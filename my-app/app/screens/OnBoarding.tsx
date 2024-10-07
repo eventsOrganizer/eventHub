@@ -1,7 +1,5 @@
-// app/screens/Onboarding.tsx
-
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
 import { Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -36,10 +34,10 @@ const slides = [
 
 // Define props type
 interface OnboardingProps {
-  onNext: () => void;
+  navigation: any;
 }
 
-const Onboarding: React.FC<OnboardingProps> = ({ onNext }) => {
+const Onboarding: React.FC<OnboardingProps> = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const buttonOpacity = useRef(new Animated.Value(0)).current;
 
@@ -61,6 +59,10 @@ const Onboarding: React.FC<OnboardingProps> = ({ onNext }) => {
     setCurrentIndex(index);
   };
 
+  const goToInterests = () => {
+    navigation.navigate('Interests', { onFinish: () => console.log('Finished!') });
+  };
+
   const renderSlides = () => {
     return slides.map((slide, index) => (
       <View key={slide.key} style={styles.slide}>
@@ -70,9 +72,9 @@ const Onboarding: React.FC<OnboardingProps> = ({ onNext }) => {
             <Text style={styles.description}>{slide.description}</Text>
             {index === slides.length - 1 && (
               <Animated.View style={[styles.buttonContainer, { opacity: buttonOpacity }]}>
-                <Button mode="contained" onPress={onNext} style={styles.button}>
-  Let's Go!
-</Button>
+                <Button mode="contained" onPress={goToInterests} style={styles.button}>
+                  Let's Go!
+                </Button>
               </Animated.View>
             )}
           </View>
@@ -101,7 +103,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onNext }) => {
         {renderSlides()}
       </Animated.ScrollView>
       <View style={styles.skipContainer}>
-        <Button onPress={onNext} style={styles.skipButton}>
+        <Button onPress={goToInterests} style={styles.skipButton}>
           Skip
         </Button>
       </View>
@@ -109,7 +111,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onNext }) => {
   );
 };
 
-// Styles remain unchanged
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -168,7 +170,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    height: 60, // Large button height
+    height: 60,
     justifyContent: 'center',
     backgroundColor: '#007BFF',
     borderRadius: 10,
