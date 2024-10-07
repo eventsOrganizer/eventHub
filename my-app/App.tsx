@@ -17,7 +17,7 @@ const App = () => {
             <Onboarding onNext={() => navigation.navigate('Interests')} />
           )}
         </Stack.Screen>
-        <Stack.Screen name="Interests" component={Interests} />
+        <Stack.Screen name="Interests" component={Interests} /> 
       </Stack.Navigator>
     </NavigationContainer>
   );
