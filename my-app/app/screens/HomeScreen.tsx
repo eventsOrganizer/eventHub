@@ -1,7 +1,6 @@
 // screens/HomeScreen.tsx
-import React, { useState,useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, ScrollView, StyleSheet } from 'react-native';
-import { supabase } from '../services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
 import CustomButton from '../components/standardComponents/customButton';
 import RNPickerSelect from 'react-native-picker-select';
@@ -9,7 +8,7 @@ import Section from '../components/standardComponents/sections';
 
 const HomeScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
- 
+
   const fakeEvents = [
     { title: 'Concert Rock', description: 'Le meilleur concert de rock en ville.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvAW5v6Q9egn_GJXVu9m7cVxDaLD_tYTz31g&s' },
     { title: 'Atelier Cuisine', description: 'Apprenez à cuisiner des plats délicieux.', imageUrl: 'https://teambooking.fr/wp-content/uploads/2024/01/atelier-cuisine-team-building-lyon-renforcement-equipe-1-1.webp' },
