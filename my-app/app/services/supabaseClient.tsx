@@ -1,25 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import Constants from 'expo-constants';
+import { SUPABASE_URL, SUPABASE_API_KEY } from '@env';
 
-// Declare variables outside the block
-let supabaseUrl: string | undefined;
-let supabaseAnonKey: string | undefined;
-
-// Get the expoConfig safely
-const expoConfig = Constants.expoConfig;
-
-if (expoConfig) {
-  supabaseUrl = expoConfig.extra?.SUPABASE_URL;
-  supabaseAnonKey = expoConfig.extra?.SUPABASE_ANON_KEY;
-
-  console.log('Supabase URL:', supabaseUrl);
-  console.log('Supabase Anon Key:', supabaseAnonKey);
-} else {
-  console.error('Expo config is not available.');
+// Vérifier si les variables d'environnement sont définies
+if (!SUPABASE_URL || !SUPABASE_API_KEY) {
+  throw new Error('Supabase URL or API Key is missing');
 }
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL or Anon Key is missing');
-}
+export const supabase = createClient(SUPABASE_URL, SUPABASE_API_KEY);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
