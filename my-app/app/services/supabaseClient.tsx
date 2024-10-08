@@ -1,25 +1,31 @@
+import 'react-native-url-polyfill/auto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
-import Constants from 'expo-constants';
+import Config from 'react-native-config';
 
-// Declare variables outside the block
-let supabaseUrl: string | undefined;
-let supabaseAnonKey: string | undefined;
+console.log('Environment Variables:', Config); // Log all Config variables
 
-// Get the expoConfig safely
-const expoConfig = Constants.expoConfig;
+const supabaseUrl = Config.SUPABASE_URL;
+const supabaseAnonKey = Config.SUPABASE_API_KEY;
 
-if (expoConfig) {
-  supabaseUrl = expoConfig.extra?.SUPABASE_URL;
-  supabaseAnonKey = expoConfig.extra?.SUPABASE_ANON_KEY;
-
-  console.log('Supabase URL:', supabaseUrl);
-  console.log('Supabase Anon Key:', supabaseAnonKey);
-} else {
-  console.error('Expo config is not available.');
-}
+// Log the values being used for debugging
+console.log('Supabase URL:', supabaseUrl);
+console.log('Supabase API Key:', supabaseAnonKey);
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL or Anon Key is missing');
+  const missingKeys = [];
+  if (!supabaseUrl) missingKeys.push('SUPABASE_URL');
+  if (!supabaseAnonKey) missingKeys.push('SUPABASE_API_KEY');
+
+  console.error(`Missing Supabase configuration: ${missingKeys.join(', ')}`);
+  throw new Error('Missing Supabase configuration. Please check your .env file.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});
