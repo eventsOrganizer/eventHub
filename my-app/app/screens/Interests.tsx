@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Button, IconButton } from 'react-native-paper';
+import { StackScreenProps } from '@react-navigation/stack';
 
+// Define the interests
 const interests = [
   { label: 'Tech Events', value: 'tech' },
   { label: 'Music Festivals', value: 'music' },
@@ -9,8 +11,10 @@ const interests = [
   { label: 'Networking', value: 'networking' },
 ];
 
-const Interest: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
-  const { onFinish } = route.params; // Retrieve the onFinish function
+// Define the props type for the Interests screen
+interface InterestProps extends StackScreenProps<any> {}
+
+const Interest: React.FC<InterestProps> = ({ navigation }) => {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   const toggleInterest = (value: string) => {
@@ -43,7 +47,7 @@ const Interest: React.FC<{ navigation: any; route: any }> = ({ navigation, route
           </TouchableOpacity>
         ))}
       </View>
-      <Button mode="contained" onPress={onFinish} style={styles.button}>
+      <Button mode="contained" onPress={() => navigation.navigate('SomeOtherScreen')} style={styles.button}>
         Finish
       </Button>
     </View>
@@ -51,10 +55,11 @@ const Interest: React.FC<{ navigation: any; route: any }> = ({ navigation, route
 };
 
 const styles = StyleSheet.create({
+  // Add your styles here
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: 'center', // Center the content vertically
+    justifyContent: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -68,7 +73,7 @@ const styles = StyleSheet.create({
   },
   interestContainer: {
     flex: 1,
-    justifyContent: 'center', // Center interests in the remaining space
+    justifyContent: 'center',
   },
   interestItem: {
     padding: 15,
