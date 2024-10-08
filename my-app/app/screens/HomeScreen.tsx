@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { View, TextInput, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import CustomButton from '../components/customButton';
+import CustomButton from '../components/standardComponents/customButton';
 import RNPickerSelect from 'react-native-picker-select';
-import Section from '../components/standardComponent/sections';
+import Section from '../components/standardComponents/sections';
 
 const HomeScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);

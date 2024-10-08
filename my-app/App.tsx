@@ -13,10 +13,10 @@ export default function App() {
   return (
     <NavigationContainer>
       <Tab.Navigator>
-        <Tab.Screen name="Accueil" component={HomeScreen} />
-        <Tab.Screen name="Événements" component={EventsScreen} />
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Events" component={EventsScreen} />
         <Tab.Screen name="Services" component={ServicesScreen} />
-        <Tab.Screen name="Mon Compte" component={AccountScreen} />
+        <Tab.Screen name="Profile" component={AccountScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
