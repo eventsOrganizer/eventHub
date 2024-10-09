@@ -1,29 +1,125 @@
-// screens/AccountScreen.tsx
 import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const AccountScreen: React.FC = () => {
+const ProfileScreen: React.FC = ({ navigation }: any) => {
+  const user = {
+    name: 'Anna Avetisyan',
+    birthday: 'January 1, 1990',
+    phone: '818 123 4567',
+    instagram: '@anna_avat',
+    email: 'info@aplusdesign.co',
+    profileImage: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png', // Replace with your image URL
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Mon Compte</Text>
-      <Button title="Modifier le Profil" onPress={() => { /* Logique pour modifier le profil */ }} />
-      <Button title="Déconnexion" onPress={() => { /* Logique de déconnexion */ }} />
-      {/* Ajoutez ici d'autres options de gestion de compte */}
-    </View>
+    <ScrollView contentContainerStyle={styles.container}>
+      {/* Header Section */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton}>
+          <Icon name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{user.name}</Text>
+      </View>
+
+      {/* Profile Image Section */}
+      <View style={styles.profileImageContainer}>
+        <Image
+          source={{ uri: user.profileImage }}
+          style={styles.profileImage}
+        />
+      </View>
+
+      {/* Profile Information */}
+      <View style={styles.infoContainer}>
+        <View style={styles.infoItem}>
+          <Icon name="phone" size={24} color="#555" />
+          <Text style={styles.infoText}>{user.phone}</Text>
+        </View>
+        <View style={styles.infoItem}>
+          <Icon name="email" size={24} color="#555" />
+          <Text style={styles.infoText}>{user.email}</Text>
+        </View>
+        <View style={styles.infoItem}>
+          <Icon name="calendar-today" size={24} color="#555" />
+          <Text style={styles.infoText}>{user.birthday}</Text>
+        </View>
+        <View style={styles.infoItem}>
+          <Icon name="camera-alt" size={24} color="#555" />
+          <Text style={styles.infoText}>{user.instagram}</Text>
+        </View>
+      </View>
+
+      {/* Edit Profile Button */}
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EditProfile')}>
+        <Text style={styles.buttonText}>Edit Profile</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingTop: 20,
+    paddingHorizontal: 20,
   },
-  title: {
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#673AB7',
+    paddingVertical: 15,
+    borderRadius: 10,
+    marginBottom: 30,
+  },
+  backButton: {
+    marginRight: 10,
+  },
+  headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: '#fff',
+    flex: 1,
+    textAlign: 'center',
+  },
+  profileImageContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 30,
+  },
+  profileImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 4,
+    borderColor: '#fff',
+  },
+  infoContainer: {
+    paddingBottom: 30,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 10,
+  },
+  button: {
+    marginTop: 30,
+    paddingVertical: 15,
+    backgroundColor: '#673AB7',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 
-export default AccountScreen;
+export default ProfileScreen;
