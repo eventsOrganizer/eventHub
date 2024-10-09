@@ -9,7 +9,7 @@ const ProfileScreen: React.FC = ({ navigation }: any) => {
     phone: '818 123 4567',
     instagram: '@anna_avat',
     email: 'info@aplusdesign.co',
-    profileImage: 'https://www.example.com/path-to-image.jpg', // Replace with your image URL
+    profileImage: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png', // Replace with your image URL
   };
 
   return (
