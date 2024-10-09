@@ -14,11 +14,16 @@ const Signup = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = async () => {
+    const handleSubmit =  () => {
         console.log({ firstname, lastname, username, email, password });
-        const result = await signup(firstname, lastname, username, email, password);
+         signup(firstname, lastname, username, email, password);
+
+        if(success){
+            navigation.navigate('Signin' as never) 
+        }
       
-                  navigation.navigate('Login' as never); // Cast to 'never' to bypass type checking
+                //   navigation.navigate('Signin' as never); 
+                  // Cast to 'never' to bypass type checking
                
     };
 

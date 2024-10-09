@@ -1,4 +1,5 @@
 export type AuthStackParamList = {
+    signIn:undefined,
     SignUp: undefined; // Add other routes as necessary
-    // ... other routes ...
+    Home: undefined;
 };
