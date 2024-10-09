@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const ProfileScreen: React.FC = ({ navigation }: any) => {
   const user = {
     name: 'Anna Avetisyan',
-    birthday: 'January 1, 1990',
+    birthday: 'January 1, 1r990',
     phone: '818 123 4567',
     instagram: '@anna_avat',
     email: 'info@aplusdesign.co',
@@ -53,6 +53,11 @@ const ProfileScreen: React.FC = ({ navigation }: any) => {
       {/* Edit Profile Button */}
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EditProfile')}>
         <Text style={styles.buttonText}>Edit Profile</Text>
+      </TouchableOpacity>
+
+      {/* Navigate to Event Creation Button */}
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EventCreation')}>
+        <Text style={styles.buttonText}>Create Event</Text>
       </TouchableOpacity>
     </ScrollView>
   );
