@@ -2,13 +2,16 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import Onboarding from '../screens/OnBoarding';
 import Interests from '../screens/Interests';
-import Home from '../screens/Home'; // This should now use the tab navigator
+import Home from '../screens/Home'; 
+import MapScreen from '../screens/MapScreen'; // Import MapScreen
+import CalendarScreen from '../screens/CalendarScreen'; // Import CalendarScreen
 
-// Define the parameter list for navigation
 export type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
-  Home: undefined; // Define other routes as needed
+  Home: undefined; 
+  Map: undefined; // Add Map route
+  Calendar: undefined; // Add Calendar route
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -33,8 +36,18 @@ const AppNavigator = () => {
       />
       <Stack.Screen 
         name="Home" 
-        component={Home} 
+        component={Home}  
         options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="Map" 
+        component={MapScreen} 
+        options={{ headerShown: true }} // Adjust as needed
+      />
+      <Stack.Screen 
+        name="Calendar" 
+        component={CalendarScreen} 
+        options={{ headerShown: true }} // Adjust as needed
       />
     </Stack.Navigator>
   );
