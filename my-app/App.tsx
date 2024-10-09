@@ -1,23 +1,42 @@
-// App.tsx
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+// Importing screens
 import HomeScreen from './app/screens/HomeScreen';
 import EventsScreen from './app/screens/EventsScreen';
 import ServicesScreen from './app/screens/ServicesScreen';
 import AccountScreen from './app/screens/AccountScreen';
 
-const Tab = createBottomTabNavigator();
+import EditProfileScreen from './app/screens/EditProfileScreen';
 
-export default function App() {
+// Create Navigators
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator(); // This is now imported from native-stack
+
+// Stack Navigator for Profile and EditProfile screens
+const AccountStack = () => {
+  return (
+    <Stack.Navigator initialRouteName="Profile">
+      <Stack.Screen name="Profile" component={AccountScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const App = () => {
   return (
     <NavigationContainer>
       <Tab.Navigator>
-        <Tab.Screen name="Homeeeeee" component={HomeScreen} />
+        <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Events" component={EventsScreen} />
         <Tab.Screen name="Services" component={ServicesScreen} />
-        <Tab.Screen name="Profile" component={AccountScreen} />
+        {/* Account tab uses the AccountStack to handle Profile and EditProfile screens */}
+        <Tab.Screen name="Account" component={AccountStack} />
       </Tab.Navigator>
     </NavigationContainer>
   );
-}
+};
+
+export default App;
