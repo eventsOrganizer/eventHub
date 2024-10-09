@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, Switch, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView, Switch, TouchableOpacity, Alert } from 'react-native';
 import { Picker as RNPicker } from '@react-native-picker/picker';
 
 const EventCreationScreen: React.FC = ({ navigation }: any) => {
+  // Event Details States
   const [eventName, setEventName] = useState('');
   const [eventDescription, setEventDescription] = useState('');
   const [eventType, setEventType] = useState('');
@@ -12,6 +13,70 @@ const EventCreationScreen: React.FC = ({ navigation }: any) => {
   const [eventStages, setEventStages] = useState<string[]>(['Arrival', 'Speech']);
   const [guests, setGuests] = useState<number>(0);
   const [invitations, setInvitations] = useState(false);
+
+  // Budget and Payment States
+  const [budget, setBudget] = useState<number>(0);
+  const [calculatedCost, setCalculatedCost] = useState<number>(0);
+  const [paymentStatus, setPaymentStatus] = useState<{ [key: string]: string }>({});
+
+  // Handle adding vendors and calculating the total cost
+  const handleAddVendor = (vendor: string) => {
+    if (!vendors.includes(vendor)) {
+      setVendors(prevVendors => [...prevVendors, vendor]);
+    }
+  };
+
+  const handleRemoveVendor = (vendor: string) => {
+    setVendors(vendors.filter(v => v !== vendor));
+  };
+
+  const calculateTotalCost = () => {
+    let total = 0;
+
+    // Base prices for services
+    const servicePrices = {
+      'Catering': 500,
+      'Photographer': 300,
+      'Decorator': 200,
+      'Music & Entertainment': 150,
+    };
+
+    // Calculate total based on selected vendors
+    vendors.forEach(vendor => {
+      total += servicePrices[vendor] || 0;
+    });
+
+    // Add cost for venue (mocked)
+    const venuePrice = eventLocation === 'New York' ? 1000 : eventLocation === 'Los Angeles' ? 800 : 600;
+    total += venuePrice;
+
+    // Add music & entertainment if enabled
+    if (musicAndEntertainment) {
+      total += servicePrices['Music & Entertainment'];
+    }
+
+    setCalculatedCost(total);
+  };
+
+  const handlePayment = () => {
+    // Simulate payment logic (in a real app, this would involve payment processing)
+    alert(`Total cost: $${calculatedCost}\nPayment Successful!`);
+    setPaymentStatus({
+      'Catering': 'paid',
+      'Photographer': 'paid',
+      'Decorator': 'paid',
+      'Music & Entertainment': 'paid',
+      'Venue': 'paid',
+    });
+
+    // You can add a notification system to notify the user
+    sendNotification('Payment Successful', `Your payment of $${calculatedCost} was successful.`);
+  };
+
+  const sendNotification = (title: string, message: string) => {
+    // This function simulates sending a notification
+    Alert.alert(title, message);
+  };
 
   const handleCreateEvent = () => {
     console.log({
@@ -24,24 +89,37 @@ const EventCreationScreen: React.FC = ({ navigation }: any) => {
       eventStages,
       guests,
       invitations,
+      budget,
+      calculatedCost,
+      paymentStatus,
     });
-    alert('Event Created Successfully!');
-    navigation.goBack();
-  };
 
-  const handleAddVendor = (vendor: string) => {
-    if (!vendors.includes(vendor)) {
-      setVendors(prevVendors => [...prevVendors, vendor]);
+    if (calculatedCost <= budget) {
+      handlePayment();
+    } else {
+      alert('Your event exceeds the set budget!');
     }
-  };
-
-  const handleRemoveVendor = (vendor: string) => {
-    setVendors(vendors.filter(v => v !== vendor));
   };
 
   const handleAddStage = () => {
     setEventStages([...eventStages, '']);
   };
+
+  const checkPaymentStatus = () => {
+    // Check for any pending payments
+    const pendingPayments = Object.entries(paymentStatus).filter(([service, status]) => status === 'pending');
+    if (pendingPayments.length > 0) {
+      const message = pendingPayments.map(([service]) => service).join(', ') + ' payments are pending.';
+      sendNotification('Payment Reminder', message);
+    }
+  };
+
+  // UseEffect hook to check for payments at intervals (e.g., every minute)
+  useEffect(() => {
+    const interval = setInterval(checkPaymentStatus, 60000); // Check every 60 seconds
+
+    return () => clearInterval(interval); // Clean up the interval when the component is unmounted
+  }, [paymentStatus]);
 
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
@@ -154,6 +232,19 @@ const EventCreationScreen: React.FC = ({ navigation }: any) => {
         {invitations ? 'Invitations enabled' : 'Invitations disabled'}
       </Text>
 
+      {/* Budget Management */}
+      <Text style={styles.label}>Event Budget</Text>
+      <TextInput
+        value={String(budget)}
+        onChangeText={(text) => setBudget(Number(text))}
+        style={styles.input}
+        keyboardType="numeric"
+        placeholder="Set your budget"
+      />
+
+      {/* Display Calculated Cost */}
+      <Text style={styles.label}>Calculated Cost: ${calculatedCost}</Text>
+
       {/* Create Event Button */}
       <View style={styles.buttonContainer}>
         <Button title="Create Event" onPress={handleCreateEvent} />
@@ -171,7 +262,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContainer: {
     flexGrow: 1,
-    paddingBottom: 20, // To ensure there's space at the bottom when content is large
+    paddingBottom: 20,
   },
   header: {
     fontSize: 28,
@@ -190,39 +281,28 @@ const styles = StyleSheet.create({
     height: 45,
     borderColor: '#ddd',
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    fontSize: 16,
-    backgroundColor: '#fff',
+    borderRadius: 5,
+    marginBottom: 10,
+    paddingLeft: 10,
   },
   descriptionInput: {
-    height: 120,
-    textAlignVertical: 'top',
-  },
-  picker: {
-    height: 50,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 15,
-    backgroundColor: '#fff',
+    height: 100,
+    textAlignVertical: 'top', // Align text to the top
   },
   switchLabel: {
-    marginBottom: 15,
-    color: '#666',
+    marginTop: 5,
+    fontSize: 14,
+    color: '#333',
   },
   checkBoxContainer: {
-    marginBottom: 15,
+    marginBottom: 20,
   },
   vendorItem: {
     fontSize: 16,
-    marginBottom: 8,
-    color: '#007AFF',
+    padding: 5,
   },
   vendorsList: {
-    fontSize: 16,
-    color: '#555',
+    fontSize: 14,
     marginTop: 10,
   },
   stageInputContainer: {
@@ -230,6 +310,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: 20,
+  },
+  picker: {
+    height: 45,
+    width: '100%',
   },
 });
 
