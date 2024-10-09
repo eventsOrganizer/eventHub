@@ -6,6 +6,8 @@ import HomeScreen from './app/screens/HomeScreen';
 import EventsScreen from './app/screens/EventsScreen';
 import ServicesScreen from './app/screens/ServicesScreen';
 import AccountScreen from './app/screens/AccountScreen';
+// import UsersScreen from './app/screens/UsersScreen';
+import MapScreen from './app/screens/MapScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -17,6 +19,7 @@ export default function App() {
         <Tab.Screen name="Events" component={EventsScreen} />
         <Tab.Screen name="Services" component={ServicesScreen} />
         <Tab.Screen name="Profile" component={AccountScreen} />
+        <Tab.Screen name="Map" component={MapScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
