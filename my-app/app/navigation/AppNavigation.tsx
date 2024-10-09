@@ -13,6 +13,7 @@ import CalendarScreen from '../screens/CalendarScreen';
 import ProfileScreen from '../screens/AccountScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import EventCreationScreen from '../screens/EventCreationScreen'; // Event creation screen import
+import EventCustomizationScreen from '../screens/EventCustomizationScreen'; // Corrected import
 
 // Define the types for your stack params
 export type RootStackParamList = {
@@ -24,6 +25,7 @@ export type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   EventCreation: undefined; // Add EventCreation as a screen
+  EventCustomization: undefined; // Add EventCustomization as a screen
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -34,7 +36,6 @@ const AppNavigator = () => {
   };
 
   return (
-   
       <Stack.Navigator initialRouteName="Onboarding">
         {/* Other Screens */}
         <Stack.Screen 
@@ -80,7 +81,15 @@ const AppNavigator = () => {
           component={EventCreationScreen} 
           options={{ title: 'Create Event' }} 
         />
+
+        {/* Event Customization Screen */}
+        <Stack.Screen 
+          name="EventCustomization" 
+          component={EventCustomizationScreen} 
+          options={{ title: 'Event Customization' }} 
+        />
       </Stack.Navigator>
+   
   );
 };
 

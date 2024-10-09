@@ -8,7 +8,7 @@ import CalendarScreen from './CalendarScreen';
 import MapScreen from './MapScreen';
 import ProfileScreen from './AccountScreen';
 import EventCreationScreen from './EventCreationScreen';
-
+import EventCustomizationScreen from './EventCustomizationScreen';
 const Tab = createBottomTabNavigator();
 
 const MainTabNavigator = () => {
@@ -21,6 +21,7 @@ const MainTabNavigator = () => {
       <Tab.Screen name="Calendar" component={CalendarScreen} />
       <Tab.Screen name="Map" component={MapScreen} />
       <Tab.Screen name="EventCreation" component={EventCreationScreen} />
+      <Tab.Screen name="EventCustomization" component={EventCustomizationScreen} />
     </Tab.Navigator>
   );
 };

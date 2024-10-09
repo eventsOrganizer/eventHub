@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
-
 const EventCreationScreen: React.FC = ({ navigation }: any) => {
   const [eventName, setEventName] = useState('');
   const [eventDescription, setEventDescription] = useState('');
@@ -20,7 +19,8 @@ const EventCreationScreen: React.FC = ({ navigation }: any) => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Create New Event</Text>
 
-      <Text>Event Name</Text>
+      {/* Event Name Input */}
+      <Text style={styles.label}>Event Name</Text>
       <TextInput
         value={eventName}
         onChangeText={setEventName}
@@ -28,7 +28,8 @@ const EventCreationScreen: React.FC = ({ navigation }: any) => {
         placeholder="Enter event name"
       />
 
-      <Text>Event Description</Text>
+      {/* Event Description Input */}
+      <Text style={styles.label}>Event Description</Text>
       <TextInput
         value={eventDescription}
         onChangeText={setEventDescription}
@@ -37,7 +38,8 @@ const EventCreationScreen: React.FC = ({ navigation }: any) => {
         multiline
       />
 
-      <Text>Event Type</Text>
+      {/* Event Type Picker */}
+      <Text style={styles.label}>Event Type</Text>
       <Picker
         selectedValue={eventType}
         onValueChange={setEventType}
@@ -50,7 +52,10 @@ const EventCreationScreen: React.FC = ({ navigation }: any) => {
         <Picker.Item label="Party" value="Party" />
       </Picker>
 
-      <Button title="Create Event" onPress={handleCreateEvent} />
+      {/* Create Event Button */}
+      <View style={styles.buttonContainer}>
+        <Button title="Create Event" onPress={handleCreateEvent} color="#fff" />
+      </View>
     </ScrollView>
   );
 };
@@ -59,28 +64,49 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 20,
+    backgroundColor: '#f5f5f5', // Light background color
   },
   header: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
+    textAlign: 'center',
     marginBottom: 20,
+    color: '#4CAF50', // Green color for header
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#333', // Dark color for labels
   },
   input: {
-    height: 40,
-    borderColor: '#ccc',
+    height: 45,
+    borderColor: '#ddd',
     borderWidth: 1,
-    marginBottom: 10,
-    paddingLeft: 10,
-    borderRadius: 5,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    fontSize: 16,
+    backgroundColor: '#fff',
   },
   descriptionInput: {
-    height: 100,
-    textAlignVertical: 'top',
+    height: 120,
+    textAlignVertical: 'top', // Align text to the top in multiline input
   },
   picker: {
     height: 50,
-    width: '100%',
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 15,
+    backgroundColor: '#fff',
+  },
+  buttonContainer: {
+    marginTop: 20,
+    borderRadius: 8,
+    backgroundColor: '#4CAF50', // Green background for button
+    overflow: 'hidden', // Make sure the button has rounded corners
   },
 });
 
