@@ -1,6 +1,6 @@
 // screens/HomeScreen.tsx
 import React, { useState } from 'react';
-import { View, TextInput, ScrollView, StyleSheet } from 'react-native';
+import { View, TextInput, ScrollView, StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CustomButton from '../components/standardComponents/customButton';
 import RNPickerSelect from 'react-native-picker-select';
@@ -23,18 +23,22 @@ const HomeScreen: React.FC = () => {
     { title: 'Spectacle de Magie', description: 'Un spectacle de magie pour toute la famille.', imageUrl: 'https://i0.wp.com/alex-magicien.fr/wp-content/uploads/2015/05/Affiche-spectacle-de-magie-Alex-le-magicien-774x1024.jpg?ssl=1' },
   ];
 
-  const fakeProducts = [
-    { title: 'Guitare Électrique', description: 'Guitare de haute qualité à vendre.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlaPVJzESG50tMzpaKUhxQyGRHcG0yPaDaPw&s' },
-    { title: 'Appareil Photo', description: 'Appareil photo professionnel.', imageUrl: 'https://media.s-bol.com/3G2PPwYJWBEp/lJQB27/550x454.jpg' },
-    { title: 'Vélo de Montagne', description: 'Vélo robuste pour les terrains difficiles.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtFqz1V0as--Bn_URHTbSHKAntEquVKJELKA&s' },
-    { title: 'Ordinateur Portable', description: 'Ordinateur portable performant.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8YJN4T0TxETPJYqskAqFrnEA9i5NBvvERvutOAWAsDtynxxSsQRpPlUW40HuDgo8lslw&usqp=CAU' },
+  const fakeStaffServices = [
+    { title: 'DJ Professionnel', description: 'DJ pour animer vos soirées.', imageUrl: 'https://example.com/dj.jpg' },
+    { title: 'Photographe', description: 'Photographe pour capturer vos moments.', imageUrl: 'https://example.com/photographer.jpg' },
+    // Ajoutez d'autres services ici
   ];
 
-  const fakeRentals = [
-    { title: 'Projecteur', description: 'Projecteur HD à louer.', imageUrl: 'https://masterled.es/8678-large_zoom/projecteur-led-100w-plat-smd.jpg' },
-    { title: 'Tente de Camping', description: 'Tente spacieuse pour vos aventures.', imageUrl: 'https://www.toitdecoton.fr/wp-content/uploads/2022/07/sibley-800-protech.jpg' },
-    { title: 'Voiture de Luxe', description: 'Louez une voiture de luxe pour vos événements.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjH_P-CUZVR8Z_sZ_nzxAxtJE1NSXzSNkc_g&s' },
-    { title: 'Salle de Réunion', description: 'Salle équipée pour vos réunions professionnelles.', imageUrl: 'https://intense-dmc.com/wp-content/themes/yootheme/cache/1b/salle-reunion-seminaire-1-1b5a72f9.jpeg' },
+  const fakeLocalServices = [
+    { title: 'Salle de Fête', description: 'Location de salle pour vos événements.', imageUrl: 'https://example.com/venue.jpg' },
+    { title: 'Traiteur', description: 'Service de traiteur pour vos réceptions.', imageUrl: 'https://example.com/catering.jpg' },
+    // Ajoutez d'autres services ici
+  ];
+
+  const fakeMaterialsAndFoodServices = [
+    { title: 'Matériel de Sonorisation', description: 'Location de matériel audio.', imageUrl: 'https://example.com/sound.jpg' },
+    { title: 'Buffet', description: 'Buffet varié pour vos événements.', imageUrl: 'https://example.com/buffet.jpg' },
+    // Ajoutez d'autres services ici
   ];
 
   return (
@@ -69,11 +73,36 @@ const HomeScreen: React.FC = () => {
       </View>
 
       {/* Sections */}
-      <ScrollView style={styles.sections}>
-        <Section title="Your events" data={fakeEvents} />
-        <Section title="Top events" data={fakeTopEvents} />
-        <Section title="Top products to sell" data={fakeProducts} />
-        <Section title="Top  rent" data={fakeRentals} />
+      <ScrollView style={styles.sections} contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Your events</Text>
+          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
+        </View>
+        <Section data={fakeEvents} style={styles.section}  title=""/>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Top events</Text>
+          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
+        </View>
+        <Section data={fakeTopEvents} style={styles.section} title="" />
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Top staff services</Text>
+          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
+        </View>
+        <Section data={fakeStaffServices} style={styles.section} title="" />
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Top locals services</Text>
+          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
+        </View>
+        <Section data={fakeLocalServices} style={styles.section} title="" />
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Top materials and food services</Text>
+          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
+        </View>
+        <Section data={fakeMaterialsAndFoodServices} style={styles.section} title="" />
       </ScrollView>
     </View>
   );
@@ -111,6 +140,22 @@ const styles = StyleSheet.create({
   },
   sections: {
     flex: 1,
+  },
+  scrollViewContent: {
+    paddingBottom: 20, // Ajoutez un padding en bas pour éviter que le dernier élément soit coupé
+  },
+  section: {
+    marginBottom: 20, // Ajoutez un margin en bas de chaque section
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
