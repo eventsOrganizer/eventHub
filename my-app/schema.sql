@@ -20,8 +20,11 @@ CREATE TABLE "user" (
     lastname VARCHAR(45),
     age INTEGER,
     username VARCHAR(45),
-    gender VARCHAR(45)
+    gender VARCHAR(45),
+    password VARCHAR(45) NOT NULL,
+    email VARCHAR(45) UNIQUE NOT NULL
 );
+
 
 CREATE TABLE service (
     id SERIAL PRIMARY KEY,
@@ -29,7 +32,7 @@ CREATE TABLE service (
     user_id UUID NOT NULL,
     subcategory_id INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (subcategory_id) REFERENCES subcategory(id)
+    FOREIGN KEY (category_id) REFERENCES category(id)
 );
 
 CREATE TABLE personal (
