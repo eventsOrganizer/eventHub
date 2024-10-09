@@ -29,6 +29,6 @@ export default {
   },
   extra: {
     SUPABASE_URL: process.env.SUPABASE_URL, // Load Supabase URL from .env
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY, // Load Supabase Anon Key from .env
+    SUPABASE_API_KEY: process.env.SUPABASE_API_KEY, // Load Supabase Anon Key from .env
   },
 };
