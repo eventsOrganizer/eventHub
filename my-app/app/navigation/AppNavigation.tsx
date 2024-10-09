@@ -7,6 +7,8 @@ import MapScreen from '../screens/MapScreen'; // Import MapScreen
 import CalendarScreen from '../screens/CalendarScreen'; // Import CalendarScreen
 import ProfileScreen from '../screens/AccountScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import Signup from '../components/Auth/SignUp';
+import Signin from '../components/Auth/SignIn';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -16,6 +18,8 @@ export type RootStackParamList = {
   Map: undefined; // Add Map route
   Calendar: undefined; // Add Calendar route
   EditProfile: undefined;
+  Signup: undefined;
+  Signin: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -64,6 +68,17 @@ const AppNavigator = () => {
         component={EditProfileScreen} 
         options={{ headerShown: true }} // Adjust as needed
       />
+      <Stack.Screen 
+        name="Signup" 
+        component={Signup}  
+        options={{ headerShown: true }} // Adjust as needed
+      />
+      <Stack.Screen 
+        name="Signin" 
+        component={Signin}  
+        options={{ headerShown: true }} // Adjust as needed
+      />
+
     </Stack.Navigator>
   );
 };

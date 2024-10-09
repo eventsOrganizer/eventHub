@@ -7,6 +7,8 @@ import AccountScreen from './AccountScreen';
 import CalendarScreen from './CalendarScreen';
 import MapScreen from './MapScreen';
 import ProfileScreen from './AccountScreen';
+import Signup from '../components/Auth/SignUp';
+import Signin from '../components/Auth/SignIn';
 
 const Tab = createBottomTabNavigator();
 
@@ -19,6 +21,8 @@ const MainTabNavigator = () => {
       <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />
       <Tab.Screen name="Map" component={MapScreen} />
+      <Tab.Screen name="Signup" component={Signup}/>
+      <Tab.Screen name="Signin" component={Signin}/>
     </Tab.Navigator>
   );
 };
