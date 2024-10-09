@@ -1,30 +1,43 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import useAuth from '../../hooks/useAuth';
 
 const Login = () => {
-    const { login, error, success } = useAuth();
+    // Updated the type definition for useAuth to include login
+    const { login, error, success }: { login: (identifier: string, password: string) => Promise<void>; error: string | null; success: string | null; } = useAuth();
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = () => {
-        login(identifier, password);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await login(identifier, password);
+            // Handle success (e.g., redirect or show a success message)
+        } catch (err) {
+            // Handle error (e.g., show an error message)
+        }
     };
 
     return (
-        <View>
-            <TextInput placeholder="Username or Email" value={identifier} onChangeText={setIdentifier} />
-            <TextInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
-            <Button title="Login" onPress={handleSubmit} />
-            {error && <Text style={styles.error}>{error}</Text>}
-            {success && <Text style={styles.success}>{success}</Text>}
-        </View>
+        <form onSubmit={handleSubmit}>
+            <input
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="Identifier"
+                required
+            />
+            <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                required
+            />
+            <button type="submit">Login</button>
+            {error && <p>{error}</p>}
+            {success && <p>{success}</p>}
+        </form>
     );
 };
-
-const styles = StyleSheet.create({
-    error: { color: 'red' },
-    success: { color: 'green' },
-});
 
 export default Login;

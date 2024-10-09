@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import useAuth from '../../hooks/useAuth';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack'; // Importing the correct type
+import { AuthStackParamList } from '../../navigation/types'; // Adjust the import path as necessary
 
 const Signup = () => {
     const { signup, error, success } = useAuth();
+    const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>(); // Typing the navigation prop
     const [firstname, setFirstname] = useState('');
     const [lastname, setLastname] = useState('');
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = () => {
-        signup(firstname, lastname, username, email, password);
+    const handleSubmit = async () => {
+        console.log({ firstname, lastname, username, email, password });
+        const result = await signup(firstname, lastname, username, email, password);
+      
+                  navigation.navigate('Login' as never); // Cast to 'never' to bypass type checking
+               
     };
 
     return (
@@ -31,6 +39,13 @@ const Signup = () => {
 const styles = StyleSheet.create({
     error: { color: 'red' },
     success: { color: 'green' },
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+    },
 });
 
 export default Signup;
