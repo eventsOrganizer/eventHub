@@ -38,12 +38,12 @@ CREATE TABLE service (
 CREATE TABLE personal (
     id SERIAL PRIMARY KEY,
     subcategory_id INTEGER NOT NULL,
-    service_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
     priceperhour INTEGER,
     name VARCHAR(45),
     details VARCHAR(45),
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
-    FOREIGN KEY (service_id) REFERENCES service(id)
+    FOREIGN KEY (user_id) REFERENCES service(id)
 );
 
 CREATE TABLE event (

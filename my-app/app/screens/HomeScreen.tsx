@@ -6,6 +6,7 @@ import CustomButton from '../components/standardComponents/customButton';
 import RNPickerSelect from 'react-native-picker-select';
 import Section from '../components/standardComponents/sections';
 import { supabase } from '../services/supabaseClient';
+import { useNavigation } from '@react-navigation/native';
 
 const HomeScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
@@ -14,6 +15,8 @@ const HomeScreen: React.FC = () => {
   const [staffServices, setStaffServices] = useState<any[]>([]);
   const [localServices, setLocalServices] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
+
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,7 +93,7 @@ const HomeScreen: React.FC = () => {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Top staff services</Text>
-          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
+          <CustomButton title="See all" onPress={() => navigation.navigate('Personals')}  />
         </View>
         <Section data={staffServices.map(service => ({
           title: service.name,
