@@ -1,41 +1,49 @@
 // screens/HomeScreen.tsx
-import React, { useState } from 'react';
-import { View, TextInput, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, ScrollView, StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CustomButton from '../components/standardComponents/customButton';
 import RNPickerSelect from 'react-native-picker-select';
 import Section from '../components/standardComponents/sections';
+import { supabase } from '../services/supabaseClient';
 
 const HomeScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [events, setEvents] = useState<any[]>([]);
+  const [topEvents, setTopEvents] = useState<any[]>([]);
+  const [staffServices, setStaffServices] = useState<any[]>([]);
+  const [localServices, setLocalServices] = useState<any[]>([]);
+  const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
 
-  const fakeEvents = [
-    { title: 'Concert Rock', description: 'Le meilleur concert de rock en ville.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvAW5v6Q9egn_GJXVu9m7cVxDaLD_tYTz31g&s' },
-    { title: 'Atelier Cuisine', description: 'Apprenez à cuisiner des plats délicieux.', imageUrl: 'https://teambooking.fr/wp-content/uploads/2024/01/atelier-cuisine-team-building-lyon-renforcement-equipe-1-1.webp' },
-    { title: 'Marathon', description: 'Participez à notre marathon annuel.', imageUrl: 'https://marathon.comar.tn/sites/default/files/inline-images/Sans%20titre%20%281%29.jpg' },
-    { title: 'Exposition d\'Art', description: 'Découvrez des œuvres d\'artistes locaux.', imageUrl: 'https://image.over-blog.com/waCkrPis1VFIr-JBruEH0-FHftc=/filters:no_upscale()/image%2F1406669%2F20240807%2Fob_ffac14_expo-art-urbain-petit-palais-paris.jpg' },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('event')
+        .select('*');
+      if (eventsError) console.error(eventsError);
+      else setEvents(eventsData);
 
-  const fakeTopEvents = [
-    { title: 'Festival Jazz', description: 'Un festival de jazz incroyable.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQL0sjzO4rPJdKL7OIzT0Fm8JOXQfmyLF5DA&s' },
-    { title: 'Conférence Tech', description: 'Les dernières innovations technologiques.', imageUrl: 'https://d1csarkz8obe9u.cloudfront.net/posterpreviews/technology-conference-post-design-template-7b35dcccfd217515239991c14bd9dff5_screen.jpg?ts=1663081102' },
-    { title: 'Salon du Livre', description: 'Rencontrez vos auteurs préférés.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTkoQbkQUPGwwqZo8EIJAzBtKS4JABd5j1RmA&s' },
-    { title: 'Spectacle de Magie', description: 'Un spectacle de magie pour toute la famille.', imageUrl: 'https://i0.wp.com/alex-magicien.fr/wp-content/uploads/2015/05/Affiche-spectacle-de-magie-Alex-le-magicien-774x1024.jpg?ssl=1' },
-  ];
+      const { data: staffServicesData, error: staffServicesError } = await supabase
+        .from('personal')
+        .select('*');
+      if (staffServicesError) console.error(staffServicesError);
+      else setStaffServices(staffServicesData);
 
-  const fakeProducts = [
-    { title: 'Guitare Électrique', description: 'Guitare de haute qualité à vendre.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlaPVJzESG50tMzpaKUhxQyGRHcG0yPaDaPw&s' },
-    { title: 'Appareil Photo', description: 'Appareil photo professionnel.', imageUrl: 'https://media.s-bol.com/3G2PPwYJWBEp/lJQB27/550x454.jpg' },
-    { title: 'Vélo de Montagne', description: 'Vélo robuste pour les terrains difficiles.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtFqz1V0as--Bn_URHTbSHKAntEquVKJELKA&s' },
-    { title: 'Ordinateur Portable', description: 'Ordinateur portable performant.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8YJN4T0TxETPJYqskAqFrnEA9i5NBvvERvutOAWAsDtynxxSsQRpPlUW40HuDgo8lslw&usqp=CAU' },
-  ];
+      const { data: localServicesData, error: localServicesError } = await supabase
+        .from('local')
+        .select('*');
+      if (localServicesError) console.error(localServicesError);
+      else setLocalServices(localServicesData);
 
-  const fakeRentals = [
-    { title: 'Projecteur', description: 'Projecteur HD à louer.', imageUrl: 'https://masterled.es/8678-large_zoom/projecteur-led-100w-plat-smd.jpg' },
-    { title: 'Tente de Camping', description: 'Tente spacieuse pour vos aventures.', imageUrl: 'https://www.toitdecoton.fr/wp-content/uploads/2022/07/sibley-800-protech.jpg' },
-    { title: 'Voiture de Luxe', description: 'Louez une voiture de luxe pour vos événements.', imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjH_P-CUZVR8Z_sZ_nzxAxtJE1NSXzSNkc_g&s' },
-    { title: 'Salle de Réunion', description: 'Salle équipée pour vos réunions professionnelles.', imageUrl: 'https://intense-dmc.com/wp-content/themes/yootheme/cache/1b/salle-reunion-seminaire-1-1b5a72f9.jpeg' },
-  ];
+      const { data: materialsAndFoodServicesData, error: materialsAndFoodServicesError } = await supabase
+        .from('material')
+        .select('*');
+      if (materialsAndFoodServicesError) console.error(materialsAndFoodServicesError);
+      else setMaterialsAndFoodServices(materialsAndFoodServicesData);
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -69,11 +77,46 @@ const HomeScreen: React.FC = () => {
       </View>
 
       {/* Sections */}
-      <ScrollView style={styles.sections}>
-        <Section title="Your events" data={fakeEvents} />
-        <Section title="Top events" data={fakeTopEvents} />
-        <Section title="Top products to sell" data={fakeProducts} />
-        <Section title="Top  rent" data={fakeRentals} />
+      <ScrollView style={styles.sections} contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Your events</Text>
+          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
+        </View>
+        <Section data={events.map(event => ({
+          title: event.name,
+          description: event.details || '',
+          imageUrl: '' // Ajoutez une URL d'image si disponible
+        }))} style={styles.section} title="" />
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Top staff services</Text>
+          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
+        </View>
+        <Section data={staffServices.map(service => ({
+          title: service.name,
+          description: service.details || '',
+          imageUrl: '' // Ajoutez une URL d'image si disponible
+        }))} style={styles.section} title="" />
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Top locals services</Text>
+          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
+        </View>
+        <Section data={localServices.map(service => ({
+          title: service.name,
+          description: '',
+          imageUrl: '' // Ajoutez une URL d'image si disponible
+        }))} style={styles.section} title="" />
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Top materials and food services</Text>
+          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
+        </View>
+        <Section data={materialsAndFoodServices.map(service => ({
+          title: service.name,
+          description: service.details || '',
+          imageUrl: '' // Ajoutez une URL d'image si disponible
+        }))} style={styles.section} title="" />
       </ScrollView>
     </View>
   );
@@ -111,6 +154,22 @@ const styles = StyleSheet.create({
   },
   sections: {
     flex: 1,
+  },
+  scrollViewContent: {
+    paddingBottom: 20, // Ajoutez un padding en bas pour éviter que le dernier élément soit coupé
+  },
+  section: {
+    marginBottom: 20, // Ajoutez un margin en bas de chaque section
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 

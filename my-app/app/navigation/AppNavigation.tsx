@@ -12,6 +12,8 @@ import MapScreen from '../screens/MapScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import ProfileScreen from '../screens/AccountScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import Signup from '../components/Auth/SignUp';
+import Signin from '../components/Auth/SignIn';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
 import CategorySelectionScreen from '../screens/CategorySelectionScreen';
 import SubcategorySelectionScreen from '../screens/subcategorySelectionScreen';
@@ -26,6 +28,8 @@ export type RootStackParamList = {
   Calendar: undefined;
   Profile: undefined;
   EditProfile: undefined;
+  Signup: undefined;
+  Signin: undefined;
   EventCreation: undefined;
   EventDetails: { eventName: string, eventDescription: string, eventType: string };
   CategorySelection: { eventName: string, eventDescription: string, eventType: string };
@@ -102,6 +106,17 @@ const AppNavigator = () => {
         component={SubcategorySelectionScreen} 
         options={{ title: 'Select Subcategory' }} 
       />
+      <Stack.Screen 
+        name="Signup" 
+        component={Signup}  
+        options={{ headerShown: true }} // Adjust as needed
+      />
+      <Stack.Screen 
+        name="Signin" 
+        component={Signin}  
+        options={{ headerShown: true }} // Adjust as needed
+      />
+
     </Stack.Navigator>
   );
 };
