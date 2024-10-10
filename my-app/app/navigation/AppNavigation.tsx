@@ -15,6 +15,7 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import EventCreationScreen from '../screens/EventCreationScreen'; // Event creation screen import
 import EventDetailsScreen from '../screens/EventDetailsScreen'; // Event details screen import
 
+
 // Define the types for your stack params
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -27,6 +28,7 @@ export type RootStackParamList = {
   EventCreation: undefined; // Event creation screen
   EventDetails: { eventName: string, eventDescription: string, eventType: string }; // Event details screen params
 };
+
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -89,7 +91,7 @@ const AppNavigator = () => {
           options={{ title: 'Event Details' }} 
         />
       </Stack.Navigator>
-  );
-};
+  )
+}
 
 export default AppNavigator;

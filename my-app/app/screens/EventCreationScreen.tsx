@@ -1,120 +1,126 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, ImageBackground } from 'react-native';
-import { Picker as RNPicker } from '@react-native-picker/picker';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Button, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';  // Ensure you're importing from the right package
+import { supabase } from '../services/supabaseClient';  // Assuming you have a Supabase instance exported
 
-const EventCreationScreen: React.FC = ({ navigation }: any) => {
-  // States for event creation
-  const [eventName, setEventName] = useState('');
-  const [eventDescription, setEventDescription] = useState('');
-  const [eventType, setEventType] = useState('');
+const EventCreationScreen = ({ navigation }: any) => {
+  const [categories, setCategories] = useState<any[]>([]);  // State to store categories
+  const [selectedCategory, setSelectedCategory] = useState<string>('');  // Selected category
+  const [subcategories, setSubcategories] = useState<any[]>([]);  // State to store subcategories
+
+  // Fetch categories on screen load
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('category')
+        .select('*');
+      
+      if (error) {
+        Alert.alert('Error', error.message);
+      } else {
+        setCategories(data);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Fetch subcategories based on selected category
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      if (selectedCategory) {
+        const { data, error } = await supabase
+          .from('subcategory')
+          .select('*')
+          .eq('category_id', selectedCategory);
+        
+        if (error) {
+          Alert.alert('Error', error.message);
+        } else {
+          setSubcategories(data);
+        }
+      }
+    };
+
+    fetchSubcategories();
+  }, [selectedCategory]);  // Run this effect when selectedCategory changes
 
   const handleNext = () => {
-    if (eventName && eventDescription && eventType) {
-      navigation.navigate('EventDetails', {
-        eventName,
-        eventDescription,
-        eventType,
-      });
+    if (selectedCategory) {
+      // Proceed to the next screen with selected category
+      navigation.navigate('SubcategorySelection', { selectedCategory });
     } else {
-      alert('Please fill in all fields before proceeding.');
+      Alert.alert('Validation Error', 'Please select a category');
     }
   };
 
   return (
-    <ImageBackground source={require('../assets/svgs/OnBoardingSvg')} style={styles.backgroundImage}>
-      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        <Text style={styles.header}>Create New Event</Text>
+    <View style={styles.container}>
+      <Text style={styles.header}>Create New Event</Text>
 
-        {/* Event Name Input */}
-        <Text style={styles.label}>Event Name</Text>
-        <TextInput
-          value={eventName}
-          onChangeText={setEventName}
-          style={styles.input}
-          placeholder="Enter event name"
-          placeholderTextColor="#fff"
-        />
-
-        {/* Event Description Input */}
-        <Text style={styles.label}>Event Description</Text>
-        <TextInput
-          value={eventDescription}
-          onChangeText={setEventDescription}
-          style={[styles.input, styles.descriptionInput]}
-          placeholder="Enter event description"
-          placeholderTextColor="#fff"
-          multiline
-        />
-
-        {/* Event Type Picker */}
-        <Text style={styles.label}>Event Type</Text>
-        <RNPicker
-          selectedValue={eventType}
-          onValueChange={setEventType}
+      {/* Category Picker */}
+      <Text style={styles.label}>Select Event Category</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={selectedCategory}
+          onValueChange={(itemValue) => setSelectedCategory(itemValue)}
           style={styles.picker}
         >
-          <RNPicker.Item label="Select event type" value="" />
-          <RNPicker.Item label="Conference" value="Conference" />
-          <RNPicker.Item label="Workshop" value="Workshop" />
-          <RNPicker.Item label="Meeting" value="Meeting" />
-          <RNPicker.Item label="Party" value="Party" />
-        </RNPicker>
+          <Picker.Item label="Select Category" value="" />
+          {categories.map((category) => (
+            <Picker.Item key={category.id} label={category.name} value={category.id} />
+          ))}
+        </Picker>
+      </View>
 
-        {/* Next Button */}
-        <View style={styles.buttonContainer}>
-          <Button title="Next" onPress={handleNext} color="#4CAF50" />
-        </View>
-      </ScrollView>
-    </ImageBackground>
+      {/* Subcategory Picker */}
+      {selectedCategory && (
+        <>
+          <Text style={styles.label}>Select Event Subcategory</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedCategory}
+              onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Select Subcategory" value="" />
+              {subcategories.map((subcategory) => (
+                <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
+              ))}
+            </Picker>
+          </View>
+        </>
+      )}
+
+      <Button title="Next" onPress={handleNext} color="#4CAF50" />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  backgroundImage: {
+  container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  scrollViewContainer: {
-    flexGrow: 1,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
+    padding: 20,
   },
   header: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
-    color: '#fff',
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
     marginBottom: 8,
-    color: '#fff',
   },
-  input: {
-    height: 45,
-    borderColor: '#fff',
-    borderWidth: 1,
-    borderRadius: 5,
-    marginBottom: 10,
-    paddingLeft: 10,
-    color: '#fff',
-  },
-  descriptionInput: {
-    height: 100,
-    textAlignVertical: 'top',
+  pickerContainer: {
+    height: 50,
+    marginBottom: 20,
+    justifyContent: 'center',
   },
   picker: {
-    height: 45,
+    height: 50,
     width: '100%',
-    color: '#fff',
-  },
-  buttonContainer: {
-    marginTop: 20,
   },
 });
 
