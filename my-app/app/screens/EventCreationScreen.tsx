@@ -1,20 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker';  // Ensure you're importing from the right package
-import { supabase } from '../services/supabaseClient';  // Assuming you have a Supabase instance exported
+import React, { useState , useEffect} from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { supabase } from '../services/supabaseClient'; // Assuming you've already configured supabase
 
 const EventCreationScreen = ({ navigation }: any) => {
-  const [categories, setCategories] = useState<any[]>([]);  // State to store categories
-  const [selectedCategory, setSelectedCategory] = useState<string>('');  // Selected category
-  const [subcategories, setSubcategories] = useState<any[]>([]);  // State to store subcategories
+  const [eventName, setEventName] = useState('');
+  const [eventDescription, setEventDescription] = useState('');
+  const [eventType, setEventType] = useState('');
+  const [categories, setCategories] = useState<any[]>([]);
 
-  // Fetch categories on screen load
+  // Fetch categories from supabase with type 'event'
+
   useEffect(() => {
     const fetchCategories = async () => {
       const { data, error } = await supabase
         .from('category')
-        .select('*');
-      
+        .select('*')
+        .eq('type', 'event'); // Only 'event' type categories
+
       if (error) {
         Alert.alert('Error', error.message);
       } else {
@@ -25,32 +28,15 @@ const EventCreationScreen = ({ navigation }: any) => {
     fetchCategories();
   }, []);
 
-  // Fetch subcategories based on selected category
-  useEffect(() => {
-    const fetchSubcategories = async () => {
-      if (selectedCategory) {
-        const { data, error } = await supabase
-          .from('subcategory')
-          .select('*')
-          .eq('category_id', selectedCategory);
-        
-        if (error) {
-          Alert.alert('Error', error.message);
-        } else {
-          setSubcategories(data);
-        }
-      }
-    };
-
-    fetchSubcategories();
-  }, [selectedCategory]);  // Run this effect when selectedCategory changes
-
   const handleNext = () => {
-    if (selectedCategory) {
-      // Proceed to the next screen with selected category
-      navigation.navigate('SubcategorySelection', { selectedCategory });
+    if (eventName && eventDescription && eventType) {
+      navigation.navigate('CategorySelection', {
+        eventName,
+        eventDescription,
+        eventType,
+      });
     } else {
-      Alert.alert('Validation Error', 'Please select a category');
+      Alert.alert('Error', 'Please fill all fields.');
     }
   };
 
@@ -58,39 +44,34 @@ const EventCreationScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <Text style={styles.header}>Create New Event</Text>
 
-      {/* Category Picker */}
-      <Text style={styles.label}>Select Event Category</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={selectedCategory}
-          onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-          style={styles.picker}
-        >
-          <Picker.Item label="Select Category" value="" />
-          {categories.map((category) => (
-            <Picker.Item key={category.id} label={category.name} value={category.id} />
-          ))}
-        </Picker>
-      </View>
+      <Text style={styles.label}>Event Name</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter event name"
+        value={eventName}
+        onChangeText={setEventName}
+      />
 
-      {/* Subcategory Picker */}
-      {selectedCategory && (
-        <>
-          <Text style={styles.label}>Select Event Subcategory</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={selectedCategory}
-              onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Select Subcategory" value="" />
-              {subcategories.map((subcategory) => (
-                <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
-              ))}
-            </Picker>
-          </View>
-        </>
-      )}
+      <Text style={styles.label}>Event Description</Text>
+      <TextInput
+        style={[styles.input, styles.textArea]}
+        placeholder="Enter event description"
+        value={eventDescription}
+        onChangeText={setEventDescription}
+        multiline
+      />
+
+      <Text style={styles.label}>Event Type</Text>
+      <Picker
+        selectedValue={eventType}
+        onValueChange={setEventType}
+        style={styles.picker}
+      >
+        <Picker.Item label="Select Event Type" value="" />
+        <Picker.Item label="Online" value="online" />
+        <Picker.Item label="Outdoor" value="outdoor" />
+        <Picker.Item label="Indoor" value="indoor" />
+      </Picker>
 
       <Button title="Next" onPress={handleNext} color="#4CAF50" />
     </View>
@@ -100,27 +81,32 @@ const EventCreationScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     padding: 20,
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
     marginBottom: 20,
   },
   label: {
     fontSize: 16,
     marginBottom: 8,
   },
-  pickerContainer: {
-    height: 50,
-    marginBottom: 20,
-    justifyContent: 'center',
+  input: {
+    height: 45,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 15,
+    paddingLeft: 10,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
   },
   picker: {
     height: 50,
-    width: '100%',
+    marginBottom: 15,
   },
 });
 
