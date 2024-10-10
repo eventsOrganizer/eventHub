@@ -1,6 +1,3 @@
-
-
--- Create the tables
 CREATE TABLE category (
     id SERIAL PRIMARY KEY,
     name VARCHAR(45) NOT NULL,
@@ -21,29 +18,20 @@ CREATE TABLE "user" (
     age INTEGER,
     username VARCHAR(45),
     gender VARCHAR(45),
-    password VARCHAR(45) NOT NULL,
-    email VARCHAR(45) UNIQUE NOT NULL
+    email VARCHAR(255) NOT NULL,
+    encrypted_password VARCHAR(255) NOT NULL
 );
 
-
-CREATE TABLE service (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(45),
-    user_id UUID NOT NULL,
-    subcategory_id INTEGER NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (category_id) REFERENCES category(id)
-);
 
 CREATE TABLE personal (
     id SERIAL PRIMARY KEY,
     subcategory_id INTEGER NOT NULL,
-    service_id INTEGER NOT NULL,
+    user_id UUID NOT NULL,
     priceperhour INTEGER,
     name VARCHAR(45),
     details VARCHAR(45),
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
-    FOREIGN KEY (service_id) REFERENCES service(id)
+    FOREIGN KEY (user_id) REFERENCES "user"(id)
 );
 
 CREATE TABLE event (
@@ -61,17 +49,18 @@ CREATE TABLE event (
 CREATE TABLE local (
     id SERIAL PRIMARY KEY,
     subcategory_id INTEGER NOT NULL,
-    service_id INTEGER NOT NULL,
+    user_id UUID NOT NULL,
     priceperhour INTEGER,
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
-    FOREIGN KEY (service_id) REFERENCES service(id)
+    FOREIGN KEY (user_id) REFERENCES "user"(id)
+  
 );
 
 CREATE TABLE availability (
     id SERIAL PRIMARY KEY,
     start VARCHAR(45) NOT NULL,
-    "end" VARCHAR(45) NOT NULL,
-    daysofweek VARCHAR(9) NOT NULL CHECK (daysofweek IN ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')),
+    end VARCHAR(45) NOT NULL,
+    daysofweek VARCHAR(9) CHECK (daysofweek IN ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')),
     personal_id INTEGER,
     event_id INTEGER,
     local_id INTEGER,
@@ -85,19 +74,21 @@ CREATE TABLE chatroom (
     id SERIAL PRIMARY KEY,
     event_id INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    type VARCHAR(7) CHECK (type IN ('private', 'public')),
     FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE material (
     id SERIAL PRIMARY KEY,
     subcategory_id INTEGER NOT NULL,
-    service_id INTEGER NOT NULL,
     quantity INTEGER,
     price INTEGER,
     name VARCHAR(45),
     details VARCHAR(255),
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
-    FOREIGN KEY (service_id) REFERENCES service(id)
+    FOREIGN KEY (user_id) REFERENCES "user"(id)
+    
 );
 
 CREATE TABLE comment (
@@ -222,6 +213,11 @@ CREATE TABLE review (
     FOREIGN KEY (local_id) REFERENCES local(id)
 );
 
+
+
+-- Rest of the tables remain the same
+-- ... (omitted for brevity)
+
 -- Enable Row Level Security on the user table
 ALTER TABLE "user" ENABLE ROW LEVEL SECURITY;
 
@@ -230,16 +226,49 @@ CREATE POLICY "Users can view and update their own profile" ON "user"
     USING (auth.uid() = id)
     WITH CHECK (auth.uid() = id);
 
--- Create a trigger to automatically create a user profile when a new auth user is created
+-- Create a function to handle new user creation and sync data
 CREATE OR REPLACE FUNCTION public.handle_new_user() 
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public."user" (id)
-  VALUES (NEW.id);
+  INSERT INTO public."user" (id, email, encrypted_password)
+  VALUES (NEW.id, NEW.email, NEW.encrypted_password);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Create a trigger to automatically create a user profile when a new auth user is created
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Create a function to handle email updates
+CREATE OR REPLACE FUNCTION public.handle_email_update() 
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE public."user"
+  SET email = NEW.email
+  WHERE id = NEW.id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create a trigger to sync email updates from auth.users to public.user
+CREATE TRIGGER on_auth_email_updated
+  AFTER UPDATE OF email ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_email_update();
+
+-- Create a function to handle password updates
+CREATE OR REPLACE FUNCTION public.handle_password_update() 
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE public."user"
+  SET encrypted_password = NEW.encrypted_password
+  WHERE id = NEW.id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create a trigger to sync password updates from auth.users to public.user
+CREATE TRIGGER on_auth_password_updated
+  AFTER UPDATE OF encrypted_password ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_password_update();

@@ -31,11 +31,17 @@ const useAuth = () => {
         });
 
         if (error) {
+            console.error('Signup error:', error);
             setError(error.message);
             setSuccess(null);
-        } else {
+        } else if (data?.user) {
+            console.log('Signup successful:', data.user);
             setSuccess("Signup successful");
             setError(null);
+        } else {
+            console.error('Unexpected result:', data);
+            setError("An unexpected error occurred");
+            setSuccess(null);
         }
     };
 
