@@ -6,6 +6,8 @@ import Card from './cards';
 interface SectionProps {
   title: string;
   data: { title: string; description: string; imageUrl: string }[];
+  children?: React.ReactNode; 
+  style?: { marginBottom: number; }; 
 }
 
 const Section: React.FC<SectionProps> = ({ title, data }) => {
