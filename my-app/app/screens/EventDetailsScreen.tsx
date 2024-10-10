@@ -21,6 +21,18 @@ const EventDetailsScreen: React.FC = ({ route, navigation }: any) => {
     calculateTotalCost();
   }, [musicAndEntertainment, budget]);
 
+  const handleNext = () => {
+    // Pass event details and calculated cost to the MapScreen
+    navigation.navigate('Map', {
+      eventName,
+      eventDescription,
+      eventType,
+      budget,
+      calculatedCost,
+      musicAndEntertainment
+    });
+  };
+
   const handleSubmit = () => {
     // Submit event details and navigate back or to another page
     Alert.alert('Event Created', `Your event "${eventName}" has been created!`);
@@ -59,6 +71,11 @@ const EventDetailsScreen: React.FC = ({ route, navigation }: any) => {
       {/* Submit Button */}
       <View style={styles.buttonContainer}>
         <Button title="Create Event" onPress={handleSubmit} />
+      </View>
+
+      {/* Next Button */}
+      <View style={styles.buttonContainer}>
+        <Button title="Next: Choose Location" onPress={handleNext} />
       </View>
     </ScrollView>
   );
