@@ -7,6 +7,7 @@ const MapScreen: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [markedLocation, setMarkedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
+  
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
