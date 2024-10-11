@@ -10,29 +10,30 @@ export type AuthStackParamList = {
   
 
 export interface PersonalData {
-    id: string;
+  id: string;
+  name: string;
+  priceperhour: number;
+  rating: number;
+  reviewCount: number;
+  description: string;
+  location: string;
+  experience: number;
+  languages?: string[];
+  subcategory?: {
     name: string;
-    priceperhour: number;
-    rating: number;
-    reviewCount: number;
-    description: string;
-    location: string;
-    experience: number;
-    languages?: string[];
-    subcategory?: {
+    category?: {
       name: string;
-      category?: {
-        name: string;
-      };
     };
-    media?: { url: string }[];
-  }
+  };
+  media?: { url: string }[];
+}
 
 export type RootStackParamList = {
-  PersonalScreen: undefined;
+  Home: undefined;
+  PersonalsScreen: { category?: string };
   PersonalDetail: { personalId: string };
 };
 
-export type PersonalScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'PersonalScreen'>;
-
+export type PersonalScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'PersonalsScreen'>;
+export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
  

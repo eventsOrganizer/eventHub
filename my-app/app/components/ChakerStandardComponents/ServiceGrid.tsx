@@ -17,7 +17,7 @@ const ServiceGrid: React.FC<ServiceGridProps> = ({ services, navigation }) => {
           <TouchableOpacity
             key={service.id}
             style={styles.serviceItem}
-            onPress={() => navigation.navigate('PersonalDetail', { personalId: service.id })}
+            onPress={() => navigation.navigate('PersonalDetail', { personalId: String(service.id) })}
           >
             <Image source={{ uri: service.imageUrl }} style={styles.serviceImage} />
             <Ionicons name="heart-outline" size={24} color="black" style={styles.favoriteIcon} />

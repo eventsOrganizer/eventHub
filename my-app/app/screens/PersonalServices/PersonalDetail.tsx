@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { supabase } from '../services/supabaseClient';
-import { PersonalData } from '../navigation/types';
-import Header from '../components/standardComponents/Header';
-import ImageCarousel from '../components/standardComponents/ImageCarousel';
-import PersonalInfo from '../components/standardComponents/PersonalInfo';
-import DetailsList from '../components/standardComponents/DetailsList';
-import BookButton from '../components/standardComponents/BookButton';
+import BookButton from '../../components/ChakerStandardComponents/BookButton';
+import DetailsList from '../../components/ChakerStandardComponents/DetailsList';
+import PersonalInfo from '../../components/ChakerStandardComponents/PersonalInfo';
+import ImageCarousel from '../../components/ChakerStandardComponents/ImageCarousel';
+import Header from '../../components/ChakerStandardComponents/Header';
+import { PersonalData } from '../../navigation/types';
+import { supabase } from '../../services/supabaseClient';
 
 const PersonalDetail: React.FC = () => {
   const route = useRoute();

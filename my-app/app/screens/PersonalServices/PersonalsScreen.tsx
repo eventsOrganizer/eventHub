@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { PersonalScreenNavigationProp } from '../navigation/types';
-import { fetchStaffServices, Service } from '../services/personalService';
-import CategoryList from '../components/standardComponents/CategoryList';
-import ServiceGrid from '../components/standardComponents/ServiceGrid';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { PersonalScreenNavigationProp } from '../../navigation/types';
+import { fetchStaffServices, Service } from '../../services/personalService';
+import CategoryList from '../../components/ChakerStandardComponents/CategoryList';
+import ServiceGrid from '../../components/ChakerStandardComponents/ServiceGrid';
 
-const PersonalsScreen: React.FC = () => {
+const PersonalsScreen = () => {
   const [staffServices, setStaffServices] = useState<Service[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const navigation = useNavigation<PersonalScreenNavigationProp>();
+  const route = useRoute();
+  const { category }: { category?: string }  = route.params || {};
+
+  useEffect(() => {
+    if (category) {
+      setSelectedCategory(category);
+    }
+  }, [category]);
 
   useEffect(() => {
     const loadServices = async () => {
