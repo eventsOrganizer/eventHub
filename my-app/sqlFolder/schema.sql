@@ -19,7 +19,9 @@ CREATE TABLE "user" (
     username VARCHAR(45),
     gender VARCHAR(45),
     email VARCHAR(255) NOT NULL,
-    encrypted_password VARCHAR(255) NOT NULL
+    encrypted_password VARCHAR(255) NOT NULL,
+    details TEXT,
+    bio TEXT
 );
 
 
@@ -92,8 +94,11 @@ CREATE TABLE material (
     sell_or_rent VARCHAR(4) CHECK (sell_or_rent IN ('sell', 'rent')), -- Using VARCHAR with a CHECK constraint
     name VARCHAR(45),
     details VARCHAR(255),
+    sell_or_rent VARCHAR(4) CHECK (sell_or_rent IN ('sell', 'rent')),
+    price_per_hour INTEGER,
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id)
+);
 
 
 CREATE TABLE comment (
@@ -156,7 +161,7 @@ CREATE TABLE media (
     personal_id INTEGER,
     material_id INTEGER,
     local_id INTEGER,
-    url VARCHAR(45),
+    url TEXT,
     FOREIGN KEY (event_id) REFERENCES event(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id),
     FOREIGN KEY (personal_id) REFERENCES personal(id),

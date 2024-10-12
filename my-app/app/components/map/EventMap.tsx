@@ -6,13 +6,43 @@ import * as Location from 'expo-location';
 interface EventMapProps {
   eventLatitude: number;
   eventLongitude: number;
+  onDistanceCalculated: (distance: number) => void;
+  onAddressFound: (address: string) => void;
 }
 
-const EventMap: React.FC<EventMapProps> = ({ eventLatitude, eventLongitude }) => {
+
+
+const EventMap: React.FC<EventMapProps> = ({ eventLatitude, eventLongitude, onDistanceCalculated, onAddressFound }) => {
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const mapRef = useRef<MapView>(null);
 
+
+
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; 
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+  
+  const getAddressFromCoordinates = async (latitude: number, longitude: number): Promise<string> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+      );
+      const data = await response.json();
+      return data.display_name || 'Address not found';
+    } catch (error) {
+      console.error('Error fetching address:', error);
+      return 'Error fetching address';
+    }
+  };
   useEffect(() => {
     let isMounted = true;
 
@@ -54,6 +84,27 @@ const EventMap: React.FC<EventMapProps> = ({ eventLatitude, eventLongitude }) =>
     }
   }, [currentLocation, eventLatitude, eventLongitude]);
 
+  useEffect(() => {
+    if (currentLocation) {
+      const distance = calculateDistance(
+        currentLocation.latitude,
+        currentLocation.longitude,
+        eventLatitude,
+        eventLongitude
+      );
+      onDistanceCalculated(distance);
+    }
+  }, [currentLocation, eventLatitude, eventLongitude, onDistanceCalculated]);
+
+  useEffect(() => {
+    const fetchAddress = async () => {
+      const address = await getAddressFromCoordinates(eventLatitude, eventLongitude);
+      onAddressFound(address);
+    };
+
+    fetchAddress();
+  }, [eventLatitude, eventLongitude, onAddressFound]);
+
   return (
     <View style={styles.container}>
       <MapView
@@ -82,6 +133,7 @@ const EventMap: React.FC<EventMapProps> = ({ eventLatitude, eventLongitude }) =>
             pinColor="blue"
           />
         )}
+        
       </MapView>
       {errorMessage && (
         <View style={styles.errorContainer}>
