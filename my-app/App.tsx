@@ -49,6 +49,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { Provider } from 'react-redux';
 import { store } from './app/redux/store/store';
 import AppNavigator from './app/navigation/AppNavigation';
+import {seedDatabase} from './app/fake_data/indexService';
+import {seedEvents} from './app/fake_data/indexEvent';
+
+
 
 export default function App() {
   return (

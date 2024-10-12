@@ -1,12 +1,12 @@
 CREATE TABLE category (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(45) NOT NULL,
+    name TEXT NOT NULL,
     type VARCHAR(7) CHECK (type IN ('service', 'event'))
 );
 
 CREATE TABLE subcategory (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(45) NOT NULL,
+    name TEXT NOT NULL,
     category_id INTEGER NOT NULL,
     FOREIGN KEY (category_id) REFERENCES category(id)
 );
@@ -28,7 +28,7 @@ CREATE TABLE personal (
     subcategory_id INTEGER NOT NULL,
     user_id UUID NOT NULL,
     priceperhour INTEGER,
-    name VARCHAR(45),
+    name TEXT,
     details VARCHAR(45),
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id)
@@ -39,15 +39,16 @@ CREATE TABLE event (
     type VARCHAR(7) NOT NULL CHECK (type IN ('online', 'outdoor', 'indoor')),
     privacy BOOLEAN,
     user_id UUID NOT NULL,
-    details VARCHAR(255),
+    details TEXT,
     subcategory_id INTEGER NOT NULL,
-    name VARCHAR(45),
+    name TEXT,
     FOREIGN KEY (user_id) REFERENCES "user"(id),
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id)
 );
 
 CREATE TABLE local (
     id SERIAL PRIMARY KEY,
+    details TEXT,
     subcategory_id INTEGER NOT NULL,
     user_id UUID NOT NULL,
     priceperhour INTEGER,
@@ -59,15 +60,17 @@ CREATE TABLE local (
 CREATE TABLE availability (
     id SERIAL PRIMARY KEY,
     start VARCHAR(45) NOT NULL,
-    end VARCHAR(45) NOT NULL,
+    "end" VARCHAR(45) NOT NULL,
     daysofweek VARCHAR(9) CHECK (daysofweek IN ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')),
     personal_id INTEGER,
     event_id INTEGER,
     local_id INTEGER,
+    material_id INTEGER, -- New foreign key for material
     date DATE,
     FOREIGN KEY (personal_id) REFERENCES personal(id),
     FOREIGN KEY (event_id) REFERENCES event(id),
-    FOREIGN KEY (local_id) REFERENCES local(id)
+    FOREIGN KEY (local_id) REFERENCES local(id),
+    FOREIGN KEY (material_id) REFERENCES material(id) -- New foreign key constraint
 );
 
 CREATE TABLE chatroom (
@@ -82,27 +85,32 @@ CREATE TABLE chatroom (
 CREATE TABLE material (
     id SERIAL PRIMARY KEY,
     subcategory_id INTEGER NOT NULL,
+    user_id UUID NOT NULL,
     quantity INTEGER,
     price INTEGER,
+    price_per_hour INTEGER, -- New column for price per hour
+    sell_or_rent VARCHAR(4) CHECK (sell_or_rent IN ('sell', 'rent')), -- Using VARCHAR with a CHECK constraint
     name VARCHAR(45),
     details VARCHAR(255),
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id)
-    
-);
+
 
 CREATE TABLE comment (
     id SERIAL PRIMARY KEY,
     personal_id INTEGER,
     material_id INTEGER,
     event_id INTEGER,
+    local_id INTEGER, -- New foreign key for local
     user_id UUID NOT NULL,
     details VARCHAR(255),
     FOREIGN KEY (personal_id) REFERENCES personal(id),
     FOREIGN KEY (material_id) REFERENCES material(id),
     FOREIGN KEY (event_id) REFERENCES event(id),
+    FOREIGN KEY (local_id) REFERENCES local(id), -- New foreign key constraint
     FOREIGN KEY (user_id) REFERENCES "user"(id)
 );
+
 
 CREATE TABLE event_has_user (
     event_id INTEGER NOT NULL,
@@ -122,7 +130,7 @@ CREATE TABLE friends (
 );
 
 CREATE TABLE interest (
-    idinterest SERIAL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     subcategory_id INTEGER NOT NULL,
     user_id UUID NOT NULL,
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
@@ -144,7 +152,7 @@ CREATE TABLE location (
 CREATE TABLE media (
     id SERIAL PRIMARY KEY,
     event_id INTEGER,
-    user_id UUID NOT NULL,
+    user_id UUID ,
     personal_id INTEGER,
     material_id INTEGER,
     local_id INTEGER,
@@ -213,62 +221,54 @@ CREATE TABLE review (
     FOREIGN KEY (local_id) REFERENCES local(id)
 );
 
+-- Create material_user table with status using CHECK constraint
+CREATE TABLE material_user (
+    material_id INTEGER NOT NULL,
+    user_id UUID NOT NULL,
+    status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('confirmed', 'rejected', 'pending')), -- Enum-like status
+    PRIMARY KEY (material_id, user_id),
+    FOREIGN KEY (material_id) REFERENCES material(id),
+    FOREIGN KEY (user_id) REFERENCES "user"(id)
+);
+
+-- Create personal_user table with status using CHECK constraint
+CREATE TABLE personal_user (
+    personal_id INTEGER NOT NULL,
+    user_id UUID NOT NULL,
+    status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('confirmed', 'rejected', 'pending')), -- Enum-like status
+    PRIMARY KEY (personal_id, user_id),
+    FOREIGN KEY (personal_id) REFERENCES personal(id),
+    FOREIGN KEY (user_id) REFERENCES "user"(id)
+);
+
+-- Create local_user table with status using CHECK constraint
+CREATE TABLE local_user (
+    local_id INTEGER NOT NULL,
+    user_id UUID NOT NULL,
+    status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('confirmed', 'rejected', 'pending')), -- Enum-like status
+    PRIMARY KEY (local_id, user_id),
+    FOREIGN KEY (local_id) REFERENCES local(id),
+    FOREIGN KEY (user_id) REFERENCES "user"(id)
+);
+
+
+create table
+  "like" (
+    id SERIAL primary key,
+    event_id integer, -- Nullable if not all references are required
+    local_id integer,
+    material_id integer,
+    personal_id integer,
+    user_id uuid not null, -- Assuming a user likes the entities
+    foreign key (event_id) references event (id),
+    foreign key (local_id) references local (id),
+    foreign key (material_id) references material (id),
+    foreign key (personal_id) references personal (id),
+    foreign key (user_id) references "user" (id)
+  );
+
 
 
 -- Rest of the tables remain the same
 -- ... (omitted for brevity)
 
--- Enable Row Level Security on the user table
-ALTER TABLE "user" ENABLE ROW LEVEL SECURITY;
-
--- Create a policy to allow users to view and update their own profile
-CREATE POLICY "Users can view and update their own profile" ON "user"
-    USING (auth.uid() = id)
-    WITH CHECK (auth.uid() = id);
-
--- Create a function to handle new user creation and sync data
-CREATE OR REPLACE FUNCTION public.handle_new_user() 
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public."user" (id, email, encrypted_password)
-  VALUES (NEW.id, NEW.email, NEW.encrypted_password);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create a trigger to automatically create a user profile when a new auth user is created
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
--- Create a function to handle email updates
-CREATE OR REPLACE FUNCTION public.handle_email_update() 
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE public."user"
-  SET email = NEW.email
-  WHERE id = NEW.id;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create a trigger to sync email updates from auth.users to public.user
-CREATE TRIGGER on_auth_email_updated
-  AFTER UPDATE OF email ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_email_update();
-
--- Create a function to handle password updates
-CREATE OR REPLACE FUNCTION public.handle_password_update() 
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE public."user"
-  SET encrypted_password = NEW.encrypted_password
-  WHERE id = NEW.id;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create a trigger to sync password updates from auth.users to public.user
-CREATE TRIGGER on_auth_password_updated
-  AFTER UPDATE OF encrypted_password ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_password_update();

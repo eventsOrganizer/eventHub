@@ -9,18 +9,26 @@ import ProfileScreen from '../screens/AccountScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import Signup from '../components/Auth/SignUp';
 import Signin from '../components/Auth/SignIn';
+import EventDetailsScreen from '../screens/EventDetailsScreen';
+import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
+
 
 export type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
   Profile: undefined;
   Home: undefined; 
-  Map: undefined; // Add Map route
-  Calendar: undefined; // Add Calendar route
+  Map: undefined;
+  Calendar: undefined;
   EditProfile: undefined;
   Signup: undefined;
   Signin: undefined;
+  EventDetails: { eventId: number };
+  OrganizerProfile: { organizerId: string };
 };
+
+
+
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -78,7 +86,16 @@ const AppNavigator = () => {
         component={Signin}  
         options={{ headerShown: true }} // Adjust as needed
       />
-
+      <Stack.Screen 
+        name="EventDetails" 
+        component={EventDetailsScreen as React.ComponentType<any>} 
+        options={{ headerShown: true }} // Adjust as needed
+      />  
+      <Stack.Screen 
+        name="OrganizerProfile" 
+        component={OrganizerProfileScreen as React.ComponentType<any>} 
+        options={{ headerShown: true }} // Adjust as needed
+      />  
     </Stack.Navigator>
   );
 };

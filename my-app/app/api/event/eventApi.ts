@@ -15,7 +15,7 @@ export const fetchEvents = async () => {
       ),
       location (id, longitude, latitude),
       availability (id, start, end, daysofweek, date),
-      media (id, url)
+      media (url)  // Ensure this line is correctly fetching the URLs
     `);
 
   if (error) {
