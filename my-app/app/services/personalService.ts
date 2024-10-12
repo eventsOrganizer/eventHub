@@ -14,26 +14,26 @@ export type Service = {
   };
   media?: { url: string }[];
   imageUrl?: string;
-  availability: Array<{
+  availability?: Array<{
     start: string;
     end: string;
     daysofweek: string[];
     date: string;
   }>;
-  comments: Array<{
+  comments?: Array<{
     details: string;
     user_id: string;
   }>;
-  likes: Array<{ user_id: string }>;
-  orders: Array<{
+  likes?: Array<{ user_id: string }>;
+  orders?: Array<{
     user_id: string;
     ticket_id: string;
   }>;
-  personal_users: Array<{
+  personal_user?: Array<{
     user_id: string;
     status: string;
   }>;
-  reviews: Array<{
+  review?: Array<{
     user_id: string;
     rate: number;
     total: number;
@@ -54,16 +54,17 @@ export const fetchStaffServices = async (): Promise<Service[]> => {
         ),
         media (url),
         availability (start, end, daysofweek, date),
-        comments (details, user_id),
-        likes (user_id),
-        orders (user_id, ticket_id),
-        personal_users (user_id, status),
-        reviews (user_id, rate, total)
-      `);
+        comment (details, user_id),
+        like (user_id),
+        order (user_id, ticket_id),
+        personal_user (user_id, status),
+        review (user_id, rate, total)
+      `)
+      .in('subcategory.name', ['Cooker', 'Security', 'Waiter']);
 
     if (error) throw error;
 
-    return data.map((service: Service) => ({
+    return (data || []).map((service: Service) => ({
       ...service,
       imageUrl: service.media && service.media.length > 0
         ? service.media[0].url
@@ -89,23 +90,23 @@ export const fetchPersonalDetail = async (id: number): Promise<Service | null> =
         ),
         media (url),
         availability (start, end, daysofweek, date),
-        comments (details, user_id),
-        likes (user_id),
-        orders (user_id, ticket_id),
-        personal_users (user_id, status),
-        reviews (user_id, rate, total)
+        comment (details, user_id),
+        like (user_id),
+        order (user_id, ticket_id),
+        personal_user (user_id, status),
+        review (user_id, rate, total)
       `)
       .eq('id', id)
       .single();
 
     if (error) throw error;
 
-    return {
+    return data ? {
       ...data,
       imageUrl: data.media && data.media.length > 0
         ? data.media[0].url
         : 'https://via.placeholder.com/150'
-    };
+    } : null;
   } catch (error) {
     console.error('Error fetching personal detail:', error);
     return null;
@@ -115,7 +116,7 @@ export const fetchPersonalDetail = async (id: number): Promise<Service | null> =
 export const addComment = async (personalId: number, userId: string, comment: string) => {
   try {
     const { data, error } = await supabase
-      .from('comments')
+      .from('comment')
       .insert({ personal_id: personalId, user_id: userId, details: comment });
 
     if (error) throw error;
@@ -129,7 +130,7 @@ export const addComment = async (personalId: number, userId: string, comment: st
 export const toggleLike = async (personalId: number, userId: string) => {
   try {
     const { data: existingLike, error: fetchError } = await supabase
-      .from('likes')
+      .from('like')
       .select('*')
       .eq('personal_id', personalId)
       .eq('user_id', userId)
@@ -139,7 +140,7 @@ export const toggleLike = async (personalId: number, userId: string) => {
 
     if (existingLike) {
       const { error: deleteError } = await supabase
-        .from('likes')
+        .from('like')
         .delete()
         .eq('personal_id', personalId)
         .eq('user_id', userId);
@@ -147,7 +148,7 @@ export const toggleLike = async (personalId: number, userId: string) => {
       if (deleteError) throw deleteError;
     } else {
       const { error: insertError } = await supabase
-        .from('likes')
+        .from('like')
         .insert({ personal_id: personalId, user_id: userId });
 
       if (insertError) throw insertError;

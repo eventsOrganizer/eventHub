@@ -16,8 +16,8 @@ const PersonalDetail: React.FC = () => {
     const fetchData = async () => {
       const data = await fetchPersonalDetail(personalId);
       setPersonalData(data);
-      // Check if the current user has liked this service
-      // This would require knowing the current user's ID
+      // Vérifiez si l'utilisateur actuel a aimé ce service
+      // Cela nécessiterait de connaître l'ID de l'utilisateur actuel
       // setIsLiked(data?.likes.some(like => like.user_id === currentUserId));
     };
     fetchData();
@@ -25,12 +25,12 @@ const PersonalDetail: React.FC = () => {
 
   const handleAddComment = async () => {
     if (comment.trim() && personalData) {
-      // This would require knowing the current user's ID
+      // Cela nécessiterait de connaître l'ID de l'utilisateur actuel
       // const result = await addComment(personalData.id, currentUserId, comment);
       // if (result) {
       //   setPersonalData(prevData => ({
       //     ...prevData!,
-      //     comments: [...prevData!.comments, { details: comment, user_id: currentUserId }]
+      //     comments: [...(prevData?.comments || []), { details: comment, user_id: currentUserId }]
       //   }));
       //   setComment('');
       // }
@@ -39,22 +39,22 @@ const PersonalDetail: React.FC = () => {
 
   const handleToggleLike = async () => {
     if (personalData) {
-      // This would require knowing the current user's ID
+      // Cela nécessiterait de connaître l'ID de l'utilisateur actuel
       // const result = await toggleLike(personalData.id, currentUserId);
       // if (result !== null) {
       //   setIsLiked(result);
       //   setPersonalData(prevData => ({
       //     ...prevData!,
       //     likes: result
-      //       ? [...prevData!.likes, { user_id: currentUserId }]
-      //       : prevData!.likes.filter(like => like.user_id !== currentUserId)
+      //       ? [...(prevData?.likes || []), { user_id: currentUserId }]
+      //       : (prevData?.likes || []).filter(like => like.user_id !== currentUserId)
       //   }));
       // }
     }
   };
 
   if (!personalData) {
-    return <Text>Loading...</Text>;
+    return <Text>Chargement...</Text>;
   }
 
   return (
@@ -68,36 +68,36 @@ const PersonalDetail: React.FC = () => {
         <View style={styles.statsContainer}>
           <TouchableOpacity onPress={handleToggleLike} style={styles.likeButton}>
             <Ionicons name={isLiked ? "heart" : "heart-outline"} size={24} color={isLiked ? "red" : "black"} />
-            <Text>{personalData.likes.length} Likes</Text>
+            <Text>{personalData.likes?.length || 0} Likes</Text>
           </TouchableOpacity>
           <View style={styles.reviewsContainer}>
             <Ionicons name="star" size={24} color="gold" />
-            <Text>{personalData.reviews.length} Reviews</Text>
+            <Text>{personalData.review?.length || 0} Reviews</Text>
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Availability</Text>
-        {personalData.availability.map((slot, index) => (
+        <Text style={styles.sectionTitle}>Disponibilité</Text>
+        {personalData.availability?.map((slot, index) => (
           <Text key={index}>{`${slot.date}: ${slot.start} - ${slot.end}`}</Text>
-        ))}
+        )) || <Text>Aucune disponibilité</Text>}
 
-        <Text style={styles.sectionTitle}>Comments</Text>
-        {personalData.comments.map((comment, index) => (
+        <Text style={styles.sectionTitle}>Commentaires</Text>
+        {personalData.comments?.map((comment, index) => (
           <View key={index} style={styles.commentContainer}>
-            <Text style={styles.commentUser}>User {comment.user_id}</Text>
+            <Text style={styles.commentUser}>Utilisateur {comment.user_id}</Text>
             <Text>{comment.details}</Text>
           </View>
-        ))}
+        )) || <Text>Aucun commentaire</Text>}
 
         <View style={styles.addCommentContainer}>
           <TextInput
             style={styles.commentInput}
             value={comment}
             onChangeText={setComment}
-            placeholder="Add a comment..."
+            placeholder="Ajouter un commentaire..."
           />
           <TouchableOpacity onPress={handleAddComment} style={styles.addCommentButton}>
-            <Text>Post</Text>
+            <Text>Poster</Text>
           </TouchableOpacity>
         </View>
       </View>

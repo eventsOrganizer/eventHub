@@ -4,9 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 const categories = [
   { name: 'All', icon: 'grid-outline' },
-  { name: 'Catering Services', icon: 'restaurant-outline' },
-  { name: 'Security Personnel', icon: 'shield-checkmark-outline' },
-  { name: 'Technical Support', icon: 'construct-outline' },
+  { name: 'Cooker', icon: 'restaurant-outline' },
+  { name: 'Security', icon: 'shield-checkmark-outline' },
+  { name: 'Waiter', icon: 'cafe-outline' },
   { name: 'Entertainment & Performers', icon: 'musical-notes-outline' },
   { name: 'Transport & Logistics', icon: 'car-outline' },
   { name: 'Cleaning & Maintenance', icon: 'broom-outline' },
@@ -34,7 +34,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ selectedCategory, onSelectC
           >
             <Ionicons 
               name={category.icon as keyof typeof Ionicons.glyphMap} 
-              size={24} // Increased from 16 to 24
+              size={24}
               color={selectedCategory === category.name ? "white" : "black"} 
             />
             <Text style={[

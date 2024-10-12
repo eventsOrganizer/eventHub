@@ -49,7 +49,7 @@ const PersonalsScreen = () => {
         <Text style={styles.servicePrice}>${item.priceperhour}/hr</Text>
         <Text style={styles.serviceDetails}>{item.details}</Text>
         <Text style={styles.serviceLikes}>Likes: {item.likes?.length || 0}</Text>
-        <Text style={styles.serviceReviews}>Reviews: {item.reviews?.length || 0}</Text>
+        <Text style={styles.serviceReviews}>Reviews: {item.review?.length || 0}</Text>
       </View>
     </TouchableOpacity>
   );
