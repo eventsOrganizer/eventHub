@@ -51,15 +51,17 @@ import { store } from './app/redux/store/store';
 import AppNavigator from './app/navigation/AppNavigation';
 import {seedDatabase} from './app/fake_data/indexService';
 import {seedEvents} from './app/fake_data/indexEvent';
-
+import { UserProvider } from './app/UserContext';
 
 
 export default function App() {
   return (
+    <UserProvider>
     <Provider store={store}>
       <NavigationContainer>
         <AppNavigator />
       </NavigationContainer>
     </Provider>
+    </UserProvider>
   );
 }

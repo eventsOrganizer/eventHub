@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 import EventCard from '../event/EventCard';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useUser } from '../../UserContext';
 
 interface OrganizerProfile {
   id: string;
@@ -47,6 +47,7 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
   const [services, setServices] = useState<Service[]>([]);
   const [showEvents, setShowEvents] = useState(true);
   const [loading, setLoading] = useState(false);
+  const { userId: currentUserId } = useUser();
 
   useEffect(() => {
     fetchOrganizerProfile();
@@ -145,75 +146,89 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
   };
 
   if (!organizer) {
-    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#FFA500" /></View>;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFA500" />
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
-      <ScrollView>
-        <View style={styles.coverPhoto}>
-          <LinearGradient
-            colors={['#FFA500', '#FFD700']}
-            style={styles.gradient}
-          />
-        </View>
-        <View style={styles.profileSection}>
-          <Image 
-            source={{ uri: organizer.avatar_url }} 
-            style={styles.avatar} 
-          />
-          <View style={styles.profileInfo}>
-            <Text style={styles.name}>{organizer.full_name}</Text>
-            <Text style={styles.email}>{organizer.email}</Text>
-            <Text style={styles.bio}>{organizer.bio || 'No bio available'}</Text>
-          </View>
-        </View>
-        <View style={styles.toggleContainer}>
-          <TouchableOpacity
-            style={[styles.toggleButton, showEvents && styles.activeToggle]}
-            onPress={() => {
-              setShowEvents(true);
-              setEvents([]);
-            }}
-          >
-            <Text style={[styles.toggleText, showEvents && styles.activeToggleText]}>Events</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleButton, !showEvents && styles.activeToggle]}
-            onPress={() => {
-              setShowEvents(false);
-              setServices([]);
-            }}
-          >
-            <Text style={[styles.toggleText, !showEvents && styles.activeToggleText]}>Services</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.contentContainer}>
-          {loading ? (
-            <ActivityIndicator size="large" color="#FFA500" />
+      <View style={styles.coverPhoto}>
+        <LinearGradient
+          colors={['#FFA500', '#FFD700']}
+          style={styles.gradient}
+        />
+      </View>
+      <View style={styles.profileSection}>
+        <Image 
+          source={{ uri: organizer.avatar_url }} 
+          style={styles.avatar} 
+        />
+        <View style={styles.profileInfo}>
+          <Text style={styles.name}>{organizer.full_name}</Text>
+          <Text style={styles.email}>{organizer.email}</Text>
+          <Text style={styles.bio}>{organizer.bio || 'No bio available'}</Text>
+          {currentUserId ? (
+            currentUserId !== organizerId ? (
+              <TouchableOpacity
+                style={styles.chatButton}
+                onPress={() => navigation.navigate('ChatRoom', { userId: currentUserId, organizerId })}
+              >
+                <Text style={styles.chatButtonText}>Chat with Organizer</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.loginPrompt}>This is your profile</Text>
+            )
           ) : (
-            <FlatList
-              data={showEvents ? events : services}
-              renderItem={({ item }) => (
-                showEvents ? (
-                  <TouchableOpacity onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} style={styles.itemContainer}>
-                    <EventCard event={item as any} onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} />
-                  </TouchableOpacity>
-                ) : (
-                  <View style={styles.serviceItem}>
-                    <Text style={styles.serviceName}>{item.name}</Text>
-                    <Text style={styles.serviceType}>{item.type}</Text>
-                    {item.details && <Text style={styles.serviceDetails}>{item.details}</Text>}
-                  </View>
-                )
-              )}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={styles.listContent}
-              ListEmptyComponent={<Text style={styles.emptyText}>{showEvents ? 'No events found' : 'No services found'}</Text>}
-            />
+            <Text style={styles.loginPrompt}>Log in to chat with the organizer</Text>
           )}
         </View>
-      </ScrollView>
+      </View>
+      <View style={styles.toggleContainer}>
+        <TouchableOpacity
+          style={[styles.toggleButton, showEvents && styles.activeToggle]}
+          onPress={() => {
+            setShowEvents(true);
+            setEvents([]);
+          }}
+        >
+          <Text style={[styles.toggleText, showEvents && styles.activeToggleText]}>Events</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.toggleButton, !showEvents && styles.activeToggle]}
+          onPress={() => {
+            setShowEvents(false);
+            setServices([]);
+          }}
+        >
+          <Text style={[styles.toggleText, !showEvents && styles.activeToggleText]}>Services</Text>
+        </TouchableOpacity>
+      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#FFA500" />
+      ) : (
+        <FlatList
+          data={showEvents ? events : services}
+          renderItem={({ item }) => (
+            showEvents ? (
+              <TouchableOpacity onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} style={styles.itemContainer}>
+                <EventCard event={item as any} onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.serviceItem}>
+                <Text style={styles.serviceName}>{item.name}</Text>
+                <Text style={styles.serviceType}>{item.type}</Text>
+                {item.details && <Text style={styles.serviceDetails}>{item.details}</Text>}
+              </View>
+            )
+          )}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={<Text style={styles.emptyText}>{showEvents ? 'No events found' : 'No services found'}</Text>}
+        />
+      )}
     </View>
   );
 };
@@ -266,6 +281,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
+  chatButton: {
+    backgroundColor: '#FFA500',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  chatButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  loginPrompt: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 10,
+  },
   toggleContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -275,34 +306,29 @@ const styles = StyleSheet.create({
     borderTopColor: '#e0e0e0',
   },
   toggleButton: {
+    paddingHorizontal: 20,
     paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    marginHorizontal: 10,
-    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
   },
   activeToggle: {
     backgroundColor: '#FFA500',
   },
   toggleText: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#333',
   },
   activeToggleText: {
     color: '#fff',
+    fontWeight: 'bold',
   },
-  contentContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingTop: 20,
+  listContent: {
+    padding: 10,
   },
   itemContainer: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   serviceItem: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
@@ -322,13 +348,10 @@ const styles = StyleSheet.create({
     color: '#333',
     marginTop: 5,
   },
-  listContent: {
-    paddingBottom: 20,
-  },
   emptyText: {
+    textAlign: 'center',
     fontSize: 16,
     color: '#666',
-    textAlign: 'center',
     marginTop: 20,
   },
 });

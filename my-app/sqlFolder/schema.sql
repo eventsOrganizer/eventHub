@@ -78,9 +78,18 @@ CREATE TABLE availability (
 CREATE TABLE chatroom (
     id SERIAL PRIMARY KEY,
     event_id INTEGER,
+    user1_id UUID,
+    user2_id UUID,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     type VARCHAR(7) CHECK (type IN ('private', 'public')),
-    FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE
+    FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE,
+    FOREIGN KEY (user1_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (user2_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    CONSTRAINT check_private_public 
+        CHECK (
+            (type = 'public' AND event_id IS NOT NULL AND user1_id IS NULL AND user2_id IS NULL) OR 
+            (type = 'private' AND event_id IS NULL AND user1_id IS NOT NULL AND user2_id IS NOT NULL)
+        )
 );
 
 

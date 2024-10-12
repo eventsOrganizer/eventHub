@@ -82,42 +82,22 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           onValueChange={(value) => setSelectedFilter(value)}
           items={[
             { label: 'Tous', value: 'all' },
-            { label: 'Événements', value: 'events' },
-            { label: 'Produits', value: 'products' },
-            { label: 'Services', value: 'services' },
+            { label: 'Cette semaine', value: 'this_week' },
+            { label: 'Ce mois', value: 'this_month' },
           ]}
           style={pickerSelectStyles}
-          placeholder={{ label: "Filtre Avancé", value: null }}
         />
       </View>
-
-      <View style={styles.services}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <Ionicons name="musical-notes-outline" size={40} style={styles.serviceIcon} />
-          <Ionicons name="restaurant-outline" size={40} style={styles.serviceIcon} />
-          <Ionicons name="camera-outline" size={40} style={styles.serviceIcon} />
-        </ScrollView>
-      </View>
-
-      <ScrollView style={styles.sections} contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Your events</Text>
-          <CustomButton title="See all" onPress={() => { console.log('Button pressed') }} />
-        </View>
-        <EventSection
-          title=""
-          events={events}
-          style={styles.section}
-          navigation={navigation}
-        />
-
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <EventSection title="Events" events={events} navigation={navigation} />
+        
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Top staff services</Text>
           <CustomButton title="See all" onPress={() => { console.log('Button pressed') }} />
         </View>
         <Section data={staffServices.map(service => ({
           title: service.name,
-          description: service.details || '',
+          description: '',
           imageUrl: '' // Add image URL if available
         }))} style={styles.section} title="" />
 
@@ -137,9 +117,15 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
         <Section data={materialsAndFoodServices.map(service => ({
           title: service.name,
-          description: service.details || '',
+          description: '',
           imageUrl: '' // Add image URL if available
         }))} style={styles.section} title="" />
+
+        <CustomButton
+          title="Check Messages"
+          onPress={() => navigation.navigate('ChatList')}
+          style  ={styles.messageButton as never }
+        />
       </ScrollView>
     </View>
   );
@@ -194,6 +180,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  messageButton: {
+    marginTop: 10,
+    marginHorizontal: 10,
   },
 });
 

@@ -11,7 +11,8 @@ import Signup from '../components/Auth/SignUp';
 import Signin from '../components/Auth/SignIn';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
-
+import ChatRoomScreen from '../components/event/ChatRoomScreen';
+import ChatListScreen from '../components/event/ChatListScreen';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -25,6 +26,8 @@ export type RootStackParamList = {
   Signin: undefined;
   EventDetails: { eventId: number };
   OrganizerProfile: { organizerId: string };
+  ChatRoom: { userId: string; organizerId: string };
+  ChatList: undefined;
 };
 
 
@@ -96,6 +99,19 @@ const AppNavigator = () => {
         component={OrganizerProfileScreen as React.ComponentType<any>} 
         options={{ headerShown: true }} // Adjust as needed
       />  
+      <Stack.Screen
+       name="ChatRoom"
+        component={ChatRoomScreen as React.ComponentType<any>}
+        options={{ headerShown: true }} // Adjust as needed
+      />
+      <Stack.Screen
+        name ="ChatList"
+        component={ChatListScreen as React.ComponentType<any>}
+        options={{ headerShown: true }} // Adjust as needed
+      />
+
+
+
     </Stack.Navigator>
   );
 };
