@@ -2,15 +2,13 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type AuthStackParamList = {
-    signIn:undefined,
+    signIn: undefined,
     SignUp: undefined; // Add other routes as necessary
     Home: undefined;
 };
 
-  
-
 export interface PersonalData {
-  id: string;
+  id: number;
   name: string;
   priceperhour: number;
   rating: number;
@@ -31,9 +29,8 @@ export interface PersonalData {
 export type RootStackParamList = {
   Home: undefined;
   PersonalsScreen: { category?: string };
-  PersonalDetail: { personalId: string };
+  PersonalDetail: { personalId: number };
 };
 
 export type PersonalScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'PersonalsScreen'>;
 export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
- 

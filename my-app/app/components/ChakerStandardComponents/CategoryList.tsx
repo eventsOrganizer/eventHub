@@ -34,7 +34,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ selectedCategory, onSelectC
           >
             <Ionicons 
               name={category.icon as keyof typeof Ionicons.glyphMap} 
-              size={16} 
+              size={24} // Increased from 16 to 24
               color={selectedCategory === category.name ? "white" : "black"} 
             />
             <Text style={[
@@ -50,7 +50,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ selectedCategory, onSelectC
 
 const styles = StyleSheet.create({
   container: {
-    maxHeight: 70,
+    maxHeight: 80, // Increased from 70 to 80
     marginBottom: 10,
   },
   categoriesScroll: {
@@ -62,15 +62,15 @@ const styles = StyleSheet.create({
     marginRight: 15,
     padding: 5,
     borderRadius: 20,
-    width: 80,
-    height: 70,
+    width: 90, // Increased from 80 to 90
+    height: 80, // Increased from 70 to 80
   },
   selectedCategory: {
     backgroundColor: 'black',
   },
   categoryName: {
-    marginTop: 2,
-    fontSize: 9,
+    marginTop: 4, // Increased from 2 to 4
+    fontSize: 10, // Increased from 9 to 10
     textAlign: 'center',
   },
   selectedCategoryText: {

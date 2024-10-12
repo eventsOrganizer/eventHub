@@ -29,7 +29,7 @@ const HomeScreen: React.FC = () => {
       const { data: staffServicesData } = await supabase
         .from('personal')
         .select('*, subcategory (name), media (url)')
-        .eq('subcategory.name', 'Crew')
+        // .eq('subcategory.name', 'Crew')
         .limit(5);
       const { data: localServicesData } = await supabase.from('local').select('*');
       const { data: materialsAndFoodServicesData } = await supabase.from('material').select('*');
