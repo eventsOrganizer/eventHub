@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import CustomButton from './ChakerStandardComponents/customButton';
-import Section from './ChakerStandardComponents/sections';
+import CustomButton from './PersonalServiceComponents/customButton';
+import Section from './PersonalServiceComponents/sections';
 
 interface SectionComponentProps {
   title: string;

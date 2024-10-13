@@ -9,8 +9,8 @@ import ProfileScreen from '../screens/AccountScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import Signup from '../components/Auth/SignUp';
 import Signin from '../components/Auth/SignIn';
-import PersonalsScreen from '../screens/PersonalServices/PersonalsScreen';
-import PersonalDetail from '../screens/PersonalServices/PersonalDetail';
+import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
+import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
 export type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };

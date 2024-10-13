@@ -3,9 +3,9 @@ import { View,Text, StyleSheet, ScrollView } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import {  Service } from '../../services/serviceTypes';
 import { fetchPersonalDetail } from '../../services/personalService';
-import PersonalInfo from '../../components/ChakerStandardComponents/PersonalInfo';
-import AvailabilityList from '../../components/ChakerStandardComponents/AvailabilityList';
-import CommentSection from '../../components/ChakerStandardComponents/CommentSection';
+import PersonalInfo from '../../components/PersonalServiceComponents/PersonalInfo';
+import AvailabilityList from '../../components/PersonalServiceComponents/AvailabilityList';
+import CommentSection from '../../components/PersonalServiceComponents/CommentSection';
 
 const PersonalDetail: React.FC = () => {
   const route = useRoute();

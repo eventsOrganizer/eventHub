@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { PersonalScreenNavigationProp } from '../../navigation/types';
-import { fetchStaffServices, Service } from '../../services/personalService';
-import CategoryList from '../../components/ChakerStandardComponents/CategoryList';
+import {  Service } from '../../services/serviceTypes';
+import { fetchStaffServices } from '../../services/personalService';
+import CategoryList from '../../components/PersonalServiceComponents/CategoryList';
 
 const PersonalsScreen = () => {
   const [staffServices, setStaffServices] = useState<Service[]>([]);
@@ -48,7 +49,7 @@ const PersonalsScreen = () => {
         <Text style={styles.serviceName}>{item.name}</Text>
         <Text style={styles.servicePrice}>${item.priceperhour}/hr</Text>
         <Text style={styles.serviceDetails}>{item.details}</Text>
-        <Text style={styles.serviceLikes}>Likes: {item.likes?.length || 0}</Text>
+        <Text style={styles.serviceLikes}>Likes: {item.like?.length || 0}</Text>
         <Text style={styles.serviceReviews}>Reviews: {item.review?.length || 0}</Text>
       </View>
     </TouchableOpacity>
