@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { User } from '@supabase/supabase-js';
 
 export type Service = {
   id: number;
@@ -14,26 +15,27 @@ export type Service = {
   };
   media?: { url: string }[];
   imageUrl?: string;
-  availability?: Array<{
+  availability: Array<{
+    id: number;
     start: string;
     end: string;
-    daysofweek: string[];
+    daysofweek: string;
     date: string;
   }>;
-  comments?: Array<{
+  comments: Array<{
     details: string;
     user_id: string;
   }>;
-  likes?: Array<{ user_id: string }>;
-  orders?: Array<{
+  likes: Array<{ user_id: string }>;
+  orders: Array<{
     user_id: string;
     ticket_id: string;
   }>;
-  personal_user?: Array<{
+  personal_users: Array<{
     user_id: string;
     status: string;
   }>;
-  review?: Array<{
+  reviews: Array<{
     user_id: string;
     rate: number;
     total: number;
@@ -157,6 +159,28 @@ export const toggleLike = async (personalId: number, userId: string) => {
     return !existingLike;
   } catch (error) {
     console.error('Error toggling like:', error);
+    return null;
+  }
+};
+export const makeServiceRequest = async (personalId: number, availabilityId: number) => {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('request')
+      .insert({
+        user_id: userData.user.id,
+        personal_id: personalId,
+        availability_id: availabilityId,
+        status: 'pending'
+      });
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error making service request:', error);
     return null;
   }
 };
