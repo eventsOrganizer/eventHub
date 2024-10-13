@@ -129,34 +129,38 @@ export const addComment = async (personalId: number, userId: string, comment: st
   }
 };
 
-export const toggleLike = async (personalId: number, userId: string) => {
+export const toggleLike = async (personalId: number) => {
   try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user) throw new Error('User not authenticated');
+
     const { data: existingLike, error: fetchError } = await supabase
-      .from('like')
+      .from('likes')
       .select('*')
       .eq('personal_id', personalId)
-      .eq('user_id', userId)
+      .eq('user_id', userData.user.id)
       .single();
 
     if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
     if (existingLike) {
       const { error: deleteError } = await supabase
-        .from('like')
+        .from('likes')
         .delete()
         .eq('personal_id', personalId)
-        .eq('user_id', userId);
+        .eq('user_id', userData.user.id);
 
       if (deleteError) throw deleteError;
+      return false;
     } else {
       const { error: insertError } = await supabase
-        .from('like')
-        .insert({ personal_id: personalId, user_id: userId });
+        .from('likes')
+        .insert({ personal_id: personalId, user_id: userData.user.id });
 
       if (insertError) throw insertError;
+      return true;
     }
-
-    return !existingLike;
   } catch (error) {
     console.error('Error toggling like:', error);
     return null;
