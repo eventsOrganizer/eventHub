@@ -9,6 +9,8 @@ import PhotosSection from '../components/event/PhotosSection';
 import CommentsSection from '../components/event/CommentsSection';
 import styles from '../components/event/styles/eventDetailsStyles';
 import JoinEventButton from '../components/event/JoinEventButton';
+import UserAvatar from '../components/event/UserAvatar';
+
 
 interface EventDetails {
   id: number;
@@ -67,31 +69,40 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
           `)
           .eq('id', eventId)
           .single();
-
+    
+        console.log('Event Data:', eventData);
+    
         if (eventError) {
           console.error('Error fetching event details:', eventError);
           return;
         }
-
+    
         if (eventData) {
           const { data: userData, error: userError } = await supabase
             .from('user')
             .select('email')
             .eq('id', eventData.user_id)
             .single();
-
+    
+          console.log('User Data:', userData);
+    
           if (userError) {
             console.error('Error fetching user details:', userError);
           } else {
-            eventData.user = userData;
+            eventData.user = {
+              ...eventData.user,
+              email: userData.email
+            };
           }
-
+    
           const { data: mediaData, error: mediaError } = await supabase
             .from('media')
             .select('url')
             .eq('user_id', eventData.user_id)
             .single();
-
+    
+          console.log('Media Data:', mediaData);
+    
           if (mediaError) {
             console.error('Error fetching user media:', mediaError);
           } else {
@@ -101,7 +112,8 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
             };
           }
         }
-
+    
+        console.log('Final Event Data:', eventData);
         setEventDetails(eventData);
       } catch (error) {
         console.error('Error:', error);
@@ -147,19 +159,13 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
             onJoinSuccess={handleJoinSuccess}
             onLeaveSuccess={handleLeaveSuccess}
           />
-          <TouchableOpacity
-            style={styles.organizerContainer}
-            onPress={() => navigation.navigate('OrganizerProfile', { organizerId: eventDetails.user_id })}
-          >
-            <Image 
-              source={{ uri: eventDetails.user?.avatar_url || 'https://via.placeholder.com/150' }} 
-              style={styles.organizerAvatar} 
-            />
-            <View>
-              <Text style={styles.organizerLabel}>Organizer:</Text>
-              <Text style={styles.organizerEmail}>{eventDetails.user?.email || 'Unknown'}</Text>
-            </View>
-          </TouchableOpacity>
+          <View style={styles.organizerContainer}>
+  <UserAvatar userId={eventDetails.user_id} size={60} />
+  <View>
+    <Text style={styles.organizerLabel}>Organizer:</Text>
+    <Text style={styles.organizerEmail}>{eventDetails.user?.email || 'Unknown'}</Text>
+  </View>
+</View>
         </LinearGradient>
 
         <Image source={{ uri: eventDetails.media[0]?.url }} style={styles.eventImage} />

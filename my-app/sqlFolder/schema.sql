@@ -115,13 +115,14 @@ CREATE TABLE comment (
     personal_id INTEGER,
     material_id INTEGER,
     event_id INTEGER,
-    local_id INTEGER, -- New foreign key for local
+    local_id INTEGER,
     user_id UUID NOT NULL,
     details VARCHAR(255),
+    parent_id INTEGER REFERENCES comment(id),
     FOREIGN KEY (personal_id) REFERENCES personal(id),
     FOREIGN KEY (material_id) REFERENCES material(id),
     FOREIGN KEY (event_id) REFERENCES event(id),
-    FOREIGN KEY (local_id) REFERENCES local(id), -- New foreign key constraint
+    FOREIGN KEY (local_id) REFERENCES local(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id)
 );
 
@@ -290,6 +291,13 @@ create table
     foreign key (user_id) references "user" (id)
   );
 
+CREATE TABLE comment_replies (
+    id SERIAL PRIMARY KEY,
+    comment_id INTEGER NOT NULL,  -- The original comment
+    reply_id INTEGER NOT NULL,    -- The comment that replies to the original comment
+    FOREIGN KEY (comment_id) REFERENCES comment(id) ON DELETE CASCADE,
+    FOREIGN KEY (reply_id) REFERENCES comment(id) ON DELETE CASCADE
+);
 
 
 -- Rest of the tables remain the same

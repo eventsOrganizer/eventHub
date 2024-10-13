@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { useNavigation, NavigationProp, ParamListBase } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
+
+type RootStackParamList = {
+  OrganizerProfile: { organizerId: string };
+};
 
 interface UserAvatarProps {
   userId: string;
@@ -9,7 +13,7 @@ interface UserAvatarProps {
 }
 
 const UserAvatar: React.FC<UserAvatarProps> = ({ userId, size = 50 }) => {
-  const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +37,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ userId, size = 50 }) => {
   };
 
   const handlePress = () => {
-    navigation.navigate('OrganizerProfile' as any, { organizerId: userId } as never);
+    navigation.navigate('OrganizerProfile', { organizerId: userId });
   };
 
   if (loading) {

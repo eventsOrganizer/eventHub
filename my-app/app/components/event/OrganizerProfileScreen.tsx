@@ -62,31 +62,54 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
   }, [showEvents]);
 
   const fetchOrganizerProfile = async () => {
-    const { data: userData, error: userError } = await supabase
-      .from('user')
-      .select('*')
-      .eq('id', organizerId)
-      .single();
-
-    if (userError) {
-      console.error('Error fetching organizer profile:', userError);
-      return;
+    console.log('Fetching organizer profile for ID:', organizerId);
+    try {
+      const { data: allUsers, error: allUsersError } = await supabase
+        .from('user')
+        .select('id, email, firstname, lastname, bio');
+  
+      console.log('All users:', allUsers);
+      console.log('All users error:', allUsersError);
+  
+      if (allUsersError) {
+        console.error('Error fetching all users:', allUsersError);
+        return;
+      }
+  
+      if (!allUsers || allUsers.length === 0) {
+        console.error('No users found in the database');
+        return;
+      }
+  
+      const userData = allUsers.find(user => user.id === organizerId);
+  
+      if (!userData) {
+        console.error('No user data found for organizer ID:', organizerId);
+        return;
+      }
+  
+      console.log('User data:', userData);
+  
+      const { data: mediaData, error: mediaError } = await supabase
+        .from('media')
+        .select('url')
+        .eq('user_id', organizerId)
+        .single();
+  
+      if (mediaError) {
+        console.error('Error fetching user media:', mediaError);
+      }
+  
+      setOrganizer({
+        id: userData.id,
+        email: userData.email,
+        full_name: `${userData.firstname || ''} ${userData.lastname || ''}`.trim(),
+        bio: userData.bio || '',
+        avatar_url: mediaData?.url || 'https://via.placeholder.com/150'
+      });
+    } catch (error) {
+      console.error('Unexpected error in fetchOrganizerProfile:', error);
     }
-
-    const { data: mediaData, error: mediaError } = await supabase
-      .from('media')
-      .select('url')
-      .eq('user_id', organizerId)
-      .single();
-
-    if (mediaError) {
-      console.error('Error fetching user media:', mediaError);
-    }
-
-    setOrganizer({
-      ...userData,
-      avatar_url: mediaData?.url || 'https://via.placeholder.com/150'
-    });
   };
 
   const fetchOrganizerEvents = async () => {
@@ -105,7 +128,7 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
         availability (date, start, end, daysofweek)
       `)
       .eq('user_id', organizerId);
-  
+
     if (error) {
       console.error('Error fetching organizer events:', error);
     } else {
@@ -299,15 +322,15 @@ const styles = StyleSheet.create({
   },
   toggleContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    padding: 10,
+    justifyContent: 'space-around',
     backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   toggleButton: {
+    paddingVertical: 5,
     paddingHorizontal: 20,
-    paddingVertical: 10,
     borderRadius: 20,
   },
   activeToggle: {
@@ -322,16 +345,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   listContent: {
-    padding: 10,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   itemContainer: {
-    marginBottom: 10,
+    marginBottom: 20,
   },
   serviceItem: {
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 15,
   },
   serviceName: {
     fontSize: 18,
@@ -346,12 +370,12 @@ const styles = StyleSheet.create({
   serviceDetails: {
     fontSize: 14,
     color: '#333',
-    marginTop: 5,
+    marginTop: 10,
   },
   emptyText: {
-    textAlign: 'center',
     fontSize: 16,
     color: '#666',
+    textAlign: 'center',
     marginTop: 20,
   },
 });
