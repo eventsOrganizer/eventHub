@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import UserAvatar from './UserAvatar';
 
 interface AttendeesSectionProps {
   eventId: number;
@@ -11,12 +11,10 @@ interface AttendeesSectionProps {
 
 interface Attendee {
   id: string;
-  avatar_url: string;
 }
 
 const AttendeesSection: React.FC<AttendeesSectionProps> = ({ eventId, refreshTrigger }) => {
   const [attendees, setAttendees] = useState<Attendee[]>([]);
-  const navigation = useNavigation();
 
   useEffect(() => {
     fetchAttendees();
@@ -33,30 +31,13 @@ const AttendeesSection: React.FC<AttendeesSectionProps> = ({ eventId, refreshTri
       return;
     }
 
-    const userIds = data.map(item => item.user_id);
-    const { data: userData, error: userError } = await supabase
-      .from('media')
-      .select('user_id, url')
-      .in('user_id', userIds);
-
-    if (userError) {
-      console.error('Error fetching user data:', userError);
-      return;
-    }
-
-    setAttendees(userData.map(user => ({ id: user.user_id, avatar_url: user.url })));
+    setAttendees(data.map(item => ({ id: item.user_id })));
   };
 
   const renderAttendee = ({ item }: { item: Attendee }) => (
-    <TouchableOpacity 
-      style={styles.attendeeItem}
-      onPress={() => navigation.navigate('OrganizerProfile', { organizerId: item.id })}
-    >
-      <Image 
-        source={{ uri: item.avatar_url || 'https://via.placeholder.com/50' }} 
-        style={styles.attendeeAvatar} 
-      />
-    </TouchableOpacity>
+    <View style={styles.attendeeItem}>
+      <UserAvatar userId={item.id} size={50} />
+    </View>
   );
 
   return (
@@ -96,11 +77,6 @@ const styles = StyleSheet.create({
   },
   attendeeItem: {
     marginRight: 10,
-  },
-  attendeeAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
   },
 });
 

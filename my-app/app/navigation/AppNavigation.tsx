@@ -29,6 +29,7 @@ export type RootStackParamList = {
   OrganizerProfile: { organizerId: string };
   ChatRoom: { userId: string; organizerId: string };
   ChatList: undefined;
+  Requests: undefined;
 };
 
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, ScrollView, StyleSheet, Text, ViewStyle } from 'react-native';
+import { TouchableOpacity, View, TextInput, ScrollView, StyleSheet, Text, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CustomButton from '../components/standardComponents/customButton';
 import RNPickerSelect from 'react-native-picker-select';
@@ -7,11 +7,7 @@ import Section from '../components/standardComponents/sections';
 import { supabase } from '../services/supabaseClient';
 import EventSection from '../components/event/EventSection';
 
-// interface ButtonProps {
-//   title: string;
-//   onPress: () => void;
-//   style?: ViewStyle;
-// }
+
 
 const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
