@@ -34,7 +34,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData }) => {
         </TouchableOpacity>
         <View style={styles.statItem}>
           <Ionicons name="star" size={24} color="gold" />
-          <Text>{personalData.reviews?.length || 0} Reviews</Text>
+          <Text>{personalData.review?.length || 0} Reviews</Text>
         </View>
       </View>
     </View>
