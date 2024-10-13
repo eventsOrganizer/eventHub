@@ -47,7 +47,8 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './app/navigation/AppNavigation';
-
+import {createFakeData} from "./app/fake_data/index"
+createFakeData()
 export default function App() {
   return (
     <NavigationContainer>

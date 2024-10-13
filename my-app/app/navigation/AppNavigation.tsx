@@ -9,7 +9,8 @@ import ProfileScreen from '../screens/AccountScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import Signup from '../components/Auth/SignUp';
 import Signin from '../components/Auth/SignIn';
-
+import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
+import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
 export type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -20,6 +21,8 @@ export type RootStackParamList = {
   EditProfile: undefined;
   Signup: undefined;
   Signin: undefined;
+  PersonalsScreen: undefined;
+  PersonalDetail: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -78,6 +81,16 @@ const AppNavigator = () => {
         component={Signin}  
         options={{ headerShown: true }} // Adjust as needed
       />
+         <Stack.Screen 
+         name="PersonalsScreen" 
+         component={PersonalsScreen}
+         options={{ headerShown: true }}
+          />
+        <Stack.Screen 
+        name="PersonalDetail" 
+        component={(props:any) => <PersonalDetail {...props} />} 
+        options={{ headerShown: true }}
+        />
 
     </Stack.Navigator>
   );
