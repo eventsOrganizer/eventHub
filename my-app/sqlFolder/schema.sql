@@ -178,7 +178,7 @@ CREATE TABLE media (
     FOREIGN KEY (local_id) REFERENCES local(id)
 );
 
-CREATE TABLE messages (
+CREATE TABLE message (
     id SERIAL PRIMARY KEY,
     chatroom_id INTEGER NOT NULL,
     user_id UUID NOT NULL,
@@ -213,11 +213,20 @@ CREATE TABLE "order" (
 CREATE TABLE request (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL,
+    personal_id INTEGER NOT NULL,
     event_id INTEGER NOT NULL,
+    local_id INTEGER,
+    material_id INTEGER,
     status VARCHAR(8) CHECK (status IN ('pending', 'accepted', 'refused')),
+
+    -- Foreign key references
     FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (event_id) REFERENCES event(id)
+    FOREIGN KEY (personal_id) REFERENCES personal(id),
+    FOREIGN KEY (event_id) REFERENCES event(id),
+    FOREIGN KEY (local_id) REFERENCES local(id),
+    FOREIGN KEY (material_id) REFERENCES material(id)
 );
+
 
 CREATE TABLE review (
     id SERIAL PRIMARY KEY,

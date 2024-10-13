@@ -13,6 +13,7 @@ import EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ChatListScreen from '../components/event/ChatListScreen';
+import RequestsScreen from '../components/event/RequestsScreen';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -107,6 +108,11 @@ const AppNavigator = () => {
       <Stack.Screen
         name ="ChatList"
         component={ChatListScreen as React.ComponentType<any>}
+        options={{ headerShown: true }} // Adjust as needed
+      />
+      <Stack.Screen
+        name="Requests"
+        component={RequestsScreen as React.ComponentType<any>}
         options={{ headerShown: true }} // Adjust as needed
       />
 
