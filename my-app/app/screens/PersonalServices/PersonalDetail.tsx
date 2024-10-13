@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View,Text, StyleSheet, ScrollView } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import { fetchPersonalDetail, Service } from '../../services/personalService';
+import {  Service } from '../../services/serviceTypes';
+import { fetchPersonalDetail } from '../../services/personalService';
 import PersonalInfo from '../../components/ChakerStandardComponents/PersonalInfo';
 import AvailabilityList from '../../components/ChakerStandardComponents/AvailabilityList';
 import CommentSection from '../../components/ChakerStandardComponents/CommentSection';
@@ -42,7 +43,7 @@ const PersonalDetail: React.FC = () => {
         personalId={personalData.id} 
       />
       <CommentSection 
-        comments={personalData.comments} 
+        comments={personalData.comment} 
         personalId={personalData.id}
       />
     </ScrollView>

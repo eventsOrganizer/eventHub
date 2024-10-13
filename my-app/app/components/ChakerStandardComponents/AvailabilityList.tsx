@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { makeServiceRequest } from '../../services/personalService';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { makeServiceRequest, initiatePayment } from '../../services/serviceTypes';
 
 interface AvailabilityListProps {
   availability: Array<{
@@ -15,17 +15,24 @@ interface AvailabilityListProps {
 
 const AvailabilityList: React.FC<AvailabilityListProps> = ({ availability, personalId }) => {
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [hours, setHours] = useState<string>('');
 
   const handleMakeRequest = async () => {
-    if (selectedSlot !== null) {
-      const result = await makeServiceRequest(personalId, availability[selectedSlot].id);
+    if (selectedSlot !== null && hours) {
+      const result = await makeServiceRequest(personalId, availability[selectedSlot].id, parseInt(hours));
       if (result) {
-        alert('Request sent successfully!');
+        const paymentResult = await initiatePayment(result.requestData.id, result.depositAmount);
+        if (paymentResult) {
+          // Redirect to Flouci payment page or handle the payment process
+          console.log('Payment initiated:', paymentResult);
+        } else {
+          alert('Failed to initiate payment. Please try again.');
+        }
       } else {
-        alert('Failed to send request. Please try again.');
+        alert('Failed to create request. Please try again.');
       }
     } else {
-      alert('Please select an availability slot before making a request.');
+      alert('Please select an availability slot and enter the number of hours before making a request.');
     }
   };
 
@@ -44,11 +51,18 @@ const AvailabilityList: React.FC<AvailabilityListProps> = ({ availability, perso
           <Text>{`${slot.date}: ${slot.start} - ${slot.end}, ${slot.daysofweek}`}</Text>
         </TouchableOpacity>
       ))}
+      <TextInput
+        style={styles.input}
+        placeholder="Number of hours"
+        value={hours}
+        onChangeText={setHours}
+        keyboardType="numeric"
+      />
       <TouchableOpacity
         style={styles.requestButton}
         onPress={handleMakeRequest}
       >
-        <Text style={styles.requestButtonText}>Make Request</Text>
+        <Text style={styles.requestButtonText}>Make Request and Pay Deposit</Text>
       </TouchableOpacity>
     </View>
   );
@@ -73,6 +87,14 @@ const styles = StyleSheet.create({
   selectedSlot: {
     backgroundColor: '#e6f7ff',
     borderColor: '#1890ff',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    marginTop: 10,
+    marginBottom: 10,
   },
   requestButton: {
     backgroundColor: '#1890ff',

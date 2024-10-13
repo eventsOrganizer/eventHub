@@ -1,45 +1,70 @@
 import { supabase } from './supabaseClient';
 import { User } from '@supabase/supabase-js';
+import { Service } from './serviceTypes';
 
-export type Service = {
-  id: number;
-  name: string;
-  priceperhour: number;
-  details: string;
-  user_id: string;
-  subcategory?: { 
-    name: string;
-    category?: {
-      name: string;
-    };
-  };
-  media?: { url: string }[];
-  imageUrl?: string;
-  availability: Array<{
-    id: number;
-    start: string;
-    end: string;
-    daysofweek: string;
-    date: string;
-  }>;
-  comments: Array<{
-    details: string;
-    user_id: string;
-  }>;
-  likes: Array<{ user_id: string }>;
-  orders: Array<{
-    user_id: string;
-    ticket_id: string;
-  }>;
-  personal_users: Array<{
-    user_id: string;
-    status: string;
-  }>;
-  reviews: Array<{
-    user_id: string;
-    rate: number;
-    total: number;
-  }>;
+export const makeServiceRequest = async (personalId: number, availabilityId: number, hours: number) => {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user) throw new Error('User not authenticated');
+
+    const { data: personalData, error: personalError } = await supabase
+      .from('personal')
+      .select('priceperhour')
+      .eq('id', personalId)
+      .single();
+    if (personalError) throw personalError;
+
+    const totalPrice = personalData.priceperhour * hours;
+    const depositAmount = totalPrice * 0.25; // 25% deposit
+
+    const { data, error } = await supabase
+      .from('request')
+      .insert({
+        user_id: userData.user.id,
+        personal_id: personalId,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        hours: hours,
+        total_price: totalPrice,
+        deposit_amount: depositAmount
+      });
+
+    if (error) throw error;
+    return { requestData: data, depositAmount };
+  } catch (error) {
+    console.error('Error making service request:', error);
+    return null;
+  }
+};
+
+export const initiatePayment = async (requestId: number, amount: number) => {
+  const FLOUCI_APP_TOKEN = "4c1e07ef-8533-4e83-bbeb-7f61c0b21931";
+  const FLOUCI_APP_SECRET = "ee9d6f08-30c8-4dbb-8578-d51293ff2535";
+
+  try {
+    const response = await fetch('https://api.flouci.com/payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${FLOUCI_APP_TOKEN}`
+      },
+      body: JSON.stringify({
+        app_token: FLOUCI_APP_TOKEN,
+        app_secret: FLOUCI_APP_SECRET,
+        amount: amount,
+        accept_url: `https://yourapp.com/payment-success?requestId=${requestId}`,
+        cancel_url: `https://yourapp.com/payment-cancel?requestId=${requestId}`,
+        decline_url: `https://yourapp.com/payment-decline?requestId=${requestId}`,
+      })
+    });
+
+    const paymentData = await response.json();
+    return paymentData;
+  } catch (error) {
+    console.error('Error initiating Flouci payment:', error);
+    return null;
+  }
 };
 
 export const fetchStaffServices = async (): Promise<Service[]> => {
@@ -61,16 +86,16 @@ export const fetchStaffServices = async (): Promise<Service[]> => {
         order (user_id, ticket_id),
         personal_user (user_id, status),
         review (user_id, rate, total)
-      `)
-      .in('subcategory.name', ['Cooker', 'Security', 'Waiter']);
+      `);
 
     if (error) throw error;
 
-    return (data || []).map((service: Service) => ({
+    return data.map((service: Service) => ({
       ...service,
       imageUrl: service.media && service.media.length > 0
         ? service.media[0].url
-        : 'https://via.placeholder.com/150'
+        : 'https://via.placeholder.com/150',
+      comments: service.comment || []
     }));
   } catch (error) {
     console.error('Error fetching staff services:', error);
@@ -103,12 +128,13 @@ export const fetchPersonalDetail = async (id: number): Promise<Service | null> =
 
     if (error) throw error;
 
-    return data ? {
+    return {
       ...data,
       imageUrl: data.media && data.media.length > 0
         ? data.media[0].url
-        : 'https://via.placeholder.com/150'
-    } : null;
+        : 'https://via.placeholder.com/150',
+      comments: data.comment || []
+    };
   } catch (error) {
     console.error('Error fetching personal detail:', error);
     return null;
@@ -136,7 +162,7 @@ export const toggleLike = async (personalId: number) => {
     if (!userData.user) throw new Error('User not authenticated');
 
     const { data: existingLike, error: fetchError } = await supabase
-      .from('likes')
+      .from('like')
       .select('*')
       .eq('personal_id', personalId)
       .eq('user_id', userData.user.id)
@@ -146,7 +172,7 @@ export const toggleLike = async (personalId: number) => {
 
     if (existingLike) {
       const { error: deleteError } = await supabase
-        .from('likes')
+        .from('like')
         .delete()
         .eq('personal_id', personalId)
         .eq('user_id', userData.user.id);
@@ -155,7 +181,7 @@ export const toggleLike = async (personalId: number) => {
       return false;
     } else {
       const { error: insertError } = await supabase
-        .from('likes')
+        .from('like')
         .insert({ personal_id: personalId, user_id: userData.user.id });
 
       if (insertError) throw insertError;
@@ -163,28 +189,6 @@ export const toggleLike = async (personalId: number) => {
     }
   } catch (error) {
     console.error('Error toggling like:', error);
-    return null;
-  }
-};
-export const makeServiceRequest = async (personalId: number, availabilityId: number) => {
-  try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError) throw userError;
-    if (!userData.user) throw new Error('User not authenticated');
-
-    const { data, error } = await supabase
-      .from('request')
-      .insert({
-        user_id: userData.user.id,
-        personal_id: personalId,
-        availability_id: availabilityId,
-        status: 'pending'
-      });
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Error making service request:', error);
     return null;
   }
 };

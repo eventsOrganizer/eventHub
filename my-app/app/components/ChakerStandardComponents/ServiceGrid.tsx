@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Service } from '../../services/personalService';
+import { Service } from '../../services/serviceTypes';
 import { PersonalScreenNavigationProp } from '../../navigation/types';
 
 type ServiceGridProps = {

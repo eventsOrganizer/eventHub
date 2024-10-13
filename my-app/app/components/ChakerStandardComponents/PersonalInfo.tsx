@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Service } from '../../services/personalService';
+import { Service } from '../../services/serviceTypes';
 import { toggleLike } from '../../services/personalService';
 
 interface PersonalInfoProps {
@@ -9,7 +9,7 @@ interface PersonalInfoProps {
 }
 
 const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData }) => {
-  const [likes, setLikes] = useState(personalData.likes?.length || 0);
+  const [likes, setLikes] = useState(personalData.like?.length || 0);
   const [isLiked, setIsLiked] = useState(false);
 
   const handleLike = async () => {
@@ -40,7 +40,6 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData }) => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   infoContainer: {
     padding: 16,
