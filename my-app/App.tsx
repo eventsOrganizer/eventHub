@@ -53,6 +53,9 @@ import {seedDatabase} from './app/fake_data/indexService';
 import {seedEvents} from './app/fake_data/indexEvent';
 import { UserProvider } from './app/UserContext';
 
+// import {createFakeData} from "./app/fake_data/index"
+// createFakeData()
+
 
 export default function App() {
   return (

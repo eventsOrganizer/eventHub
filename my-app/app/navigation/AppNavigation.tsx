@@ -14,7 +14,8 @@ import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ChatListScreen from '../components/event/ChatListScreen';
 import RequestsScreen from '../components/event/RequestsScreen';
-
+import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
+import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
 export type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -30,6 +31,8 @@ export type RootStackParamList = {
   ChatRoom: { userId: string; organizerId: string };
   ChatList: undefined;
   Requests: undefined;
+  PersonalsScreen: undefined;
+  PersonalDetail: undefined;
 };
 
 
@@ -91,6 +94,16 @@ const AppNavigator = () => {
         component={Signin}  
         options={{ headerShown: true }} // Adjust as needed
       />
+         <Stack.Screen 
+         name="PersonalsScreen" 
+         component={PersonalsScreen}
+         options={{ headerShown: true }}
+          />
+        <Stack.Screen 
+        name="PersonalDetail" 
+        component={(props:any) => <PersonalDetail {...props} />} 
+        options={{ headerShown: true }}
+        />
       <Stack.Screen 
         name="EventDetails" 
         component={EventDetailsScreen as React.ComponentType<any>} 

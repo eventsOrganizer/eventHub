@@ -99,6 +99,7 @@ CREATE TABLE material (
     user_id UUID NOT NULL,
     quantity INTEGER,
     price INTEGER,
+
     price_per_hour INTEGER, -- New column for price per hour
     sell_or_rent VARCHAR(4) CHECK (sell_or_rent IN ('sell', 'rent')), -- Using VARCHAR with a CHECK constraint
     name VARCHAR(45),
@@ -148,6 +149,7 @@ CREATE TABLE interest (
     id SERIAL PRIMARY KEY,
     subcategory_id INTEGER NOT NULL,
     user_id UUID NOT NULL,
+
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id)
 );
@@ -167,6 +169,7 @@ CREATE TABLE location (
 CREATE TABLE media (
     id SERIAL PRIMARY KEY,
     event_id INTEGER,
+    user_id UUID ,
     user_id UUID ,
     personal_id INTEGER,
     material_id INTEGER,
@@ -215,9 +218,10 @@ CREATE TABLE request (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL,
     personal_id INTEGER NOT NULL,
+    local_id INTEGER NOT NULL,
+    material_id INTEGER NOT NULL,
     event_id INTEGER NOT NULL,
-    local_id INTEGER,
-    material_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(8) CHECK (status IN ('pending', 'accepted', 'refused')),
 
     -- Foreign key references
