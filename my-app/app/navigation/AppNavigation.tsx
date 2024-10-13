@@ -9,6 +9,11 @@ import ProfileScreen from '../screens/AccountScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import Signup from '../components/Auth/SignUp';
 import Signin from '../components/Auth/SignIn';
+import EventDetailsScreen from '../screens/EventDetailsScreen';
+import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
+import ChatRoomScreen from '../components/event/ChatRoomScreen';
+import ChatListScreen from '../components/event/ChatListScreen';
+import RequestsScreen from '../components/event/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
 import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
 export type RootStackParamList = {
@@ -16,14 +21,22 @@ export type RootStackParamList = {
   Interests: { onComplete: () => void };
   Profile: undefined;
   Home: undefined; 
-  Map: undefined; // Add Map route
-  Calendar: undefined; // Add Calendar route
+  Map: undefined;
+  Calendar: undefined;
   EditProfile: undefined;
   Signup: undefined;
   Signin: undefined;
+  EventDetails: { eventId: number };
+  OrganizerProfile: { organizerId: string };
+  ChatRoom: { userId: string; organizerId: string };
+  ChatList: undefined;
+  Requests: undefined;
   PersonalsScreen: undefined;
   PersonalDetail: undefined;
 };
+
+
+
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -91,6 +104,33 @@ const AppNavigator = () => {
         component={(props:any) => <PersonalDetail {...props} />} 
         options={{ headerShown: true }}
         />
+      <Stack.Screen 
+        name="EventDetails" 
+        component={EventDetailsScreen as React.ComponentType<any>} 
+        options={{ headerShown: true }} // Adjust as needed
+      />  
+      <Stack.Screen 
+        name="OrganizerProfile" 
+        component={OrganizerProfileScreen as React.ComponentType<any>} 
+        options={{ headerShown: true }} // Adjust as needed
+      />  
+      <Stack.Screen
+       name="ChatRoom"
+        component={ChatRoomScreen as React.ComponentType<any>}
+        options={{ headerShown: true }} // Adjust as needed
+      />
+      <Stack.Screen
+        name ="ChatList"
+        component={ChatListScreen as React.ComponentType<any>}
+        options={{ headerShown: true }} // Adjust as needed
+      />
+      <Stack.Screen
+        name="Requests"
+        component={RequestsScreen as React.ComponentType<any>}
+        options={{ headerShown: true }} // Adjust as needed
+      />
+
+
 
     </Stack.Navigator>
   );

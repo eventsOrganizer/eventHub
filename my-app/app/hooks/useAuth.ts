@@ -1,21 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../navigation/types';
-import { useSupabaseUserId } from './getUser';
+import { useUser } from '../UserContext';
 
 const useAuth = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>();
-    const { userId, loading: userIdLoading } = useSupabaseUserId();
-
-    useEffect(() => {
-        if (userId) {
-            console.log('Current User ID:', userId);
-        }
-    }, [userId]);
+    const { userId, setUserId } = useUser();
 
     const signup = async (firstname: string, lastname: string, username: string, email: string, password: string) => {
         const { data, error } = await supabase.auth.signUp({
@@ -31,11 +25,17 @@ const useAuth = () => {
         });
 
         if (error) {
+            console.error('Signup error:', error);
             setError(error.message);
             setSuccess(null);
-        } else {
+        } else if (data?.user) {
+            console.log('Signup successful:', data.user);
             setSuccess("Signup successful");
             setError(null);
+        } else {
+            console.error('Unexpected result:', data);
+            setError("An unexpected error occurred");
+            setSuccess(null);
         }
     };
 
@@ -64,16 +64,20 @@ const useAuth = () => {
             console.error('Login error:', error);
             setError(error.message);
             setSuccess(null);
-        } else {
+        } else if (data.session) {
             setSuccess("Login successful");
             setError(null);
             console.log('Logged in user:', data.user);
             console.log('Logged in user ID:', data.user?.id);
+            setUserId(data.user?.id || null);
             navigation.navigate('Home');
+        } else {
+            setError("Login failed: No session created");
+            setSuccess(null);
         }
     };
 
-    return { signup, login, error, success, userId, userIdLoading };
+    return { signup, login, error, success, userId };
 };
 
 export default useAuth;
