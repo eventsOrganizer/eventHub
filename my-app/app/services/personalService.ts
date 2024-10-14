@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { Service } from './serviceTypes';
 
-export const makeServiceRequest = async (personalId: number, availabilityId: number, hours: number) => {
+export const makeServiceRequest = async (personalId: number, hours: number, date: string) => {
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
@@ -19,13 +19,14 @@ export const makeServiceRequest = async (personalId: number, availabilityId: num
     const depositAmount = totalPrice * 0.25; // 25% deposit
 
     const { data, error } = await supabase
-      .from('request')
+      .from('requests')
       .insert({
         user_id: userData.user.id,
         personal_id: personalId,
         status: 'pending',
         created_at: new Date().toISOString(),
         hours: hours,
+        date: date,
         total_price: totalPrice,
         deposit_amount: depositAmount
       });

@@ -1,59 +1,92 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { PersonalScreenNavigationProp } from '../../navigation/types';
-import {  Service } from '../../services/serviceTypes';
+import { Service } from '../../services/serviceTypes';
 import { fetchStaffServices } from '../../services/personalService';
 import CategoryList from '../../components/PersonalServiceComponents/CategoryList';
 
 const PersonalsScreen = () => {
   const [staffServices, setStaffServices] = useState<Service[]>([]);
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
   const navigation = useNavigation<PersonalScreenNavigationProp>();
   const route = useRoute();
   const { category }: { category?: string } = route.params || {};
 
+  const loadServices = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const services = await fetchStaffServices();
+      setStaffServices(services);
+      setFilteredServices(services); // Initialize filtered services with all services
+    } catch (error) {
+      console.error('Error fetching staff services:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (category) {
       setSelectedCategory(category);
     }
-  }, [category]);
+    loadServices();
+  }, [category, loadServices]);
 
   useEffect(() => {
-    const loadServices = async () => {
-      const services = await fetchStaffServices();
-      setStaffServices(services);
-    };
-    loadServices();
-  }, []);
+    filterServices();
+  }, [selectedCategory, searchQuery, minPrice, maxPrice, staffServices]);
 
-  const filteredServices = staffServices
-    .filter(service => 
-      (selectedCategory ? service.subcategory?.name === selectedCategory : true) &&
-      (searchQuery ? service.name.toLowerCase().includes(searchQuery.toLowerCase()) : true) &&
-      (minPrice ? service.priceperhour >= parseFloat(minPrice) : true) &&
-      (maxPrice ? service.priceperhour <= parseFloat(maxPrice) : true)
-    );
+  const filterServices = () => {
+    let filtered = staffServices;
+    if (selectedCategory) {
+      filtered = filtered.filter(service => service.subcategory?.name === selectedCategory);
+    }
+    if (searchQuery) {
+      filtered = filtered.filter(service => 
+        service.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    if (minPrice) {
+      filtered = filtered.filter(service => service.priceperhour >= parseFloat(minPrice));
+    }
+    if (maxPrice) {
+      filtered = filtered.filter(service => service.priceperhour <= parseFloat(maxPrice));
+    }
+    setFilteredServices(filtered);
+  };
 
   const renderServiceItem = ({ item }: { item: Service }) => (
     <TouchableOpacity
       style={styles.serviceItem}
       onPress={() => navigation.navigate('PersonalDetail', { personalId: item.id })}
     >
-      <Image source={{ uri: item.imageUrl }} style={styles.serviceImage} />
+      <Image source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} style={styles.serviceImage} />
       <View style={styles.serviceInfo}>
         <Text style={styles.serviceName}>{item.name}</Text>
         <Text style={styles.servicePrice}>${item.priceperhour}/hr</Text>
-        <Text style={styles.serviceDetails}>{item.details}</Text>
-        <Text style={styles.serviceLikes}>Likes: {item.like?.length || 0}</Text>
-        <Text style={styles.serviceReviews}>Reviews: {item.review?.length || 0}</Text>
+        <Text style={styles.serviceDetails} numberOfLines={2}>{item.details}</Text>
+        <View style={styles.serviceStats}>
+          <Text style={styles.serviceLikes}>❤️ {item.like?.length || 0}</Text>
+          <Text style={styles.serviceReviews}>⭐ {item.review?.length || 0}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading services...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -88,6 +121,10 @@ const PersonalsScreen = () => {
         renderItem={renderServiceItem}
         keyExtractor={(item) => item.id.toString()}
         style={styles.serviceList}
+        contentContainerStyle={styles.serviceListContent}
+        ListEmptyComponent={
+          <Text style={styles.emptyListText}>No services found. Try adjusting your filters.</Text>
+        }
       />
     </View>
   );
@@ -96,18 +133,26 @@ const PersonalsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   searchBar: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#fff',
     borderRadius: 20,
     margin: 10,
-    paddingHorizontal: 10,
-    marginBottom: 5,
+    paddingHorizontal: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   searchInput: {
-    paddingVertical: 8,
-    color: 'black',
+    paddingVertical: 10,
   },
   priceFilter: {
     flexDirection: 'row',
@@ -118,10 +163,15 @@ const styles = StyleSheet.create({
   },
   priceInput: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#fff',
     borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   priceSeparator: {
     marginHorizontal: 10,
@@ -129,40 +179,60 @@ const styles = StyleSheet.create({
   serviceList: {
     flex: 1,
   },
-  serviceItem: {
-    flexDirection: 'row',
+  serviceListContent: {
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+  },
+  serviceItem: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    marginBottom: 15,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   serviceImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 10,
+    width: '100%',
+    height: 200,
+    resizeMode: 'cover',
   },
   serviceInfo: {
-    flex: 1,
+    padding: 15,
   },
   serviceName: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 5,
   },
   servicePrice: {
     fontSize: 16,
-    color: 'green',
+    color: '#4CAF50',
+    marginBottom: 5,
   },
   serviceDetails: {
     fontSize: 14,
-    color: 'gray',
+    color: '#757575',
+    marginBottom: 10,
+  },
+  serviceStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   serviceLikes: {
     fontSize: 14,
-    color: 'blue',
+    color: '#E91E63',
   },
   serviceReviews: {
     fontSize: 14,
-    color: 'orange',
+    color: '#FFC107',
+  },
+  emptyListText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#757575',
   },
 });
 
