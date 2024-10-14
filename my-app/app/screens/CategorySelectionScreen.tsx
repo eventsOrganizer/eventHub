@@ -8,6 +8,7 @@ const CategorySelectionScreen = ({ route, navigation }: any) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
 
+  
   useEffect(() => {
     const fetchCategories = async () => {
       const { data, error } = await supabase

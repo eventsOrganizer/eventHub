@@ -46,14 +46,12 @@
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
-
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
 import useAuth from '../../hooks/useAuth';
 
 const Login = () => {
     const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>();
-
     const { login, error, success } = useAuth();
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
@@ -66,7 +64,6 @@ const Login = () => {
         }
 
         setValidationError('');
-
         try {
             await login(identifier, password);
             if (success) {
@@ -92,13 +89,13 @@ const Login = () => {
                 placeholder="Password"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry={true}
+                secureTextEntry
                 style={styles.input}
             />
             <Button title="Login" onPress={handleSubmit} />
-            {validationError ? <Text style={styles.errorText}>{validationError}</Text> : null}
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            {success ? <Text style={styles.successText}>{success}</Text> : null}
+            {validationError && <Text style={styles.errorText}>{validationError}</Text>}
+            {error && <Text style={styles.errorText}>{error}</Text>}
+            {success && <Text style={styles.successText}>{success}</Text>}
         </View>
     );
 };

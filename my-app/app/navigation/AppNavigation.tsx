@@ -1,10 +1,9 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { NavigationContainer } from '@react-navigation/native';
-
-// Import your screens
-import LandingPage from '../screens/LandingPage';  // Import the LandingPage screen
-import EventCreationScreen from '../screens/EventCreationScreen'; // Event creation screen import
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+// Import screens
 import Onboarding from '../screens/OnBoarding';
 import Interests from '../screens/Interests';
 import Home from '../screens/Home';
@@ -14,108 +13,213 @@ import ProfileScreen from '../screens/AccountScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import Signup from '../components/Auth/SignUp';
 import Signin from '../components/Auth/SignIn';
+import LandingPage from '../screens/LandingPage';
+import EventCreationScreen from '../screens/EventCreationScreen';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
 import CategorySelectionScreen from '../screens/CategorySelectionScreen';
 import SubcategorySelectionScreen from '../screens/subcategorySelectionScreen';
+import VenueSelectionScreen from '../screens/VenueSelectionScreen';
+import MusicAndEntertainmentScreen from '../screens/MusicAndEntertainmentScreen';
+import EventTimelineScreen from '../screens/EventTimelineScreen';
+import GuestManagementScreen from '../screens/GuestManagementScreen';
+import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
+import CreateServiceScreen from '../screens/CreateServiceScreen'; // Added CreateService import
+import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
 
-// Define the types for your stack params
+
+
+// Define RootStackParamList to type your navigation
 export type RootStackParamList = {
-  LandingPage: undefined;
   Onboarding: undefined;
   Interests: { onComplete: () => void };
+  Profile: undefined;
   Home: undefined;
   Map: undefined;
   Calendar: undefined;
-  Profile: undefined;
   EditProfile: undefined;
   Signup: undefined;
   Signin: undefined;
-  EventCreation: undefined;
-  EventDetails: { eventName: string, eventDescription: string, eventType: string };
-  CategorySelection: { eventName: string, eventDescription: string, eventType: string };
-  SubcategorySelection: { eventName: string, eventDescription: string, eventType: string, selectedCategory: string };
+  LandingPage: undefined;
+ 
+  EventDetails: { eventName: string; eventDescription: string; eventType: string };
+  CategorySelection: { eventName: string; eventDescription: string; eventType: string };
+  SubcategorySelection: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string };
+  VenueSelection: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string };
+  MusicAndEntertainment: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; venue: string };
+  EventTimeline: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; venue: string; music: string };
+  
+  GuestManagement: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
+  TeamCollaboration: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
+  Notifications: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
+  Ticketing: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
+  EventSummary: { eventId: string };
+  EventCreation: { eventType: string };
+  
+  // Add the CreateService screen and pass serviceType as a param
+  CreateService: { serviceType: string };
+  EventSetupOptions: { 
+    eventName: string; 
+    eventDescription: string; 
+    eventType: string; 
+    selectedCategory: string; 
+    selectedSubcategory: string 
+  };
+};
+type EventSetupOptionsScreenProps = {
+  route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
+  navigation: NativeStackNavigationProp<RootStackParamList>;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
+  // Callback for Interests screen (as an example)
+  const handleOnComplete = () => {
+    console.log('Onboarding complete!');
+  };
+
   return (
-    <Stack.Navigator initialRouteName="LandingPage">
-      {/* Landing Page */}
-      <Stack.Screen 
-        name="LandingPage" 
-        component={LandingPage} 
-        options={{ headerShown: false }} 
+    <Stack.Navigator initialRouteName="Onboarding">
+      {/* Onboarding Screen */}
+      <Stack.Screen
+        name="Onboarding"
+        component={Onboarding}
+        options={{ headerShown: false }}
       />
       
-      {/* Event Creation Screen */}
-      <Stack.Screen 
-        name="EventCreation" 
-        component={EventCreationScreen} 
-        options={{ title: 'Create Event' }} 
+      {/* Interests Screen */}
+      <Stack.Screen
+        name="Interests"
+        component={Interests}
+        initialParams={{ onComplete: handleOnComplete }}
+        options={{ headerShown: false }}
       />
       
-      {/* Other Screens */}
-      <Stack.Screen 
-        name="Onboarding" 
-        component={Onboarding} 
-        options={{ headerShown: false }} 
+      {/* Home Screen */}
+      <Stack.Screen
+        name="Home"
+        component={Home}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Interests" 
-        component={Interests} 
-        options={{ headerShown: false }} 
+      
+      {/* Map Screen */}
+      <Stack.Screen
+        name="Map"
+        component={MapScreen}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Home" 
-        component={Home} 
-        options={{ headerShown: false }} 
+      
+      {/* Calendar Screen */}
+      <Stack.Screen
+        name="Calendar"
+        component={CalendarScreen}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Map" 
-        component={MapScreen} 
-        options={{ headerShown: true }} 
+      
+      {/* Profile Screen */}
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Calendar" 
-        component={CalendarScreen} 
-        options={{ headerShown: true }} 
+      
+      {/* Edit Profile Screen */}
+      <Stack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        options={{ headerShown: true }} 
+      
+      {/* Signup Screen */}
+      <Stack.Screen
+        name="Signup"
+        component={Signup}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="EditProfile" 
-        component={EditProfileScreen} 
-        options={{ headerShown: true }} 
+      
+      {/* Signin Screen */}
+      <Stack.Screen
+        name="Signin"
+        component={Signin}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="EventDetails" 
-        component={EventDetailsScreen} 
-        options={{ title: 'Event Details' }} 
+      
+      {/* Landing Page Screen */}
+      <Stack.Screen
+        name="LandingPage"
+        component={LandingPage}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="CategorySelection" 
-        component={CategorySelectionScreen} 
-        options={{ title: 'Select Category' }} 
+      
+      {/* Event Creation Screens */}
+      <Stack.Screen
+        name="EventCreation"
+        component={EventCreationScreen}
+        options={{ title: 'Create Event' }}
       />
-      <Stack.Screen 
-        name="SubcategorySelection" 
-        component={SubcategorySelectionScreen} 
-        options={{ title: 'Select Subcategory' }} 
+      
+      <Stack.Screen
+        name="CategorySelection"
+        component={CategorySelectionScreen}
+        options={{ title: 'Select Category' }}
       />
-      <Stack.Screen 
-        name="Signup" 
-        component={Signup}  
-        options={{ headerShown: true }} // Adjust as needed
+      
+      <Stack.Screen
+        name="SubcategorySelection"
+        component={SubcategorySelectionScreen}
+        options={{ title: 'Select Subcategory' }}
       />
-      <Stack.Screen 
-        name="Signin" 
-        component={Signin}  
-        options={{ headerShown: true }} // Adjust as needed
+      
+      {/* Event Customization Screens */}
+      <Stack.Screen
+        name="VenueSelection"
+        component={VenueSelectionScreen}
+        options={{ title: 'Select Venue' }}
       />
+      
+      <Stack.Screen
+        name="MusicAndEntertainment"
+        component={MusicAndEntertainmentScreen}
+        options={{ title: 'Entertainment & Music' }}
+      />
+      
+      <Stack.Screen
+        name="EventTimeline"
+        component={EventTimelineScreen}
+        options={{ title: 'Event Timeline' }}
+      />
+      
+      {/* Event Details Screen */}
+      <Stack.Screen
+        name="EventDetails"
+        component={EventDetailsScreen}
+        options={{ title: 'Event Details' }}
+      />
+      
+      {/* New Screens */}
+      <Stack.Screen
+        name="GuestManagement"
+        component={GuestManagementScreen}
+        options={{ title: 'Guest Management' }}
+      />
+      
+      <Stack.Screen
+        name="TeamCollaboration"
+        component={TeamCollaborationScreen}
+        options={{ title: 'Team Collaboration' }}
+      />
+      
+      {/* CreateService Screen */}
+      <Stack.Screen
+        name="CreateService"
+        component={CreateServiceScreen}
+        options={{ title: 'Create Service' }}
+      />
+<Stack.Screen
+  name="EventSetupOptions"
+  component={EventSetupOptionsScreen}
+  options={{ title: 'Event Setup Options' }}
+/>
 
     </Stack.Navigator>
   );

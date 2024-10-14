@@ -27,8 +27,13 @@ const SubcategorySelectionScreen = ({ route, navigation }: any) => {
 
   const handleNext = () => {
     if (selectedSubcategory) {
-      // Proceed with the next steps
-      Alert.alert('Event Created', `Event: ${eventName} with Subcategory: ${selectedSubcategory}`);
+      navigation.navigate('EventSetupOptions', {
+        eventName,
+        eventDescription,
+        eventType,
+        selectedCategory,
+        selectedSubcategory
+      });
     } else {
       Alert.alert('Error', 'Please select a subcategory');
     }
