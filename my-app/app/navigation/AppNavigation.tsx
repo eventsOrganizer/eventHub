@@ -16,6 +16,9 @@ import ChatListScreen from '../components/event/ChatListScreen';
 import RequestsScreen from '../components/event/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
 import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
+import LocalServiceDetailScreen from '../components/LocalService/LocalServiceDetailScreen';
+import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
+
 export type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -33,6 +36,8 @@ export type RootStackParamList = {
   Requests: undefined;
   PersonalsScreen: undefined;
   PersonalDetail: undefined;
+  LocalServiceScreen: undefined;
+  LocalServiceDetails: { localServiceId: number };
 };
 
 
@@ -129,9 +134,18 @@ const AppNavigator = () => {
         component={RequestsScreen as React.ComponentType<any>}
         options={{ headerShown: true }} // Adjust as needed
       />
+     <Stack.Screen
+  name="LocalServiceScreen"
+  component={LocalServiceScreen}
+  options={{ title: 'Local Services' }}
+/>
 
-
-
+<Stack.Screen
+  name="LocalServiceDetails"
+  component={LocalServiceDetailScreen}
+  options={{ title: 'Service Details' }}
+/>
+    
     </Stack.Navigator>
   );
 };

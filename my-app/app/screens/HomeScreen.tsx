@@ -22,6 +22,10 @@ type RootStackParamList = {
   AllEvents: undefined;
   LocalServicesScreen: undefined;
   MaterialsAndFoodServicesScreen: undefined;
+  LocalServiceScreen: undefined;
+  MaterialServiceDetail: { materialId: number };
+  LocalServiceDetails: { localServiceId: number };
+  
 };
 
 
@@ -39,6 +43,10 @@ const HomeScreen: React.FC = () => {
   const [staffServices, setStaffServices] = useState<any[]>([]);
   const [localServices, setLocalServices] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
+  const [locals, setLocals] = useState<any[]>([]);
+
+
+
 
   const fetchEvents = async () => {
     const { data, error } = await supabase
@@ -64,29 +72,69 @@ const HomeScreen: React.FC = () => {
     return data;
   };
 
+
+  const fetchLocals = async () => {
+    const { data, error } = await supabase
+      .from('local')
+      .select(`
+        *,
+        subcategory (
+          id,
+          name,
+          category (
+            id,
+            name
+          )
+        ),
+        location (id, longitude, latitude),
+        availability (id, start, end, daysofweek, date),
+        media (url)
+      `);
+  
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data;
+  };
+
+  const fetchData = async () => {
+    try {
+      const eventsData = await fetchEvents();
+      setEvents(eventsData);
+
+      const { data: staffServicesData } = await supabase
+        .from('personal')
+        .select('*, subcategory (name), media (url)')
+        .limit(5);
+
+      const { data: localServicesData } = await supabase.from('local').select('*');
+      const { data: materialsAndFoodServicesData } = await supabase.from('material').select('*');
+
+      if (staffServicesData) setStaffServices(staffServicesData);
+      if (localServicesData) setLocalServices(localServicesData);
+      if (materialsAndFoodServicesData) setMaterialsAndFoodServices(materialsAndFoodServicesData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+
+
+
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAllData = async () => {
       try {
         const eventsData = await fetchEvents();
+        const localsData = await fetchLocals();
         setEvents(eventsData);
-
-        const { data: staffServicesData } = await supabase
-          .from('personal')
-          .select('*, subcategory (name), media (url)')
-          .limit(5);
-
-        const { data: localServicesData } = await supabase.from('local').select('*');
-        const { data: materialsAndFoodServicesData } = await supabase.from('material').select('*');
-
-        if (staffServicesData) setStaffServices(staffServicesData);
-        if (localServicesData) setLocalServices(localServicesData);
-        if (materialsAndFoodServicesData) setMaterialsAndFoodServices(materialsAndFoodServicesData);
+        setLocals(localsData);
+        fetchData();
       } catch (error) {
-        console.error(error);
+        console.error('Error fetching data:', error);
       }
     };
-
-    fetchData();
+  
+    fetchAllData();
   }, []);
 
   const handleSeeAllStaffServices = () => {
@@ -103,11 +151,12 @@ const HomeScreen: React.FC = () => {
   };
 
   const handleSeeAllLocalServices = () => {
-    navigation.navigate('LocalServicesScreen');
+    navigation.navigate('LocalServiceScreen');
   };
 
   const handleLocalServicePress = (item: any) => {
-    
+    console.log('Navigating to LocalServiceDetails with id:', item.id);
+    navigation.navigate('LocalServiceDetails', { localServiceId: item.id  });
   };
 
   const handleSeeAllMaterialsAndFoodServices = () => {
@@ -157,18 +206,18 @@ const HomeScreen: React.FC = () => {
     type="staff"
   />
   <SectionComponent 
-    title="Top locals services" 
-    data={localServices} 
-    onSeeAll={handleSeeAllLocalServices} 
-    onItemPress={handleLocalServicePress}
-    type="other"
-  />
+  title="Top locals services" 
+  data={locals} 
+  onSeeAll={handleSeeAllLocalServices} 
+  onItemPress={handleLocalServicePress}
+  type="local"
+/>
   <SectionComponent 
     title="Top materials services" 
     data={materialsAndFoodServices} 
     onSeeAll={handleSeeAllMaterialsAndFoodServices} 
     onItemPress={handleMaterialsAndFoodServicePress}
-    type="other"
+    type="material"
   />
 </VIPServicesContainer>
         <CustomButton
