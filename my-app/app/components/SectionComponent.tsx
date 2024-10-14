@@ -11,10 +11,12 @@ interface SectionComponentProps {
 
 const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeAll }) => {
   return (
-    <>
+    <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{title}</Text>
-        <CustomButton title="See all" onPress={onSeeAll} />
+        <View style={styles.seeAllButtonContainer}>
+          <CustomButton title="See All" onPress={onSeeAll} style={styles.seeAllButton} />
+        </View>
       </View>
       <Section
         data={data.map(item => ({
@@ -22,26 +24,37 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
           description: item.details || '',
           imageUrl: item.media && item.media.length > 0 ? item.media[0].url : ''
         }))}
-        style={styles.section}
+        style={styles.sectionContent}
         title=""
       />
-    </>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  section: {
+    marginBottom: 20,
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    paddingHorizontal: 10,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
   },
-  section: {
-    marginBottom: 20,
+  seeAllButtonContainer: {
+    width: 80,
+  },
+  seeAllButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  sectionContent: {
+    marginBottom: 10,
   },
 });
 

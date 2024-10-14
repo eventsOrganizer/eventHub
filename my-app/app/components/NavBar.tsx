@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import RNPickerSelect from 'react-native-picker-select';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface NavBarProps {
   selectedFilter: string | null;
@@ -10,44 +11,77 @@ interface NavBarProps {
 
 const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter }) => {
   return (
-    <View style={styles.navbar}>
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Rechercher des événements..."
-      />
-      <Ionicons name="notifications-outline" size={24} style={styles.icon} />
-      <RNPickerSelect
-        onValueChange={(value) => setSelectedFilter(value)}
-        items={[
-          { label: 'Tous', value: 'all' },
-          { label: 'Événements', value: 'events' },
-          { label: 'Produits', value: 'products' },
-          { label: 'Services', value: 'services' },
-        ]}
-        style={pickerSelectStyles}
-        placeholder={{ label: "Filtre Avancé", value: null }}
-      />
-    </View>
+    <LinearGradient
+      colors={['#1a2a6c', '#b21f1f', '#fdbb2d']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.container}
+    >
+      <View style={styles.navbar}>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#fff" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search events..."
+            placeholderTextColor="#ccc"
+          />
+        </View>
+        <TouchableOpacity style={styles.iconContainer}>
+          <Ionicons name="notifications" size={24} color="#fff" />
+        </TouchableOpacity>
+        <View style={styles.pickerContainer}>
+          <RNPickerSelect
+            onValueChange={(value) => setSelectedFilter(value)}
+            items={[
+              { label: 'All', value: 'all' },
+              { label: 'This Week', value: 'this_week' },
+              { label: 'This Month', value: 'this_month' },
+            ]}
+            style={pickerSelectStyles}
+            value={selectedFilter}
+            Icon={() => <Ionicons name="chevron-down" size={20} color="#fff" />}
+          />
+        </View>
+      </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    paddingTop: 40,
+    paddingBottom: 10,
+    paddingHorizontal: 15,
+  },
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    justifyContent: 'space-between',
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    marginRight: 10,
+  },
+  searchIcon: {
+    marginRight: 5,
   },
   searchBar: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 5,
-    marginRight: 10,
-    backgroundColor: '#fff',
+    color: '#fff',
+    fontSize: 16,
+    paddingVertical: 8,
   },
-  icon: {
-    marginHorizontal: 5,
+  iconContainer: {
+    marginHorizontal: 10,
+    padding: 5,
+  },
+  pickerContainer: {
+    width: 120,
   },
 });
 
@@ -56,20 +90,14 @@ const pickerSelectStyles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: 'gray',
-    borderRadius: 4,
-    color: 'black',
+    color: 'white',
     paddingRight: 30,
   },
   inputAndroid: {
     fontSize: 16,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    borderWidth: 0.5,
-    borderColor: 'purple',
-    borderRadius: 8,
-    color: 'black',
+    color: 'white',
     paddingRight: 30,
   },
 });
