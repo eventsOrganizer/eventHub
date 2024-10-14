@@ -19,7 +19,9 @@ CREATE TABLE "user" (
     username VARCHAR(45),
     gender VARCHAR(45),
     email VARCHAR(255) NOT NULL,
-    encrypted_password VARCHAR(255) NOT NULL
+    encrypted_password VARCHAR(255) NOT NULL,
+    details TEXT,
+    bio TEXT
 );
 
 
@@ -48,6 +50,7 @@ CREATE TABLE event (
 
 CREATE TABLE local (
     id SERIAL PRIMARY KEY,
+    details TEXT,
     subcategory_id INTEGER NOT NULL,
     user_id UUID NOT NULL,
     priceperhour INTEGER,
@@ -75,9 +78,18 @@ CREATE TABLE availability (
 CREATE TABLE chatroom (
     id SERIAL PRIMARY KEY,
     event_id INTEGER,
+    user1_id UUID,
+    user2_id UUID,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     type VARCHAR(7) CHECK (type IN ('private', 'public')),
-    FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE
+    FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE,
+    FOREIGN KEY (user1_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (user2_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    CONSTRAINT check_private_public 
+        CHECK (
+            (type = 'public' AND event_id IS NOT NULL AND user1_id IS NULL AND user2_id IS NULL) OR 
+            (type = 'private' AND event_id IS NULL AND user1_id IS NOT NULL AND user2_id IS NOT NULL)
+        )
 );
 
 
@@ -87,12 +99,16 @@ CREATE TABLE material (
     user_id UUID NOT NULL,
     quantity INTEGER,
     price INTEGER,
+
     price_per_hour INTEGER, -- New column for price per hour
     sell_or_rent VARCHAR(4) CHECK (sell_or_rent IN ('sell', 'rent')), -- Using VARCHAR with a CHECK constraint
     name VARCHAR(45),
     details VARCHAR(255),
+    sell_or_rent VARCHAR(4) CHECK (sell_or_rent IN ('sell', 'rent')),
+    price_per_hour INTEGER,
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id)
+);
 
 
 CREATE TABLE comment (
@@ -100,13 +116,14 @@ CREATE TABLE comment (
     personal_id INTEGER,
     material_id INTEGER,
     event_id INTEGER,
-    local_id INTEGER, -- New foreign key for local
+    local_id INTEGER,
     user_id UUID NOT NULL,
     details VARCHAR(255),
+    parent_id INTEGER REFERENCES comment(id),
     FOREIGN KEY (personal_id) REFERENCES personal(id),
     FOREIGN KEY (material_id) REFERENCES material(id),
     FOREIGN KEY (event_id) REFERENCES event(id),
-    FOREIGN KEY (local_id) REFERENCES local(id), -- New foreign key constraint
+    FOREIGN KEY (local_id) REFERENCES local(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id)
 );
 
@@ -153,10 +170,11 @@ CREATE TABLE media (
     id SERIAL PRIMARY KEY,
     event_id INTEGER,
     user_id UUID ,
+    user_id UUID ,
     personal_id INTEGER,
     material_id INTEGER,
     local_id INTEGER,
-    url VARCHAR(45),
+    url TEXT,
     FOREIGN KEY (event_id) REFERENCES event(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id),
     FOREIGN KEY (personal_id) REFERENCES personal(id),
@@ -164,7 +182,7 @@ CREATE TABLE media (
     FOREIGN KEY (local_id) REFERENCES local(id)
 );
 
-CREATE TABLE messages (
+CREATE TABLE message (
     id SERIAL PRIMARY KEY,
     chatroom_id INTEGER NOT NULL,
     user_id UUID NOT NULL,
@@ -205,12 +223,15 @@ CREATE TABLE request (
     event_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(8) CHECK (status IN ('pending', 'accepted', 'refused')),
+
+    -- Foreign key references
     FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (event_id) REFERENCES event(id),
     FOREIGN KEY (personal_id) REFERENCES personal(id),
+    FOREIGN KEY (event_id) REFERENCES event(id),
     FOREIGN KEY (local_id) REFERENCES local(id),
-    FOREIGN KEY (material_id) REFERENCES material(id),
+    FOREIGN KEY (material_id) REFERENCES material(id)
 );
+
 
 CREATE TABLE review (
     id SERIAL PRIMARY KEY,
@@ -273,3 +294,16 @@ create table
     foreign key (personal_id) references personal (id),
     foreign key (user_id) references "user" (id)
   );
+
+CREATE TABLE comment_replies (
+    id SERIAL PRIMARY KEY,
+    comment_id INTEGER NOT NULL,  -- The original comment
+    reply_id INTEGER NOT NULL,    -- The comment that replies to the original comment
+    FOREIGN KEY (comment_id) REFERENCES comment(id) ON DELETE CASCADE,
+    FOREIGN KEY (reply_id) REFERENCES comment(id) ON DELETE CASCADE
+);
+
+
+-- Rest of the tables remain the same
+-- ... (omitted for brevity)
+

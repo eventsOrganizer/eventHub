@@ -1,43 +1,89 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../services/supabaseClient';
 import NavBar from '../components/NavBar';
 import ServiceIcons from '../components/ServiceIcons';
+import EventSection from '../components/event/EventSection';
 import SectionComponent from '../components/SectionComponent';
+import CustomButton from '../components/PersonalServiceComponents/customButton';
+import EventMarquee from '../screens/EventMarquee';
+import VIPServicesContainer from '../components/VIPServicesContainer';
+import EventSectionContainer from '../components/event/EventSectionContainer';
+import BeautifulSectionHeader from '../components/event/BeautifulSectionHeader';
 
 type RootStackParamList = {
   Home: undefined;
   PersonalsScreen: { category: string };
+  ChatList: undefined;
+  PersonalDetail: { personalId: number };
+  EventDetails: { eventId: number };
+  AllEvents: undefined;
+  LocalServicesScreen: undefined;
+  MaterialsAndFoodServicesScreen: undefined;
 };
+
+
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
+const RedStripe = () => (
+  <View style={styles.redStripe} />
+);
+
 const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [staffServices, setStaffServices] = useState<any[]>([]);
   const [localServices, setLocalServices] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
 
-  const navigation = useNavigation<HomeScreenNavigationProp>();
+  const fetchEvents = async () => {
+    const { data, error } = await supabase
+      .from('event')
+      .select(`
+        *,
+        subcategory (
+          id,
+          name,
+          category (
+            id,
+            name
+          )
+        ),
+        location (id, longitude, latitude),
+        availability (id, start, end, daysofweek, date),
+        media (url)
+      `);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: eventsData } = await supabase.from('event').select('*');
-      const { data: staffServicesData } = await supabase
-        .from('personal')
-        .select('*, subcategory (name), media (url)')
-        // .eq('subcategory.name', 'Crew')
-        .limit(5);
-      const { data: localServicesData } = await supabase.from('local').select('*');
-      const { data: materialsAndFoodServicesData } = await supabase.from('material').select('*');
+      try {
+        const eventsData = await fetchEvents();
+        setEvents(eventsData);
 
-      if (eventsData) setEvents(eventsData);
-      if (staffServicesData) setStaffServices(staffServicesData);
-      if (localServicesData) setLocalServices(localServicesData);
-      if (materialsAndFoodServicesData) setMaterialsAndFoodServices(materialsAndFoodServicesData);
+        const { data: staffServicesData } = await supabase
+          .from('personal')
+          .select('*, subcategory (name), media (url)')
+          .limit(5);
+
+        const { data: localServicesData } = await supabase.from('local').select('*');
+        const { data: materialsAndFoodServicesData } = await supabase.from('material').select('*');
+
+        if (staffServicesData) setStaffServices(staffServicesData);
+        if (localServicesData) setLocalServices(localServicesData);
+        if (materialsAndFoodServicesData) setMaterialsAndFoodServices(materialsAndFoodServicesData);
+      } catch (error) {
+        console.error(error);
+      }
     };
 
     fetchData();
@@ -47,15 +93,89 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('PersonalsScreen', { category: 'Crew' });
   };
 
+  const handleStaffServicePress = (item: any) => {
+    console.log('Navigating to PersonalDetail with id:', item.id);
+    navigation.navigate('PersonalDetail', { personalId: item.id });
+  };
+
+  const handleSeeAllEvents = () => {
+    navigation.navigate('AllEvents');
+  };
+
+  const handleSeeAllLocalServices = () => {
+    navigation.navigate('LocalServicesScreen');
+  };
+
+  const handleLocalServicePress = (item: any) => {
+    
+  };
+
+  const handleSeeAllMaterialsAndFoodServices = () => {
+    navigation.navigate('MaterialsAndFoodServicesScreen');
+  };
+
+  const handleMaterialsAndFoodServicePress = (item: any) => {
+    
+  };
+
+
+  const togglemode = () => {
+
+  };
+
   return (
     <View style={styles.container}>
       <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
-      <ServiceIcons />
+      <RedStripe />
       <ScrollView style={styles.sections} contentContainerStyle={styles.scrollViewContent}>
-        <SectionComponent title="Your events" data={events} onSeeAll={() => {}} />
-        <SectionComponent title="Top staff services" data={staffServices} onSeeAll={handleSeeAllStaffServices} />
-        <SectionComponent title="Top locals services" data={localServices} onSeeAll={() => {}} />
-        <SectionComponent title="Top materials and food services" data={materialsAndFoodServices} onSeeAll={() => {}} />
+        <EventMarquee events={events} />
+        <ServiceIcons />
+        <BeautifulSectionHeader title="EVENTS" onSeeAllPress={togglemode} />
+        <EventSectionContainer>
+  <EventSection 
+    title="Your events" 
+    events={events} 
+    navigation={navigation}
+    onSeeAll={handleSeeAllEvents}
+    isTopEvents={false}
+  />
+  <EventSection 
+    title="Top events" 
+    events={events} 
+    navigation={navigation}
+    onSeeAll={handleSeeAllEvents}
+    isTopEvents={true}
+  />
+</EventSectionContainer>
+<BeautifulSectionHeader title="SERVICES" onSeeAllPress={togglemode} />
+        <VIPServicesContainer>
+  <SectionComponent 
+    title="Top staff services"
+    data={staffServices}
+    onSeeAll={handleSeeAllStaffServices}
+    onItemPress={handleStaffServicePress}
+    type="staff"
+  />
+  <SectionComponent 
+    title="Top locals services" 
+    data={localServices} 
+    onSeeAll={handleSeeAllLocalServices} 
+    onItemPress={handleLocalServicePress}
+    type="other"
+  />
+  <SectionComponent 
+    title="Top materials services" 
+    data={materialsAndFoodServices} 
+    onSeeAll={handleSeeAllMaterialsAndFoodServices} 
+    onItemPress={handleMaterialsAndFoodServicePress}
+    type="other"
+  />
+</VIPServicesContainer>
+        <CustomButton
+          title="Check Messages"
+          onPress={() => navigation.navigate('ChatList')}
+          style={styles.messageButton}
+        />
       </ScrollView>
     </View>
   );
@@ -64,14 +184,65 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
+  },
+  redStripe: {
+    height: 4,
+    backgroundColor: 'white',
+    width: '100%',
   },
   sections: {
     flex: 1,
   },
   scrollViewContent: {
     paddingBottom: 20,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 10,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  seeAllButtonContainer: {
+    width: 80,
+  },
+  seeAllButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  serviceCard: {
+    width: 150,
+    marginRight: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    padding: 10,
+  },
+  serviceImage: {
+    width: 130,
+    height: 100,
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  serviceName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  servicePrice: {
+    fontSize: 14,
+    color: 'green',
+  },
+  messageButton: {
+    marginTop: 10,
+    marginHorizontal: 10,
   },
 });
 
