@@ -9,7 +9,7 @@ const categories = [
   { name: 'Waiter', icon: 'cafe-outline' },
   { name: 'Entertainment & Performers', icon: 'musical-notes-outline' },
   { name: 'Transport & Logistics', icon: 'car-outline' },
-  { name: 'Cleaning & Maintenance', icon: 'broom-outline' },
+  { name: 'Cleaning & Maintenance', icon: 'brush-outline' },
   { name: 'Decor & Design', icon: 'color-palette-outline' },
   { name: 'Photography & Videography', icon: 'camera-outline' },
 ];

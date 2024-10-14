@@ -80,30 +80,27 @@ export const fetchStaffServices = async (): Promise<Service[]> => {
             name
           )
         ),
-        media (url),
-        availability (start, end, daysofweek, date),
-        comment (details, user_id),
-        like (user_id),
-        order (user_id, ticket_id),
-        personal_user (user_id, status),
-        review (user_id, rate, total)
+        media (url)
       `);
 
     if (error) throw error;
 
-    return data.map((service: Service) => ({
+    if (!data || data.length === 0) {
+      console.log('No services found in the database');
+      return [];
+    }
+
+    return data.map((service: any) => ({
       ...service,
       imageUrl: service.media && service.media.length > 0
         ? service.media[0].url
         : 'https://via.placeholder.com/150',
-      comments: service.comment || []
     }));
   } catch (error) {
     console.error('Error fetching staff services:', error);
     return [];
   }
 };
-
 export const fetchPersonalDetail = async (id: number): Promise<Service | null> => {
   try {
     const { data, error } = await supabase
@@ -134,24 +131,11 @@ export const fetchPersonalDetail = async (id: number): Promise<Service | null> =
       imageUrl: data.media && data.media.length > 0
         ? data.media[0].url
         : 'https://via.placeholder.com/150',
-      comments: data.comment || []
+      comments: data.comment || [],
+      likes: data.like || []
     };
   } catch (error) {
     console.error('Error fetching personal detail:', error);
-    return null;
-  }
-};
-
-export const addComment = async (personalId: number, userId: string, comment: string) => {
-  try {
-    const { data, error } = await supabase
-      .from('comment')
-      .insert({ personal_id: personalId, user_id: userId, details: comment });
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Error adding comment:', error);
     return null;
   }
 };

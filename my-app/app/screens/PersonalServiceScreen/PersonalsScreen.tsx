@@ -8,27 +8,22 @@ import CategoryList from '../../components/PersonalServiceComponents/CategoryLis
 
 const PersonalsScreen = () => {
   const [staffServices, setStaffServices] = useState<Service[]>([]);
-  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
 
   const navigation = useNavigation<PersonalScreenNavigationProp>();
   const route = useRoute();
   const { category }: { category?: string } = route.params || {};
 
   const loadServices = useCallback(async () => {
-    setIsLoading(true);
     try {
       const services = await fetchStaffServices();
       setStaffServices(services);
-      setFilteredServices(services); // Initialize filtered services with all services
     } catch (error) {
-      console.error('Error fetching staff services:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error loading services:', error);
+      setStaffServices([]);
     }
   }, []);
 
@@ -39,39 +34,23 @@ const PersonalsScreen = () => {
     loadServices();
   }, [category, loadServices]);
 
-  useEffect(() => {
-    filterServices();
-  }, [selectedCategory, searchQuery, minPrice, maxPrice, staffServices]);
-
-  const filterServices = () => {
-    let filtered = staffServices;
-    if (selectedCategory) {
-      filtered = filtered.filter(service => service.subcategory?.name === selectedCategory);
-    }
-    if (searchQuery) {
-      filtered = filtered.filter(service => 
-        service.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    if (minPrice) {
-      filtered = filtered.filter(service => service.priceperhour >= parseFloat(minPrice));
-    }
-    if (maxPrice) {
-      filtered = filtered.filter(service => service.priceperhour <= parseFloat(maxPrice));
-    }
-    setFilteredServices(filtered);
-  };
+  const filteredServices = staffServices.filter(service => 
+    (selectedCategory ? service.subcategory?.name === selectedCategory : true) &&
+    (searchQuery ? service.name.toLowerCase().includes(searchQuery.toLowerCase()) : true) &&
+    (minPrice ? service.priceperhour >= parseFloat(minPrice) : true) &&
+    (maxPrice ? service.priceperhour <= parseFloat(maxPrice) : true)
+  );
 
   const renderServiceItem = ({ item }: { item: Service }) => (
     <TouchableOpacity
       style={styles.serviceItem}
       onPress={() => navigation.navigate('PersonalDetail', { personalId: item.id })}
     >
-      <Image source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} style={styles.serviceImage} />
+      <Image source={{ uri: item.imageUrl }} style={styles.serviceImage} />
       <View style={styles.serviceInfo}>
         <Text style={styles.serviceName}>{item.name}</Text>
         <Text style={styles.servicePrice}>${item.priceperhour}/hr</Text>
-        <Text style={styles.serviceDetails} numberOfLines={2}>{item.details}</Text>
+        <Text style={styles.serviceDetails}>{item.details}</Text>
         <View style={styles.serviceStats}>
           <Text style={styles.serviceLikes}>❤️ {item.like?.length || 0}</Text>
           <Text style={styles.serviceReviews}>⭐ {item.review?.length || 0}</Text>
@@ -79,14 +58,6 @@ const PersonalsScreen = () => {
       </View>
     </TouchableOpacity>
   );
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading services...</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -122,23 +93,14 @@ const PersonalsScreen = () => {
         keyExtractor={(item) => item.id.toString()}
         style={styles.serviceList}
         contentContainerStyle={styles.serviceListContent}
-        ListEmptyComponent={
-          <Text style={styles.emptyListText}>No services found. Try adjusting your filters.</Text>
-        }
       />
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   searchBar: {
     backgroundColor: '#fff',
@@ -153,6 +115,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     paddingVertical: 10,
+    color: 'black',
   },
   priceFilter: {
     flexDirection: 'row',
@@ -228,12 +191,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFC107',
   },
-  emptyListText: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
-    color: '#757575',
-  },
 });
-
 export default PersonalsScreen;
+
