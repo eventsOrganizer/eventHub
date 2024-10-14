@@ -1,107 +1,115 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import EventCard from './EventCard';
-
+import YourEventCard from './YourEventCard';
+import JoinEventButton from './JoinEventButton';
 const { width, height } = Dimensions.get('window');
 
 interface EventSectionProps {
   title: string;
-  events: Array<{
-    id: number;
-    name: string;
-    type: string;
-    details: string;
-    media: { url: string }[];
-    subcategory: {
-      category: {
-        name: string;
-      };
-      name: string;
-    };
-    availability: {
-      date: string;
-    };
-  }>;
+  events: Array<any>;
   navigation: any;
   onSeeAll: () => void;
+  isTopEvents: boolean;
 }
 
-const EventSection: React.FC<EventSectionProps> = ({ title, events, navigation, onSeeAll }) => {
-  return (
-    <View style={styles.section}>
-      <LinearGradient
-        colors={['#FF6B6B', '#4ECDC4']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradientBackground}
+const EventSection: React.FC<EventSectionProps> = ({ title, events, navigation, onSeeAll, isTopEvents }) => {
+  const renderEventCard = ({ item }: { item: any }) => (
+    isTopEvents ? (
+      <EventCard 
+        key={item.id}
+        event={item}
+        onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
       >
+        <JoinEventButton
+          eventId={item.id}
+          privacy={item.privacy}
+          organizerId={item.user_id}
+          onJoinSuccess={() => {}}
+          onLeaveSuccess={() => {}}
+        />
+      </EventCard>
+    ) : (
+      <YourEventCard 
+        key={item.id}
+        event={item}
+        onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
+      >
+        <JoinEventButton
+          eventId={item.id}
+          privacy={item.privacy}
+          organizerId={item.user_id}
+          onJoinSuccess={() => {}}
+          onLeaveSuccess={() => {}}
+        />
+      </YourEventCard>
+    )
+  );
+
+  return (
+    <View style={[styles.section, { height: isTopEvents ? 'auto' : height * 0.7 }]}>
+      <View style={styles.gradientBackground}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{title}</Text>
           <TouchableOpacity onPress={onSeeAll} style={styles.seeAllButton}>
             <Text style={styles.seeAllText}>See All</Text>
-            <Ionicons name="arrow-forward" size={16} color="#fff" />
+            <Ionicons name="arrow-forward" size={16} color="#333" />
           </TouchableOpacity>
         </View>
-        <ScrollView 
-          horizontal 
+        <FlatList
+          data={events}
+          renderItem={renderEventCard}
+          keyExtractor={(item) => item.id.toString()}
+          horizontal={isTopEvents}
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollViewContent}
-        >
-          {events.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
-            />
-          ))}
-        </ScrollView>
-      </LinearGradient>
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={isTopEvents ? styles.topEventList : styles.yourEventList}
+        />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 20,
-    borderRadius: 15,
-    overflow: 'hidden',
-    height: height * 0.45,
+    marginBottom: 15,
   },
   gradientBackground: {
     flex: 1,
-    padding: 15,
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    color: '#333',
   },
   seeAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 15,
   },
   seeAllText: {
-    color: '#fff',
-    marginRight: 5,
+    color: '#333',
+    marginRight: 3,
     fontWeight: '600',
+    fontSize: 12,
   },
-  scrollViewContent: {
-    paddingBottom: 10,
+  topEventList: {
+    paddingBottom: 5,
+  },
+  yourEventList: {
+    paddingBottom: 5,
   },
 });
 

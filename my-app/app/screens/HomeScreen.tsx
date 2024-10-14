@@ -9,8 +9,9 @@ import EventSection from '../components/event/EventSection';
 import SectionComponent from '../components/SectionComponent';
 import CustomButton from '../components/PersonalServiceComponents/customButton';
 import EventMarquee from '../screens/EventMarquee';
-
-
+import VIPServicesContainer from '../components/VIPServicesContainer';
+import EventSectionContainer from '../components/event/EventSectionContainer';
+import BeautifulSectionHeader from '../components/event/BeautifulSectionHeader';
 
 type RootStackParamList = {
   Home: undefined;
@@ -22,6 +23,8 @@ type RootStackParamList = {
   LocalServicesScreen: undefined;
   MaterialsAndFoodServicesScreen: undefined;
 };
+
+
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -103,8 +106,21 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('LocalServicesScreen');
   };
 
+  const handleLocalServicePress = (item: any) => {
+    
+  };
+
   const handleSeeAllMaterialsAndFoodServices = () => {
     navigation.navigate('MaterialsAndFoodServicesScreen');
+  };
+
+  const handleMaterialsAndFoodServicePress = (item: any) => {
+    
+  };
+
+
+  const togglemode = () => {
+
   };
 
   return (
@@ -114,44 +130,47 @@ const HomeScreen: React.FC = () => {
       <ScrollView style={styles.sections} contentContainerStyle={styles.scrollViewContent}>
         <EventMarquee events={events} />
         <ServiceIcons />
-        <EventSection 
-          title="Your events" 
-          events={events} 
-          navigation={navigation}
-          onSeeAll={handleSeeAllEvents}
-        />
-        
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Top staff services</Text>
-            <View style={styles.seeAllButtonContainer}>
-              <CustomButton title="See All" onPress={handleSeeAllStaffServices} style={styles.seeAllButton} />
-            </View>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {staffServices.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => handleStaffServicePress(item)}
-                style={styles.serviceCard}
-              >
-                <Image source={{ uri: item.media?.[0]?.url }} style={styles.serviceImage} />
-                <Text style={styles.serviceName}>{item.name}</Text>
-                <Text style={styles.servicePrice}>${item.priceperhour}/hr</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-        <SectionComponent 
-          title="Top locals services" 
-          data={localServices} 
-          onSeeAll={handleSeeAllLocalServices} 
-        />
-        <SectionComponent 
-          title="Top materials and food services" 
-          data={materialsAndFoodServices} 
-          onSeeAll={handleSeeAllMaterialsAndFoodServices} 
-        />
+        <BeautifulSectionHeader title="EVENTS" onSeeAllPress={togglemode} />
+        <EventSectionContainer>
+  <EventSection 
+    title="Your events" 
+    events={events} 
+    navigation={navigation}
+    onSeeAll={handleSeeAllEvents}
+    isTopEvents={false}
+  />
+  <EventSection 
+    title="Top events" 
+    events={events} 
+    navigation={navigation}
+    onSeeAll={handleSeeAllEvents}
+    isTopEvents={true}
+  />
+</EventSectionContainer>
+<BeautifulSectionHeader title="SERVICES" onSeeAllPress={togglemode} />
+        <VIPServicesContainer>
+  <SectionComponent 
+    title="Top staff services"
+    data={staffServices}
+    onSeeAll={handleSeeAllStaffServices}
+    onItemPress={handleStaffServicePress}
+    type="staff"
+  />
+  <SectionComponent 
+    title="Top locals services" 
+    data={localServices} 
+    onSeeAll={handleSeeAllLocalServices} 
+    onItemPress={handleLocalServicePress}
+    type="other"
+  />
+  <SectionComponent 
+    title="Top materials services" 
+    data={materialsAndFoodServices} 
+    onSeeAll={handleSeeAllMaterialsAndFoodServices} 
+    onItemPress={handleMaterialsAndFoodServicePress}
+    type="other"
+  />
+</VIPServicesContainer>
         <CustomButton
           title="Check Messages"
           onPress={() => navigation.navigate('ChatList')}

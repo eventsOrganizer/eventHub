@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
-import EventCard from '../event/EventCard';
+import YourEventCard from '../event/YourEventCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../UserContext';
 
@@ -237,7 +237,7 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
           renderItem={({ item }) => (
             showEvents ? (
               <TouchableOpacity onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} style={styles.itemContainer}>
-                <EventCard event={item as any} onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} />
+                <YourEventCard event={item as any} onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} />
               </TouchableOpacity>
             ) : (
               <View style={styles.serviceItem}>

@@ -23,11 +23,14 @@ interface EventCardProps {
       start: string;
       end: string;
     };
+    privacy: boolean;
+    user_id: string;
   };
   onPress: (event: any) => void;
+  children?: React.ReactNode;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, onPress }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, onPress, children }) => {
   return (
     <TouchableOpacity
       style={styles.eventCardContainer}
@@ -38,6 +41,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, onPress }) => {
         style={styles.eventCardBackground}
         imageStyle={styles.eventCardImage}
       >
+        <View style={styles.joinButtonContainer}>
+          {children}
+        </View>
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.8)']}
           style={styles.eventCardGradient}
@@ -69,8 +75,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, onPress }) => {
 
 const styles = StyleSheet.create({
   eventCardContainer: {
-    width: width * 0.6,
-    height: height * 0.35,
+    width: width * 0.45,
+    height: height * 0.25,
     marginRight: 10,
     borderRadius: 10,
     overflow: 'hidden',
@@ -83,28 +89,34 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   eventCardGradient: {
-    padding: 10,
+    padding: 8,
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
   },
   eventName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
+    marginBottom: 3,
   },
   eventInfoContainer: {
-    marginTop: 5,
+    marginTop: 3,
   },
   eventInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   eventInfoText: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#fff',
-    marginLeft: 5,
+    marginLeft: 3,
+  },
+  joinButtonContainer: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    zIndex: 1,
   },
 });
 
