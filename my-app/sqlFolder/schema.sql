@@ -165,22 +165,34 @@ CREATE TABLE location (
     FOREIGN KEY (local_id) REFERENCES local(id),
     FOREIGN KEY (event_id) REFERENCES event(id)
 );
-
+////-////
 CREATE TABLE media (
     id SERIAL PRIMARY KEY,
     event_id INTEGER,
     user_id UUID ,
-    user_id UUID ,
     personal_id INTEGER,
     material_id INTEGER,
     local_id INTEGER,
+    album_id INTEGER,
     url TEXT,
+    type VARCHAR(45),
     FOREIGN KEY (event_id) REFERENCES event(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id),
     FOREIGN KEY (personal_id) REFERENCES personal(id),
     FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (local_id) REFERENCES local(id)
+    FOREIGN KEY (local_id) REFERENCES local(id),
+    FOREIGN KEY (album_id) REFERENCES album(id)
+
 );
+
+CREATE TABLE album (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(45),
+    details TEXT,
+    user_id UUID NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES "user"(id)
+);
+////-////
 
 CREATE TABLE message (
     id SERIAL PRIMARY KEY,
