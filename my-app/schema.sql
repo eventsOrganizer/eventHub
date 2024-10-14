@@ -228,14 +228,14 @@ CREATE POLICY "Users can view and update their own profile" ON "user"
     WITH CHECK (auth.uid() = id);
 
 -- Create a trigger to automatically create a user profile when a new auth user is created
-CREATE OR REPLACE FUNCTION public.handle_new_user() 
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public."user" (id)
-  VALUES (NEW.id);
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+   CREATE OR REPLACE FUNCTION public.handle_new_user() 
+   RETURNS TRIGGER AS $$
+   BEGIN
+     INSERT INTO public."user" (id, firstname, lastname, username)
+     VALUES (NEW.id, NEW.raw_user_meta_data->>'firstname', NEW.raw_user_meta_data->>'lastname', NEW.raw_user_meta_data->>'username');
+     RETURN NEW;
+   END;
+   $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

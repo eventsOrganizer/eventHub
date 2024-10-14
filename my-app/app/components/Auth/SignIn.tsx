@@ -1,127 +1,92 @@
-// import React, { useState } from 'react';
-// import useAuth from '../../hooks/useAuth';
-
-// const Login = () => {
-//     // Updated the type definition for useAuth to include login
-//     const { login, error, success }: { login: (identifier: string, password: string) => Promise<void>; error: string | null; success: string | null; } = useAuth();
-//     const [identifier, setIdentifier] = useState('');
-//     const [password, setPassword] = useState('');
-
-//     const handleSubmit = async (e: React.FormEvent) => {
-//         e.preventDefault();
-//         try {
-//             await login(identifier, password);
-//             // Handle success (e.g., redirect or show a success message)
-//         } catch (err) {
-//             // Handle error (e.g., show an error message)
-//         }
-//     };
-
-//     return (
-//         <form onSubmit={handleSubmit}>
-//             <input
-//                 type="text"
-//                 value={identifier}
-//                 onChange={(e) => setIdentifier(e.target.value)}
-//                 placeholder="Identifier"
-//                 required
-//             />
-//             <input
-//                 type="password"
-//                 value={password}
-//                 onChange={(e) => setPassword(e.target.value)}
-//                 placeholder="Password"
-//                 required
-//             />
-//             <button type="submit">Login</button>
-//             {error && <p>{error}</p>}
-//             {success && <p>{success}</p>}
-//         </form>
-//     );
-// };
-
-// export default Login;
-
-
+import React, { useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { NativeBaseProvider, Box, VStack, Heading, Input, Button, Text, FormControl, ScrollView, useToast } from 'native-base';
+import useAuth from '../../hooks/useAuth';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
 
-import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
-import useAuth from '../../hooks/useAuth';
+const Signin = () => {
+  const { login, error, success } = useAuth();
+  const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>();
+  const toast = useToast();
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
 
-const Login = () => {
-    const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>();
+  const handleSubmit = async () => {
+    if (!identifier || !password) {
+      toast.show({
+        title: "Validation Error",
+        description: "Both fields are required."
+      });
+      return;
+    }
 
-    const { login, error, success } = useAuth();
-    const [identifier, setIdentifier] = useState('');
-    const [password, setPassword] = useState('');
-    const [validationError, setValidationError] = useState('');
+    try {
+      await login(identifier, password);
+      if (success) {
+        toast.show({
+          title: "Login Successful",
+          description: "You have logged in successfully."
+        });
+        navigation.navigate('Home');
+      }
+    } catch (err) {
+      if (error) {
+        toast.show({
+          title: "Login Failed",
+          description: error
+        });
+      }
+    }
+  };
 
-    const handleSubmit = async () => {
-        if (!identifier || !password) {
-            setValidationError('Both fields are required.');
-            return;
-        }
+  return (
+    <NativeBaseProvider>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Box safeArea p="2" py="8" w="90%" maxW="290">
+          <Heading size="lg" fontWeight="600" color="orange.500" _dark={{
+            color: "warmGray.50"
+          }}>
+            Welcome Back
+          </Heading>
+          <Heading mt="1" _dark={{
+            color: "warmGray.200"
+          }} color="orange.400" fontWeight="medium" size="xs">
+            Sign in to continue!
+          </Heading>
 
-        setValidationError('');
-
-        try {
-            await login(identifier, password);
-            if (success) {
-                Alert.alert('Success', 'You have logged in successfully.');
-                navigation.navigate('Home');
-            }
-        } catch (err) {
-            if (error) {
-                Alert.alert('Error', error);
-            }
-        }
-    };
-
-    return (
-        <View style={styles.container}>
-            <TextInput
-                placeholder="Identifier"
-                value={identifier}
-                onChangeText={setIdentifier}
-                style={styles.input}
-            />
-            <TextInput
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={true}
-                style={styles.input}
-            />
-            <Button title="Login" onPress={handleSubmit} />
-            {validationError ? <Text style={styles.errorText}>{validationError}</Text> : null}
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            {success ? <Text style={styles.successText}>{success}</Text> : null}
-        </View>
-    );
+          <VStack space={3} mt="5">
+            <FormControl>
+              <FormControl.Label>Identifier</FormControl.Label>
+              <Input value={identifier} onChangeText={setIdentifier} />
+            </FormControl>
+            <FormControl>
+              <FormControl.Label>Password</FormControl.Label>
+              <Input type="password" value={password} onChangeText={setPassword} />
+            </FormControl>
+            <Button mt="2" colorScheme="orange" onPress={handleSubmit}>
+              Sign in
+            </Button>
+            <Text mt="2" textAlign="center">
+              Don't have an account?{" "}
+              <Text color="orange.500" fontWeight="medium" onPress={() => navigation.navigate('Signup' as never)}>
+                Sign Up
+              </Text>
+            </Text>
+          </VStack>
+        </Box>
+      </ScrollView>
+    </NativeBaseProvider>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 20,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        marginBottom: 10,
-        borderRadius: 5,
-    },
-    errorText: {
-        color: 'red',
-        marginTop: 10,
-    },
-    successText: {
-        color: 'green',
-        marginTop: 10,
-    },
+  container: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    backgroundColor: 'white',
+  },
 });
 
-export default Login;
+export default Signin;

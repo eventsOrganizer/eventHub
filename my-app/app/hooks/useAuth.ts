@@ -3,12 +3,11 @@ import { supabase } from '../../lib/supabase';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../navigation/types';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const useAuth = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>();
-
     const signup = async (firstname: string, lastname: string, username: string, email: string, password: string) => {
         const { data, error } = await supabase.auth.signUp({
             email,
@@ -21,13 +20,17 @@ const useAuth = () => {
                 },
             },
         });
-
+    
         if (error) {
             setError(error.message);
             setSuccess(null);
         } else {
             setSuccess("Signup successful");
             setError(null);
+            // Store the access token
+            if (data.session) {
+                await AsyncStorage.setItem('access_token', data.session.access_token);
+            }
         }
     };
 
