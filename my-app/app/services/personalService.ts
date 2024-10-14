@@ -70,6 +70,7 @@ export const initiatePayment = async (requestId: number, amount: number) => {
 
 export const fetchStaffServices = async (): Promise<Service[]> => {
   try {
+    console.log('Fetching staff services...');
     const { data, error } = await supabase
       .from('personal')
       .select(`
@@ -83,13 +84,17 @@ export const fetchStaffServices = async (): Promise<Service[]> => {
         media (url)
       `);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching staff services:', error);
+      return [];
+    }
 
     if (!data || data.length === 0) {
       console.log('No services found in the database');
       return [];
     }
 
+    console.log(`Found ${data.length} services`);
     return data.map((service: any) => ({
       ...service,
       imageUrl: service.media && service.media.length > 0
@@ -97,10 +102,11 @@ export const fetchStaffServices = async (): Promise<Service[]> => {
         : 'https://via.placeholder.com/150',
     }));
   } catch (error) {
-    console.error('Error fetching staff services:', error);
+    console.error('Unexpected error fetching staff services:', error);
     return [];
   }
 };
+
 export const fetchPersonalDetail = async (id: number): Promise<Service | null> => {
   try {
     const { data, error } = await supabase
