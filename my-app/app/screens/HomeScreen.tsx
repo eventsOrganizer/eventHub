@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, TextInput, TouchableOpacity, Text, Image } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../services/supabaseClient';
@@ -8,17 +8,29 @@ import ServiceIcons from '../components/ServiceIcons';
 import EventSection from '../components/event/EventSection';
 import SectionComponent from '../components/SectionComponent';
 import CustomButton from '../components/PersonalServiceComponents/customButton';
-
-import RNPickerSelect from 'react-native-picker-select';
+import EventMarquee from '../screens/EventMarquee';
+import VIPServicesContainer from '../components/VIPServicesContainer';
+import EventSectionContainer from '../components/event/EventSectionContainer';
+import BeautifulSectionHeader from '../components/event/BeautifulSectionHeader';
 
 type RootStackParamList = {
   Home: undefined;
   PersonalsScreen: { category: string };
   ChatList: undefined;
   PersonalDetail: { personalId: number };
+  EventDetails: { eventId: number };
+  AllEvents: undefined;
+  LocalServicesScreen: undefined;
+  MaterialsAndFoodServicesScreen: undefined;
 };
 
+
+
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+
+const RedStripe = () => (
+  <View style={styles.redStripe} />
+);
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -86,35 +98,79 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('PersonalDetail', { personalId: item.id });
   };
 
+  const handleSeeAllEvents = () => {
+    navigation.navigate('AllEvents');
+  };
+
+  const handleSeeAllLocalServices = () => {
+    navigation.navigate('LocalServicesScreen');
+  };
+
+  const handleLocalServicePress = (item: any) => {
+    
+  };
+
+  const handleSeeAllMaterialsAndFoodServices = () => {
+    navigation.navigate('MaterialsAndFoodServicesScreen');
+  };
+
+  const handleMaterialsAndFoodServicePress = (item: any) => {
+    
+  };
+
+
+  const togglemode = () => {
+
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.navbar}>
-        
-       
-      </View>
       <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
-      <ServiceIcons />
+      <RedStripe />
       <ScrollView style={styles.sections} contentContainerStyle={styles.scrollViewContent}>
-        <EventSection title="Your events" events={events} navigation={navigation} />
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Top staff services</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {staffServices.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => handleStaffServicePress(item)}
-                style={styles.serviceCard}
-              >
-                <Image source={{ uri: item.media?.[0]?.url }} style={styles.serviceImage} />
-                <Text style={styles.serviceName}>{item.name}</Text>
-                <Text style={styles.servicePrice}>${item.priceperhour}/hr</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-          <CustomButton title="See All" onPress={handleSeeAllStaffServices} />
-        </View>
-        <SectionComponent title="Top locals services" data={localServices} onSeeAll={() => {}} />
-        <SectionComponent title="Top materials and food services" data={materialsAndFoodServices} onSeeAll={() => {}} />
+        <EventMarquee events={events} />
+        <ServiceIcons />
+        <BeautifulSectionHeader title="EVENTS" onSeeAllPress={togglemode} />
+        <EventSectionContainer>
+  <EventSection 
+    title="Your events" 
+    events={events} 
+    navigation={navigation}
+    onSeeAll={handleSeeAllEvents}
+    isTopEvents={false}
+  />
+  <EventSection 
+    title="Top events" 
+    events={events} 
+    navigation={navigation}
+    onSeeAll={handleSeeAllEvents}
+    isTopEvents={true}
+  />
+</EventSectionContainer>
+<BeautifulSectionHeader title="SERVICES" onSeeAllPress={togglemode} />
+        <VIPServicesContainer>
+  <SectionComponent 
+    title="Top staff services"
+    data={staffServices}
+    onSeeAll={handleSeeAllStaffServices}
+    onItemPress={handleStaffServicePress}
+    type="staff"
+  />
+  <SectionComponent 
+    title="Top locals services" 
+    data={localServices} 
+    onSeeAll={handleSeeAllLocalServices} 
+    onItemPress={handleLocalServicePress}
+    type="other"
+  />
+  <SectionComponent 
+    title="Top materials services" 
+    data={materialsAndFoodServices} 
+    onSeeAll={handleSeeAllMaterialsAndFoodServices} 
+    onItemPress={handleMaterialsAndFoodServicePress}
+    type="other"
+  />
+</VIPServicesContainer>
         <CustomButton
           title="Check Messages"
           onPress={() => navigation.navigate('ChatList')}
@@ -130,22 +186,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  navbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 10,
-  },
-  searchBar: {
-    flex: 1,
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingLeft: 10,
-  },
-  icon: {
-    marginLeft: 10,
+  redStripe: {
+    height: 4,
+    backgroundColor: 'white',
+    width: '100%',
   },
   sections: {
     flex: 1,
@@ -156,10 +200,22 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 10,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+  },
+  seeAllButtonContainer: {
+    width: 80,
+  },
+  seeAllButton: {
+    paddingVertical: 5,
     paddingHorizontal: 10,
   },
   serviceCard: {
@@ -189,7 +245,5 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
 });
-
-
 
 export default HomeScreen;
