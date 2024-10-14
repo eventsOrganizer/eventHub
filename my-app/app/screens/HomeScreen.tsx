@@ -1,122 +1,181 @@
-// screens/HomeScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, ScrollView, StyleSheet, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import CustomButton from '../components/standardComponents/customButton';
-import RNPickerSelect from 'react-native-picker-select';
-import Section from '../components/standardComponents/sections';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../services/supabaseClient';
+import NavBar from '../components/NavBar';
+import ServiceIcons from '../components/ServiceIcons';
+import EventSection from '../components/event/EventSection';
+import SectionComponent from '../components/SectionComponent';
+import CustomButton from '../components/PersonalServiceComponents/customButton';
+import EventMarquee from '../screens/EventMarquee';
+import VIPServicesContainer from '../components/VIPServicesContainer';
+import EventSectionContainer from '../components/event/EventSectionContainer';
+import BeautifulSectionHeader from '../components/event/BeautifulSectionHeader';
+
+type RootStackParamList = {
+  Home: undefined;
+  PersonalsScreen: { category: string };
+  ChatList: undefined;
+  PersonalDetail: { personalId: number };
+  EventDetails: { eventId: number };
+  AllEvents: undefined;
+  LocalServicesScreen: undefined;
+  MaterialsAndFoodServicesScreen: undefined;
+};
+
+
+
+type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+
+const RedStripe = () => (
+  <View style={styles.redStripe} />
+);
 
 const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [events, setEvents] = useState<any[]>([]);
-  const [topEvents, setTopEvents] = useState<any[]>([]);
   const [staffServices, setStaffServices] = useState<any[]>([]);
   const [localServices, setLocalServices] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
 
+  const fetchEvents = async () => {
+    const { data, error } = await supabase
+      .from('event')
+      .select(`
+        *,
+        subcategory (
+          id,
+          name,
+          category (
+            id,
+            name
+          )
+        ),
+        location (id, longitude, latitude),
+        availability (id, start, end, daysofweek, date),
+        media (url)
+      `);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('event')
-        .select('*');
-      if (eventsError) console.error(eventsError);
-      else setEvents(eventsData);
+      try {
+        const eventsData = await fetchEvents();
+        setEvents(eventsData);
 
-      const { data: staffServicesData, error: staffServicesError } = await supabase
-        .from('personal')
-        .select('*');
-      if (staffServicesError) console.error(staffServicesError);
-      else setStaffServices(staffServicesData);
+        const { data: staffServicesData } = await supabase
+          .from('personal')
+          .select('*, subcategory (name), media (url)')
+          .limit(5);
 
-      const { data: localServicesData, error: localServicesError } = await supabase
-        .from('local')
-        .select('*');
-      if (localServicesError) console.error(localServicesError);
-      else setLocalServices(localServicesData);
+        const { data: localServicesData } = await supabase.from('local').select('*');
+        const { data: materialsAndFoodServicesData } = await supabase.from('material').select('*');
 
-      const { data: materialsAndFoodServicesData, error: materialsAndFoodServicesError } = await supabase
-        .from('material')
-        .select('*');
-      if (materialsAndFoodServicesError) console.error(materialsAndFoodServicesError);
-      else setMaterialsAndFoodServices(materialsAndFoodServicesData);
+        if (staffServicesData) setStaffServices(staffServicesData);
+        if (localServicesData) setLocalServices(localServicesData);
+        if (materialsAndFoodServicesData) setMaterialsAndFoodServices(materialsAndFoodServicesData);
+      } catch (error) {
+        console.error(error);
+      }
     };
 
     fetchData();
   }, []);
 
+  const handleSeeAllStaffServices = () => {
+    navigation.navigate('PersonalsScreen', { category: 'Crew' });
+  };
+
+  const handleStaffServicePress = (item: any) => {
+    console.log('Navigating to PersonalDetail with id:', item.id);
+    navigation.navigate('PersonalDetail', { personalId: item.id });
+  };
+
+  const handleSeeAllEvents = () => {
+    navigation.navigate('AllEvents');
+  };
+
+  const handleSeeAllLocalServices = () => {
+    navigation.navigate('LocalServicesScreen');
+  };
+
+  const handleLocalServicePress = (item: any) => {
+    
+  };
+
+  const handleSeeAllMaterialsAndFoodServices = () => {
+    navigation.navigate('MaterialsAndFoodServicesScreen');
+  };
+
+  const handleMaterialsAndFoodServicePress = (item: any) => {
+    
+  };
+
+
+  const togglemode = () => {
+
+  };
+
   return (
     <View style={styles.container}>
-      {/* Navbar */}
-      <View style={styles.navbar}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Rechercher des événements..."
-        />
-        <Ionicons name="notifications-outline" size={24} style={styles.icon} />
-        <RNPickerSelect
-          onValueChange={(value) => setSelectedFilter(value)}
-          items={[
-            { label: 'Tous', value: 'all' },
-            { label: 'Événements', value: 'events' },
-            { label: 'Produits', value: 'products' },
-            { label: 'Services', value: 'services' },
-          ]}
-          style={pickerSelectStyles}
-          placeholder={{ label: "Filtre Avancé", value: null }}
-        />
-      </View>
-
-      {/* Services Icons */}
-      <View style={styles.services}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <Ionicons name="musical-notes-outline" size={40} style={styles.serviceIcon} />
-          <Ionicons name="restaurant-outline" size={40} style={styles.serviceIcon} />
-          <Ionicons name="camera-outline" size={40} style={styles.serviceIcon} />
-        </ScrollView>
-      </View>
-
-      {/* Sections */}
+      <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
+      <RedStripe />
       <ScrollView style={styles.sections} contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Your events</Text>
-          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
-        </View>
-        <Section data={events.map(event => ({
-          title: event.name,
-          description: event.details || '',
-          imageUrl: '' // Ajoutez une URL d'image si disponible
-        }))} style={styles.section} title="" />
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Top staff services</Text>
-          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
-        </View>
-        <Section data={staffServices.map(service => ({
-          title: service.name,
-          description: service.details || '',
-          imageUrl: '' // Ajoutez une URL d'image si disponible
-        }))} style={styles.section} title="" />
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Top locals services</Text>
-          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
-        </View>
-        <Section data={localServices.map(service => ({
-          title: service.name,
-          description: '',
-          imageUrl: '' // Ajoutez une URL d'image si disponible
-        }))} style={styles.section} title="" />
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Top materials and food services</Text>
-          <CustomButton title="See all" onPress={() => { console.log('Bouton pressé') }} />
-        </View>
-        <Section data={materialsAndFoodServices.map(service => ({
-          title: service.name,
-          description: service.details || '',
-          imageUrl: '' // Ajoutez une URL d'image si disponible
-        }))} style={styles.section} title="" />
+        <EventMarquee events={events} />
+        <ServiceIcons />
+        <BeautifulSectionHeader title="EVENTS" onSeeAllPress={togglemode} />
+        <EventSectionContainer>
+  <EventSection 
+    title="Your events" 
+    events={events} 
+    navigation={navigation}
+    onSeeAll={handleSeeAllEvents}
+    isTopEvents={false}
+  />
+  <EventSection 
+    title="Top events" 
+    events={events} 
+    navigation={navigation}
+    onSeeAll={handleSeeAllEvents}
+    isTopEvents={true}
+  />
+</EventSectionContainer>
+<BeautifulSectionHeader title="SERVICES" onSeeAllPress={togglemode} />
+        <VIPServicesContainer>
+  <SectionComponent 
+    title="Top staff services"
+    data={staffServices}
+    onSeeAll={handleSeeAllStaffServices}
+    onItemPress={handleStaffServicePress}
+    type="staff"
+  />
+  <SectionComponent 
+    title="Top locals services" 
+    data={localServices} 
+    onSeeAll={handleSeeAllLocalServices} 
+    onItemPress={handleLocalServicePress}
+    type="other"
+  />
+  <SectionComponent 
+    title="Top materials services" 
+    data={materialsAndFoodServices} 
+    onSeeAll={handleSeeAllMaterialsAndFoodServices} 
+    onItemPress={handleMaterialsAndFoodServicePress}
+    type="other"
+  />
+</VIPServicesContainer>
+        <CustomButton
+          title="Check Messages"
+          onPress={() => navigation.navigate('ChatList')}
+          style={styles.messageButton}
+        />
       </ScrollView>
     </View>
   );
@@ -125,74 +184,65 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: '#f5f5f5',
-  },
-  navbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  searchBar: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 5,
-    marginRight: 10,
     backgroundColor: '#fff',
   },
-  icon: {
-    marginHorizontal: 5,
-  },
-  services: {
-    marginBottom: 20,
-  },
-  serviceIcon: {
-    marginHorizontal: 10,
-    color: '#4CAF50',
+  redStripe: {
+    height: 4,
+    backgroundColor: 'white',
+    width: '100%',
   },
   sections: {
     flex: 1,
   },
   scrollViewContent: {
-    paddingBottom: 20, // Ajoutez un padding en bas pour éviter que le dernier élément soit coupé
+    paddingBottom: 20,
   },
   section: {
-    marginBottom: 20, // Ajoutez un margin en bas de chaque section
+    marginBottom: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+    paddingHorizontal: 10,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
   },
-});
-
-const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: 'gray',
-    borderRadius: 4,
-    color: 'black',
-    paddingRight: 30, // to ensure the text is never behind the icon
+  seeAllButtonContainer: {
+    width: 80,
   },
-  inputAndroid: {
-    fontSize: 16,
+  seeAllButton: {
+    paddingVertical: 5,
     paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 0.5,
-    borderColor: 'purple',
-    borderRadius: 8,
-    color: 'black',
-    paddingRight: 30, // to ensure the text is never behind the icon
+  },
+  serviceCard: {
+    width: 150,
+    marginRight: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    padding: 10,
+  },
+  serviceImage: {
+    width: 130,
+    height: 100,
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  serviceName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  servicePrice: {
+    fontSize: 14,
+    color: 'green',
+  },
+  messageButton: {
+    marginTop: 10,
+    marginHorizontal: 10,
   },
 });
 
