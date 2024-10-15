@@ -18,7 +18,8 @@ type RouteParams = {
     parking: boolean;
     aircon: boolean;
   };
-  subcategoryName: string; // Use subcategoryName
+  subcategoryName: string;
+  subcategoryId: string; // Add subcategoryId here
 };
 
 type NavigationProps = StackNavigationProp<RootStackParamList, 'CreateLocalServiceStep5'>;
@@ -26,28 +27,33 @@ type NavigationProps = StackNavigationProp<RootStackParamList, 'CreateLocalServi
 const CreateLocalServiceStep5 = () => {
   const navigation = useNavigation<NavigationProps>();
   const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
-  const { serviceName, description, images, price, availabilityFrom, availabilityTo, amenities, subcategoryName } = route.params;
+  const { serviceName, description, images, price, availabilityFrom, availabilityTo, amenities, subcategoryName, subcategoryId } = route.params; // Extract subcategoryId
 
   // Accessing userId from the context
   const { userId } = useUser();
 
   const handleConfirm = async () => {
-    // Check if userId is available
+    // Check if userId and subcategoryId are available
     if (!userId) {
       Alert.alert('You must be logged in to create a service.');
       return;
     }
-  
+
+    if (!subcategoryId) {
+      Alert.alert('Subcategory ID is required.');
+      return;
+    }
+
     // Log the parameters to debug
     console.log('Inserting with the following parameters:');
     console.log({
       serviceName,
       description,
       price,
-      subcategoryId,
+      subcategoryId, // Ensure subcategoryId is logged
       userId,
     });
-  
+
     // Proceed with service submission
     try {
       const { data, error } = await supabase
@@ -57,11 +63,11 @@ const CreateLocalServiceStep5 = () => {
           details: description,
           priceperhour: parseFloat(price),
           subcategory_id: parseInt(subcategoryId), // Ensure this is a valid integer
-          user_id: userId, // Use userId from context
+          user_id: userId,
         });
-  
+
       if (error) throw error;
-  
+
       Alert.alert('Service submitted successfully!');
       navigation.navigate('Home');
     } catch (error) {

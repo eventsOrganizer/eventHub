@@ -9,6 +9,7 @@ type CreateLocalServiceStep1Params = {
     serviceName: string;
     description: string;
     subcategoryName: string; // Change from subcategoryId to subcategoryName
+    subcategoryId: string; // Pass subcategory ID
   };
 };
 
@@ -52,11 +53,12 @@ const CreateLocalServiceStep1 = () => {
   }, []);
 
   const handleNext = () => {
-    if (serviceName && description && selectedSubcategory) { // Check if selectedSubcategory is not null
+    if (serviceName && description && selectedSubcategory) {
       navigation.navigate('CreateLocalServiceStep2', { 
         serviceName, 
         description, 
-        subcategoryName: selectedSubcategory.name // Pass subcategory name
+        subcategoryName: selectedSubcategory.name, // Pass subcategory name
+        subcategoryId: selectedSubcategory.id // Pass subcategory ID
       });
     } else {
       alert('Please fill in all fields');

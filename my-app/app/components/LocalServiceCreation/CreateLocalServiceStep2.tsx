@@ -36,7 +36,7 @@ type Props = {
 };
 
 const CreateLocalServiceStep2: React.FC<Props> = ({ navigation, route }) => {
-  const { serviceName, description, subcategoryName, subcategories = [] } = route.params;
+  const { serviceName, description, subcategoryName, subcategoryId, subcategories = [] } = route.params; // Extract subcategoryId
   const [images, setImages] = useState<string[]>([]);
 
   // Debugging logs
@@ -66,8 +66,9 @@ const CreateLocalServiceStep2: React.FC<Props> = ({ navigation, route }) => {
         serviceName,
         description,
         images,
-        subcategoryId: subcategories?.find((subcategory) => subcategory.name === subcategoryName)?.id, // Ensure this is passed
-        subcategories // Pass the subcategories array
+        subcategoryName, // Pass subcategoryName
+        subcategoryId, // Pass subcategoryId
+        subcategories
       });
     }
   };

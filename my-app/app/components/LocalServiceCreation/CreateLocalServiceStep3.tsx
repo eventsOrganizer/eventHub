@@ -7,6 +7,7 @@ type RouteParams = {
   description: string;
   images: string[];
   subcategoryName: string; // Use subcategoryName
+  subcategoryId: string; // Extract subcategoryId
 };
 
 type CreateLocalServiceStackParamList = {
@@ -18,13 +19,14 @@ type CreateLocalServiceStackParamList = {
     availabilityFrom: string;
     availabilityTo: string;
     subcategoryName: string; // Use subcategoryName
+    subcategoryId: string; // Pass subcategoryId
   };
 };
 
 const CreateLocalServiceStep3 = () => {
   const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
   const navigation = useNavigation<NavigationProp<CreateLocalServiceStackParamList, 'CreateLocalServiceStep4'>>();
-  const { serviceName, description, images, subcategoryName } = route.params;
+  const { serviceName, description, images, subcategoryName, subcategoryId } = route.params; // Extract subcategoryId
 
   const [price, setPrice] = useState('');
   const [availabilityFrom, setAvailabilityFrom] = useState('');
@@ -38,6 +40,7 @@ const CreateLocalServiceStep3 = () => {
         serviceName,
         description,
         subcategoryName, // Pass subcategoryName
+        subcategoryId, // Pass subcategoryId
         images,
         price,
         availabilityFrom,
