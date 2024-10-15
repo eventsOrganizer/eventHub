@@ -2,18 +2,26 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { addComment } from '../../services/interactionService';
 
-interface CommentSectionProps {
-  comments: Array<{ details: string; user_id: string }> | undefined;
-  personalId: number;
+interface CommentType {
+  details: string;
+  user_id: string;
+  user?: {
+    username: string;
+  };
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ comments, personalId }) => {
+interface CommentSectionProps {
+  comments: CommentType[] | undefined;
+  personalId: number;
+  userId: string | null;
+}
+
+const CommentSection: React.FC<CommentSectionProps> = ({ comments, personalId, userId }) => {
   const [comment, setComment] = useState('');
 
   const handleAddComment = async () => {
-    if (comment.trim()) {
-      // Note: This function needs to be updated in personalService.ts to handle authentication
-      const result = await addComment(personalId, 'current-user-id', comment);
+    if (comment.trim() && userId) {
+      const result = await addComment(personalId, userId, comment);
       if (result) {
         // Update comments locally or refetch data
         setComment('');
@@ -26,25 +34,26 @@ const CommentSection: React.FC<CommentSectionProps> = ({ comments, personalId })
       <Text style={styles.sectionTitle}>Comments</Text>
       {comments?.map((comment, index) => (
         <View key={index} style={styles.commentContainer}>
-          <Text style={styles.commentUser}>User {comment.user_id}</Text>
+          <Text style={styles.commentUser}>{comment.user?.username || 'Anonymous'}</Text>
           <Text>{comment.details}</Text>
         </View>
       ))}
-      <View style={styles.addCommentContainer}>
-        <TextInput
-          style={styles.commentInput}
-          value={comment}
-          onChangeText={setComment}
-          placeholder="Add a comment..."
-        />
-        <TouchableOpacity onPress={handleAddComment} style={styles.addCommentButton}>
-          <Text style={styles.addCommentButtonText}>Post</Text>
-        </TouchableOpacity>
-      </View>
+      {userId && (
+        <View style={styles.addCommentContainer}>
+          <TextInput
+            style={styles.commentInput}
+            value={comment}
+            onChangeText={setComment}
+            placeholder="Add a comment..."
+          />
+          <TouchableOpacity onPress={handleAddComment} style={styles.addCommentButton}>
+            <Text style={styles.addCommentButtonText}>Post</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     padding: 16,
