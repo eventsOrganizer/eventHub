@@ -136,7 +136,6 @@ const AppNavigator = () => {
         component={PersonalDetail}
         options={{ headerShown: true }}
       />
-      />
       <Stack.Screen 
         name="EventDetails" 
         component={EventDetailsScreen} 
@@ -188,6 +187,8 @@ const AppNavigator = () => {
         component={CreateLocalServiceStep5} 
         options={{ headerShown: true, title: 'Create Local Service - Step 5' }} 
       />
+      <Stack.Screen
+      name="Requests"
         component={RequestsScreen as React.ComponentType<any>}
         options={{ headerShown: true }} // Adjust as needed
       />
