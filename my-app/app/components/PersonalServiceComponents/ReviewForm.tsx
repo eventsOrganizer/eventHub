@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
+import { useUser } from '../../UserContext';
 
 interface ReviewFormProps {
   personalId: number;
@@ -9,29 +10,43 @@ interface ReviewFormProps {
 
 const ReviewForm: React.FC<ReviewFormProps> = ({ personalId, onReviewSubmitted }) => {
   const [rating, setRating] = useState('');
+  const { userId } = useUser();
 
   const handleSubmitReview = async () => {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError || !userData.user) {
-      console.error('User not authenticated');
+    if (!userId) {
+      Alert.alert('Authentication Required', 'Please log in to submit a review.');
       return;
     }
 
-    const { data, error } = await supabase
-      .from('review')
-      .insert({
-        user_id: userData.user.id,
-        personal_id: personalId,
-        rate: parseFloat(rating),
-      });
+    const ratingNumber = parseFloat(rating);
+    if (isNaN(ratingNumber) || ratingNumber < 0 || ratingNumber > 5) {
+      Alert.alert('Invalid Rating', 'Please enter a valid rating between 0 and 5.');
+      return;
+    }
 
-    if (error) {
-      console.error('Error submitting review:', error);
-    } else {
+    try {
+      const { data, error } = await supabase
+        .from('review')
+        .insert({
+          user_id: userId,
+          personal_id: personalId,
+          rate: ratingNumber,
+        });
+
+      if (error) throw error;
+
       console.log('Review submitted successfully');
       onReviewSubmitted();
+      setRating('');
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      Alert.alert('Error', 'Failed to submit review. Please try again.');
     }
   };
+
+  if (!userId) {
+    return null; // Don't render the form if the user is not authenticated
+  }
 
   return (
     <View style={styles.container}>

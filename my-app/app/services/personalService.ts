@@ -1,43 +1,9 @@
 import { supabase } from './supabaseClient';
-import { User } from '@supabase/supabase-js';
 import { Service } from './serviceTypes';
+import { makeServiceRequest } from './requestService';
 
-export const makeServiceRequest = async (personalId: number, hours: number, date: string) => {
-  try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError) throw userError;
-    if (!userData.user) throw new Error('User not authenticated');
+export { makeServiceRequest };
 
-    const { data: personalData, error: personalError } = await supabase
-      .from('personal')
-      .select('priceperhour')
-      .eq('id', personalId)
-      .single();
-    if (personalError) throw personalError;
-
-    const totalPrice = personalData.priceperhour * hours;
-    const depositAmount = totalPrice * 0.25; // 25% deposit
-
-    const { data, error } = await supabase
-      .from('requests')
-      .insert({
-        user_id: userData.user.id,
-        personal_id: personalId,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        hours: hours,
-        date: date,
-        total_price: totalPrice,
-        deposit_amount: depositAmount
-      });
-
-    if (error) throw error;
-    return { requestData: data, depositAmount };
-  } catch (error) {
-    console.error('Error making service request:', error);
-    return null;
-  }
-};
 
 export const initiatePayment = async (requestId: number, amount: number) => {
   const FLOUCI_APP_TOKEN = "4c1e07ef-8533-4e83-bbeb-7f61c0b21931";
@@ -81,7 +47,9 @@ export const fetchStaffServices = async (): Promise<Service[]> => {
             name
           )
         ),
-        media (url)
+        media (url),
+        like (user_id),
+        review (user_id, rate)
       `);
 
     if (error) {
@@ -121,7 +89,11 @@ export const fetchPersonalDetail = async (id: number): Promise<Service | null> =
         ),
         media (url),
         availability (start, end, daysofweek, date),
-        comment (details, user_id),
+        comment (
+          details,
+          user_id,
+          user (username)
+        ),
         like (user_id),
         order (user_id, ticket_id),
         personal_user (user_id, status),
@@ -145,18 +117,15 @@ export const fetchPersonalDetail = async (id: number): Promise<Service | null> =
     return null;
   }
 };
-
-export const toggleLike = async (personalId: number) => {
+export const toggleLike = async (personalId: number, userId: string | null) => {
   try {
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError) throw userError;
-    if (!userData.user) throw new Error('User not authenticated');
+    if (!userId) throw new Error('User not authenticated');
 
     const { data: existingLike, error: fetchError } = await supabase
       .from('like')
       .select('*')
       .eq('personal_id', personalId)
-      .eq('user_id', userData.user.id)
+      .eq('user_id', userId)
       .single();
 
     if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
@@ -166,14 +135,14 @@ export const toggleLike = async (personalId: number) => {
         .from('like')
         .delete()
         .eq('personal_id', personalId)
-        .eq('user_id', userData.user.id);
+        .eq('user_id', userId);
 
       if (deleteError) throw deleteError;
       return false;
     } else {
       const { error: insertError } = await supabase
         .from('like')
-        .insert({ personal_id: personalId, user_id: userData.user.id });
+        .insert({ personal_id: personalId, user_id: userId });
 
       if (insertError) throw insertError;
       return true;
