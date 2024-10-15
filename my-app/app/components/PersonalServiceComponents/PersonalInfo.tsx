@@ -20,6 +20,11 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData }) => {
     }
   };
 
+  const reviewCount = personalData.review?.length || 0;
+  const averageRating = personalData.review && personalData.review.length > 0
+    ? personalData.review.reduce((sum, review) => sum + review.rate, 0) / reviewCount
+    : 0;
+
   return (
     <View style={styles.infoContainer}>
       <Image source={{ uri: personalData.imageUrl || 'https://via.placeholder.com/150' }} style={styles.image} />
@@ -34,7 +39,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData }) => {
         </TouchableOpacity>
         <View style={styles.statItem}>
           <Ionicons name="star" size={24} color="gold" />
-          <Text>{personalData.review?.length || 0} Reviews</Text>
+          <Text>{reviewCount} Reviews (Avg: {averageRating.toFixed(1)})</Text>
         </View>
       </View>
     </View>

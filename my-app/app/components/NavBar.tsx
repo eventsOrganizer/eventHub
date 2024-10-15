@@ -3,6 +3,7 @@ import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import RNPickerSelect from 'react-native-picker-select';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 
 interface NavBarProps {
   selectedFilter: string | null;
@@ -10,6 +11,8 @@ interface NavBarProps {
 }
 
 const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter }) => {
+  const navigation = useNavigation();
+
   return (
     <LinearGradient
       colors={['#1a2a6c', '#b21f1f', '#fdbb2d']}
@@ -26,6 +29,12 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter }) =>
             placeholderTextColor="#ccc"
           />
         </View>
+        <TouchableOpacity 
+          style={styles.iconContainer}
+          onPress={() => navigation.navigate('UserProfile' as never)}
+        >
+          <Ionicons name="person" size={24} color="#fff" />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.iconContainer}>
           <Ionicons name="notifications" size={24} color="#fff" />
         </TouchableOpacity>

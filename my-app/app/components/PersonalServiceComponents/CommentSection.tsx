@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import { addComment } from '../../services/personalService';
+import { addComment } from '../../services/interactionService';
 
 interface CommentSectionProps {
   comments: Array<{ details: string; user_id: string }> | undefined;

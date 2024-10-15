@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { Service } from './serviceTypes';
 
-export const makeServiceRequest = async (personalId: number, availabilityId: number, hours: number) => {
+export const makeServiceRequest = async (personalId: number, hours: number, date: string) => {
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
@@ -19,13 +19,14 @@ export const makeServiceRequest = async (personalId: number, availabilityId: num
     const depositAmount = totalPrice * 0.25; // 25% deposit
 
     const { data, error } = await supabase
-      .from('request')
+      .from('requests')
       .insert({
         user_id: userData.user.id,
         personal_id: personalId,
         status: 'pending',
         created_at: new Date().toISOString(),
         hours: hours,
+        date: date,
         total_price: totalPrice,
         deposit_amount: depositAmount
       });
@@ -69,6 +70,7 @@ export const initiatePayment = async (requestId: number, amount: number) => {
 
 export const fetchStaffServices = async (): Promise<Service[]> => {
   try {
+    console.log('Fetching staff services...');
     const { data, error } = await supabase
       .from('personal')
       .select(`
@@ -79,26 +81,28 @@ export const fetchStaffServices = async (): Promise<Service[]> => {
             name
           )
         ),
-        media (url),
-        availability (start, end, daysofweek, date),
-        comment (details, user_id),
-        like (user_id),
-        order (user_id, ticket_id),
-        personal_user (user_id, status),
-        review (user_id, rate, total)
+        media (url)
       `);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching staff services:', error);
+      return [];
+    }
 
-    return data.map((service: Service) => ({
+    if (!data || data.length === 0) {
+      console.log('No services found in the database');
+      return [];
+    }
+
+    console.log(`Found ${data.length} services`);
+    return data.map((service: any) => ({
       ...service,
       imageUrl: service.media && service.media.length > 0
         ? service.media[0].url
         : 'https://via.placeholder.com/150',
-      comments: service.comment || []
     }));
   } catch (error) {
-    console.error('Error fetching staff services:', error);
+    console.error('Unexpected error fetching staff services:', error);
     return [];
   }
 };
@@ -133,24 +137,11 @@ export const fetchPersonalDetail = async (id: number): Promise<Service | null> =
       imageUrl: data.media && data.media.length > 0
         ? data.media[0].url
         : 'https://via.placeholder.com/150',
-      comments: data.comment || []
+      comments: data.comment || [],
+      likes: data.like || []
     };
   } catch (error) {
     console.error('Error fetching personal detail:', error);
-    return null;
-  }
-};
-
-export const addComment = async (personalId: number, userId: string, comment: string) => {
-  try {
-    const { data, error } = await supabase
-      .from('comment')
-      .insert({ personal_id: personalId, user_id: userId, details: comment });
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Error adding comment:', error);
     return null;
   }
 };

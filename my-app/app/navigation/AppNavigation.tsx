@@ -13,9 +13,15 @@ import EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ChatListScreen from '../components/event/ChatListScreen';
-import RequestsScreen from '../components/event/RequestsScreen';
+import RequestsScreen from '../components/event/profile/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
 import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
+import LocalServiceDetailScreen from '../components/LocalService/LocalServiceDetailScreen';
+import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
+import UserProfileScreen from '../components/event/profile/UserProfileScreen';
+
+
+
 import CreateLocalServiceStep1 from '../components/LocalServiceCreation/CreateLocalServiceStep1';
 import CreateLocalServiceStep2 from '../components/LocalServiceCreation/CreateLocalServiceStep2';
 import CreateLocalServiceStep3 from '../components/LocalServiceCreation/CreateLocalServiceStep3';
@@ -59,6 +65,9 @@ type RootStackParamList = {
   CreateLocalServiceStep3: CreateLocalServiceStep3Props;
   CreateLocalServiceStep4: { formData: any };
   CreateLocalServiceStep5: { formData: any };
+  LocalServiceScreen: undefined;
+  LocalServiceDetails: { localServiceId: number };
+  UserProfile: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -116,7 +125,7 @@ const AppNavigator = () => {
         component={Signin}  
         options={{ headerShown: true }} 
       />
-      <Stack.Screen 
+         <Stack.Screen 
         name="PersonalsScreen" 
         component={PersonalsScreen}
         options={{ headerShown: true }}
@@ -124,7 +133,9 @@ const AppNavigator = () => {
       <Stack.Screen 
         name="PersonalDetail" 
         component={PersonalDetail}
+        component={PersonalDetail}
         options={{ headerShown: true }}
+      />
       />
       <Stack.Screen 
         name="EventDetails" 
@@ -177,6 +188,29 @@ const AppNavigator = () => {
         component={CreateLocalServiceStep5} 
         options={{ headerShown: true, title: 'Create Local Service - Step 5' }} 
       />
+        component={RequestsScreen as React.ComponentType<any>}
+        options={{ headerShown: true }} // Adjust as needed
+      />
+     <Stack.Screen
+       name="LocalServiceScreen"
+      component={LocalServiceScreen}
+      options={{ title: 'Local Services' }}
+    />
+
+    <Stack.Screen
+      name="LocalServiceDetails"
+      component={LocalServiceDetailScreen}
+      options={{ title: 'Service Details' }}
+/>
+
+      {/* Your other screens */}
+      <Stack.Screen 
+      name="UserProfile" 
+      component={UserProfileScreen} />
+    
+
+    
+
     </Stack.Navigator>
   );
 };

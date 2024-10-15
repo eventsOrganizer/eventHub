@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { supabase } from '../../services/supabaseClient';
-import { useUser } from '../../UserContext';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { supabase } from '../../../services/supabaseClient';
+import { useUser } from '../../../UserContext';
 
 interface Request {
   id: number;
@@ -11,6 +11,7 @@ interface Request {
 
 const RequestsScreen: React.FC = () => {
   const [requests, setRequests] = useState<Request[]>([]);
+  const [loading, setLoading] = useState(true);
   const { userId } = useUser();
 
   useEffect(() => {
@@ -20,6 +21,7 @@ const RequestsScreen: React.FC = () => {
   const fetchRequests = async () => {
     if (!userId) return;
 
+    setLoading(true);
     const { data, error } = await supabase
       .from('request')
       .select(`
@@ -36,9 +38,11 @@ const RequestsScreen: React.FC = () => {
     } else {
       setRequests(data as unknown as Request[]);
     }
+    setLoading(false);
   };
 
   const handleRequest = async (requestId: number, status: 'accepted' | 'rejected') => {
+    setLoading(true);
     const { error } = await supabase
       .from('request')
       .update({ status })
@@ -64,7 +68,9 @@ const RequestsScreen: React.FC = () => {
       fetchRequests();
       Alert.alert('Success', `Request ${status}`);
     }
+    setLoading(false);
   };
+
   const renderRequest = ({ item }: { item: Request }) => (
     <View style={styles.requestItem}>
       <Text style={styles.requestText}>{item.user.email} wants to join {item.event.name}</Text>
@@ -85,15 +91,26 @@ const RequestsScreen: React.FC = () => {
     </View>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Join Requests</Text>
-      <FlatList
-        data={requests}
-        renderItem={renderRequest}
-        keyExtractor={item => item.id.toString()}
-        ListEmptyComponent={<Text style={styles.emptyText}>No pending requests</Text>}
-      />
+      {requests.length > 0 ? (
+        <FlatList
+          data={requests}
+          renderItem={renderRequest}
+          keyExtractor={item => item.id.toString()}
+        />
+      ) : (
+        <Text style={styles.emptyText}>No pending requests</Text>
+      )}
     </View>
   );
 };
@@ -148,6 +165,18 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 20,
   },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default RequestsScreen;
+
+
+
+
+
+

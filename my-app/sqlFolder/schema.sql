@@ -43,9 +43,11 @@ CREATE TABLE event (
     user_id UUID NOT NULL,
     details TEXT,
     subcategory_id INTEGER NOT NULL,
+    group_id INTEGER,
     name TEXT,
     FOREIGN KEY (user_id) REFERENCES "user"(id),
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id)
+    FOREIGN KEY (group_id) REFERENCES "group"(id);
 );
 
 CREATE TABLE local (
@@ -165,22 +167,34 @@ CREATE TABLE location (
     FOREIGN KEY (local_id) REFERENCES local(id),
     FOREIGN KEY (event_id) REFERENCES event(id)
 );
-
+////-////
 CREATE TABLE media (
     id SERIAL PRIMARY KEY,
     event_id INTEGER,
     user_id UUID ,
-    user_id UUID ,
     personal_id INTEGER,
     material_id INTEGER,
     local_id INTEGER,
+    album_id INTEGER,
     url TEXT,
+    type VARCHAR(45),
     FOREIGN KEY (event_id) REFERENCES event(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id),
     FOREIGN KEY (personal_id) REFERENCES personal(id),
     FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (local_id) REFERENCES local(id)
+    FOREIGN KEY (local_id) REFERENCES local(id),
+    FOREIGN KEY (album_id) REFERENCES album(id)
+
 );
+
+CREATE TABLE album (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(45),
+    details TEXT,
+    user_id UUID NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES "user"(id)
+);
+////-////
 
 CREATE TABLE message (
     id SERIAL PRIMARY KEY,
@@ -216,21 +230,45 @@ CREATE TABLE "order" (
 
 CREATE TABLE request (
     id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL,
-    personal_id INTEGER NOT NULL,
-    local_id INTEGER NOT NULL,
-    material_id INTEGER NOT NULL,
-    event_id INTEGER NOT NULL,
+    user_id UUID NOT NULL, -- The user who receives the request
+    friend_id UUID 
+    personal_id INTEGER 
+    local_id INTEGER 
+    material_id INTEGER
+    event_id INTEGER 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(8) CHECK (status IN ('pending', 'accepted', 'refused')),
-
+    
     -- Foreign key references
     FOREIGN KEY (user_id) REFERENCES "user"(id),
+    FOREIGN KEY (friend_id) REFERENCES "user"(id),
     FOREIGN KEY (personal_id) REFERENCES personal(id),
-    FOREIGN KEY (event_id) REFERENCES event(id),
     FOREIGN KEY (local_id) REFERENCES local(id),
-    FOREIGN KEY (material_id) REFERENCES material(id)
+    FOREIGN KEY (material_id) REFERENCES material(id),
+    FOREIGN KEY (event_id) REFERENCES event(id)
 );
+
+CREATE TABLE "group" (
+    id SERIAL PRIMARY KEY,
+    privacy BOOLEAN,
+    name TEXT NOT NULL, -- Group name
+    details TEXT -- Group details or description
+);
+
+
+
+CREATE TABLE follower (
+    follower_id UUID NOT NULL,
+    following_id UUID NOT NULL,
+    followed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+
+    PRIMARY KEY (follower_id, following_id),
+    FOREIGN KEY (follower_id) REFERENCES "user"(id) ON DELETE CASCADE,  -- The follower
+    FOREIGN KEY (following_id) REFERENCES "user"(id) ON DELETE CASCADE  -- The user being followed
+);
+
+
 
 
 CREATE TABLE review (
