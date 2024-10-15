@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '../../../services/supabaseClient';
 
 interface Friend {
   id: string;
@@ -18,7 +18,7 @@ const FriendsList: React.FC<{ userId: string }> = ({ userId }) => {
 
   const fetchFriends = async () => {
     const { data, error } = await supabase
-      .from('friends')
+      .from('friend')
       .select('friend_id')
       .eq('user_id', userId);
 

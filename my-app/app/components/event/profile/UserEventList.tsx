@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { supabase } from '../../services/supabaseClient';
-import YourEventCard from './YourEventCard';
+import { supabase } from '../../../services/supabaseClient';
+import YourEventCard from '../YourEventCard';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -10,7 +10,7 @@ type RootStackParamList = {
   // Add other routes as needed
 };
 
-type AttendedEventsListNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EventDetails'>;
+type UserEventsListNavigationProp = NativeStackNavigationProp<RootStackParamList, 'EventDetails'>;
 
 interface Event {
   id: number;
@@ -33,44 +33,42 @@ interface Event {
   user_id: string;
 }
 
-const AttendedEventsList: React.FC<{ userId: string }> = ({ userId }) => {
-  const [attendedEvents, setAttendedEvents] = useState<Event[]>([]);
-  const navigation = useNavigation<AttendedEventsListNavigationProp>();
+const UserEventsList: React.FC<{ userId: string }> = ({ userId }) => {
+  const [userEvents, setUserEvents] = useState<Event[]>([]);
+  const navigation = useNavigation<UserEventsListNavigationProp>();
 
   useEffect(() => {
-    fetchAttendedEvents();
+    fetchUserEvents();
   }, [userId]);
 
-  const fetchAttendedEvents = async () => {
+  const fetchUserEvents = async () => {
     const { data, error } = await supabase
-      .from('event_has_user')
+      .from('event')
       .select(`
-        event:event_id (
-          id, name, type, details,
-          media (url),
-          subcategory (
-            name,
-            category (name)
-          ),
-          availability (date, start, end, daysofweek),
-          privacy,
-          user_id
-        )
+        id, name, type, details,
+        media (url),
+        subcategory (
+          name,
+          category (name)
+        ),
+        availability (date, start, end, daysofweek),
+        privacy,
+        user_id
       `)
       .eq('user_id', userId);
   
     if (error) {
-      console.error('Error fetching attended events:', error);
+      console.error('Error fetching user events:', error);
     } else if (data) {
-      setAttendedEvents(data.map(item => item.event) as unknown as Event[]);
+      setUserEvents(data as unknown as Event[]);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Attended Events</Text>
+      <Text style={styles.title}>Your Events</Text>
       <FlatList
-        data={attendedEvents}
+        data={userEvents}
         renderItem={({ item }) => (
           <YourEventCard
             event={item}
@@ -97,4 +95,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AttendedEventsList;
+export default UserEventsList;

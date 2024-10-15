@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '../../../services/supabaseClient';
 
 interface Album {
   id: number;

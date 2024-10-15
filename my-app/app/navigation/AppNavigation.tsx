@@ -13,12 +13,12 @@ import EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ChatListScreen from '../components/event/ChatListScreen';
-import RequestsScreen from '../components/event/RequestsScreen';
+import RequestsScreen from '../components/event/profile/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
 import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
 import LocalServiceDetailScreen from '../components/LocalService/LocalServiceDetailScreen';
 import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
-import UserProfileScreen from '../components/event/UserProfileScreen';
+import UserProfileScreen from '../components/event/profile/UserProfileScreen';
 
 
 
