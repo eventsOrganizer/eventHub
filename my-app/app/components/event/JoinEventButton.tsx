@@ -47,24 +47,37 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({ eventId, privacy, org
 
   const handleJoin = async () => {
     if (!userId) return;
-
+  
     if (!privacy) {
       const { data, error } = await supabase
         .from('event_has_user')
         .insert({ user_id: userId, event_id: eventId });
-
+  
       if (!error) {
         setIsJoined(true);
         onJoinSuccess();
+      } else {
+        console.error('Error joining event:', error);
+        Alert.alert('Error', 'Failed to join the event. Please try again.');
       }
     } else {
       const { data, error } = await supabase
         .from('request')
-        .insert({ user_id: userId, event_id: eventId, status: 'pending' });
-
+        .insert({
+          user_id: userId,
+          event_id: eventId,
+          status: 'pending',
+          personal_id: null,
+          local_id: null,
+          material_id: null
+        });
+  
       if (!error) {
         setIsPending(true);
-        onJoinSuccess();
+        Alert.alert('Request Sent', 'Your request to join this event has been sent to the organizer.');
+      } else {
+        console.error('Error sending join request:', error);
+        Alert.alert('Error', 'Failed to send join request. Please try again.');
       }
     }
   };

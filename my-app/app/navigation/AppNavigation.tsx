@@ -13,9 +13,15 @@ import EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ChatListScreen from '../components/event/ChatListScreen';
-import RequestsScreen from '../components/event/RequestsScreen';
+import RequestsScreen from '../components/event/profile/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
 import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
+import LocalServiceDetailScreen from '../components/LocalService/LocalServiceDetailScreen';
+import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
+import UserProfileScreen from '../components/event/profile/UserProfileScreen';
+
+
+
 export type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -33,6 +39,9 @@ export type RootStackParamList = {
   Requests: undefined;
   PersonalsScreen: undefined;
   PersonalDetail: undefined;
+  LocalServiceScreen: undefined;
+  LocalServiceDetails: { localServiceId: number };
+  UserProfile: undefined;
 };
 
 
@@ -99,11 +108,7 @@ const AppNavigator = () => {
          component={PersonalsScreen}
          options={{ headerShown: true }}
           />
-        <Stack.Screen 
-        name="PersonalDetail" 
-        component={(props:any) => <PersonalDetail {...props} />} 
-        options={{ headerShown: true }}
-        />
+        <Stack.Screen name="PersonalDetail" component={PersonalDetail} />
       <Stack.Screen 
         name="EventDetails" 
         component={EventDetailsScreen as React.ComponentType<any>} 
@@ -129,8 +134,25 @@ const AppNavigator = () => {
         component={RequestsScreen as React.ComponentType<any>}
         options={{ headerShown: true }} // Adjust as needed
       />
+     <Stack.Screen
+       name="LocalServiceScreen"
+      component={LocalServiceScreen}
+      options={{ title: 'Local Services' }}
+    />
 
+    <Stack.Screen
+      name="LocalServiceDetails"
+      component={LocalServiceDetailScreen}
+      options={{ title: 'Service Details' }}
+/>
 
+      {/* Your other screens */}
+      <Stack.Screen 
+      name="UserProfile" 
+      component={UserProfileScreen} />
+    
+
+    
 
     </Stack.Navigator>
   );

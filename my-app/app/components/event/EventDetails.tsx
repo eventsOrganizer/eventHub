@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
 
 interface Event {
+  id: number;
   name: string;
   type: string;
   subcategory: {

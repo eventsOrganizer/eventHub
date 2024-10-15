@@ -4,7 +4,8 @@ import CustomButton from './PersonalServiceComponents/customButton';
 import StaffServiceCard from './PersonalServiceComponents/StaffServiceCard';
 import EventCard from './event/EventCard';
 import { Dimensions } from 'react-native';
-
+import LocalServiceCard from './LocalService/LocalServiceCard';
+import ServiceCard from './LocalService/LocalServiceCard';
 const { width, height } = Dimensions.get('window');
 
 interface SectionComponentProps {
@@ -12,10 +13,11 @@ interface SectionComponentProps {
   data: any[];
   onSeeAll: () => void;
   onItemPress: (item: any) => void;
-  type: 'staff' | 'event' | 'other';
+  type: 'staff' | 'event' | 'local' | 'material';
 }
 
 const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeAll, onItemPress, type }) => {
+
   const renderItem = (item: any) => {
     switch (type) {
       case 'staff':
@@ -34,18 +36,17 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
             onPress={() => onItemPress(item)}
           />
         );
-      default:
+      case 'local':
+      case 'material':
         return (
-          <TouchableOpacity
+          <ServiceCard
             key={item.id}
+            item={item}
             onPress={() => onItemPress(item)}
-            style={styles.serviceCard}
-          >
-            <Image source={{ uri: item.media?.[0]?.url }} style={styles.serviceImage} />
-            <Text style={styles.serviceName}>{item.name}</Text>
-            <Text style={styles.serviceDescription}>{item.details || ''}</Text>
-          </TouchableOpacity>
+          />
         );
+      default:
+        return null;
     }
   };
 
