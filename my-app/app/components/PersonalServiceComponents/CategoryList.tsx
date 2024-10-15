@@ -7,11 +7,7 @@ const categories = [
   { name: 'Cooker', icon: 'restaurant-outline' },
   { name: 'Security', icon: 'shield-checkmark-outline' },
   { name: 'Waiter', icon: 'cafe-outline' },
-  { name: 'Entertainment & Performers', icon: 'musical-notes-outline' },
-  { name: 'Transport & Logistics', icon: 'car-outline' },
-  { name: 'Cleaning & Maintenance', icon: 'brush-outline' },
-  { name: 'Decor & Design', icon: 'color-palette-outline' },
-  { name: 'Photography & Videography', icon: 'camera-outline' },
+  { name: 'Cleaning', icon: 'brush-outline' },
 ];
 
 type CategoryListProps = {
@@ -34,7 +30,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ selectedCategory, onSelectC
           >
             <Ionicons 
               name={category.icon as keyof typeof Ionicons.glyphMap} 
-              size={24}
+              size={20}
               color={selectedCategory === category.name ? "white" : "black"} 
             />
             <Text style={[
@@ -50,27 +46,27 @@ const CategoryList: React.FC<CategoryListProps> = ({ selectedCategory, onSelectC
 
 const styles = StyleSheet.create({
   container: {
-    maxHeight: 80, // Increased from 70 to 80
-    marginBottom: 10,
+    height: 60,
+    marginBottom: 8,
   },
   categoriesScroll: {
-    paddingLeft: 10,
+    paddingLeft: 8,
   },
   categoryItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 15,
-    padding: 5,
-    borderRadius: 20,
-    width: 90, // Increased from 80 to 90
-    height: 80, // Increased from 70 to 80
+    marginRight: 12,
+    padding: 4,
+    borderRadius: 16,
+    width: 70,
+    height: 60,
   },
   selectedCategory: {
     backgroundColor: 'black',
   },
   categoryName: {
-    marginTop: 4, // Increased from 2 to 4
-    fontSize: 10, // Increased from 9 to 10
+    marginTop: 2,
+    fontSize: 10,
     textAlign: 'center',
   },
   selectedCategoryText: {

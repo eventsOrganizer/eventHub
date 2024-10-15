@@ -25,3 +25,5 @@ export const ServiceItem: React.FC<ServiceItemProps> = ({ item, onPress }) => (
     </View>
   </TouchableOpacity>
 );
+
+export default ServiceItem;
