@@ -104,11 +104,15 @@ const AppNavigator = () => {
         options={{ headerShown: true }} // Adjust as needed
       />
          <Stack.Screen 
-         name="PersonalsScreen" 
-         component={PersonalsScreen}
-         options={{ headerShown: true }}
-          />
-        <Stack.Screen name="PersonalDetail" component={PersonalDetail} />
+        name="PersonalsScreen" 
+        component={PersonalsScreen}
+        options={{ headerShown: true }}
+      />
+      <Stack.Screen 
+        name="PersonalDetail" 
+        component={PersonalDetail}
+        options={{ headerShown: true }}
+      />
       <Stack.Screen 
         name="EventDetails" 
         component={EventDetailsScreen as React.ComponentType<any>} 

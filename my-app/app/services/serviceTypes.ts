@@ -41,6 +41,20 @@ export type Service = {
     }>;
 };
 
+export type ServiceRequest = {
+  requestData: {
+    id: number;
+    user_id: string;
+    personal_id: number;
+    status: string;
+    created_at: string;
+    hours: number;
+    total_price: number;
+    deposit_amount: number;
+  };
+  depositAmount: number;
+};
+
 
   export const makeServiceRequest = async (personalId: number, availabilityId: number, hours: number): Promise<{ requestData: any; depositAmount: number } | null> => {
     try {
