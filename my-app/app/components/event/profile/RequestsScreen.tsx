@@ -1,89 +1,100 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { supabase } from '../../../services/supabaseClient';
 import { useUser } from '../../../UserContext';
 
-interface Request {
+interface EventRequest {
   id: number;
   user: { id: string; email: string };
   event: { id: number; name: string };
 }
 
 const RequestsScreen: React.FC = () => {
-  const [requests, setRequests] = useState<Request[]>([]);
+  const [eventRequests, setEventRequests] = useState<EventRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const { userId } = useUser();
 
   useEffect(() => {
-    fetchRequests();
+    fetchEventRequests();
   }, [userId]);
 
-  const fetchRequests = async () => {
+  const fetchEventRequests = async () => {
     if (!userId) return;
 
     setLoading(true);
-    const { data, error } = await supabase
-      .from('request')
-      .select(`
-        id,
-        event:event_id (id, name),
-        user:user_id (id, email)
-      `)
-      .eq('status', 'pending')
-      .eq('event.user_id', userId);
+    try {
+      const { data, error } = await supabase
+        .from('request')
+        .select(`
+          id,
+          event:event_id (id, name),
+          user:user_id (id, email)
+        `)
+        .eq('status', 'pending')
+        .eq('event.user_id', userId)
+        .is('friend_id', null);
 
-    if (error) {
-      console.error('Error fetching requests:', error);
-      Alert.alert('Error', 'Failed to fetch requests. Please try again.');
-    } else {
-      setRequests(data as unknown as Request[]);
+      if (error) throw error;
+      setEventRequests(data as unknown as EventRequest[]);
+    } catch (error) {
+      console.error('Error fetching event requests:', error);
+      Alert.alert('Error', 'Failed to fetch event requests. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const handleRequest = async (requestId: number, status: 'accepted' | 'rejected') => {
+  const handleEventRequest = async (requestId: number, status: 'accepted' | 'rejected') => {
     setLoading(true);
-    const { error } = await supabase
-      .from('request')
-      .update({ status })
-      .eq('id', requestId);
-
-    if (error) {
-      console.error('Error updating request:', error);
-      Alert.alert('Error', 'Failed to update request. Please try again.');
-    } else {
+    try {
       if (status === 'accepted') {
-        const request = requests.find(r => r.id === requestId);
-        if (request) {
+        const { error } = await supabase
+          .from('request')
+          .update({ status })
+          .eq('id', requestId);
+
+        if (error) throw error;
+
+        const request = eventRequests.find(r => r.id === requestId);
+        if (request && request.event) {
           const { error: insertError } = await supabase
             .from('event_has_user')
             .insert({ user_id: request.user.id, event_id: request.event.id });
 
-          if (insertError) {
-            console.error('Error adding user to event:', insertError);
-            Alert.alert('Error', 'Failed to add user to event. Please try again.');
-          }
+          if (insertError) throw insertError;
         }
+      } else {
+        const { error } = await supabase
+          .from('request')
+          .delete()
+          .eq('id', requestId);
+
+        if (error) throw error;
       }
-      fetchRequests();
+
+      fetchEventRequests();
       Alert.alert('Success', `Request ${status}`);
+    } catch (error) {
+      console.error('Error handling event request:', error);
+      Alert.alert('Error', 'Failed to handle request. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const renderRequest = ({ item }: { item: Request }) => (
+  const renderEventRequest = ({ item }: { item: EventRequest }) => (
     <View style={styles.requestItem}>
       <Text style={styles.requestText}>{item.user.email} wants to join {item.event.name}</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, styles.acceptButton]}
-          onPress={() => handleRequest(item.id, 'accepted')}
+          onPress={() => handleEventRequest(item.id, 'accepted')}
         >
           <Text style={styles.buttonText}>Accept</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.rejectButton]}
-          onPress={() => handleRequest(item.id, 'rejected')}
+          onPress={() => handleEventRequest(item.id, 'rejected')}
         >
           <Text style={styles.buttonText}>Reject</Text>
         </TouchableOpacity>
@@ -101,15 +112,15 @@ const RequestsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Join Requests</Text>
-      {requests.length > 0 ? (
+      <Text style={styles.title}>Event Requests</Text>
+      {eventRequests.length > 0 ? (
         <FlatList
-          data={requests}
-          renderItem={renderRequest}
+          data={eventRequests}
+          renderItem={renderEventRequest}
           keyExtractor={item => item.id.toString()}
         />
       ) : (
-        <Text style={styles.emptyText}>No pending requests</Text>
+        <Text style={styles.emptyText}>No pending event requests</Text>
       )}
     </View>
   );
@@ -125,10 +136,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#333',
   },
   requestItem: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
@@ -137,17 +147,17 @@ const styles = StyleSheet.create({
   requestText: {
     fontSize: 16,
     marginBottom: 10,
-    color: '#333',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   button: {
-    padding: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 5,
-    width: '48%',
-    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
   },
   acceptButton: {
     backgroundColor: '#4CAF50',
@@ -156,27 +166,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#F44336',
   },
   buttonText: {
-    color: 'white',
+    color: '#ffffff',
+    textAlign: 'center',
     fontWeight: 'bold',
   },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#666',
-    marginTop: 20,
-  },
-
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#666',
+  },
 });
 
 export default RequestsScreen;
-
-
-
-
-
-

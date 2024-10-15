@@ -19,6 +19,9 @@ import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
 import LocalServiceDetailScreen from '../components/LocalService/LocalServiceDetailScreen';
 import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
+import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
+import SavedScreen from '../components/event/profile/SavedScreen';
+
 
 
 
@@ -42,6 +45,8 @@ export type RootStackParamList = {
   LocalServiceScreen: undefined;
   LocalServiceDetails: { localServiceId: number };
   UserProfile: undefined;
+  FriendRequests: undefined;
+  Saved: undefined;
 };
 
 
@@ -148,13 +153,19 @@ const AppNavigator = () => {
       name="LocalServiceDetails"
       component={LocalServiceDetailScreen}
       options={{ title: 'Service Details' }}
-/>
+      />
 
-      {/* Your other screens */}
       <Stack.Screen 
       name="UserProfile" 
       component={UserProfileScreen} />
+
+      <Stack.Screen
+       name="FriendRequests" 
+      component={FriendRequestsScreen} />
     
+      <Stack.Screen
+       name ="Saved" 
+      component={SavedScreen} />  
 
     
 

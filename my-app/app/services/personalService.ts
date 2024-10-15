@@ -125,7 +125,7 @@ export const fetchPersonalDetail = async (id: number): Promise<Service | null> =
         like (user_id),
         order (user_id, ticket_id),
         personal_user (user_id, status),
-        review (user_id, rate, total)
+        review (user_id, rate)
       `)
       .eq('id', id)
       .single();

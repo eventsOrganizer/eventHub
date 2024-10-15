@@ -4,6 +4,9 @@ import { supabase } from '../../services/supabaseClient';
 import YourEventCard from '../event/YourEventCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUser } from '../../UserContext';
+import { useNavigation, NavigationProp, ParamListBase } from '@react-navigation/native';
+import FriendButton from '../../components/event/profile/FriendButton';
+import FollowButton from '../../components/event/profile/FollowButton';
 
 interface OrganizerProfile {
   id: string;
@@ -40,7 +43,7 @@ interface Service {
   details?: string;
 }
 
-const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string } }, navigation: any }> = ({ route, navigation }) => {
+const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string } } }> = ({ route }) => {
   const { organizerId } = route.params;
   const [organizer, setOrganizer] = useState<OrganizerProfile | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
@@ -48,6 +51,7 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
   const [showEvents, setShowEvents] = useState(true);
   const [loading, setLoading] = useState(false);
   const { userId: currentUserId } = useUser();
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   useEffect(() => {
     fetchOrganizerProfile();
@@ -68,9 +72,6 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
         .from('user')
         .select('id, email, firstname, lastname, bio');
   
-      console.log('All users:', allUsers);
-      console.log('All users error:', allUsersError);
-  
       if (allUsersError) {
         console.error('Error fetching all users:', allUsersError);
         return;
@@ -87,8 +88,6 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
         console.error('No user data found for organizer ID:', organizerId);
         return;
       }
-  
-      console.log('User data:', userData);
   
       const { data: mediaData, error: mediaError } = await supabase
         .from('media')
@@ -140,30 +139,15 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
 
   const fetchOrganizerServices = async () => {
     setLoading(true);
-    const { data: personalData, error: personalError } = await supabase
-      .from('personal')
+    const { data, error } = await supabase
+      .from('service')
       .select('*')
       .eq('user_id', organizerId);
 
-    const { data: localData, error: localError } = await supabase
-      .from('local')
-      .select('*')
-      .eq('user_id', organizerId);
-
-    const { data: materialData, error: materialError } = await supabase
-      .from('material')
-      .select('*')
-      .eq('user_id', organizerId);
-
-    if (personalError || localError || materialError) {
-      console.error('Error fetching organizer services:', personalError || localError || materialError);
+    if (error) {
+      console.error('Error fetching organizer services:', error);
     } else {
-      const allServices = [
-        ...(personalData || []).map(s => ({ ...s, type: 'Personal' })),
-        ...(localData || []).map(s => ({ ...s, type: 'Local' })),
-        ...(materialData || []).map(s => ({ ...s, type: 'Material' }))
-      ];
-      setServices(allServices);
+      setServices(data);
     }
     setLoading(false);
   };
@@ -195,17 +179,21 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
           <Text style={styles.bio}>{organizer.bio || 'No bio available'}</Text>
           {currentUserId ? (
             currentUserId !== organizerId ? (
-              <TouchableOpacity
-                style={styles.chatButton}
-                onPress={() => navigation.navigate('ChatRoom', { userId: currentUserId, organizerId })}
-              >
-                <Text style={styles.chatButtonText}>Chat with Organizer</Text>
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity
+                  style={styles.chatButton}
+                  onPress={() => navigation.navigate('ChatRoom', { userId: currentUserId, organizerId })}
+                >
+                  <Text style={styles.chatButtonText}>Chat with Organizer</Text>
+                </TouchableOpacity>
+                <FriendButton targetUserId={organizerId} />
+                <FollowButton targetUserId={organizerId} />
+              </>
             ) : (
               <Text style={styles.loginPrompt}>This is your profile</Text>
             )
           ) : (
-            <Text style={styles.loginPrompt}>Log in to chat with the organizer</Text>
+            <Text style={styles.loginPrompt}>Log in to interact with the organizer</Text>
           )}
         </View>
       </View>
@@ -331,51 +319,49 @@ const styles = StyleSheet.create({
   toggleButton: {
     paddingVertical: 5,
     paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  activeToggle: {
-    backgroundColor: '#FFA500',
   },
   toggleText: {
     fontSize: 16,
-    color: '#333',
+    color: '#666',
+  },
+  activeToggle: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#FFA500',
   },
   activeToggleText: {
-    color: '#fff',
+    color: '#FFA500',
     fontWeight: 'bold',
   },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
   itemContainer: {
-    marginBottom: 20,
+    marginBottom: 15,
   },
   serviceItem: {
     backgroundColor: '#fff',
     padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
+    marginBottom: 10,
+    borderRadius: 5,
   },
   serviceName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    marginBottom: 5,
   },
   serviceType: {
     fontSize: 14,
     color: '#666',
-    marginTop: 5,
+    marginBottom: 5,
   },
   serviceDetails: {
     fontSize: 14,
     color: '#333',
-    marginTop: 10,
+  },
+  listContent: {
+    padding: 15,
   },
   emptyText: {
+    textAlign: 'center',
     fontSize: 16,
     color: '#666',
-    textAlign: 'center',
     marginTop: 20,
   },
 });
