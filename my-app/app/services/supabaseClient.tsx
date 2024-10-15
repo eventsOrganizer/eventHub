@@ -25,8 +25,4 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_API_KEY, {
   },
 });
 
-<<<<<<< HEAD
-export const supabase = createClient(SUPABASE_URL, SUPABASE_API_KEY);
-=======
 console.log('Supabase client initialized');
->>>>>>> 27016f8a9b04dc4f12ac01beefabdc660818306a

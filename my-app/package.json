@@ -41,12 +41,8 @@
     "react-native-config": "^1.5.3",
     "react-native-dotenv": "^3.4.11",
     "react-native-gesture-handler": "^2.20.0",
-<<<<<<< HEAD
-    "react-native-maps": "^1.18.0",
-=======
     "react-native-linear-gradient-text": "^1.2.8",
     "react-native-maps": "^1.14.0",
->>>>>>> 27016f8a9b04dc4f12ac01beefabdc660818306a
     "react-native-paper": "^5.12.5",
     "react-native-picker-select": "^9.3.1",
     "react-native-reanimated": "^3.15.4",

@@ -206,11 +206,11 @@ const AppNavigator = () => {
       />
       
       {/* Event Details Screen */}
-      <Stack.Screen
+      {/* <Stack.Screen
         name="EventDetails"
         component={EventDetailsScreen}
         options={{ title: 'Event Details' }}
-      />
+      /> */}
       
       {/* New Screens */}
       <Stack.Screen
