@@ -7,6 +7,7 @@ import PersonalInfo from '../../components/PersonalServiceComponents/PersonalInf
 import CommentSection from '../../components/PersonalServiceComponents/CommentSection';
 import BookingForm from '../../components/PersonalServiceComponents/BookingForm';
 import BookingStatus from '../../components/PersonalServiceComponents/BookingStatus';
+import ReviewForm from '../../components/PersonalServiceComponents/ReviewForm';
 import { styles } from './styles';
 
 const PersonalDetail = () => {
@@ -58,6 +59,11 @@ const PersonalDetail = () => {
     }
   };
 
+  const handleReviewSubmitted = () => {
+    Alert.alert('Success', 'Your review has been submitted successfully.');
+    fetchData(); // Refresh the data to show the updated review
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -97,6 +103,8 @@ const PersonalDetail = () => {
           )}
 
           <BookingStatus status={requestStatus} />
+
+          <ReviewForm personalId={personalId} onReviewSubmitted={handleReviewSubmitted} />
 
           <CommentSection 
             comments={personalData.comment} 
