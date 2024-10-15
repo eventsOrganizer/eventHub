@@ -4,6 +4,7 @@ import { Switch } from 'react-native-paper';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
+
 type RouteParams = {
   serviceName: string;
   description: string;
@@ -11,7 +12,7 @@ type RouteParams = {
   price: string;
   availabilityFrom: string;
   availabilityTo: string;
-  subcategoryId: string;
+  subcategoryName: string; // Use subcategoryName
 };
 
 // Define the type for the navigation parameters
@@ -33,7 +34,7 @@ const CreateLocalServiceStep4 = () => {
   const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>>();
 
-  const { serviceName, description, images, price, availabilityFrom, availabilityTo, subcategoryId } = route.params;
+  const { serviceName, description, images, price, availabilityFrom, availabilityTo, subcategoryName } = route.params;
 
   const [amenities, setAmenities] = useState({ wifi: false, parking: false, aircon: false });
 
@@ -46,8 +47,8 @@ const CreateLocalServiceStep4 = () => {
       availabilityFrom,
       availabilityTo,
       amenities,
-      subcategoryId,
-    } as CreateLocalServiceStep5Params); // Assert the parameter type
+      subcategoryName, // Pass subcategoryName
+    });
   };
 
   return (

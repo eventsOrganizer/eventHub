@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, Image, Button, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { supabase } from '../../services/supabaseClient'; // Ensure correct import path
+import { useUser } from '../../UserContext'; // Importing useUser
 
 type RouteParams = {
   serviceName: string;
@@ -17,11 +18,7 @@ type RouteParams = {
     parking: boolean;
     aircon: boolean;
   };
-  subcategoryId: string; // Ensure this is a string
-  subcategories?: {
-    id: string; // Ensure this matches the type of subcategoryId
-    name: string;
-  }[];
+  subcategoryName: string; // Use subcategoryName
 };
 
 type NavigationProps = StackNavigationProp<RootStackParamList, 'CreateLocalServiceStep5'>;
@@ -29,16 +26,27 @@ type NavigationProps = StackNavigationProp<RootStackParamList, 'CreateLocalServi
 const CreateLocalServiceStep5 = () => {
   const navigation = useNavigation<NavigationProps>();
   const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
-  const { serviceName, description, images, price, availabilityFrom, availabilityTo, amenities, subcategoryId } = route.params;
+  const { serviceName, description, images, price, availabilityFrom, availabilityTo, amenities, subcategoryName } = route.params;
+
+  // Accessing userId from the context
+  const { userId } = useUser();
 
   const handleConfirm = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser();
-  
-    // Check if user is null or error exists
-    if (error || !user) {
+    // Check if userId is available
+    if (!userId) {
       Alert.alert('You must be logged in to create a service.');
       return;
     }
+  
+    // Log the parameters to debug
+    console.log('Inserting with the following parameters:');
+    console.log({
+      serviceName,
+      description,
+      price,
+      subcategoryId,
+      userId,
+    });
   
     // Proceed with service submission
     try {
@@ -48,8 +56,8 @@ const CreateLocalServiceStep5 = () => {
           name: serviceName,
           details: description,
           priceperhour: parseFloat(price),
-          subcategory_id: parseInt(subcategoryId),
-          user_id: user.id, // Safely access user id
+          subcategory_id: parseInt(subcategoryId), // Ensure this is a valid integer
+          user_id: userId, // Use userId from context
         });
   
       if (error) throw error;
@@ -66,7 +74,7 @@ const CreateLocalServiceStep5 = () => {
     <ScrollView style={styles.container}>
       <Text style={styles.label}>Service Name: {serviceName}</Text>
       <Text style={styles.label}>Description: {description}</Text>
-      <Text style={styles.label}>Subcategory: {subcategoryId}</Text>
+      <Text style={styles.label}>Subcategory: {subcategoryName}</Text>
       <Text style={styles.label}>Price: {price}</Text>
       <Text style={styles.label}>Available From: {availabilityFrom}</Text>
       <Text style={styles.label}>Available To: {availabilityTo}</Text>

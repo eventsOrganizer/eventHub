@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; // Updated import
+import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { supabase } from '../../services/supabaseClient'; // Adjust the import path as necessary
+import { supabase } from '../../services/supabaseClient';
 
 type CreateLocalServiceStep1Params = {
   CreateLocalServiceStep2: {
     serviceName: string;
     description: string;
-    subcategoryId: number;
+    subcategoryName: string; // Change from subcategoryId to subcategoryName
   };
 };
 
 type Subcategory = {
-  id: string; // or number, depending on your data
+  id: string;
   name: string;
 };
 
@@ -21,13 +21,12 @@ const CreateLocalServiceStep1 = () => {
   const [serviceName, setServiceName] = useState('');
   const [description, setDescription] = useState('');
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<number | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<Subcategory | null>(null); // Change to store the whole subcategory
   const navigation = useNavigation<NavigationProp<CreateLocalServiceStep1Params>>();
 
   useEffect(() => {
     const fetchSubcategories = async () => {
       try {
-        // Fetch the category with type 'local'
         const { data: categoryData, error: categoryError } = await supabase
           .from('category')
           .select('id')
@@ -36,7 +35,6 @@ const CreateLocalServiceStep1 = () => {
 
         if (categoryError) throw categoryError;
 
-        // Fetch subcategories related to the 'local' category
         const { data: subcategories, error: subcategoryError } = await supabase
           .from('subcategory')
           .select('*')
@@ -44,7 +42,7 @@ const CreateLocalServiceStep1 = () => {
 
         if (subcategoryError) throw subcategoryError;
 
-        setSubcategories(subcategories as any); // Cast to any to avoid TypeScript error
+        setSubcategories(subcategories as any);
       } catch (error) {
         console.error('Error fetching subcategories:', error);
       }
@@ -54,8 +52,12 @@ const CreateLocalServiceStep1 = () => {
   }, []);
 
   const handleNext = () => {
-    if (serviceName && description && selectedSubcategory !== null) {
-      navigation.navigate('CreateLocalServiceStep2', { serviceName, description, subcategoryId: selectedSubcategory });
+    if (serviceName && description && selectedSubcategory) { // Check if selectedSubcategory is not null
+      navigation.navigate('CreateLocalServiceStep2', { 
+        serviceName, 
+        description, 
+        subcategoryName: selectedSubcategory.name // Pass subcategory name
+      });
     } else {
       alert('Please fill in all fields');
     }
@@ -80,8 +82,11 @@ const CreateLocalServiceStep1 = () => {
       />
       <Text style={styles.label}>Subcategory</Text>
       <Picker
-        selectedValue={selectedSubcategory}
-        onValueChange={(itemValue) => setSelectedSubcategory(itemValue)}
+        selectedValue={selectedSubcategory ? selectedSubcategory.id : null} // Update to work with selectedSubcategory
+        onValueChange={(itemValue) => {
+          const selected = subcategories.find(sub => sub.id === itemValue); // Find the selected subcategory
+          setSelectedSubcategory(selected || null); // Set the whole subcategory object
+        }}
         style={styles.input}
       >
         <Picker.Item label="Select a subcategory" value={null} />

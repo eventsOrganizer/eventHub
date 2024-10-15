@@ -1,26 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, TextInput, Alert } from 'react-native';
+import { View, Text, Button, StyleSheet, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker'; // Add image picker library if needed
+import * as ImagePicker from 'expo-image-picker';
 
 type RouteParams = {
   serviceName: string;
   description: string;
-  subcategoryId: number;
+  subcategoryName: string; // Use subcategoryName instead of subcategoryId
+  subcategories?: { id: number; name: string }[];
 };
 
-// Define the type for your navigation stack
 type RootStackParamList = {
   CreateLocalServiceStep3: {
     serviceName: string;
     description: string;
     images: string[];
     subcategoryId: number;
+    subcategories?: { id: number; name: string }[];
   };
-  // ... other routes
 };
 
-// Define the props for your component
 type CreateLocalServiceStep2NavigationProp = NavigationProp<
   RootStackParamList,
   'CreateLocalServiceStep3'
@@ -37,8 +36,12 @@ type Props = {
 };
 
 const CreateLocalServiceStep2: React.FC<Props> = ({ navigation, route }) => {
-  const { serviceName, description, subcategoryId } = route.params;
+  const { serviceName, description, subcategoryName, subcategories = [] } = route.params;
   const [images, setImages] = useState<string[]>([]);
+
+  // Debugging logs
+  console.log('Subcategory ID:', subcategories?.find((subcategory) => subcategory.id === subcategoryId)?.id);
+  console.log('Subcategories:', subcategories);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -63,7 +66,8 @@ const CreateLocalServiceStep2: React.FC<Props> = ({ navigation, route }) => {
         serviceName,
         description,
         images,
-        subcategoryId,
+        subcategoryId: subcategories?.find((subcategory) => subcategory.name === subcategoryName)?.id, // Ensure this is passed
+        subcategories // Pass the subcategories array
       });
     }
   };
@@ -72,7 +76,7 @@ const CreateLocalServiceStep2: React.FC<Props> = ({ navigation, route }) => {
     <View style={styles.container}>
       <Text style={styles.label}>Service Name: {serviceName}</Text>
       <Text style={styles.label}>Description: {description}</Text>
-      <Text style={styles.label}>Subcategory ID: {subcategoryId}</Text>
+      <Text style={styles.label}>Category: {subcategoryName}</Text>
 
       <Button title="Pick Images" onPress={pickImage} />
       {images.length > 0 && (
