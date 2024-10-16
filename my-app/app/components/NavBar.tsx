@@ -38,6 +38,12 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter }) =>
         <TouchableOpacity style={styles.iconContainer}>
           <Ionicons name="notifications" size={24} color="#fff" />
         </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.iconContainer}
+          onPress={() => navigation.navigate('ChatList' as never)}
+        >
+          <Ionicons name="chatbubbles-outline" size={24} color="#fff" />
+        </TouchableOpacity>
         <View style={styles.pickerContainer}>
           <RNPickerSelect
             onValueChange={(value) => setSelectedFilter(value)}
@@ -86,7 +92,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   iconContainer: {
-    marginHorizontal: 10,
+    marginHorizontal: 5,
     padding: 5,
   },
   pickerContainer: {
