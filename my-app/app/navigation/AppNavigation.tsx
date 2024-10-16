@@ -25,7 +25,7 @@ import GuestManagementScreen from '../screens/GuestManagementScreen';
 import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
 import CreateServiceScreen from '../screens/CreateServiceScreen'; // Added CreateService import
 import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
-
+import ChatRoomScreen from '../components/event/ChatRoomScreen';
 
 
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
@@ -50,21 +50,12 @@ import CreateLocalServiceStep3 from '../components/LocalServiceCreation/CreateLo
 import CreateLocalServiceStep4 from '../components/LocalServiceCreation/CreateLocalServiceStep4';
 import CreateLocalServiceStep5 from '../components/LocalServiceCreation/CreateLocalServiceStep5';
 
-// Define the props interface for CreateLocalServiceStep3
-interface CreateLocalServiceStep3Props {
-  // Add the necessary props here
-}
+import CreatePersonalServiceStep1 from '../components/PersonalServiceCreation/CreatePersonalServiceStep1';
+import CreatePersonalServiceStep2 from '../components/PersonalServiceCreation/CreatePersonalServiceStep2';
+import CreatePersonalServiceStep3 from '../components/PersonalServiceCreation/CreatePersonalServiceStep3';
+import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
+import CreatePersonalServiceStep5 from '../components/PersonalServiceCreation/CreatePersonalServiceStep5';
 
-const CreateLocalServiceStep3s: React.FC<CreateLocalServiceStep3Props> = (props) => {
-  // Ensure the component returns a valid React node
-  return (
-    <div>
-      {/* Component implementation */}
-    </div>
-  );
-};
-
-// Update the navigation stack to include the props type
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -114,21 +105,25 @@ type EventSetupOptionsScreenProps = {
   PersonalsScreen: undefined;
   PersonalDetail: undefined;
   CreateLocalServiceStep1: undefined;
-  CreateLocalServiceStep2: { formData: any }; // Consider defining a specific type for formData
-  CreateLocalServiceStep3: CreateLocalServiceStep3Props;
+  CreateLocalServiceStep2: { formData: any };
+  CreateLocalServiceStep3: undefined;
   CreateLocalServiceStep4: { formData: any };
   CreateLocalServiceStep5: { formData: any };
   LocalServiceScreen: undefined;
   LocalServiceDetails: { localServiceId: number };
   UserProfile: undefined;
+  CreatePersonalServiceStep1: undefined;
+  CreatePersonalServiceStep2: { serviceName: string; description: string; subcategoryName: string; subcategoryId: number };
+  CreatePersonalServiceStep3: { serviceName: string; description: string; images: string[]; subcategoryName: string; subcategoryId: number };
+  CreatePersonalServiceStep4: { serviceName: string; description: string; images: string[]; price: string; availabilityFrom: string; availabilityTo: string; subcategoryName: string; subcategoryId: number };
+  CreatePersonalServiceStep5: { serviceName: string; description: string; images: string[]; price: string; availabilityFrom: string; availabilityTo: string; skills: string[]; subcategoryName: string; subcategoryId: number };
   FriendRequests: undefined;
   Saved: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const AppNavigator = () => {
-  // Callback for Interests screen (as an example)
+const AppNavigation: React.FC = () => {
   const handleOnComplete = () => {
     console.log('Onboarding complete!');
   };
@@ -149,121 +144,142 @@ const AppNavigator = () => {
         initialParams={{ onComplete: handleOnComplete }}
         options={{ headerShown: false }}
       />
-      
-      {/* Home Screen */}
-      <Stack.Screen
-        name="Home"
-        component={Home}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="Map" 
-        component={MapScreen} 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
-        name="Calendar" 
-        component={CalendarScreen} 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
-        name="EditProfile" 
-        component={EditProfileScreen} 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
-        name="Signup" 
-        component={Signup}  
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
-        name="Signin" 
-        component={Signin}  
-        options={{ headerShown: false }} 
-      />
-         <Stack.Screen 
-        name="PersonalsScreen" 
-        component={PersonalsScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="PersonalDetail" 
-        component={PersonalDetail}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="EventDetails" 
-        component={EventDetailsScreen} 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
-        name="OrganizerProfile" 
-        component={OrganizerProfileScreen} 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen
-        name="ChatRoom"
-        component={ChatRoomScreen}
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen
-        name="ChatList"
-        component={ChatListScreen}
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen
-        name="Requests"
-        component={RequestsScreen}
-        options={{ headerShown: false }} 
-      />
-      {/* Local Service Creation Steps */}
-      <Stack.Screen 
-        name="CreateLocalServiceStep1" 
-        component={CreateLocalServiceStep1} 
-        options={{ headerShown: true, title: 'Create Local Service - Step 1' }} 
-      />
-      <Stack.Screen 
-        name="CreateLocalServiceStep2" 
-        component={CreateLocalServiceStep2} 
-        options={{ headerShown: true, title: 'Create Local Service - Step 2' }} 
-      />
-      <Stack.Screen 
-        name="CreateLocalServiceStep3" 
-        component={CreateLocalServiceStep3} 
-        options={{ headerShown: true, title: 'Create Local Service - Step 3' }} 
-      />
-      <Stack.Screen 
-        name="CreateLocalServiceStep4" 
-        component={CreateLocalServiceStep4} 
-        options={{ headerShown: true, title: 'Create Local Service - Step 4' }} 
-      />
-      <Stack.Screen 
-        name="CreateLocalServiceStep5" 
-        component={CreateLocalServiceStep5} 
-        options={{ headerShown: true, title: 'Create Local Service - Step 5' }} 
-      />
-     <Stack.Screen
-       name="LocalServiceScreen"
-      component={LocalServiceScreen}
-      options={{ title: 'Local Services' }}
-    />
-
-    <Stack.Screen
-      name="LocalServiceDetails"
-      component={LocalServiceDetailScreen}
-      options={{ title: 'Service Details' }}
-      />
-
-      <Stack.Screen 
-      name="UserProfile" 
-      component={UserProfileScreen} />
-
-      <Stack.Screen
+        <Stack.Screen 
+          name="Home" 
+          component={Home}  
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="Map" 
+          component={MapScreen} 
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen 
+          name="Calendar" 
+          component={CalendarScreen} 
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen 
+          name="Profile" 
+          component={ProfileScreen} 
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen 
+          name="EditProfile" 
+          component={EditProfileScreen} 
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen 
+          name="Signup" 
+          component={Signup}  
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen 
+          name="Signin" 
+          component={Signin}  
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen 
+          name="PersonalsScreen" 
+          component={PersonalsScreen}
+          options={{ headerShown: true }}
+        />
+        <Stack.Screen 
+          name="PersonalDetail" 
+          component={PersonalDetail}
+          options={{ headerShown: true }}
+        />
+        <Stack.Screen 
+          name="EventDetails" 
+          component={EventDetailsScreen} 
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen 
+          name="OrganizerProfile" 
+          component={OrganizerProfileScreen} 
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen
+          name="ChatRoom"
+          component={ChatRoomScreen}
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen
+          name="ChatList"
+          component={ChatListScreen}
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen
+          name="Requests"
+          component={RequestsScreen}
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen 
+          name="CreateLocalServiceStep1" 
+          component={CreateLocalServiceStep1} 
+          options={{ headerShown: true, title: 'Create Local Service - Step 1' }} 
+        />
+        <Stack.Screen 
+          name="CreateLocalServiceStep2" 
+          component={CreateLocalServiceStep2} 
+          options={{ headerShown: true, title: 'Create Local Service - Step 2' }} 
+        />
+        <Stack.Screen 
+          name="CreateLocalServiceStep3" 
+          component={CreateLocalServiceStep3} 
+          options={{ headerShown: true, title: 'Create Local Service - Step 3' }} 
+        />
+        <Stack.Screen 
+          name="CreateLocalServiceStep4" 
+          component={CreateLocalServiceStep4} 
+          options={{ headerShown: true, title: 'Create Local Service - Step 4' }} 
+        />
+        <Stack.Screen 
+          name="CreateLocalServiceStep5" 
+          component={CreateLocalServiceStep5} 
+          options={{ headerShown: true, title: 'Create Local Service - Step 5' }} 
+        />
+        <Stack.Screen
+          name="LocalServiceScreen"
+          component={LocalServiceScreen}
+          options={{ title: 'Local Services' }}
+        />
+        <Stack.Screen
+          name="LocalServiceDetails"
+          component={LocalServiceDetailScreen}
+          options={{ title: 'Service Details' }}
+        />
+        <Stack.Screen 
+          name="CreatePersonalServiceStep1" 
+          component={CreatePersonalServiceStep1} 
+          options={{ headerShown: true, title: 'Create Personal Service - Step 1' }} 
+        />
+        <Stack.Screen 
+          name="CreatePersonalServiceStep2" 
+          component={CreatePersonalServiceStep2} 
+          options={{ headerShown: true, title: 'Create Personal Service - Step 2' }} 
+        />
+        <Stack.Screen 
+          name="CreatePersonalServiceStep3" 
+          component={CreatePersonalServiceStep3} 
+          options={{ headerShown: true, title: 'Create Personal Service - Step 3' }} 
+        />
+        <Stack.Screen 
+          name="CreatePersonalServiceStep4" 
+          component={CreatePersonalServiceStep4} 
+          options={{ headerShown: true, title: 'Create Personal Service - Step 4' }} 
+        />
+        <Stack.Screen 
+          name="CreatePersonalServiceStep5" 
+          component={CreatePersonalServiceStep5} 
+          options={{ headerShown: true, title: 'Create Personal Service - Step 5' }} 
+        />
+        <Stack.Screen 
+          name="UserProfile" 
+          component={UserProfileScreen} 
+          options={{ headerShown: true }} 
+        />
+        <Stack.Screen
        name="FriendRequests" 
       component={FriendRequestsScreen} />
     
@@ -271,10 +287,9 @@ const AppNavigator = () => {
        name ="Saved" 
       component={SavedScreen} />  
 
-    
-
-    </Stack.Navigator>
+      </Stack.Navigator>
+   
   );
 };
 
-export default AppNavigator;
+export default AppNavigation;
