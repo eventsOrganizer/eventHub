@@ -97,6 +97,7 @@ type RootStackParamList = {
     selectedCategory: string; 
     selectedSubcategory: string 
   };
+  UserProfile: undefined; // or { userId: string } if you pass params
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -118,6 +119,8 @@ type EventSetupOptionsScreenProps = {
   UserProfile: undefined;
   HomeScreen: undefined;
   Map: undefined;
+
+  
   Home: undefined;
 };
 
@@ -149,7 +152,7 @@ const AppNavigator = () => {
       {/* Home Screen */}
       <Stack.Screen
         name="Home"
-        component={HomeScreen}
+        component={Home}
         options={{ headerShown: false }}
       />
       <Stack.Screen 

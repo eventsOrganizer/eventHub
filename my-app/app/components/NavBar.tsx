@@ -33,12 +33,9 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
 />
 
         </View>
-        <TouchableOpacity 
-          style={styles.iconContainer}
-          onPress={() => navigation.navigate('Home' as never)}
-        >
-          <Ionicons name="person" size={24} color="#fff" />
-        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('UserProfile' as never)}>
+  <Ionicons name="person-outline" size={24} color="#333" />
+</TouchableOpacity>
         <TouchableOpacity style={styles.iconContainer}>
           <Ionicons name="notifications" size={24} color="#fff" />
         </TouchableOpacity>
