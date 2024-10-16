@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Image } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, RefreshControl, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,10 +31,11 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [events, setEvents] = useState<any[]>([]);
+  const [topEvents, setTopEvents] = useState<any[]>([]);
   const [staffServices, setStaffServices] = useState<any[]>([]);
   const [locals, setLocals] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
-  const [displayMode, setDisplayMode] = useState<'all' | 'events' | 'services'>('all');
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -42,14 +43,16 @@ const HomeScreen: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const [eventsData, localsData, staffServicesData, materialsAndFoodServicesData] = await Promise.all([
+      const [eventsData, topEventsData, localsData, staffServicesData, materialsAndFoodServicesData] = await Promise.all([
         fetchEvents(),
+        fetchTopEvents(),
         fetchLocals(),
         fetchStaffServices(),
         fetchMaterialsAndFoodServices()
       ]);
 
       setEvents(eventsData);
+      setTopEvents(topEventsData);
       setLocals(localsData);
       setStaffServices(staffServicesData);
       setMaterialsAndFoodServices(materialsAndFoodServicesData);
@@ -62,18 +65,28 @@ const HomeScreen: React.FC = () => {
     const { data, error } = await supabase
       .from('event')
       .select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`)
+ 
+    if (error) throw new Error(error.message);
+    return data || [];
+  };
+
+  const fetchTopEvents = async () => {
+    const { data, error } = await supabase
+      .from('event')
+      .select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`)
+    
       .limit(10);
     if (error) throw new Error(error.message);
-    return data;
+    return data || [];
   };
 
   const fetchLocals = async () => {
     const { data, error } = await supabase
       .from('local')
       .select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`)
-      .limit(5);
+
     if (error) throw new Error(error.message);
-    return data;
+    return data || [];
   };
 
   const fetchStaffServices = async () => {
@@ -82,14 +95,19 @@ const HomeScreen: React.FC = () => {
       .select('*, subcategory (name), media (url)')
       .limit(5);
     if (error) throw new Error(error.message);
-    return data;
+    return data || [];
   };
 
   const fetchMaterialsAndFoodServices = async () => {
     const { data, error } = await supabase.from('material').select('*').limit(5);
     if (error) throw new Error(error.message);
-    return data;
+    return data || [];
   };
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchData().then(() => setRefreshing(false));
+  }, []);
 
   const handleSeeAllEvents = () => navigation.navigate('AllEvents');
   const handleStaffServicePress = (item: any) => navigation.navigate('PersonalDetail', { personalId: item.id });
@@ -99,92 +117,86 @@ const HomeScreen: React.FC = () => {
   const handleSeeAllMaterialsAndFoodServices = () => navigation.navigate('MaterialsAndFoodServicesScreen');
   const handleMaterialsAndFoodServicePress = (item: any) => navigation.navigate('MaterialServiceDetail', { materialId: item.id });
 
-  const toggleMode = () => {
-    setDisplayMode((prevMode) => {
-      switch (prevMode) {
-        case 'all': return 'events';
-        case 'events': return 'services';
-        case 'services': return 'all';
-        default: return 'all';
-      }
-    });
-  };
-
   const renderSectionHeader = (title: string, onPress: () => void) => (
-    <LinearGradient
-      colors={['#FF6B6B', '#FF8E53', '#FFA726']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.sectionHeader}
-    >
+    <View style={styles.sectionHeader}>
       <Text style={styles.sectionHeaderTitle}>{title}</Text>
       <TouchableOpacity onPress={onPress} style={styles.seeAllButton}>
         <Text style={styles.seeAllButtonText}>See All</Text>
-        <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
+        <Ionicons name="chevron-forward" size={24} color="#007AFF" />
       </TouchableOpacity>
-    </LinearGradient>
+    </View>
   );
 
   return (
-    <LinearGradient
-      colors={['#FFFFFF', '#FFF5E6', '#FFE0B2', '#FFCC80', '#FFB74D', '#FFA726', '#FF9800', '#FB8C00', '#F57C00', '#EF6C00', '#E65100']}
-      locations={[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]}
-      style={styles.container}
-    >
-      <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-        <EventMarquee events={events} />
-        <ServiceIcons />
-        
-        {renderSectionHeader("EVENTS", toggleMode)}
-        <View style={styles.sectionContainer}>
-          <EventSection 
-            title="Your events" 
-            events={events.slice(0, 3)} 
-            navigation={navigation}
-            onSeeAll={handleSeeAllEvents}
-            isTopEvents={false}
-          />
-          <EventSection 
-            title="Top events" 
-            events={events.slice(3, 6)} 
-            navigation={navigation}
-            onSeeAll={handleSeeAllEvents}
-            isTopEvents={true}
-          />
-        </View>
+    <SafeAreaView style={styles.container}>
+      <LinearGradient
+        colors={['#FFFFFF', '#E6F3FF', '#CCE7FF']}
+        style={styles.gradient}
+      >
+        <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
+        <ScrollView 
+          style={styles.scrollView} 
+          contentContainerStyle={styles.scrollViewContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <EventMarquee events={events.slice(0, 10)} />
+          <ServiceIcons />
+          
+          {renderSectionHeader("EVENTS", handleSeeAllEvents)}
+          <View style={styles.sectionContainer}>
+            <EventSection 
+              title="Your events" 
+              events={events} 
+              navigation={navigation}
+              onSeeAll={handleSeeAllEvents}
+              isTopEvents={false}
+            />
+            <EventSection 
+              title="Top events" 
+              events={topEvents} 
+              navigation={navigation}
+              onSeeAll={handleSeeAllEvents}
+              isTopEvents={true}
+            />
+          </View>
 
-        {renderSectionHeader("SERVICES", toggleMode)}
-        <View style={styles.sectionContainer}>
-          <SectionComponent 
-            title="Top staff services"
-            data={staffServices}
-            onSeeAll={handleSeeAllStaffServices}
-            onItemPress={handleStaffServicePress}
-            type="staff"
-          />
-          <SectionComponent 
-            title="Top local services" 
-            data={locals} 
-            onSeeAll={handleSeeAllLocalServices} 
-            onItemPress={handleLocalServicePress}
-            type="local"
-          />
-          <SectionComponent 
-            title="Top material services" 
-            data={materialsAndFoodServices} 
-            onSeeAll={handleSeeAllMaterialsAndFoodServices} 
-            onItemPress={handleMaterialsAndFoodServicePress}
-            type="material"
-          />
-        </View>
-      </ScrollView>
-    </LinearGradient>
+          {renderSectionHeader("SERVICES", handleSeeAllStaffServices)}
+          <View style={styles.sectionContainer}>
+            <SectionComponent 
+              title="Top staff services"
+              data={staffServices}
+              onSeeAll={handleSeeAllStaffServices}
+              onItemPress={handleStaffServicePress}
+              type="staff"
+            />
+            <SectionComponent 
+              title="Top local services" 
+              data={locals} 
+              onSeeAll={handleSeeAllLocalServices} 
+              onItemPress={handleLocalServicePress}
+              type="local"
+            />
+            <SectionComponent 
+              title="Top material services" 
+              data={materialsAndFoodServices} 
+              onSeeAll={handleSeeAllMaterialsAndFoodServices} 
+              onItemPress={handleMaterialsAndFoodServicePress}
+              type="material"
+            />
+          </View>
+        </ScrollView>
+      </LinearGradient>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  gradient: {
     flex: 1,
   },
   scrollView: {
@@ -200,32 +212,51 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     marginTop: 20,
-    marginHorizontal: 10,
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
+    marginHorizontal: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   sectionHeaderTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    color: '#007AFF',
   },
   seeAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F0F8FF',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
   },
   seeAllButtonText: {
-    color: '#FF8C00',
+    color: '#007AFF',
     fontSize: 16,
     marginRight: 5,
+    fontWeight: '600',
   },
   sectionContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 15,
     marginHorizontal: 10,
     marginTop: 10,
     padding: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
 });
 

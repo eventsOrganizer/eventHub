@@ -5,17 +5,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
+// All categories have the same red color now
 const categories = [
   { name: 'Music', icon: 'musical-notes', color: '#E63946' },
-  { name: 'Food', icon: 'restaurant', color: '#2A9D8F' },
-  { name: 'Photo', icon: 'camera', color: '#0081A7' },
-  { name: 'Sports', icon: 'basketball', color: '#F4A261' },
-  { name: 'Politics', icon: 'megaphone', color: '#5C4D9A' },
+  { name: 'Food', icon: 'restaurant', color: '#E63946' },
+  { name: 'Photo', icon: 'camera', color: '#E63946' },
+  { name: 'Sports', icon: 'basketball', color: '#E63946' },
+  { name: 'Politics', icon: 'megaphone', color: '#E63946' },
   { name: 'Art', icon: 'color-palette', color: '#E63946' },
-  { name: 'Home', icon: 'home', color: '#2A9D8F' },
-  { name: 'Business', icon: 'briefcase', color: '#0081A7' },
-  { name: 'Education', icon: 'school', color: '#F4A261' },
-  { name: 'Tech', icon: 'hardware-chip', color: '#5C4D9A' },
+  { name: 'Home', icon: 'home', color: '#E63946' },
+  { name: 'Business', icon: 'briefcase', color: '#E63946' },
+  { name: 'Education', icon: 'school', color: '#E63946' },
+  { name: 'Tech', icon: 'hardware-chip', color: '#E63946' },
 ];
 
 const ServiceIcons: React.FC = () => {
