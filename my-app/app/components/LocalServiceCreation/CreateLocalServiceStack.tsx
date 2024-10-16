@@ -11,11 +11,11 @@ const Stack = createStackNavigator();
 const CreateLocalServiceStack: React.FC = () => {
   return (
     <Stack.Navigator initialRouteName="CreateLocalServiceStep1">
-      <Stack.Screen name="CreateLocalServiceStep1" component={CreateLocalServiceStep1} />
-      <Stack.Screen name="CreateLocalServiceStep2" component={CreateLocalServiceStep2} />
-      <Stack.Screen name="CreateLocalServiceStep3" component={CreateLocalServiceStep3} />
-      <Stack.Screen name="CreateLocalServiceStep4" component={CreateLocalServiceStep4} />
-      <Stack.Screen name="CreateLocalServiceStep5" component={CreateLocalServiceStep5} />
+      <Stack.Screen name="CreateLocalServiceStep1" component={CreateLocalServiceStep1} options={{ headerShown: false }}/>
+      <Stack.Screen name="CreateLocalServiceStep2" component={CreateLocalServiceStep2} options={{ headerShown: false }}/>
+      <Stack.Screen name="CreateLocalServiceStep3" component={CreateLocalServiceStep3} options={{ headerShown: false }}/>
+      <Stack.Screen name="CreateLocalServiceStep4" component={CreateLocalServiceStep4} options={{ headerShown: false }}/>
+      <Stack.Screen name="CreateLocalServiceStep5" component={CreateLocalServiceStep5} options={{ headerShown: false }}/>
     </Stack.Navigator>
   );
 };

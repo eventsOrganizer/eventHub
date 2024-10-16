@@ -1,0 +1,275 @@
+[33mcommit 8e5bc57e986c11bcf0b5fc60184da0e3505d22f2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32myesser[m[33m)[m
+Merge: 3f42ac7 19351e4
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Tue Oct 15 20:13:49 2024 +0100
+
+    Merge branch 'main' of https://github.com/eventsOrganizer/eventHub into yesser
+
+[33mcommit 3f42ac7dfab660ffd48645ae3f14328c17baa50e[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Tue Oct 15 20:12:42 2024 +0100
+
+    followers and followings  , friends , interests , notification of friend request and event requests
+
+[33mcommit 19351e4c74d2f9e1cb1d176f102be6c3a317838b[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Merge: 3e165eb 1cb8ed6
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Tue Oct 15 19:30:53 2024 +0100
+
+    Merge pull request #22 from eventsOrganizer/chaker
+    
+    Chaker
+
+[33mcommit 1cb8ed6de22971c5363bb18f8a23a91bd4ea8944[m
+Merge: 3de644c 3e165eb
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Tue Oct 15 17:01:47 2024 +0100
+
+    Merge branch 'main' of https://github.com/eventsOrganizer/eventHub into chaker
+
+[33mcommit 3de644c36fd3cc55da25c235b086a4c41710530f[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Tue Oct 15 17:01:04 2024 +0100
+
+    auth implemented and all featurs work
+
+[33mcommit 3e165eb7fec0f41f03f8ebe5ab6f9ade8a34e811[m
+Merge: 0558671 dff6909
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Tue Oct 15 16:11:48 2024 +0100
+
+    Merge pull request #21 from eventsOrganizer/ahmed
+    
+    Ahmed
+
+[33mcommit dff6909839bc631875db5048921c8015363d98c0[m
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Tue Oct 15 16:10:21 2024 +0100
+
+    tailwind
+
+[33mcommit 4a80f40b4d94555d354daad028459a78fca68a5a[m
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Tue Oct 15 15:49:18 2024 +0100
+
+    fix creation attemtp
+
+[33mcommit 47be97e4ee5d7f7728f26eba3abb0b0742a3b1b7[m
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Tue Oct 15 14:30:21 2024 +0100
+
+    creation of local
+
+[33mcommit 08be9943df190d86dd34b7e7fb34804860516499[m
+Merge: 418cec2 0558671
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Tue Oct 15 14:29:40 2024 +0100
+
+    Merge branch 'main' of https://github.com/eventsOrganizer/eventHub
+
+[33mcommit 418cec2a426722631680b53bb2d1292ba6553ac7[m
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Tue Oct 15 14:27:03 2024 +0100
+
+    creation of local
+
+[33mcommit 0558671658b14643c520be32a3c41f912da446aa[m
+Merge: dcfd083 a0f5b43
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Tue Oct 15 13:13:00 2024 +0100
+
+    Merge pull request #19 from eventsOrganizer/chaker
+    
+    Chaker
+
+[33mcommit a0f5b435aeb5c8e00a19549d57d9c3166fd40fdf[m
+Merge: 8b6c1f3 dcfd083
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Tue Oct 15 13:11:36 2024 +0100
+
+    merged
+
+[33mcommit dcfd083cde25a257ee59da22da4697c7eb56a27f[m
+Merge: 27016f8 7ab02cf
+Author: mohamed-yesser <159530889+mohamed-yesser@users.noreply.github.com>
+Date:   Tue Oct 15 12:58:57 2024 +0100
+
+    Merge pull request #18 from eventsOrganizer/yesser
+    
+    Yesser
+
+[33mcommit 7ab02cf722715dd3d8eaa9001381add1aa328977[m[33m ([m[1;31morigin/yesser[m[33m)[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Tue Oct 15 12:56:01 2024 +0100
+
+    fixed
+
+[33mcommit 8b6c1f3353b6b9ec395e693ab65dceffa853b515[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Tue Oct 15 12:03:00 2024 +0100
+
+    reviews for personal service done
+
+[33mcommit 7625b3653de555410f7291bfbb6571ae7c6bf9c1[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Tue Oct 15 01:13:00 2024 +0100
+
+    refactored cards of personals services
+
+[33mcommit 56d9e885a44bcc66e337a9ab3499920af81dc1bd[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Mon Oct 14 22:08:47 2024 +0100
+
+    tsk 2 refactored and fixed
+
+[33mcommit caf010b8e7eb6f9d3ccd7a3b299686c5b617e7f1[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Mon Oct 14 19:59:34 2024 +0100
+
+    managing private events requests and fetchign user interests on user profile,
+
+[33mcommit 7647c6e90bc6b672c915e7baf824a0db7ce17186[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Mon Oct 14 19:08:57 2024 +0100
+
+    updated PersonalsScreen
+
+[33mcommit 1b29be5ef79379c00208de022009871f2f2e1434[m
+Merge: 8131251 27016f8
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Mon Oct 14 15:16:25 2024 +0100
+
+    Merge branch 'main' of https://github.com/eventsOrganizer/eventHub into chaker
+
+[33mcommit 8131251e35279775b2cd8e5384c5d0397d21c87f[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Mon Oct 14 15:15:41 2024 +0100
+
+    refactored personDetail
+
+[33mcommit 37f2dbdc3d3c54cc3fafbc2c21222191e0bd0b4f[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Mon Oct 14 15:06:21 2024 +0100
+
+    v2
+
+[33mcommit 27016f8a9b04dc4f12ac01beefabdc660818306a[m
+Merge: 8754f00 d460ae2
+Author: mohamed-yesser <159530889+mohamed-yesser@users.noreply.github.com>
+Date:   Mon Oct 14 09:03:15 2024 +0100
+
+    Merge pull request #17 from eventsOrganizer/yesser
+    
+    Yesser
+
+[33mcommit d460ae2fda655b35c7d679f638377290eee66192[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Mon Oct 14 06:48:47 2024 +0100
+
+    vperfect
+
+[33mcommit 0f94b35c833763513ea9a08d430af96f4595d976[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Mon Oct 14 02:14:34 2024 +0100
+
+    design
+
+[33mcommit 8754f003caf0838dbe88f56a83814aa73b902039[m
+Merge: 8037055 4696355
+Author: mohamed-yesser <159530889+mohamed-yesser@users.noreply.github.com>
+Date:   Sun Oct 13 21:59:38 2024 +0100
+
+    Merge pull request #16 from eventsOrganizer/yesser
+    
+    chat and join requests and comments and attendes and map and organzier profile
+
+[33mcommit 46963554c02d24bf95d52870562a5599b8c7b6ee[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Sun Oct 13 21:54:18 2024 +0100
+
+    fixing merge
+
+[33mcommit 687a2fc353ed2e6eb9d2e32665c1437f1f40df74[m
+Merge: d59323c 8037055
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Sun Oct 13 19:52:05 2024 +0100
+
+    merged
+
+[33mcommit d59323ccc8bfc1f5cf00da82b50f1e0217009ddd[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Sun Oct 13 19:25:58 2024 +0100
+
+    fixing errors
+
+[33mcommit 8037055946a8253fb65556ad860aa403ab00ec9e[m
+Merge: 5a93ec2 2ed0b93
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Sun Oct 13 18:08:58 2024 +0100
+
+    Merge pull request #15 from eventsOrganizer/chaker
+    
+    Chaker
+
+[33mcommit 2ed0b93eda55b76213760423665d77b50b4c9c56[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Sun Oct 13 18:06:29 2024 +0100
+
+    merged
+
+[33mcommit a8e61be6dbd2dd6174abd93b2c044aa1d50bd8db[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Sun Oct 13 15:58:44 2024 +0100
+
+    fixing
+
+[33mcommit d0ef1c718aaff654ed08fc6afa6617baa2fbf973[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Sun Oct 13 15:41:27 2024 +0100
+
+    service personal done
+
+[33mcommit ea578212ae32243f24105c647606084a947b5c2a[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Sun Oct 13 15:38:00 2024 +0100
+
+    implementation of process of payment
+
+[33mcommit ebe43ba53d77ad0cf6d36a4ec83aa5dfb80c6302[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Sun Oct 13 15:07:35 2024 +0100
+
+    joinign events and leavign events
+
+[33mcommit dfb20d85e066f937b0cad87d0f278d54ee0c6874[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Sun Oct 13 11:15:19 2024 +0100
+
+    toggle like for a personal service implemented
+
+[33mcommit a8f61c7e1b63107e21142d80b21f4c262c06b1a1[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Sun Oct 13 11:02:07 2024 +0100
+
+    make request to personal service done
+
+[33mcommit 68f8a45ea91eb2aa940fdb6e3834613aa028f76d[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Sun Oct 13 00:52:05 2024 +0100
+
+    adding chat and fixing errors
+
+[33mcommit a557e695e3eeef23acbcb49be40afddf1ab54dfd[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Sat Oct 12 23:39:27 2024 +0100
+
+    updated personalDetail
+
+[33mcommit 3bfd0b92a27b213d46dbe8acaacb5b9629946720[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Sat Oct 12 17:41:54 2024 +0100
+
+    v3
+
+[33mcommit 79c1c2c70c47bef9b00f688bcc8972e499682ff7[m
+Author

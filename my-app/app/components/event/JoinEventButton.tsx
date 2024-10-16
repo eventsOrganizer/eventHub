@@ -23,36 +23,37 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({ eventId, privacy, org
   const checkJoinStatus = async () => {
     if (!userId) return;
 
-    if (!privacy) {
-      const { data, error } = await supabase
-        .from('event_has_user')
-        .select()
-        .eq('user_id', userId)
-        .eq('event_id', eventId)
-        .single();
+    const { data, error } = await supabase
+      .from('event_has_user')
+      .select()
+      .eq('user_id', userId)
+      .eq('event_id', eventId)
+      .single();
 
-      if (data) setIsJoined(true);
-    } else {
-      const { data, error } = await supabase
+    if (data) {
+      setIsJoined(true);
+    } else if (privacy) {
+      const { data: requestData, error: requestError } = await supabase
         .from('request')
         .select()
         .eq('user_id', userId)
         .eq('event_id', eventId)
         .single();
 
-      if (data && data.status === 'pending') setIsPending(true);
-      if (data && data.status === 'accepted') setIsJoined(true);
+      if (requestData && requestData.status === 'pending') {
+        setIsPending(true);
+      }
     }
   };
 
   const handleJoin = async () => {
     if (!userId) return;
-  
+
     if (!privacy) {
       const { data, error } = await supabase
         .from('event_has_user')
         .insert({ user_id: userId, event_id: eventId });
-  
+
       if (!error) {
         setIsJoined(true);
         onJoinSuccess();
@@ -71,7 +72,7 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({ eventId, privacy, org
           local_id: null,
           material_id: null
         });
-  
+
       if (!error) {
         setIsPending(true);
         Alert.alert('Request Sent', 'Your request to join this event has been sent to the organizer.');
@@ -94,35 +95,18 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({ eventId, privacy, org
         {
           text: "OK",
           onPress: async () => {
-            if (!privacy) {
-              const { error } = await supabase
-                .from('event_has_user')
-                .delete()
-                .eq('user_id', userId)
-                .eq('event_id', eventId);
-  
-              if (!error) {
-                setIsJoined(false);
-                onLeaveSuccess();
-              } else {
-                console.error('Error leaving event:', error);
-                Alert.alert('Error', 'Failed to leave the event. Please try again.');
-              }
+            const { error } = await supabase
+              .from('event_has_user')
+              .delete()
+              .eq('user_id', userId)
+              .eq('event_id', eventId);
+
+            if (!error) {
+              setIsJoined(false);
+              onLeaveSuccess();
             } else {
-              const { error } = await supabase
-                .from('request')
-                .delete()
-                .eq('user_id', userId)
-                .eq('event_id', eventId);
-  
-              if (!error) {
-                setIsPending(false);
-                setIsJoined(false);
-                onLeaveSuccess();
-              } else {
-                console.error('Error canceling request:', error);
-                Alert.alert('Error', 'Failed to cancel the request. Please try again.');
-              }
+              console.error('Error leaving event:', error);
+              Alert.alert('Error', 'Failed to leave the event. Please try again.');
             }
           }
         }
@@ -151,7 +135,8 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({ eventId, privacy, org
       <Text style={styles.buttonText}>{privacy ? 'Request to Join' : 'Join Event'}</Text>
     </TouchableOpacity>
   );
-};
+}
+
 
 const styles = StyleSheet.create({
   joinButton: {

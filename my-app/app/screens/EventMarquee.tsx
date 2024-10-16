@@ -27,7 +27,7 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
 
   return (
     <LinearGradient
-      colors={['#FF8C00', '#FF5722']}
+      colors={['#ffffff', '#0066cc']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.container}
@@ -36,11 +36,12 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
         <Animated.View style={[styles.textContainer, { transform: [{ translateX: scrollX }] }]}>
           {events.concat(events).map((event, index) => (
             <Text key={index} style={styles.text}>
-              {event.name.toUpperCase()} •
+              {event.name.toUpperCase()} •{' '}
             </Text>
           ))}
         </Animated.View>
       </View>
+      <View style={styles.bottomLine} />
     </LinearGradient>
   );
 };
@@ -52,19 +53,24 @@ const styles = StyleSheet.create({
   },
   marqueeContainer: {
     overflow: 'hidden',
+    width: width,
   },
   textContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   text: {
-    color: '#FFFFFF',
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
     marginRight: 20,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 10,
+  },
+  bottomLine: {
+    height: 4,
+    backgroundColor: '#ff0000',
+    width: '100%',
+    position: 'absolute',
+    bottom: 0,
   },
 });
 

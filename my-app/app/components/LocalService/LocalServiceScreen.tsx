@@ -31,18 +31,19 @@ const LocalServiceScreen: React.FC = () => {
     const fetchServices = async () => {
       const { data, error } = await supabase
         .from('local')
-        .select('id, name, details, priceperhour, media (url)');
-
+        .select('id, name, details, priceperhour, media (url)')
+        .order('id', { ascending: false }); // Ensure descending order
+  
       if (error) {
         console.error('Error fetching services:', error);
       } else if (data) {
         setServices(data);
       }
     };
-
+  
     fetchServices();
+  
   }, []);
-
   const filteredServices = services.filter(service => 
     service.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
     (minPrice ? parseFloat(service.priceperhour) >= parseFloat(minPrice) : true) &&
