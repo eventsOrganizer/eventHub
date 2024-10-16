@@ -37,7 +37,6 @@ export type Service = {
     review: Array<{
       user_id: string;
       rate: number;
-      total: number;
     }>;
 };
 

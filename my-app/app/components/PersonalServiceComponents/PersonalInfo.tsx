@@ -1,24 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Service } from '../../services/serviceTypes';
-import { toggleLike } from '../../services/personalService';
+import { useUser } from '../../UserContext';
 
 interface PersonalInfoProps {
   personalData: Service;
+  onLike: () => void;
 }
 
-const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData }) => {
-  const [likes, setLikes] = useState(personalData.like?.length || 0);
-  const [isLiked, setIsLiked] = useState(false);
-
-  const handleLike = async () => {
-    const result = await toggleLike(personalData.id);
-    if (result !== null) {
-      setLikes(prev => isLiked ? prev - 1 : prev + 1);
-      setIsLiked(!isLiked);
-    }
-  };
+const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData, onLike }) => {
+  const { userId } = useUser();
+  const likes = personalData.like?.length || 0;
+  const isLiked = personalData.like?.some(like => like.user_id === userId) || false;
 
   const reviewCount = personalData.review?.length || 0;
   const averageRating = personalData.review && personalData.review.length > 0
@@ -33,7 +27,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData }) => {
       <Text style={styles.details}>{personalData.details}</Text>
       
       <View style={styles.statsContainer}>
-        <TouchableOpacity onPress={handleLike} style={styles.likeButton}>
+        <TouchableOpacity onPress={onLike} style={styles.likeButton}>
           <Ionicons name={isLiked ? "heart" : "heart-outline"} size={24} color={isLiked ? "red" : "black"} />
           <Text>{likes} Likes</Text>
         </TouchableOpacity>
@@ -45,6 +39,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData }) => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   infoContainer: {
     padding: 16,
