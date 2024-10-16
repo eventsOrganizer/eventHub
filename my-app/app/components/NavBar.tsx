@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import RNPickerSelect from 'react-native-picker-select';
@@ -8,11 +8,11 @@ import { useNavigation } from '@react-navigation/native';
 interface NavBarProps {
   selectedFilter: string | null;
   setSelectedFilter: (value: string | null) => void;
+  onSearch: (searchTerm: string) => void;
 }
-
-const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter }) => {
+const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSearch }) => {
   const navigation = useNavigation();
-
+  const [searchTerm, setSearchTerm] = useState('');
   return (
     <LinearGradient
       colors={['#ffffff', '#f0f0f0', '#e0e0e0']}
@@ -25,16 +25,17 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter }) =>
           <Ionicons name="search" size={20} color="#0000FF" style={styles.searchIcon} />
           <TextInput
             style={styles.searchBar}
-            placeholder="Search events..."
-            placeholderTextColor="#888"
-          />
+  placeholder="Search events and services..."
+            placeholderTextColor="#ccc"
+  value={searchTerm}
+  onChangeText={setSearchTerm}
+  onSubmitEditing={() => onSearch(searchTerm)}
+/>
+
         </View>
-        <TouchableOpacity 
-          style={styles.iconContainer}
-          onPress={() => navigation.navigate('UserProfile' as never)}
-        >
-          <Ionicons name="person" size={24} color="#0000FF" />
-        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('UserProfile' as never)}>
+  <Ionicons name="person-outline" size={24} color="#333" />
+</TouchableOpacity>
         <TouchableOpacity style={styles.iconContainer}>
           <Ionicons name="notifications" size={24} color="#0000FF" />
         </TouchableOpacity>
@@ -58,9 +59,40 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter }) =>
           />
         </View>
       </View>
+      
     </LinearGradient>
   );
 };
+
+// const handleSearch = (searchTerm: string) => {
+//   if (!searchTerm) return; // Ne fait rien si le terme de recherche est vide ou nul
+//   const normalizedSearchTerm = searchTerm.toLowerCase();
+
+//   const filteredEvents = events.filter(event => {
+//     const title = event.title ? event.title.toLowerCase() : ''; // Vérification si 'event.title' est défini
+//     const description = event.description ? event.description.toLowerCase() : ''; // Vérification si 'event.description' est défini
+//     return title.includes(normalizedSearchTerm) || description.includes(normalizedSearchTerm);
+//   });
+
+//   const filteredServices = services.filter(service => {
+//     const name = service.name ? service.name.toLowerCase() : ''; // Vérification si 'service.name' est défini
+//     const details = service.details ? service.details.toLowerCase() : ''; // Vérification si 'service.details' est défini
+//     return name.includes(normalizedSearchTerm) || details.includes(normalizedSearchTerm);
+//   });
+
+//   setEvents(filteredEvents);
+//   setServices(filteredServices);
+// };
+
+// <TextInput
+// style={styles.searchBar}
+// placeholder="Search events and services..."
+// placeholderTextColor="#ccc"
+// value={searchTerm}
+// onChangeText={setSearchTerm}
+// onSubmitEditing={() => onSearch(searchTerm)}
+// />
+
 
 const styles = StyleSheet.create({
   container: {

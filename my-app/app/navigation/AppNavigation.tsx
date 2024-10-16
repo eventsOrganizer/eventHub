@@ -1,5 +1,9 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+// Import screens
 import Onboarding from '../screens/OnBoarding';
 import Interests from '../screens/Interests';
 import Home from '../screens/Home';
@@ -9,9 +13,24 @@ import ProfileScreen from '../screens/AccountScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import Signup from '../components/Auth/SignUp';
 import Signin from '../components/Auth/SignIn';
+import LandingPage from '../screens/LandingPage';
+import EventCreationScreen from '../screens/EventCreationScreen';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
+import CategorySelectionScreen from '../screens/CategorySelectionScreen';
+import SubcategorySelectionScreen from '../screens/subcategorySelectionScreen';
+import VenueSelectionScreen from '../screens/VenueSelectionScreen';
+import MusicAndEntertainmentScreen from '../screens/MusicAndEntertainmentScreen';
+import EventTimelineScreen from '../screens/EventTimelineScreen';
+import GuestManagementScreen from '../screens/GuestManagementScreen';
+import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
+import CreateServiceScreen from '../screens/CreateServiceScreen'; // Added CreateService import
+import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
+
+
+
+// Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
-import ChatRoomScreen from '../components/event/ChatRoomScreen';
+
 import ChatListScreen from '../components/event/ChatListScreen';
 import RequestsScreen from '../components/event/profile/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
@@ -56,6 +75,37 @@ type RootStackParamList = {
   EditProfile: undefined;
   Signup: undefined;
   Signin: undefined;
+  LandingPage: undefined;
+  HomeScreen: undefined;
+ 
+  EventDetails: { eventName: string; eventDescription: string; eventType: string };
+  CategorySelection: { eventName: string; eventDescription: string; eventType: string };
+  SubcategorySelection: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string };
+  VenueSelection: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string };
+  MusicAndEntertainment: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; venue: string };
+  EventTimeline: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; venue: string; music: string };
+  
+  GuestManagement: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
+  TeamCollaboration: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
+  Notifications: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
+  Ticketing: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
+  EventSummary: { eventId: string };
+  EventCreation: { eventType: string };
+  
+  // Add the CreateService screen and pass serviceType as a param
+  CreateService: { serviceType: string };
+  EventSetupOptions: { 
+    eventName: string; 
+    eventDescription: string; 
+    eventType: string; 
+    selectedCategory: string; 
+    selectedSubcategory: string 
+  };
+  UserProfile: undefined; // or { userId: string } if you pass params
+};
+type EventSetupOptionsScreenProps = {
+  route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
+  navigation: NativeStackNavigationProp<RootStackParamList>;
   EventDetails: { eventId: number };
   OrganizerProfile: { organizerId: string };
   ChatRoom: { userId: string; organizerId: string };
@@ -78,27 +128,33 @@ type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
+  // Callback for Interests screen (as an example)
   const handleOnComplete = () => {
-    console.log("Onboarding complete!");
+    console.log('Onboarding complete!');
   };
 
   return (
     <Stack.Navigator initialRouteName="Onboarding">
-      <Stack.Screen 
-        name="Onboarding" 
-        component={Onboarding} 
-        options={{ headerShown: false }} 
+      {/* Onboarding Screen */}
+      <Stack.Screen
+        name="Onboarding"
+        component={Onboarding}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Interests" 
-        component={Interests} 
-        initialParams={{ onComplete: handleOnComplete }} 
-        options={{ headerShown: false }} 
+      
+      {/* Interests Screen */}
+      <Stack.Screen
+        name="Interests"
+        component={Interests}
+        initialParams={{ onComplete: handleOnComplete }}
+        options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Home" 
-        component={Home}  
-        options={{ headerShown: false }} 
+      
+      {/* Home Screen */}
+      <Stack.Screen
+        name="Home"
+        component={Home}
+        options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="Map" 

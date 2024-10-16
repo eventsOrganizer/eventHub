@@ -10,6 +10,10 @@ import ServiceIcons from '../components/ServiceIcons';
 import EventSection from '../components/event/EventSection';
 import SectionComponent from '../components/SectionComponent';
 import EventMarquee from '../screens/EventMarquee';
+import VIPServicesContainer from '../components/VIPServicesContainer';
+import EventSectionContainer from '../components/event/EventSectionContainer';
+import BeautifulSectionHeader from '../components/event/BeautifulSectionHeader';
+import { Ionicons } from '@expo/vector-icons';
 
 type RootStackParamList = {
   Home: undefined;
@@ -35,6 +39,14 @@ const HomeScreen: React.FC = () => {
   const [staffServices, setStaffServices] = useState<any[]>([]);
   const [locals, setLocals] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
+  const [locals, setLocals] = useState<any[]>([]);
+  const [isFabOpen, setIsFabOpen] = useState(false);
+
+
+
+  const toggleFab = () => {
+    setIsFabOpen(!isFabOpen);
+  };
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -186,9 +198,35 @@ const HomeScreen: React.FC = () => {
               type="material"
             />
           </View>
+          <View style={styles.fabContainer}>
+        {isFabOpen && (
+          <>
+            <TouchableOpacity
+              style={[styles.fabItem, { backgroundColor: '#4CAF50' }]}
+              onPress={() => navigation.navigate('CreateService')}
+            >
+              <Ionicons name="briefcase-outline" size={24} color="#fff" />
+              <Text style={styles.fabItemText}>Create Service</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.fabItem, { backgroundColor: '#2196F3' }]}
+              onPress={() => navigation.navigate('EventCreation')}
+            >
+              <Ionicons name="calendar-outline" size={24} color="#fff" />
+              <Text style={styles.fabItemText}>Create Event</Text>
+            </TouchableOpacity>
+          </>
+        )}
+        <TouchableOpacity style={styles.fab} onPress={toggleFab}>
+          <Ionicons name={isFabOpen ? 'close' : 'add'} size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
         </ScrollView>
       </LinearGradient>
     </SafeAreaView>
+    
+
+
   );
 };
 
@@ -258,6 +296,57 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-});
-
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+  },
+  serviceName: {
+    fontSize: 16,
+    marginRight: 5,
+    fontWeight: '600',
+  },
+  sectionContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    marginHorizontal: 10,
+    marginTop: 10,
+    padding: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+  },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FF4500',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+  },
+  fabItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 20,
+    marginBottom: 10,
+    elevation: 5,
+  },
+  fabItemText: {
+    color: '#fff',
+    marginLeft: 10,
+    fontWeight: 'bold', 
+  }
+}) 
 export default HomeScreen;
