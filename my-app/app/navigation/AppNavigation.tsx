@@ -25,7 +25,7 @@ import GuestManagementScreen from '../screens/GuestManagementScreen';
 import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
 import CreateServiceScreen from '../screens/CreateServiceScreen'; // Added CreateService import
 import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
-
+import ChatRoomScreen from '../components/event/ChatRoomScreen';
 
 
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
@@ -286,7 +286,7 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="Saved" 
       component={SavedScreen} />  
-      
+
       </Stack.Navigator>
    
   );
