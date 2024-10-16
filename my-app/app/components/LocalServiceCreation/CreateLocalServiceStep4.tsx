@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Assuming you're using MaterialIcons
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
+import * as Animatable from 'react-native-animatable';
 
 type RouteParams = {
   serviceName: string;
@@ -47,8 +48,8 @@ const CreateLocalServiceStep4 = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Select Amenities</Text>
+    <Animatable.View animation="fadeInUp" style={styles.container}>
+      <Animatable.Text animation="fadeInLeft" style={styles.title}>Select Amenities</Animatable.Text>
 
       <View style={styles.cardContainer}>
         {/* WiFi Card */}
@@ -76,15 +77,32 @@ const CreateLocalServiceStep4 = () => {
         </TouchableOpacity>
       </View>
 
-      <Button title="Next" onPress={handleNext} />
-    </View>
+      <Animatable.View animation="pulse" delay={400} style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleNext}>
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      </Animatable.View>
+    </Animatable.View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 20 },
-  cardContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  container: { 
+    flex: 1, 
+    padding: 20, 
+    backgroundColor: '#000',
+  },
+  title: { 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    color: '#fff', 
+    marginBottom: 20,
+  },
+  cardContainer: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginBottom: 20,
+  },
   card: {
     width: 100,
     height: 100,
@@ -92,9 +110,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: '#f9f9f9',
+    borderColor: '#fff', // White border for consistency
+    backgroundColor: '#333', // Dark background for the cards
     elevation: 2,
+  },
+  buttonContainer: {
+    marginTop: 20,
+  },
+  button: {
+    backgroundColor: '#FF3B30', 
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#FF3B30', 
+    shadowOffset: { width: 0, height: 10 }, 
+    shadowOpacity: 0.8, 
+    shadowRadius: 10,
+  },
+  buttonText: {
+    color: '#fff', 
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 

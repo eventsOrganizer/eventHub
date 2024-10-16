@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import * as Animatable from 'react-native-animatable';
 
 type RouteParams = {
   serviceName: string;
@@ -36,12 +39,8 @@ type Props = {
 };
 
 const CreateLocalServiceStep2: React.FC<Props> = ({ navigation, route }) => {
-  const { serviceName, description, subcategoryName, subcategoryId, subcategories = [] } = route.params; // Extract subcategoryId
+  const { serviceName, description, subcategoryName, subcategoryId, subcategories = [] } = route.params;
   const [images, setImages] = useState<string[]>([]);
-
-  // Debugging logs
-  console.log('Subcategory ID:', subcategories?.find((subcategory) => subcategory.id === subcategoryId)?.id);
-  console.log('Subcategories:', subcategories);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -66,32 +65,68 @@ const CreateLocalServiceStep2: React.FC<Props> = ({ navigation, route }) => {
         serviceName,
         description,
         images,
-        subcategoryName, // Pass subcategoryName
-        subcategoryId, // Pass subcategoryId
+        subcategoryName,
+        subcategoryId,
         subcategories
       });
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Service Name: {serviceName}</Text>
-      <Text style={styles.label}>Description: {description}</Text>
-      <Text style={styles.label}>Category: {subcategoryName}</Text>
+    <Animatable.View animation="fadeInUp" style={styles.container}>
+      <Animatable.Text animation="fadeInLeft" style={styles.label}>Service Name: {serviceName}</Animatable.Text>
+      <Animatable.Text animation="fadeInLeft" style={styles.label}>Description: {description}</Animatable.Text>
+      <Animatable.Text animation="fadeInLeft" style={styles.label}>Category: {subcategoryName}</Animatable.Text>
 
-      <Button title="Pick Images" onPress={pickImage} />
+      <TouchableOpacity style={styles.button} onPress={pickImage}>
+        <Text style={styles.buttonText}>Pick Images</Text>
+      </TouchableOpacity>
+      
       {images.length > 0 && (
         <Text style={styles.imagesText}>{images.length} image(s) selected</Text>
       )}
-      <Button title="Next" onPress={handleNext} />
-    </View>
+      
+      <Animatable.View animation="pulse" delay={400} style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleNext}>
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      </Animatable.View>
+    </Animatable.View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  label: { fontSize: 16, marginBottom: 10 },
-  imagesText: { fontSize: 14, color: 'gray', marginTop: 10 },
+  container: { 
+    flex: 1, 
+    padding: 20, 
+    backgroundColor: '#000',
+  },
+  label: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#fff', 
+    marginBottom: 5,
+  },
+  button: {
+    backgroundColor: '#FF3B30', 
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginVertical: 10, // Space between buttons
+  },
+  buttonText: {
+    color: '#fff', 
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  imagesText: {
+    fontSize: 14,
+    color: 'gray',
+    marginTop: 10,
+  },
+  buttonContainer: {
+    marginTop: 20,
+  },
 });
 
 export default CreateLocalServiceStep2;

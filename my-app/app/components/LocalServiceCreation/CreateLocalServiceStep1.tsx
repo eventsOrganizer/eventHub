@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import DropDownPicker from 'react-native-dropdown-picker';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, TextInput, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
 import { Formik } from 'formik';
@@ -30,8 +29,10 @@ const validationSchema = Yup.object().shape({
 
 const CreateLocalServiceStep1 = () => {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [open, setOpen] = useState(false);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
+  const [dropdownVisible, setDropdownVisible] = useState(false);
   const navigation = useNavigation<NavigationProp<CreateLocalServiceStep1Params>>();
+  const containerRef = useRef<Animatable.View | null>(null); // Reference for the container
 
   useEffect(() => {
     const fetchSubcategories = async () => {
@@ -44,14 +45,14 @@ const CreateLocalServiceStep1 = () => {
 
         if (categoryError) throw categoryError;
 
-        const { data: subcategoriesData, error: subcategoryError } = await supabase
+        const { data: subcategories, error: subcategoryError } = await supabase
           .from('subcategory')
           .select('*')
           .eq('category_id', categoryData.id);
 
         if (subcategoryError) throw subcategoryError;
 
-        setSubcategories(subcategoriesData as Subcategory[]);
+        setSubcategories(subcategories as any);
       } catch (error) {
         console.error('Error fetching subcategories:', error);
       }
@@ -61,15 +62,19 @@ const CreateLocalServiceStep1 = () => {
   }, []);
 
   const handleNext = (values: { serviceName: string; description: string; subcategoryId: string }) => {
-    const selectedSubcategory = subcategories.find(sub => sub.id === values.subcategoryId);
+    const selectedSubcategoryData = subcategories.find(sub => sub.id === values.subcategoryId);
 
-    if (selectedSubcategory) {
-      navigation.navigate('CreateLocalServiceStep2', { 
-        serviceName: values.serviceName, 
-        description: values.description, 
-        subcategoryName: selectedSubcategory.name,
-        subcategoryId: selectedSubcategory.id 
-      });
+    if (selectedSubcategoryData) {
+      if (containerRef.current?.fadeOut) { // Check if fadeOut is defined
+        containerRef.current.fadeOut(300).then(() => { // Animate fade out
+          navigation.navigate('CreateLocalServiceStep2', { 
+            serviceName: values.serviceName, 
+            description: values.description, 
+            subcategoryName: selectedSubcategoryData.name,
+            subcategoryId: selectedSubcategoryData.id 
+          });
+        });
+      }
     }
   };
 
@@ -80,7 +85,7 @@ const CreateLocalServiceStep1 = () => {
       onSubmit={(values) => handleNext(values)}
     >
       {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
-        <Animatable.View animation="fadeInUp" style={styles.container}>
+        <Animatable.View ref={containerRef} animation="fadeInUp" style={styles.container}>
           {/* Service Name Input */}
           <Animatable.Text animation="fadeInLeft" style={styles.label}>Service Name</Animatable.Text>
           <Animatable.View animation="bounceIn" delay={100}>
@@ -116,36 +121,37 @@ const CreateLocalServiceStep1 = () => {
 
           {/* Subcategory Dropdown */}
           <Animatable.Text animation="fadeInLeft" style={styles.label}>Subcategory</Animatable.Text>
-          <Animatable.View animation="bounceIn" delay={300}>
-  <DropDownPicker
-    open={open}
-    value={values.subcategoryId} // Ensure this is correctly linked to Formik state
-    items={subcategories.map((subcategory: Subcategory) => ({
-      label: subcategory.name,
-      value: subcategory.id,
-    }))}
-    setOpen={setOpen}
-    setValue={(value) => {
-      setFieldValue('subcategoryId', value); // Update Formik state correctly
-      setOpen(false); // Close dropdown after selection
-    }} 
-    placeholder="Select a subcategory"
-    style={styles.dropdown}
-    dropDownContainerStyle={styles.dropdownContainer}
-    placeholderStyle={styles.placeholderStyle}
-    selectedItemLabelStyle={styles.selectedItemLabelStyle}
-    zIndex={1000}
-    zIndexInverse={500}
-    onClose={() => setOpen(false)}
-    onOpen={() => setOpen(true)}
-  />
-  {touched.subcategoryId && errors.subcategoryId && (
-    <Animatable.Text animation="fadeIn" style={styles.errorText}>{errors.subcategoryId}</Animatable.Text>
-  )}
-</Animatable.View>
+          <TouchableOpacity
+            style={[styles.dropdown, { borderColor: selectedSubcategory ? '#fff' : '#FF3B30' }]}
+            onPress={() => setDropdownVisible(prev => !prev)}
+          >
+            <Text style={styles.dropdownText}>
+              {selectedSubcategory || "Select a subcategory"}
+            </Text>
+          </TouchableOpacity>
 
-          {/* Space adjustment when dropdown is open */}
-          {open && <View style={styles.dropdownSpace} />}
+          {dropdownVisible && (
+            <FlatList
+              data={subcategories}
+              keyExtractor={item => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setSelectedSubcategory(item.name);
+                    setFieldValue('subcategoryId', item.id);
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={styles.dropdownItemText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+
+          {touched.subcategoryId && errors.subcategoryId && (
+            <Animatable.Text animation="fadeIn" style={styles.errorText}>{errors.subcategoryId}</Animatable.Text>
+          )}
 
           {/* Submit Button */}
           <Animatable.View animation="pulse" delay={400} style={styles.buttonContainer}>
@@ -187,21 +193,23 @@ const styles = StyleSheet.create({
   dropdown: {
     borderWidth: 1,
     borderColor: '#fff',
-    color: '#fff',
     padding: 10,
     borderRadius: 10,
     backgroundColor: '#333',
     marginBottom: 10,
   },
-  dropdownContainer: {
-    backgroundColor: '#333',
-    borderWidth: 1,
-    borderColor: '#fff',
-    zIndex: 999,
+  dropdownText: {
+    color: '#fff',
+    fontSize: 16,
   },
-  dropdownSpace: {
-    height: 110,
-    backgroundColor: 'transparent',
+  dropdownItem: {
+    padding: 10,
+    backgroundColor: '#444',
+    borderBottomWidth: 1,
+    borderBottomColor: '#555',
+  },
+  dropdownItemText: {
+    color: '#fff',
   },
   errorText: {
     color: '#FF3B30', 
@@ -225,12 +233,6 @@ const styles = StyleSheet.create({
     color: '#fff', 
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  placeholderStyle: {
-    color: '#999',
-  },
-  selectedItemLabelStyle: {
-    color: '#fff', // Color of the selected item
   },
 });
 

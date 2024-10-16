@@ -164,7 +164,7 @@ const AppNavigator = () => {
       <Stack.Screen 
         name="CreateLocalServiceStep1" 
         component={CreateLocalServiceStep1} 
-        options={{ headerShown: true, title: 'Create Local Service - Step 1' }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="CreateLocalServiceStep2" 

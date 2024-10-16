@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import Slider from '@react-native-community/slider'; // Add slider import
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
+import * as Animatable from 'react-native-animatable';
 
 type RouteParams = {
   serviceName: string;
@@ -55,16 +56,16 @@ const CreateLocalServiceStep3 = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text>Price</Text>
+    <Animatable.View animation="fadeInUp" style={styles.container}>
+      <Animatable.Text animation="fadeInLeft" style={styles.label}>Price</Animatable.Text>
       <View style={styles.priceContainer}>
         <Slider
           style={styles.slider}
           minimumValue={30}
           maximumValue={2000}
-          step={1} // Slider will increment in whole numbers
+          step={1}
           value={Number(price)}
-          onValueChange={handlePriceChange} // Update price as the slider moves
+          onValueChange={handlePriceChange}
           minimumTrackTintColor="#1E90FF"
           maximumTrackTintColor="#000000"
         />
@@ -73,11 +74,11 @@ const CreateLocalServiceStep3 = () => {
           value={price}
           onChangeText={setPrice}
           keyboardType="numeric"
-          maxLength={4} // Limit input to 4 characters (e.g., 2000)
+          maxLength={4}
         />
       </View>
 
-      <Text>Available From</Text>
+      <Animatable.Text animation="fadeInLeft" style={styles.label}>Available From</Animatable.Text>
       <TextInput
         style={styles.input}
         placeholder="Enter Availability From"
@@ -85,7 +86,7 @@ const CreateLocalServiceStep3 = () => {
         onChangeText={setAvailabilityFrom}
       />
 
-      <Text>Available Until</Text>
+      <Animatable.Text animation="fadeInLeft" style={styles.label}>Available Until</Animatable.Text>
       <TextInput
         style={styles.input}
         placeholder="Enter Availability To"
@@ -93,19 +94,35 @@ const CreateLocalServiceStep3 = () => {
         onChangeText={setAvailabilityTo}
       />
 
-      <Button title="Next" onPress={handleNext} />
-    </View>
+      <Animatable.View animation="pulse" delay={400} style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={handleNext}>
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      </Animatable.View>
+    </Animatable.View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { 
+    flex: 1, 
+    padding: 20, 
+    backgroundColor: '#000',
+  },
+  label: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#fff', 
+    marginBottom: 5,
+  },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#fff',
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 10,
     marginBottom: 20,
+    backgroundColor: '#333',
+    color: '#fff', // Set text color to white
   },
   priceContainer: {
     flexDirection: 'row',
@@ -117,13 +134,33 @@ const styles = StyleSheet.create({
     height: 40,
   },
   priceInput: {
-    width: 80, // Small input for manual price entry
+    width: 80,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#fff',
     padding: 10,
     marginLeft: 10,
-    borderRadius: 5,
-    textAlign: 'center', // Center the text in the input
+    borderRadius: 10,
+    textAlign: 'center',
+    backgroundColor: '#333',
+    color: '#fff', // Set text color to white
+  },
+  buttonContainer: {
+    marginTop: 20,
+  },
+  button: {
+    backgroundColor: '#FF3B30', 
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#FF3B30', 
+    shadowOffset: { width: 0, height: 10 }, 
+    shadowOpacity: 0.8, 
+    shadowRadius: 10,
+  },
+  buttonText: {
+    color: '#fff', 
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
