@@ -1,40 +1,22 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView } from 'react-native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../navigation/types';
 
-type RouteParams = {
-  serviceName: string;
-  description: string;
-  images: string[];
-  subcategoryName: string;
-  subcategoryId: string;
-};
+type CreatePersonalServiceStep3ScreenRouteProp = RouteProp<RootStackParamList, 'CreatePersonalServiceStep3'>;
+type CreatePersonalServiceStep3ScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep3'>;
 
-type CreatePersonalServiceStackParamList = {
-  CreatePersonalServiceStep4: {
-    serviceName: string;
-    description: string;
-    images: string[];
-    price: string;
-    availabilityFrom: string;
-    availabilityTo: string;
-    subcategoryName: string;
-    subcategoryId: string;
-  };
-};
-
-const CreatePersonalServiceStep3 = () => {
-  const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
-  const navigation = useNavigation<NavigationProp<CreatePersonalServiceStackParamList, 'CreatePersonalServiceStep4'>>();
+const CreatePersonalServiceStep3: React.FC = () => {
+  const route = useRoute<CreatePersonalServiceStep3ScreenRouteProp>();
+  const navigation = useNavigation<CreatePersonalServiceStep3ScreenNavigationProp>();
   const { serviceName, description, images, subcategoryName, subcategoryId } = route.params;
 
   const [price, setPrice] = useState('');
-  const [availabilityFrom, setAvailabilityFrom] = useState('');
-  const [availabilityTo, setAvailabilityTo] = useState('');
 
-  const handleNext = () => {
-    if (!price || !availabilityFrom || !availabilityTo) {
-      Alert.alert('Please fill in all fields');
+  const handleNext = useCallback(() => {
+    if (!price) {
+      Alert.alert('Please enter a price');
     } else {
       navigation.navigate('CreatePersonalServiceStep4', {
         serviceName,
@@ -43,15 +25,13 @@ const CreatePersonalServiceStep3 = () => {
         subcategoryId,
         images,
         price,
-        availabilityFrom,
-        availabilityTo,
       });
     }
-  };
+  }, [price, navigation, serviceName, description, subcategoryName, subcategoryId, images]);
 
   return (
-    <View style={styles.container}>
-      <Text>Price per hour</Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.label}>Price per hour</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter Price"
@@ -59,30 +39,14 @@ const CreatePersonalServiceStep3 = () => {
         onChangeText={setPrice}
         keyboardType="numeric"
       />
-
-      <Text>Available From</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Availability From"
-        value={availabilityFrom}
-        onChangeText={setAvailabilityFrom}
-      />
-
-      <Text>Available Until</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Availability To"
-        value={availabilityTo}
-        onChangeText={setAvailabilityTo}
-      />
-
       <Button title="Next" onPress={handleNext} />
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
+  label: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',

@@ -3,7 +3,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type AuthStackParamList = {
     signIn: undefined,
-    SignUp: undefined; // Add other routes as necessary
+    SignUp: undefined;
     Home: undefined;
 };
 
@@ -57,19 +57,8 @@ export type RootStackParamList = {
           price: string; 
       }; 
   };
-  CreateLocalServiceStep5: {
-      serviceName: string;
-      description: string;
-      images: string[];
-      price: string;
-      availabilityFrom: string;
-      availabilityTo: string;
-      amenities: {
-          wifi: boolean;
-          parking: boolean;
-          aircon: boolean;
-      };
-  };
+  CreateLocalServiceStep5: CreateLocalServiceStep5Params;
+
   CreatePersonalServiceStep1: undefined;
   CreatePersonalServiceStep2: {
     serviceName: string;
@@ -89,8 +78,6 @@ export type RootStackParamList = {
     description: string;
     images: string[];
     price: string;
-    availabilityFrom: string;
-    availabilityTo: string;
     subcategoryName: string;
     subcategoryId: number;
   };
@@ -99,14 +86,11 @@ export type RootStackParamList = {
     description: string;
     images: string[];
     price: string;
-    availabilityFrom: string;
-    availabilityTo: string;
     skills: string[];
     subcategoryName: string;
     subcategoryId: number;
   };
 };
-
 
 export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;
 export type CreateLocalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep5'>;

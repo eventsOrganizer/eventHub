@@ -1,30 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, TextInput } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 
-type RouteParams = {
-  serviceName: string;
-  description: string;
-  images: string[];
-  price: string;
-  availabilityFrom: string;
-  availabilityTo: string;
-  subcategoryName: string;
-  subcategoryId: string;
-};
-
-type CreatePersonalServiceStep4NavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'CreatePersonalServiceStep4'
->;
+type CreatePersonalServiceStep4ScreenRouteProp = RouteProp<RootStackParamList, 'CreatePersonalServiceStep4'>;
+type CreatePersonalServiceStep4ScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep4'>;
 
 const CreatePersonalServiceStep4 = () => {
-  const route = useRoute<RouteProp<RootStackParamList, 'CreatePersonalServiceStep4'>>();
-  const navigation = useNavigation<CreatePersonalServiceStep4NavigationProp>();
+  const route = useRoute<CreatePersonalServiceStep4ScreenRouteProp>();
+  const navigation = useNavigation<CreatePersonalServiceStep4ScreenNavigationProp>();
 
-  const { serviceName, description, images, price, availabilityFrom, availabilityTo, subcategoryName, subcategoryId } = route.params;
+  const { serviceName, description, images, price, subcategoryName, subcategoryId } = route.params;
 
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
@@ -42,8 +29,6 @@ const CreatePersonalServiceStep4 = () => {
       description,
       images,
       price,
-      availabilityFrom,
-      availabilityTo,
       skills,
       subcategoryName,
       subcategoryId,
@@ -51,7 +36,7 @@ const CreatePersonalServiceStep4 = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text>Add Your Skills</Text>
       <TextInput
         style={styles.input}
@@ -66,7 +51,7 @@ const CreatePersonalServiceStep4 = () => {
         ))}
       </View>
       <Button title="Next" onPress={handleNext} />
-    </View>
+    </ScrollView>
   );
 };
 

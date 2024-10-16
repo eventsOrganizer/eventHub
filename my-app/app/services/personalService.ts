@@ -50,7 +50,8 @@ export const fetchStaffServices = async (): Promise<Service[]> => {
         media (url),
         like (user_id),
         review (user_id, rate)
-      `);
+      `)
+      .order('id', { ascending: false }); // Ensure descending order
 
     if (error) {
       console.error('Error fetching staff services:', error);

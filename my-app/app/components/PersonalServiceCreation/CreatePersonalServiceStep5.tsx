@@ -6,23 +6,13 @@ import { RootStackParamList } from '../../navigation/types';
 import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
 
-type RouteParams = {
-  serviceName: string;
-  description: string;
-  images: string[];
-  price: string;
-  availabilityFrom: string;
-  availabilityTo: string;
-  subcategoryName: string;
-  subcategoryId: string;
-};
-
-type NavigationProps = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
+type CreatePersonalServiceStep5ScreenRouteProp = RouteProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
+type CreatePersonalServiceStep5ScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
 
 const CreatePersonalServiceStep5 = () => {
-  const navigation = useNavigation<NavigationProps>();
-  const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
-  const { serviceName, description, images, price, availabilityFrom, availabilityTo, subcategoryName } = route.params;
+  const navigation = useNavigation<CreatePersonalServiceStep5ScreenNavigationProp>();
+  const route = useRoute<CreatePersonalServiceStep5ScreenRouteProp>();
+  const { serviceName, description, images, price, skills, subcategoryName } = route.params;
 
   const { userId } = useUser();
   const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
@@ -53,12 +43,13 @@ const CreatePersonalServiceStep5 = () => {
     }
 
     if (!subcategoryId) {
-      Alert.alert('Error', 'Subcategory not found. Please try again.');
+      Alert.alert('Error', 'Failed to fetch subcategory. Please try again.');
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      // Insert the personal service
+      const { data: personalData, error: personalError } = await supabase
         .from('personal')
         .insert({
           name: serviceName,
@@ -66,11 +57,52 @@ const CreatePersonalServiceStep5 = () => {
           priceperhour: parseFloat(price),
           subcategory_id: subcategoryId,
           user_id: userId,
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (personalError) throw personalError;
 
-      Alert.alert('Success', 'Service submitted successfully!');
+      // Create an album for the service
+      const { data: albumData, error: albumError } = await supabase
+        .from('album')
+        .insert({
+          name: `${serviceName} Album`,
+          details: `Album for ${serviceName}`,
+          user_id: userId,
+        })
+        .select()
+        .single();
+
+      if (albumError) throw albumError;
+
+      // Insert images into the media table
+      const mediaPromises = images.map(imageUrl => 
+        supabase
+          .from('media')
+          .insert({
+            personal_id: personalData.id,
+            url: imageUrl,
+            album_id: albumData.id,
+            user_id: userId,
+          })
+      );
+
+      await Promise.all(mediaPromises);
+
+      // Insert skills
+      const skillPromises = skills.map(skill =>
+        supabase
+          .from('skill')
+          .insert({
+            personal_id: personalData.id,
+            name: skill,
+          })
+      );
+
+      await Promise.all(skillPromises);
+
+      Alert.alert('Success', 'Service and images submitted successfully!');
       navigation.navigate('Home');
     } catch (error) {
       console.error('Error submitting service:', error);
@@ -84,8 +116,7 @@ const CreatePersonalServiceStep5 = () => {
       <Text style={styles.label}>Description: {description}</Text>
       <Text style={styles.label}>Subcategory: {subcategoryName}</Text>
       <Text style={styles.label}>Price per hour: {price}</Text>
-      <Text style={styles.label}>Available From: {availabilityFrom}</Text>
-      <Text style={styles.label}>Available To: {availabilityTo}</Text>
+      <Text style={styles.label}>Skills: {skills.join(', ')}</Text>
       <Text style={styles.label}>Images:</Text>
       {images.map((imageUri, index) => (
         <Image key={index} source={{ uri: imageUri }} style={styles.image} />
