@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     marginBottom: 10, // Add margin bottom for spacing
   },
   spacing: {
-    height: 60, // Adjust this value for the desired spacing
+    height: 0, // Adjust this value for the desired spacing
   },
   label: { 
     fontSize: 18, 
