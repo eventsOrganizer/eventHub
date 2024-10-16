@@ -39,9 +39,15 @@ interface Event {
 interface Service {
   id: number;
   name: string;
-  type: string;
-  details?: string;
+  type: { name: string };
+  serviceType: 'Personal' | 'Local' | 'Material';
+  priceperhour: number;
+  details: string;
+  imageUrl?: string;
+  media?: { url: string }[];
 }
+
+
 
 const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string } } }> = ({ route }) => {
   const { organizerId } = route.params;
@@ -71,34 +77,34 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
       const { data: allUsers, error: allUsersError } = await supabase
         .from('user')
         .select('id, email, firstname, lastname, bio');
-  
+
       if (allUsersError) {
         console.error('Error fetching all users:', allUsersError);
         return;
       }
-  
+
       if (!allUsers || allUsers.length === 0) {
         console.error('No users found in the database');
         return;
       }
-  
+
       const userData = allUsers.find(user => user.id === organizerId);
-  
+
       if (!userData) {
         console.error('No user data found for organizer ID:', organizerId);
         return;
       }
-  
+
       const { data: mediaData, error: mediaError } = await supabase
         .from('media')
         .select('url')
         .eq('user_id', organizerId)
         .single();
-  
+
       if (mediaError) {
         console.error('Error fetching user media:', mediaError);
       }
-  
+
       setOrganizer({
         id: userData.id,
         email: userData.email,
@@ -113,43 +119,89 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
 
   const fetchOrganizerEvents = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('event')
-      .select(`
-        *,
-        subcategory (
-          name,
-          category (
-            name
-          )
-        ),
-        media (url),
-        availability (date, start, end, daysofweek)
-      `)
-      .eq('user_id', organizerId);
+    try {
+      const { data, error } = await supabase
+        .from('event')
+        .select(`
+          *,
+          subcategory (name, category (name)),
+          media (url),
+          availability (date, start, end, daysofweek)
+        `)
+        .eq('user_id', organizerId);
 
-    if (error) {
+      if (error) throw error;
+
+      setEvents(data.filter(event => event.availability && event.availability.length > 0));
+    } catch (error) {
       console.error('Error fetching organizer events:', error);
-    } else {
-      const validEvents = data.filter(event => event.availability && event.availability.length > 0);
-      setEvents(validEvents);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const fetchOrganizerServices = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('service')
-      .select('*')
-      .eq('user_id', organizerId);
-
-    if (error) {
+    try {
+      const [personalData, localData, materialData] = await Promise.all([
+        supabase
+          .from('personal')
+          .select('id, name, type:subcategory(name), priceperhour, details, media(url)')
+          .eq('user_id', organizerId),
+        supabase
+          .from('local')
+          .select('id, name, type:subcategory(name), priceperhour, details, media(url)')
+          .eq('user_id', organizerId),
+        supabase
+          .from('material')
+          .select('id, name, type:subcategory(name), priceperhour, details, media(url)')
+          .eq('user_id', organizerId)
+      ]);
+  
+      const allServices: Service[] = [
+        ...(personalData.data || []).map(s => ({ ...s, serviceType: 'Personal' as const, imageUrl: s.media?.[0]?.url })),
+        ...(localData.data || []).map(s => ({ ...s, serviceType: 'Local' as const, imageUrl: s.media?.[0]?.url })),
+        ...(materialData.data || []).map(s => ({ ...s, serviceType: 'Material' as const, imageUrl: s.media?.[0]?.url }))
+      ];
+  
+      setServices(allServices);
+    } catch (error) {
       console.error('Error fetching organizer services:', error);
-    } else {
-      setServices(data);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const renderItem = ({ item }: { item: Event | Service }) => {
+    if ('availability' in item) {
+      // It's an Event
+      return (
+        <TouchableOpacity onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} style={styles.itemContainer}>
+          <YourEventCard event={item} onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} />
+        </TouchableOpacity>
+      );
+    } else {
+      // It's a Service
+      return (
+        <TouchableOpacity 
+          style={styles.serviceItem}
+          onPress={() => navigation.navigate(
+            item.serviceType === 'Personal' ? 'PersonalDetail' :
+            item.serviceType === 'Local' ? 'LocalServiceDetails' :
+            'MaterialDetail',
+            { serviceId: item.id }
+          )}
+        >
+          <Image source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} style={styles.serviceImage} />
+          <View style={styles.serviceInfo}>
+            <Text style={styles.serviceName}>{item.name}</Text>
+            <Text style={styles.serviceType}>{item.type.name}</Text>
+            <Text style={styles.servicePrice}>${item.priceperhour}/hour</Text>
+            <Text style={styles.serviceDetails} numberOfLines={2}>{item.details}</Text>
+          </View>
+        </TouchableOpacity>
+      );
+    }
   };
 
   if (!organizer) {
@@ -200,19 +252,13 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
       <View style={styles.toggleContainer}>
         <TouchableOpacity
           style={[styles.toggleButton, showEvents && styles.activeToggle]}
-          onPress={() => {
-            setShowEvents(true);
-            setEvents([]);
-          }}
+          onPress={() => setShowEvents(true)}
         >
           <Text style={[styles.toggleText, showEvents && styles.activeToggleText]}>Events</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.toggleButton, !showEvents && styles.activeToggle]}
-          onPress={() => {
-            setShowEvents(false);
-            setServices([]);
-          }}
+          onPress={() => setShowEvents(false)}
         >
           <Text style={[styles.toggleText, !showEvents && styles.activeToggleText]}>Services</Text>
         </TouchableOpacity>
@@ -222,20 +268,8 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
       ) : (
         <FlatList
           data={showEvents ? events : services}
-          renderItem={({ item }) => (
-            showEvents ? (
-              <TouchableOpacity onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} style={styles.itemContainer}>
-                <YourEventCard event={item as any} onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} />
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.serviceItem}>
-                <Text style={styles.serviceName}>{item.name}</Text>
-                <Text style={styles.serviceType}>{item.type}</Text>
-                {item.details && <Text style={styles.serviceDetails}>{item.details}</Text>}
-              </View>
-            )
-          )}
-          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          keyExtractor={(item) => `${showEvents ? 'event' : 'service'}-${item.id}`}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={<Text style={styles.emptyText}>{showEvents ? 'No events found' : 'No services found'}</Text>}
         />
@@ -332,14 +366,26 @@ const styles = StyleSheet.create({
     color: '#FFA500',
     fontWeight: 'bold',
   },
+  listContent: {
+    padding: 15,
+  },
   itemContainer: {
     marginBottom: 15,
   },
   serviceItem: {
+    flexDirection: 'row',
     backgroundColor: '#fff',
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 5,
+    borderRadius: 10,
+    marginBottom: 15,
+    overflow: 'hidden',
+  },
+  serviceImage: {
+    width: 100,
+    height: 100,
+  },
+  serviceInfo: {
+    flex: 1,
+    padding: 10,
   },
   serviceName: {
     fontSize: 18,
@@ -351,12 +397,14 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 5,
   },
+  servicePrice: {
+    fontSize: 16,
+    color: '#4CAF50',
+    marginBottom: 5,
+  },
   serviceDetails: {
     fontSize: 14,
     color: '#333',
-  },
-  listContent: {
-    padding: 15,
   },
   emptyText: {
     textAlign: 'center',

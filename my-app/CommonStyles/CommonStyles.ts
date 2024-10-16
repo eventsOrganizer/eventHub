@@ -184,6 +184,10 @@ export const gradients = {
     primary: [colors.primary.light, colors.primary.main, colors.primary.dark],
     secondary: [colors.secondary.light, colors.secondary.main, colors.secondary.dark],
     vipServices: ['#FF00FF', '#FF78FF', '#FF00FF'],
+    marquee: ['#FF416C', '#FF4B2B', '#FF6B6B', '#FF8C00']
+   
+
+
   };
 
 export const CommonStyles = StyleSheet.create({

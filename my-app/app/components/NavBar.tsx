@@ -15,9 +15,9 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter }) =>
 
   return (
     <LinearGradient
-      colors={['#1a2a6c', '#b21f1f', '#fdbb2d']}
+      colors={['white', 'orange']}  // Updated gradient from white to orange
       start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
+      end={{ x: 0, y: 1 }}  // Vertical gradient from top to bottom
       style={styles.container}
     >
       <View style={styles.navbar}>

@@ -17,13 +17,13 @@ const Tab = createBottomTabNavigator();
 const MainTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Events" component={EventsScreen} />
-      <Tab.Screen name="Services" component={ServicesScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Calendar" component={CalendarScreen} />
-      <Tab.Screen name="Map" component={MapScreen} />
-      <Tab.Screen name="Signup" component={Signup}/>
+      <Tab.Screen name="Home" component={HomeScreen}  options={{ headerShown: false }} />
+      <Tab.Screen name="Events" component={EventsScreen}  options={{ headerShown: false }} />
+      <Tab.Screen name="Services" component={ServicesScreen}  options={{ headerShown: false }} />
+      <Tab.Screen name="Profile" component={ProfileScreen}  options={{ headerShown: false }} />
+      <Tab.Screen name="Calendar" component={CalendarScreen}  options={{ headerShown: false }} />
+      <Tab.Screen name="Map" component={MapScreen}  options={{ headerShown: false }} />
+      <Tab.Screen name="Signup" component={Signup}  options={{ headerShown: false }}/>
       <Tab.Screen name="Signin" component={Signin}/>
       {/* Add the CreateLocalServiceScreen to the tab navigator */}
       <Tab.Screen name="CreateService" component={CreateLocalServiceStack} /> 

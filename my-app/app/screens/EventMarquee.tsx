@@ -27,9 +27,9 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
 
   return (
     <LinearGradient
-      colors={['#FF8C00', '#FF5722']}
+      colors={['white', '#ffebcc', '#ffc299']}  // Gradient from white to light orange
       start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
+      end={{ x: 1, y: 0 }}  // Left to right gradient
       style={styles.container}
     >
       <View style={styles.marqueeContainer}>
@@ -58,13 +58,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    color: '#FFFFFF',
+    color: '#333333',
     fontSize: 16,
     fontWeight: 'bold',
     marginRight: 20,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 10,
+    textShadowRadius: 2,
   },
 });
 

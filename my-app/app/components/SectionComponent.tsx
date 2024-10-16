@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +17,9 @@ interface SectionComponentProps {
 }
 
 const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeAll, onItemPress, type }) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const renderItem = (item: any) => {
     switch (type) {
       case 'staff':
@@ -29,6 +32,31 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
       default:
         return null;
     }
+  };
+
+  const renderLocalServices = () => {
+    const pages = [];
+    for (let i = 0; i < data.length; i += 4) {
+      const pageData = data.slice(i, i + 4);
+      pages.push(
+        <View key={i} style={styles.localPage}>
+          {pageData.map((item, index) => (
+            <View key={item.id} style={styles.localItem}>
+              {renderItem(item)}
+            </View>
+          ))}
+        </View>
+      );
+    }
+    return pages;
+  };
+
+  const totalPages = Math.ceil(data.length / 4);
+
+  const handleScroll = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset;
+    const page = Math.round(contentOffset.x / width);
+    setCurrentPage(page);
   };
 
   return (
@@ -51,13 +79,32 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
         end={{ x: 1, y: 1 }}
         style={styles.contentContainer}
       >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollViewContent}
-        >
-          {data.map(renderItem)}
-        </ScrollView>
+        {type === 'local' ? (
+          <>
+            <ScrollView
+              ref={scrollViewRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={handleScroll}
+            >
+              {renderLocalServices()}
+            </ScrollView>
+            {totalPages > 1 && (
+              <View style={styles.pagination}>
+                <Text style={styles.pageIndicator}>{`${currentPage + 1}/${totalPages}`}</Text>
+              </View>
+            )}
+          </>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.scrollViewContent}
+          >
+            {data.map(renderItem)}
+          </ScrollView>
+        )}
       </LinearGradient>
     </View>
   );
@@ -112,6 +159,27 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     paddingHorizontal: 10,
+  },
+  localPage: {
+    width: width - 30,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  localItem: {
+    width: '48%',
+    marginBottom: 10,
+  },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  pageIndicator: {
+    color: '#fff',
+    fontSize: 12,
   },
 });
 

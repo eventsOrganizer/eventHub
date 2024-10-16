@@ -103,67 +103,67 @@ const AppNavigator = () => {
       <Stack.Screen 
         name="Map" 
         component={MapScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="Calendar" 
         component={CalendarScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="Profile" 
         component={ProfileScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="EditProfile" 
         component={EditProfileScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="Signup" 
         component={Signup}  
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="Signin" 
         component={Signin}  
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
          <Stack.Screen 
         name="PersonalsScreen" 
         component={PersonalsScreen}
-        options={{ headerShown: true }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="PersonalDetail" 
         component={PersonalDetail}
-        options={{ headerShown: true }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="EventDetails" 
         component={EventDetailsScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="OrganizerProfile" 
         component={OrganizerProfileScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen
         name="ChatRoom"
         component={ChatRoomScreen}
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen
         name="ChatList"
         component={ChatListScreen}
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen
         name="Requests"
         component={RequestsScreen}
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       {/* Local Service Creation Steps */}
       <Stack.Screen 
