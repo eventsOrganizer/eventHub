@@ -1,18 +1,20 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, SafeAreaView, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { Service } from '../../services/serviceTypes';
-import { fetchPersonalDetail, makeServiceRequest } from '../../services/personalService';
+import { fetchPersonalDetail, makeServiceRequest, toggleLike } from '../../services/personalService';
 import PersonalInfo from '../../components/PersonalServiceComponents/PersonalInfo';
 import CommentSection from '../../components/PersonalServiceComponents/CommentSection';
+import Calendar from '../../components/PersonalServiceComponents/personalServiceCalandar';
 import BookingForm from '../../components/PersonalServiceComponents/BookingForm';
 import BookingStatus from '../../components/PersonalServiceComponents/BookingStatus';
 import ReviewForm from '../../components/PersonalServiceComponents/ReviewForm';
-import { styles } from './styles';
+import { useUser } from '../../UserContext';
 
 const PersonalDetail = () => {
   const route = useRoute();
   const { personalId } = route.params as { personalId: number };
+  const { userId } = useUser();
 
   const [personalData, setPersonalData] = useState<Service | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,12 +43,21 @@ const PersonalDetail = () => {
   }, [fetchData]);
 
   const handleBooking = () => {
+    if (!userId) {
+      Alert.alert('Authentication Required', 'Please log in to book a service.');
+      return;
+    }
     setShowCalendar(true);
   };
 
   const handleConfirm = async (selectedDate: string, hours: string) => {
     try {
-      const result = await makeServiceRequest(personalId, parseInt(hours), selectedDate);
+      if (!userId) {
+        Alert.alert('Authentication Required', 'Please log in to book a service.');
+        return;
+      }
+      console.log('Making service request with data:', { personalId, hours: parseInt(hours), selectedDate, userId });
+      const result = await makeServiceRequest(personalId, parseInt(hours), selectedDate, userId);
       if (result) {
         setRequestStatus('pending');
         Alert.alert('Success', 'Your request has been sent to the service provider for confirmation.');
@@ -55,7 +66,27 @@ const PersonalDetail = () => {
       }
     } catch (error) {
       console.error('Error making service request:', error);
-      Alert.alert('Error', 'An error occurred while sending your request.');
+      if (error instanceof Error) {
+        Alert.alert('Error', `An error occurred while sending your request: ${error.message}`);
+      } else {
+        Alert.alert('Error', 'An unknown error occurred while sending your request.');
+      }
+    }
+  };
+  const handleLike = async () => {
+    if (!userId) {
+      Alert.alert('Authentication Required', 'Please log in to like a service.');
+      return;
+    }
+    const result = await toggleLike(personalId, userId);
+    if (result !== null) {
+      setPersonalData(prevData => {
+        if (!prevData) return null;
+        const newLikes = result
+          ? [...(prevData.like || []), { user_id: userId }]
+          : (prevData.like || []).filter(like => like.user_id !== userId);
+        return { ...prevData, like: newLikes };
+      });
     }
   };
 
@@ -65,55 +96,60 @@ const PersonalDetail = () => {
   };
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
+    return <View style={styles.container}><Text>Loading...</Text></View>;
   }
 
   if (!personalData) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.noDataText}>No data available</Text>
-      </View>
-    );
+    return <View style={styles.container}><Text>No data available</Text></View>;
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{personalData.name}</Text>
-        </View>
-        <View style={styles.content}>
-          <PersonalInfo personalData={personalData} />
-          
-          {!requestStatus && (
-            <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
-              <Text style={styles.bookButtonText}>Book Now</Text>
-            </TouchableOpacity>
-          )}
+    <ScrollView style={styles.container}>
+      <PersonalInfo personalData={personalData} onLike={handleLike} />
+      
+      {!requestStatus && (
+        <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
+          <Text style={styles.bookButtonText}>Book Now</Text>
+        </TouchableOpacity>
+      )}
 
-          {showCalendar && !requestStatus && (
-            <BookingForm
-              availableDates={availableDates}
-              onConfirm={handleConfirm}
-            />
-          )}
+      {showCalendar && !requestStatus && (
+        <BookingForm
+          availableDates={availableDates}
+          onConfirm={handleConfirm}
+        />
+      )}
 
-          <BookingStatus status={requestStatus} />
+      <BookingStatus status={requestStatus} />
 
-          <ReviewForm personalId={personalId} onReviewSubmitted={handleReviewSubmitted} />
+      <ReviewForm personalId={personalData.id} onReviewSubmitted={handleReviewSubmitted} />
 
-          <CommentSection 
-            comments={personalData.comment} 
-            personalId={personalData.id}
-          />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <CommentSection 
+        comments={personalData.comment} 
+        personalId={personalData.id}
+        userId={userId}
+      />
+    </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  bookButton: {
+    backgroundColor: 'blue',
+    padding: 15,
+    margin: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  bookButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});
 
 export default PersonalDetail;

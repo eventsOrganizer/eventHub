@@ -1,48 +1,24 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions, Animated } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 interface EventSectionContainerProps {
   children: React.ReactNode;
 }
 
 const EventSectionContainer: React.FC<EventSectionContainerProps> = ({ children }) => {
-  const animatedValue = new Animated.Value(0);
-
-  React.useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(animatedValue, {
-          toValue: 1,
-          duration: 15000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(animatedValue, {
-          toValue: 0,
-          duration: 15000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
-
-  const translateY = animatedValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -50],
-  });
-
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.backgroundContainer, { transform: [{ translateY }] }]}>
+      <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFill} />
       <LinearGradient
-  colors={[ '#87CEFA', 'white', '#DDA0DD']}
-  style={styles.gradient}
-  start={{ x: 0, y: 0 }}
-  end={{ x: 1, y: 1 }}
-/>
-      </Animated.View>
+        colors={[ 'white']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      />
       <View style={styles.content}>
         {children}
       </View>
@@ -51,28 +27,25 @@ const EventSectionContainer: React.FC<EventSectionContainerProps> = ({ children 
 };
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      marginVertical: 10,
-      borderRadius: 15,
-      overflow: 'hidden',
-      elevation: 5,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 3,
-    },
-    backgroundContainer: {
-      ...StyleSheet.absoluteFillObject,
-      height: height * 1.2,
-    },
-    gradient: {
-      flex: 1,
-    },
-    content: {
-      flexGrow: 1,
-      padding: 10,
-    },
-  });
+  container: {
+    marginVertical: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.8,
+  },
+  content: {
+    padding: 25,
+    backgroundColor: 'rgba(255, 0, 255, 0.1)',
+  },
+});
 
 export default EventSectionContainer;

@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, ImageBackground, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
@@ -36,39 +35,36 @@ const EventCard: React.FC<EventCardProps> = ({ event, onPress, children }) => {
       style={styles.eventCardContainer}
       onPress={() => onPress(event)}
     >
-      <ImageBackground
-        source={{ uri: event.media[0]?.url }}
-        style={styles.eventCardBackground}
-        imageStyle={styles.eventCardImage}
-      >
-        <View style={styles.joinButtonContainer}>
-          {children}
-        </View>
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.8)']}
-          style={styles.eventCardGradient}
-        >
-          <Text style={styles.eventName}>{event.name}</Text>
-          <View style={styles.eventInfoContainer}>
-            <View style={styles.eventInfoRow}>
-              <Ionicons name="calendar-outline" size={12} color="#fff" />
-              <Text style={styles.eventInfoText}>{event.availability.date}</Text>
-            </View>
-            <View style={styles.eventInfoRow}>
-              <Ionicons name="time-outline" size={12} color="#fff" />
-              <Text style={styles.eventInfoText}>{event.availability.start} - {event.availability.end}</Text>
-            </View>
-            <View style={styles.eventInfoRow}>
-              <Ionicons name="pricetag-outline" size={12} color="#fff" />
-              <Text style={styles.eventInfoText}>{event.subcategory.category.name} - {event.subcategory.name}</Text>
-            </View>
-            <View style={styles.eventInfoRow}>
-              <Ionicons name="business-outline" size={12} color="#fff" />
-              <Text style={styles.eventInfoText}>{event.type}</Text>
-            </View>
+      <View style={styles.eventCardFrame}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: event.media[0]?.url }}
+            style={styles.eventCardImage}
+          />
+          <View style={styles.joinButtonContainer}>
+            {children}
           </View>
-        </LinearGradient>
-      </ImageBackground>
+        </View>
+        <View style={styles.eventInfoContainer}>
+          <Text style={styles.eventName} numberOfLines={1}>{event.name}</Text>
+          <View style={styles.eventInfoRow}>
+            <Ionicons name="calendar-outline" size={12} color="#666" />
+            <Text style={styles.eventInfoText}>{event.availability.date}</Text>
+          </View>
+          <View style={styles.eventInfoRow}>
+            <Ionicons name="time-outline" size={12} color="#666" />
+            <Text style={styles.eventInfoText}>{event.availability.start} - {event.availability.end}</Text>
+          </View>
+          <View style={styles.eventInfoRow}>
+            <Ionicons name="pricetag-outline" size={12} color="#666" />
+            <Text style={styles.eventInfoText} numberOfLines={1}>{event.subcategory.category.name} - {event.subcategory.name}</Text>
+          </View>
+          <View style={styles.eventInfoRow}>
+            <Ionicons name="business-outline" size={12} color="#666" />
+            <Text style={styles.eventInfoText}>{event.type}</Text>
+          </View>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -76,41 +72,56 @@ const EventCard: React.FC<EventCardProps> = ({ event, onPress, children }) => {
 const styles = StyleSheet.create({
   eventCardContainer: {
     width: width * 0.45,
-    height: height * 0.25,
+    height: height * 0.3,
     marginRight: 10,
+    marginBottom: 10,
+  },
+  eventCardFrame: {
+    flex: 1,
     borderRadius: 10,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#fff',
+    backgroundColor: '#fff',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
   },
-  eventCardBackground: {
-    flex: 1,
-    justifyContent: 'flex-end',
+  imageContainer: {
+    height: '60%',
+    width: '100%',
+    position: 'relative',
   },
   eventCardImage: {
-    borderRadius: 10,
-  },
-  eventCardGradient: {
-    padding: 8,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   eventName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 3,
+    color: '#333',
+    marginBottom: 5,
   },
   eventInfoContainer: {
-    marginTop: 3,
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 10,
   },
   eventInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: 3,
   },
   eventInfoText: {
     fontSize: 10,
-    color: '#fff',
-    marginLeft: 3,
+    color: '#666',
+    marginLeft: 5,
   },
   joinButtonContainer: {
     position: 'absolute',
