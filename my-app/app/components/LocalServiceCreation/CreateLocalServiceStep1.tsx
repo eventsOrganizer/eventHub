@@ -3,13 +3,15 @@ import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 
 type CreateLocalServiceStep1Params = {
   CreateLocalServiceStep2: {
     serviceName: string;
     description: string;
-    subcategoryName: string; // Change from subcategoryId to subcategoryName
-    subcategoryId: string; // Pass subcategory ID
+    subcategoryName: string;
+    subcategoryId: string;
   };
 };
 
@@ -18,11 +20,15 @@ type Subcategory = {
   name: string;
 };
 
+// Yup validation schema
+const validationSchema = Yup.object().shape({
+  serviceName: Yup.string().required('Service Name is required'),
+  description: Yup.string().required('Description is required'),
+  subcategoryId: Yup.string().required('Subcategory is required'),
+});
+
 const CreateLocalServiceStep1 = () => {
-  const [serviceName, setServiceName] = useState('');
-  const [description, setDescription] = useState('');
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<Subcategory | null>(null); // Change to store the whole subcategory
   const navigation = useNavigation<NavigationProp<CreateLocalServiceStep1Params>>();
 
   useEffect(() => {
@@ -52,52 +58,71 @@ const CreateLocalServiceStep1 = () => {
     fetchSubcategories();
   }, []);
 
-  const handleNext = () => {
-    if (serviceName && description && selectedSubcategory) {
+  const handleNext = (values: { serviceName: string; description: string; subcategoryId: string }) => {
+    const selectedSubcategory = subcategories.find(sub => sub.id === values.subcategoryId);
+
+    if (selectedSubcategory) {
       navigation.navigate('CreateLocalServiceStep2', { 
-        serviceName, 
-        description, 
+        serviceName: values.serviceName, 
+        description: values.description, 
         subcategoryName: selectedSubcategory.name, // Pass subcategory name
         subcategoryId: selectedSubcategory.id // Pass subcategory ID
       });
-    } else {
-      alert('Please fill in all fields');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Service Name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Service Name"
-        value={serviceName}
-        onChangeText={setServiceName}
-      />
-      <Text style={styles.label}>Description</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Description"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
-      <Text style={styles.label}>Subcategory</Text>
-      <Picker
-        selectedValue={selectedSubcategory ? selectedSubcategory.id : null} // Update to work with selectedSubcategory
-        onValueChange={(itemValue) => {
-          const selected = subcategories.find(sub => sub.id === itemValue); // Find the selected subcategory
-          setSelectedSubcategory(selected || null); // Set the whole subcategory object
-        }}
-        style={styles.input}
-      >
-        <Picker.Item label="Select a subcategory" value={null} />
-        {subcategories.map((subcategory: Subcategory) => (
-          <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
-        ))}
-      </Picker>
-      <Button title="Next" onPress={handleNext} />
-    </View>
+    <Formik
+      initialValues={{ serviceName: '', description: '', subcategoryId: '' }}
+      validationSchema={validationSchema}
+      onSubmit={(values) => handleNext(values)}
+    >
+      {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
+        <View style={styles.container}>
+          <Text style={styles.label}>Service Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Service Name"
+            onChangeText={handleChange('serviceName')}
+            onBlur={handleBlur('serviceName')}
+            value={values.serviceName}
+          />
+          {touched.serviceName && errors.serviceName && (
+            <Text style={styles.errorText}>{errors.serviceName}</Text>
+          )}
+
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Description"
+            onChangeText={handleChange('description')}
+            onBlur={handleBlur('description')}
+            value={values.description}
+            multiline
+          />
+          {touched.description && errors.description && (
+            <Text style={styles.errorText}>{errors.description}</Text>
+          )}
+
+          <Text style={styles.label}>Subcategory</Text>
+          <Picker
+            selectedValue={values.subcategoryId}
+            onValueChange={(itemValue) => setFieldValue('subcategoryId', itemValue)}
+            style={styles.input}
+          >
+            <Picker.Item label="Select a subcategory" value="" />
+            {subcategories.map((subcategory: Subcategory) => (
+              <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
+            ))}
+          </Picker>
+          {touched.subcategoryId && errors.subcategoryId && (
+            <Text style={styles.errorText}>{errors.subcategoryId}</Text>
+          )}
+
+          <Button title="Next" onPress={handleSubmit as any} />
+        </View>
+      )}
+    </Formik>
   );
 };
 
@@ -110,6 +135,10 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginBottom: 20,
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
   },
 });
 

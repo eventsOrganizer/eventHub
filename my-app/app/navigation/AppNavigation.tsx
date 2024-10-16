@@ -136,7 +136,7 @@ const AppNavigator = () => {
         options={{ headerShown: true }}
       />
       <Stack.Screen 
-        name="EventDetails" 
+        name="EventDetails"
         component={EventDetailsScreen} 
         options={{ headerShown: true }} 
       />
