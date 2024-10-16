@@ -40,6 +40,7 @@ import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
 import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
 import SavedScreen from '../components/event/profile/SavedScreen';
+import ChatRoomScreen from '../components/event/ChatRoomScreen';
 
 
 

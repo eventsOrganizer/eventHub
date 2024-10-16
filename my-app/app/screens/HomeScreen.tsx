@@ -13,7 +13,6 @@ import EventMarquee from '../screens/EventMarquee';
 import VIPServicesContainer from '../components/VIPServicesContainer';
 import EventSectionContainer from '../components/event/EventSectionContainer';
 import BeautifulSectionHeader from '../components/event/BeautifulSectionHeader';
-import { Ionicons } from '@expo/vector-icons';
 
 type RootStackParamList = {
   Home: undefined;
@@ -39,7 +38,6 @@ const HomeScreen: React.FC = () => {
   const [staffServices, setStaffServices] = useState<any[]>([]);
   const [locals, setLocals] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
-  const [locals, setLocals] = useState<any[]>([]);
   const [isFabOpen, setIsFabOpen] = useState(false);
 
 
