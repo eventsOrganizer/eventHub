@@ -12,6 +12,7 @@ import UserServicesList from './UserServiceList';
 import FriendsList from './FriendsList';
 import InterestsList from './InterestsList';
 
+
 interface UserProfile {
   id: string;
   email: string;
@@ -20,8 +21,6 @@ interface UserProfile {
   bio?: string;
   avatar_url?: string;
 }
-
-
 
 const UserProfileScreen: React.FC = () => {
   const { userId } = useUser();
@@ -118,20 +117,47 @@ const UserProfileScreen: React.FC = () => {
     }
   };
 
+  const handleCreateEvent = () => {
+    navigation.navigate('EventCreation' as never);
+  };
+
+  const handleCreateService = () => {
+    navigation.navigate('CreateService' as never);
+  };
+ 
+
+  const CreateButton: React.FC<{ onPress: () => void; iconName: string; text: string }> = ({ onPress, iconName, text }) => (
+    <TouchableOpacity style={styles.createButton} onPress={onPress}>
+      <Ionicons name={iconName} size={24} color="#fff" />
+      <Text style={styles.createButtonText}>{text}</Text>
+    </TouchableOpacity>
+  );
+
   if (!userProfile || !userId) {
     return <View style={styles.loadingContainer}><Text>Loading...</Text></View>;
   }
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#FF4500', '#FFA500']} style={styles.header}>
-        <Image source={{ uri: userProfile.avatar_url }} style={styles.avatar} />
-        <Text style={styles.name}>{`${userProfile.firstname} ${userProfile.lastname}`}</Text>
-        <Text style={styles.email}>{userProfile.email}</Text>
-        <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditProfile' as never)}>
-          <Ionicons name="pencil" size={24} color="#fff" />
+    <LinearGradient colors={['#FF4500', '#FFA500']} style={styles.header}>
+      <Image source={{ uri: userProfile.avatar_url }} style={styles.avatar} />
+      <Text style={styles.name}>{`${userProfile.firstname} ${userProfile.lastname}`}</Text>
+      <Text style={styles.email}>{userProfile.email}</Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.createButton} onPress={handleCreateEvent}>
+          <Ionicons name="add-circle-outline" size={24} color="#fff" />
+          <Text style={styles.createButtonText}>Event</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.requestsButton} onPress={() => setShowRequests(!showRequests)}>
+        <TouchableOpacity style={styles.createButton} onPress={handleCreateService}>
+          <Ionicons name="briefcase-outline" size={24} color="#fff" />
+          <Text style={styles.createButtonText}>Service</Text>
+        </TouchableOpacity>
+       
+      </View>
+      <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditProfile' as never)}>
+        <Ionicons name="pencil" size={24} color="#fff" />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.requestsButton} onPress={() => setShowRequests(!showRequests)}>
           <Ionicons name="notifications" size={24} color="#FF4500" />
           <Text style={styles.requestsButtonText}>{requestCount}</Text>
         </TouchableOpacity>
@@ -166,7 +192,7 @@ const UserProfileScreen: React.FC = () => {
         )}
       />
 
-      {showRequests && (
+{showRequests && (
         <View style={styles.requestsOverlay}>
           <RequestsScreen />
           <TouchableOpacity style={styles.closeButton} onPress={() => setShowRequests(false)}>
@@ -291,6 +317,27 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 15,
     padding: 5,
+  },
+  createButtonText: {
+    color: '#fff',
+    marginLeft: 5,
+    fontSize: 14,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+    flexWrap: 'wrap',
+  },
+  createButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    marginHorizontal: 5,
+    marginBottom: 5,
   },
 });
 

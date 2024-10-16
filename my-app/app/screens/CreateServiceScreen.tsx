@@ -1,39 +1,37 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, ScrollView } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../services/supabaseClient';
+import { Ionicons } from '@expo/vector-icons';
 
 interface CreateServiceScreenProps {
   navigation: any;
-  route: any;
 }
 
-const CreateServiceScreen: React.FC<CreateServiceScreenProps> = ({ navigation, route }) => {
-  const { serviceType } = route.params; // Fetch serviceType (local, material, person)
+const CreateServiceScreen: React.FC<CreateServiceScreenProps> = ({ navigation }) => {
+  const [serviceType, setServiceType] = useState<string>('');
   const [serviceName, setServiceName] = useState<string>('');
   const [serviceDescription, setServiceDescription] = useState<string>('');
+  const [price, setPrice] = useState<string>('');
 
-  // Handle the creation of a new service
   const handleCreateService = async () => {
-    if (!serviceName || !serviceDescription) {
+    if (!serviceType || !serviceName || !serviceDescription || !price) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     try {
-      // Insert the service into the database
       const { data, error } = await supabase
-        .from('personal') // Assuming 'personal' table is where services are stored
-        .insert([{ name: serviceName, details: serviceDescription, type: serviceType }]);
+        .from(serviceType)
+        .insert([{ name: serviceName, details: serviceDescription, price: parseFloat(price) }]);
 
       if (error) {
-        throw error; // If there's an error, throw it
+        throw error;
       }
 
-      // Success handling
       Alert.alert('Success', `Created ${serviceType} service successfully`);
-      navigation.goBack(); // Navigate back to the previous screen
+      navigation.goBack();
     } catch (error: unknown) {
-      // Handle error gracefully
       if (error instanceof Error) {
         Alert.alert('Error', error.message || 'An unexpected error occurred');
       } else {
@@ -43,31 +41,53 @@ const CreateServiceScreen: React.FC<CreateServiceScreenProps> = ({ navigation, r
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Create {serviceType} Service</Text>
-      
-      {/* Service Name Input */}
+    <ScrollView style={styles.container}>
+      <Text style={styles.header}>Create New Service</Text>
+
+      <Text style={styles.label}>Service Type</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={serviceType}
+          onValueChange={(itemValue) => setServiceType(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select Service Type" value="" />
+          <Picker.Item label="Local Service" value="local" />
+          <Picker.Item label="Personal Service" value="personal" />
+          <Picker.Item label="Material Service" value="material" />
+        </Picker>
+      </View>
+
+      <Text style={styles.label}>Service Name</Text>
       <TextInput
         style={styles.input}
-        placeholder="Service Name"
+        placeholder="Enter service name"
         value={serviceName}
         onChangeText={setServiceName}
       />
-      
-      {/* Service Description Input */}
+
+      <Text style={styles.label}>Service Description</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
-        placeholder="Service Description"
+        placeholder="Enter service description"
         value={serviceDescription}
         onChangeText={setServiceDescription}
         multiline
       />
-      
-      {/* Create Service Button */}
-      <TouchableOpacity style={styles.button} onPress={handleCreateService}>
-        <Text style={styles.buttonText}>Create Service</Text>
+
+      <Text style={styles.label}>Price</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter price"
+        value={price}
+        onChangeText={setPrice}
+        keyboardType="numeric"
+      />
+
+      <TouchableOpacity style={styles.createButton} onPress={handleCreateService}>
+        <Text style={styles.createButtonText}>Create Service</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -75,36 +95,53 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
   header: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
-    textAlign: 'center',
+    color: '#333',
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: '#333',
   },
   input: {
-    height: 40,
+    height: 50,
     borderColor: '#ddd',
     borderWidth: 1,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    borderRadius: 5,
+    borderRadius: 10,
+    marginBottom: 20,
+    paddingHorizontal: 15,
+    backgroundColor: '#fff',
   },
   textArea: {
-    height: 100,
+    height: 120,
     textAlignVertical: 'top',
+    paddingTop: 15,
   },
-  button: {
-    marginTop: 20,
-    paddingVertical: 15,
-    backgroundColor: '#673AB7',
-    borderRadius: 5,
+  pickerContainer: {
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 10,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+  },
+  picker: {
+    height: 50,
+  },
+  createButton: {
+    backgroundColor: '#4CAF50',
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
+    marginTop: 20,
   },
-  buttonText: {
+  createButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

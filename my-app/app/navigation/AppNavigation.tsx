@@ -30,7 +30,7 @@ import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
 
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
-import ChatRoomScreen from '../components/event/ChatRoomScreen';
+
 import ChatListScreen from '../components/event/ChatListScreen';
 import RequestsScreen from '../components/event/profile/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
@@ -38,10 +38,11 @@ import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
 import LocalServiceDetailScreen from '../components/LocalService/LocalServiceDetailScreen';
 import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
-
-
+import ChatRoomScreen from '../components/event/ChatRoomScreen';
+import HomeScreen from '../screens/HomeScreen';
 
 export type RootStackParamList = {
+  
   Onboarding: undefined;
   Interests: { onComplete: () => void };
   Profile: undefined;
@@ -90,6 +91,9 @@ type EventSetupOptionsScreenProps = {
   LocalServiceScreen: undefined;
   LocalServiceDetails: { localServiceId: number };
   UserProfile: undefined;
+  HomeScreen: undefined;
+  Map: undefined;
+  Home: undefined;
 };
 
 
@@ -123,7 +127,7 @@ const AppNavigator = () => {
       {/* Home Screen */}
       <Stack.Screen
         name="Home"
-        component={Home}
+        component={HomeScreen}
         options={{ headerShown: false }}
       />
       
