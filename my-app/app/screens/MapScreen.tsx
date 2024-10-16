@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 
 const MapScreen: React.FC = () => {
@@ -8,28 +8,31 @@ const MapScreen: React.FC = () => {
   const [markedLocation, setMarkedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Array<{ name: string; lat: number; lon: number }>>([]);
-  const mapRef = useRef<MapView>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const webViewRef = useRef<WebView>(null);
 
-  useEffect(() => {
-    (async () => {
+  const getLocation = useCallback(async () => {
+    try {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        console.error('Permission to access location was denied');
+        setErrorMessage('Permission to access location was denied');
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       setCurrentLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       });
-    })();
+    } catch (error) {
+      console.error('Error getting location:', error);
+      setErrorMessage('Failed to get current location');
+    }
   }, []);
 
-  const handleMapPress = (event: any) => {
-    const { coordinate } = event.nativeEvent;
-    setMarkedLocation(coordinate);
-  };
+  useEffect(() => {
+    getLocation();
+  }, [getLocation]);
 
   const fetchSuggestions = async (query: string) => {
     if (query.length > 2) {
@@ -51,15 +54,86 @@ const MapScreen: React.FC = () => {
 
   const handleSearch = (item: { name: string; lat: number; lon: number }) => {
     setMarkedLocation({ latitude: item.lat, longitude: item.lon });
-    mapRef.current?.animateToRegion({
-      latitude: item.lat,
-      longitude: item.lon,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
-    });
     setSearchQuery(item.name);
     setSuggestions([]);
+    webViewRef.current?.injectJavaScript(`
+      if (markedMarker) {
+        map.removeLayer(markedMarker);
+      }
+      markedMarker = L.marker([${item.lat}, ${item.lon}]).addTo(map).bindPopup('Marked Location');
+      map.setView([${item.lat}, ${item.lon}], 15);
+    `);
   };
+
+  const generateMapHTML = () => {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+          <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+          <style>
+            body { margin: 0; padding: 0; }
+            #map { height: 100vh; width: 100vw; }
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script>
+            var map = L.map('map', {
+              zoomControl: false,
+              attributionControl: false
+            });
+
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+              maxZoom: 19,
+              attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            }).addTo(map);
+
+            var currentMarker, markedMarker;
+
+            function updateMap(lat, lon, isCurrentLocation) {
+              var marker = isCurrentLocation ? currentMarker : markedMarker;
+              if (marker) {
+                map.removeLayer(marker);
+              }
+              marker = L.marker([lat, lon]).addTo(map)
+                .bindPopup(isCurrentLocation ? 'Your Location' : 'Marked Location');
+              if (isCurrentLocation) {
+                currentMarker = marker;
+                map.setView([lat, lon], 15);
+              } else {
+                markedMarker = marker;
+              }
+            }
+
+            map.on('click', function(e) {
+              window.ReactNativeWebView.postMessage(JSON.stringify(e.latlng));
+            });
+
+            map.setView([0, 0], 2);
+          </script>
+        </body>
+      </html>
+    `;
+  };
+
+  const handleMapMessage = (event: any) => {
+    const coordinate = JSON.parse(event.nativeEvent.data);
+    setMarkedLocation({ latitude: coordinate.lat, longitude: coordinate.lng });
+    webViewRef.current?.injectJavaScript(`
+      updateMap(${coordinate.lat}, ${coordinate.lng}, false);
+    `);
+  };
+
+  useEffect(() => {
+    if (currentLocation) {
+      webViewRef.current?.injectJavaScript(`
+        updateMap(${currentLocation.latitude}, ${currentLocation.longitude}, true);
+      `);
+    }
+  }, [currentLocation]);
 
   return (
     <View style={styles.container}>
@@ -86,34 +160,21 @@ const MapScreen: React.FC = () => {
           style={styles.suggestionList}
         />
       )}
-      {currentLocation && (
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={{
-            latitude: currentLocation.latitude,
-            longitude: currentLocation.longitude,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
-          onPress={handleMapPress}
-        >
-          <Marker
-            coordinate={{
-              latitude: currentLocation.latitude,
-              longitude: currentLocation.longitude,
-            }}
-            title="Your Location"
-            pinColor="blue"
-          />
-          {markedLocation && (
-            <Marker
-              coordinate={markedLocation}
-              title="Marked Location"
-              pinColor="red"
-            />
-          )}
-        </MapView>
+      <WebView
+        ref={webViewRef}
+        style={styles.map}
+        source={{ html: generateMapHTML() }}
+        onMessage={handleMapMessage}
+        scrollEnabled={false}
+        onError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          console.error('WebView error: ', nativeEvent);
+        }}
+      />
+      {errorMessage && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        </View>
       )}
       <Text style={styles.coordinatesText}>
         Current Location: {currentLocation?.latitude.toFixed(6)}, {currentLocation?.longitude.toFixed(6)}
@@ -162,6 +223,19 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+  },
+  errorContainer: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    right: 10,
+    backgroundColor: 'rgba(255, 0, 0, 0.7)',
+    padding: 10,
+    borderRadius: 5,
+  },
+  errorText: {
+    color: 'white',
+    textAlign: 'center',
   },
 });
 
