@@ -1,5 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { BlurView } from 'expo-blur';
+
+const { width } = Dimensions.get('window');
 
 interface LocalServiceCardProps {
   item: {
@@ -20,21 +23,25 @@ const LocalServiceCard: React.FC<LocalServiceCardProps> = ({ item, onPress }) =>
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <Image source={{ uri: item.media?.[0]?.url }} style={styles.image} />
-      <View style={styles.info}>
-        <Text style={styles.name}>{item.name || 'Unnamed Service'}</Text>
-        <Text style={styles.price}>${item.priceperhour || 0}/hr</Text>
-        {item.subcategory && (
-          <Text style={styles.category}>{item.subcategory.name}</Text>
-        )}
-      </View>
+      <BlurView intensity={80} tint="light" style={styles.blurContainer}>
+        <View style={styles.info}>
+          <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{item.name || 'Unnamed Service'}</Text>
+          <Text style={styles.price}>${item.priceperhour || 0}/hr</Text>
+          {item.subcategory && (
+            <Text style={styles.category} numberOfLines={1} ellipsizeMode="tail">{item.subcategory.name}</Text>
+          )}
+        </View>
+      </BlurView>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    width: 150,
+    width: width * 0.45,
+    height: width * 0.6,
     marginRight: 10,
+    marginBottom: 10,
     borderRadius: 10,
     overflow: 'hidden',
     backgroundColor: '#fff',
@@ -42,25 +49,34 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 100,
+    height: '100%',
     resizeMode: 'cover',
+  },
+  blurContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: width * 0.15, // Fixed height for the blurred text banner
   },
   info: {
     padding: 10,
+    height: '100%',
+    justifyContent: 'space-between',
   },
   name: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 5,
+    color: '#000',
   },
   price: {
-    fontSize: 14,
+    fontSize: 12,
     color: 'green',
+    fontWeight: '600',
   },
   category: {
-    fontSize: 12,
-    color: 'gray',
-    marginTop: 5,
+    fontSize: 10,
+    color: '#333',
   },
 });
 

@@ -15,14 +15,14 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
   const [searchTerm, setSearchTerm] = useState('');
   return (
     <LinearGradient
-      colors={['#1a2a6c', '#b21f1f', '#fdbb2d']}
+      colors={['#ffffff', '#f0f0f0', '#e0e0e0']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.container}
     >
       <View style={styles.navbar}>
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#fff" style={styles.searchIcon} />
+          <Ionicons name="search" size={20} color="#0000FF" style={styles.searchIcon} />
           <TextInput
             style={styles.searchBar}
   placeholder="Search events and services..."
@@ -37,7 +37,13 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
   <Ionicons name="person-outline" size={24} color="#333" />
 </TouchableOpacity>
         <TouchableOpacity style={styles.iconContainer}>
-          <Ionicons name="notifications" size={24} color="#fff" />
+          <Ionicons name="notifications" size={24} color="#0000FF" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.iconContainer}
+          onPress={() => navigation.navigate('ChatList' as never)}
+        >
+          <Ionicons name="chatbubbles-outline" size={24} color="#0000FF" />
         </TouchableOpacity>
         <View style={styles.pickerContainer}>
           <RNPickerSelect
@@ -49,7 +55,7 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
             ]}
             style={pickerSelectStyles}
             value={selectedFilter}
-            Icon={() => <Ionicons name="chevron-down" size={20} color="#fff" />}
+            Icon={() => <Ionicons name="chevron-down" size={20} color="#0000FF" />}
           />
         </View>
       </View>
@@ -103,7 +109,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     borderRadius: 20,
     paddingHorizontal: 10,
     marginRight: 10,
@@ -113,12 +119,12 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     flex: 1,
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
     paddingVertical: 8,
   },
   iconContainer: {
-    marginHorizontal: 10,
+    marginHorizontal: 5,
     padding: 5,
   },
   pickerContainer: {
@@ -131,14 +137,14 @@ const pickerSelectStyles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    color: 'white',
+    color: '#000',
     paddingRight: 30,
   },
   inputAndroid: {
     fontSize: 16,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    color: 'white',
+    color: '#000',
     paddingRight: 30,
   },
 });

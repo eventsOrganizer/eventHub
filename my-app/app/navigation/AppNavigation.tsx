@@ -38,8 +38,11 @@ import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
 import LocalServiceDetailScreen from '../components/LocalService/LocalServiceDetailScreen';
 import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
-import ChatRoomScreen from '../components/event/ChatRoomScreen';
-import HomeScreen from '../screens/HomeScreen';
+import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
+import SavedScreen from '../components/event/profile/SavedScreen';
+
+
+
 
 import CreateLocalServiceStep1 from '../components/LocalServiceCreation/CreateLocalServiceStep1';
 import CreateLocalServiceStep2 from '../components/LocalServiceCreation/CreateLocalServiceStep2';
@@ -73,6 +76,7 @@ type RootStackParamList = {
   Signup: undefined;
   Signin: undefined;
   LandingPage: undefined;
+  HomeScreen: undefined;
  
   EventDetails: { eventName: string; eventDescription: string; eventType: string };
   CategorySelection: { eventName: string; eventDescription: string; eventType: string };
@@ -117,11 +121,8 @@ type EventSetupOptionsScreenProps = {
   LocalServiceScreen: undefined;
   LocalServiceDetails: { localServiceId: number };
   UserProfile: undefined;
-  HomeScreen: undefined;
-  Map: undefined;
-
-  
-  Home: undefined;
+  FriendRequests: undefined;
+  Saved: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -158,67 +159,67 @@ const AppNavigator = () => {
       <Stack.Screen 
         name="Map" 
         component={MapScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="Calendar" 
         component={CalendarScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="Profile" 
         component={ProfileScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="EditProfile" 
         component={EditProfileScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="Signup" 
         component={Signup}  
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="Signin" 
         component={Signin}  
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
          <Stack.Screen 
         name="PersonalsScreen" 
         component={PersonalsScreen}
-        options={{ headerShown: true }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="PersonalDetail" 
         component={PersonalDetail}
-        options={{ headerShown: true }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen 
         name="EventDetails" 
         component={EventDetailsScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="OrganizerProfile" 
         component={OrganizerProfileScreen} 
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen
         name="ChatRoom"
         component={ChatRoomScreen}
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen
         name="ChatList"
         component={ChatListScreen}
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen
         name="Requests"
         component={RequestsScreen}
-        options={{ headerShown: true }} 
+        options={{ headerShown: false }} 
       />
       {/* Local Service Creation Steps */}
       <Stack.Screen 
@@ -256,13 +257,19 @@ const AppNavigator = () => {
       name="LocalServiceDetails"
       component={LocalServiceDetailScreen}
       options={{ title: 'Service Details' }}
-/>
+      />
 
-      {/* Your other screens */}
       <Stack.Screen 
       name="UserProfile" 
       component={UserProfileScreen} />
+
+      <Stack.Screen
+       name="FriendRequests" 
+      component={FriendRequestsScreen} />
     
+      <Stack.Screen
+       name ="Saved" 
+      component={SavedScreen} />  
 
     
 

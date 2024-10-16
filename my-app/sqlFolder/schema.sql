@@ -261,13 +261,29 @@ CREATE TABLE follower (
     follower_id UUID NOT NULL,
     following_id UUID NOT NULL,
     followed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-
     PRIMARY KEY (follower_id, following_id),
     FOREIGN KEY (follower_id) REFERENCES "user"(id) ON DELETE CASCADE,  -- The follower
     FOREIGN KEY (following_id) REFERENCES "user"(id) ON DELETE CASCADE  -- The user being followed
 );
 
+
+
+CREATE TABLE saved (
+    id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL,
+    event_id INTEGER,
+    personal_id INTEGER,
+    material_id INTEGER,
+    local_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Foreign key references
+    FOREIGN KEY (user_id) REFERENCES "user"(id),
+    FOREIGN KEY (event_id) REFERENCES event(id),
+    FOREIGN KEY (personal_id) REFERENCES personal(id),
+    FOREIGN KEY (material_id) REFERENCES material(id),
+    FOREIGN KEY (local_id) REFERENCES local(id)
+);
 
 
 
