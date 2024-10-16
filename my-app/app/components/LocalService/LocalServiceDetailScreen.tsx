@@ -4,6 +4,8 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
 import AvailabilityList from '../PersonalServiceComponents/AvailabilityList';
 import CommentSection from '../PersonalServiceComponents/CommentSection';
+import { initiatePayment } from '../../services/serviceTypes';
+
 
 type RootStackParamList = {
   LocalServiceDetails: { localServiceId: number };
@@ -27,6 +29,7 @@ const LocalServiceDetailScreen: React.FC = () => {
   const [service, setService] = useState<LocalService | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isBooking, setIsBooking] = useState(false);
 
   useEffect(() => {
     const fetchServiceDetails = async () => {
@@ -101,12 +104,12 @@ const LocalServiceDetailScreen: React.FC = () => {
       />
       <TouchableOpacity 
         style={styles.bookButton} 
-        onPress={() => {
-          // Implement booking logic here
-          console.log('Booking service:', service.id);
-        }}
+        onPress={handleBooking}
+        disabled={isBooking}
       >
-        <Text style={styles.bookButtonText}>Book Now</Text>
+        <Text style={styles.bookButtonText}>
+          {isBooking ? 'Processing...' : 'Book Now'}
+        </Text>
       </TouchableOpacity>
     </ScrollView>
   );
