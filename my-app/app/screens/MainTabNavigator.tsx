@@ -12,6 +12,8 @@ import Signin from '../components/Auth/SignIn';
 // Import the CreateLocalServiceScreen
 import CreateLocalServiceStack from '../components/LocalServiceCreation/CreateLocalServiceStack';
 
+import EventCreationScreen from './EventCreationScreen';
+// import EventCustomizationScreen from './EventCustomizationScreen';
 const Tab = createBottomTabNavigator();
 
 const MainTabNavigator: React.FC = () => {

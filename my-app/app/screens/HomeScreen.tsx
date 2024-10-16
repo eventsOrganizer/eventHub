@@ -12,6 +12,7 @@ import EventMarquee from '../screens/EventMarquee';
 import VIPServicesContainer from '../components/VIPServicesContainer';
 import EventSectionContainer from '../components/event/EventSectionContainer';
 import BeautifulSectionHeader from '../components/event/BeautifulSectionHeader';
+import { Ionicons } from '@expo/vector-icons';
 
 type RootStackParamList = {
   Home: undefined;
@@ -44,10 +45,13 @@ const HomeScreen: React.FC = () => {
   const [localServices, setLocalServices] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
   const [locals, setLocals] = useState<any[]>([]);
+  const [isFabOpen, setIsFabOpen] = useState(false);
 
 
 
-
+  const toggleFab = () => {
+    setIsFabOpen(!isFabOpen);
+  };
   const fetchEvents = async () => {
     const { data, error } = await supabase
       .from('event')
@@ -172,9 +176,51 @@ const HomeScreen: React.FC = () => {
 
   };
 
+  // const handleSearch = (searchTerm: string) => {
+  //   const normalizedSearchTerm = searchTerm.toLowerCase();
+  
+  //   const filteredEvents = events.filter(event =>
+  //     event.title.toLowerCase().includes(normalizedSearchTerm) ||
+  //     event.description.toLowerCase().includes(normalizedSearchTerm)
+  //   );
+  
+  //   const filteredStaffServices = staffServices.filter(service =>
+  //     service.name.toLowerCase().includes(normalizedSearchTerm) ||
+  //     service.details.toLowerCase().includes(normalizedSearchTerm)
+  //   );
+  
+  //   const filteredLocalServices = localServices.filter(service =>
+  //     service.name.toLowerCase().includes(normalizedSearchTerm) ||
+  //     service.details.toLowerCase().includes(normalizedSearchTerm)
+  //   );
+  
+  //   const filteredMaterialsAndFoodServices = materialsAndFoodServices.filter(service =>
+  //     service.name.toLowerCase().includes(normalizedSearchTerm) ||
+  //     service.details.toLowerCase().includes(normalizedSearchTerm)
+  //   );
+  
+  //   setEvents(filteredEvents);
+  //   setStaffServices(filteredStaffServices);
+  //   setLocalServices(filteredLocalServices);
+  //   setMaterialsAndFoodServices(filteredMaterialsAndFoodServices);
+  // };
+
+  const handleSearch = (searchTerm: string) => {
+    if (!searchTerm) return; // Early return if searchTerm is undefined or empty
+    const normalizedSearchTerm = searchTerm.toLowerCase();
+  
+    const filteredEvents = events.filter(event =>
+      (event.title?.toLowerCase().includes(normalizedSearchTerm) || false) ||
+      (event.description?.toLowerCase().includes(normalizedSearchTerm) || false)
+    );
+  
+    setEvents(filteredEvents);
+  };
+
+
   return (
     <View style={styles.container}>
-      <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
+     <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} onSearch={handleSearch} />
       <RedStripe />
       <ScrollView style={styles.sections} contentContainerStyle={styles.scrollViewContent}>
         <EventMarquee events={events} />
@@ -226,7 +272,37 @@ const HomeScreen: React.FC = () => {
           style={styles.messageButton}
         />
       </ScrollView>
+      
+
+      <View style={styles.fabContainer}>
+        {isFabOpen && (
+          <>
+            <TouchableOpacity
+              style={[styles.fabItem, { backgroundColor: '#4CAF50' }]}
+              onPress={() => navigation.navigate('CreateService')}
+            >
+              <Ionicons name="briefcase-outline" size={24} color="#fff" />
+              <Text style={styles.fabItemText}>Create Service</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.fabItem, { backgroundColor: '#2196F3' }]}
+              onPress={() => navigation.navigate('EventCreation')}
+            >
+              <Ionicons name="calendar-outline" size={24} color="#fff" />
+              <Text style={styles.fabItemText}>Create Event</Text>
+            </TouchableOpacity>
+          </>
+        )}
+        <TouchableOpacity style={styles.fab} onPress={toggleFab}>
+          <Ionicons name={isFabOpen ? 'close' : 'add'} size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
     </View>
+
+      
+
+    
+    
   );
 };
 
@@ -293,6 +369,32 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginHorizontal: 10,
   },
-});
-
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+  },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FF4500',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+  },
+  fabItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 20,
+    marginBottom: 10,
+    elevation: 5,
+  },
+  fabItemText: {
+    color: '#fff',
+    marginLeft: 10,
+    fontWeight: 'bold', 
+  }
+}) 
 export default HomeScreen;
