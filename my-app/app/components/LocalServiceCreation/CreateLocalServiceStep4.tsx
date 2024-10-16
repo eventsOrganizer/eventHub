@@ -49,6 +49,14 @@ const CreateLocalServiceStep4 = () => {
 
   return (
     <Animatable.View animation="fadeInUp" style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Icon name="arrow-back" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Spacing between the arrow and content */}
+      <View style={styles.spacing} />
+
       <Animatable.Text animation="fadeInLeft" style={styles.title}>Select Amenities</Animatable.Text>
 
       <View style={styles.cardContainer}>
@@ -91,6 +99,15 @@ const styles = StyleSheet.create({
     flex: 1, 
     padding: 20, 
     backgroundColor: '#000',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 1,
+  },
+  spacing: {
+    height: 60, // Spacing after the back button
   },
   title: { 
     fontSize: 24, 

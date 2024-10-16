@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from 'reac
 import Slider from '@react-native-community/slider';
 import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
 import * as Animatable from 'react-native-animatable';
+import Icon from 'react-native-vector-icons/Ionicons'; // Import Icon from react-native-vector-icons
 
 type RouteParams = {
   serviceName: string;
@@ -57,6 +58,14 @@ const CreateLocalServiceStep3 = () => {
 
   return (
     <Animatable.View animation="fadeInUp" style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Icon name="arrow-back" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Spacing between the arrow and content */}
+      <View style={styles.spacing} />
+
       <Animatable.Text animation="fadeInLeft" style={styles.label}>Price</Animatable.Text>
       <View style={styles.priceContainer}>
         <Slider
@@ -108,6 +117,15 @@ const styles = StyleSheet.create({
     flex: 1, 
     padding: 20, 
     backgroundColor: '#000',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 1,
+  },
+  spacing: {
+    height: 60, // Spacing after the back button
   },
   label: { 
     fontSize: 18, 

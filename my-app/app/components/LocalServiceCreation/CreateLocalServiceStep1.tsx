@@ -5,6 +5,7 @@ import { supabase } from '../../services/supabaseClient';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import * as Animatable from 'react-native-animatable';
+import Icon from 'react-native-vector-icons/Ionicons'; // Import Icon from react-native-vector-icons
 
 type CreateLocalServiceStep1Params = {
   CreateLocalServiceStep2: {
@@ -65,16 +66,12 @@ const CreateLocalServiceStep1 = () => {
     const selectedSubcategoryData = subcategories.find(sub => sub.id === values.subcategoryId);
 
     if (selectedSubcategoryData) {
-      if (containerRef.current?.fadeOut) { // Check if fadeOut is defined
-        containerRef.current.fadeOut(300).then(() => { // Animate fade out
-          navigation.navigate('CreateLocalServiceStep2', { 
-            serviceName: values.serviceName, 
-            description: values.description, 
-            subcategoryName: selectedSubcategoryData.name,
-            subcategoryId: selectedSubcategoryData.id 
-          });
-        });
-      }
+      navigation.navigate('CreateLocalServiceStep2', { 
+        serviceName: values.serviceName, 
+        description: values.description, 
+        subcategoryName: selectedSubcategoryData.name,
+        subcategoryId: selectedSubcategoryData.id 
+      });
     }
   };
 
@@ -86,6 +83,14 @@ const CreateLocalServiceStep1 = () => {
     >
       {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
         <Animatable.View ref={containerRef} animation="fadeInUp" style={styles.container}>
+          {/* Back Button */}
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Icon name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+
+          {/* Spacing between the arrow and content */}
+          <View style={styles.spacing} />
+
           {/* Service Name Input */}
           <Animatable.Text animation="fadeInLeft" style={styles.label}>Service Name</Animatable.Text>
           <Animatable.View animation="bounceIn" delay={100}>
@@ -170,6 +175,16 @@ const styles = StyleSheet.create({
     flex: 1, 
     padding: 20, 
     backgroundColor: '#000',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20, // Position to the top left
+    zIndex: 1,
+    marginBottom: 10, // Add margin bottom for spacing
+  },
+  spacing: {
+    height: 60, // Adjust this value for the desired spacing
   },
   label: { 
     fontSize: 18, 

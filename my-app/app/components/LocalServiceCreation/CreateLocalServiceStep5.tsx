@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, Button, StyleSheet, ScrollView, Alert, FlatList } from 'react-native';
+import { View, Text, Image, Button, StyleSheet, ScrollView, Alert, FlatList, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -98,6 +98,14 @@ const CreateLocalServiceStep5 = () => {
 
   return (
     <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Icon name="arrow-back" size={24} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Spacing between the arrow and content */}
+      <View style={styles.spacing} />
+
       <ScrollView contentContainerStyle={styles.scrollView}>
         <Image source={{ uri: images[0] }} style={styles.image} />
 
@@ -168,6 +176,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    zIndex: 1,
+  },
+  spacing: {
+    height: 60, // Spacing after the back button
   },
   scrollView: {
     padding: 20,
