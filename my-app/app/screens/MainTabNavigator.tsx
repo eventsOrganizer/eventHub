@@ -11,6 +11,7 @@ import Signup from '../components/Auth/SignUp';
 import Signin from '../components/Auth/SignIn';
 // Import the CreateLocalServiceScreen
 import CreateLocalServiceStack from '../components/LocalServiceCreation/CreateLocalServiceStack';
+import CreatePersonalServiceStack from '../components/PersonalServiceCreation/createPersonalServiceStack';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,6 +28,7 @@ const MainTabNavigator: React.FC = () => {
       <Tab.Screen name="Signin" component={Signin}/>
       {/* Add the CreateLocalServiceScreen to the tab navigator */}
       <Tab.Screen name="CreateService" component={CreateLocalServiceStack} /> 
+      <Tab.Screen name="CreatePersonal" component={CreatePersonalServiceStack}/>
     </Tab.Navigator>
   );
 };
