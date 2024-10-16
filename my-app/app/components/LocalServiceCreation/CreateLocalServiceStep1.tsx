@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, TextInput, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import * as Animatable from 'react-native-animatable';
+import Icon from 'react-native-vector-icons/Ionicons'; // Import Icon from react-native-vector-icons
 
 type CreateLocalServiceStep1Params = {
   CreateLocalServiceStep2: {
     serviceName: string;
     description: string;
-    subcategoryName: string; // Change from subcategoryId to subcategoryName
-    subcategoryId: string; // Pass subcategory ID
+    subcategoryName: string;
+    subcategoryId: string;
   };
 };
 
@@ -18,12 +21,19 @@ type Subcategory = {
   name: string;
 };
 
+// Yup validation schema
+const validationSchema = Yup.object().shape({
+  serviceName: Yup.string().required('Service Name is required'),
+  description: Yup.string().required('Description is required'),
+  subcategoryId: Yup.string().required('Subcategory is required'),
+});
+
 const CreateLocalServiceStep1 = () => {
-  const [serviceName, setServiceName] = useState('');
-  const [description, setDescription] = useState('');
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<Subcategory | null>(null); // Change to store the whole subcategory
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
+  const [dropdownVisible, setDropdownVisible] = useState(false);
   const navigation = useNavigation<NavigationProp<CreateLocalServiceStep1Params>>();
+  const containerRef = useRef<Animatable.View | null>(null); // Reference for the container
 
   useEffect(() => {
     const fetchSubcategories = async () => {
@@ -52,64 +62,192 @@ const CreateLocalServiceStep1 = () => {
     fetchSubcategories();
   }, []);
 
-  const handleNext = () => {
-    if (serviceName && description && selectedSubcategory) {
+  const handleNext = (values: { serviceName: string; description: string; subcategoryId: string }) => {
+    const selectedSubcategoryData = subcategories.find(sub => sub.id === values.subcategoryId);
+
+    if (selectedSubcategoryData) {
       navigation.navigate('CreateLocalServiceStep2', { 
-        serviceName, 
-        description, 
-        subcategoryName: selectedSubcategory.name, // Pass subcategory name
-        subcategoryId: selectedSubcategory.id // Pass subcategory ID
+        serviceName: values.serviceName, 
+        description: values.description, 
+        subcategoryName: selectedSubcategoryData.name,
+        subcategoryId: selectedSubcategoryData.id 
       });
-    } else {
-      alert('Please fill in all fields');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Service Name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Service Name"
-        value={serviceName}
-        onChangeText={setServiceName}
-      />
-      <Text style={styles.label}>Description</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Description"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
-      <Text style={styles.label}>Subcategory</Text>
-      <Picker
-        selectedValue={selectedSubcategory ? selectedSubcategory.id : null} // Update to work with selectedSubcategory
-        onValueChange={(itemValue) => {
-          const selected = subcategories.find(sub => sub.id === itemValue); // Find the selected subcategory
-          setSelectedSubcategory(selected || null); // Set the whole subcategory object
-        }}
-        style={styles.input}
-      >
-        <Picker.Item label="Select a subcategory" value={null} />
-        {subcategories.map((subcategory: Subcategory) => (
-          <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
-        ))}
-      </Picker>
-      <Button title="Next" onPress={handleNext} />
-    </View>
+    <Formik
+      initialValues={{ serviceName: '', description: '', subcategoryId: '' }}
+      validationSchema={validationSchema}
+      onSubmit={(values) => handleNext(values)}
+    >
+      {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
+        <Animatable.View ref={containerRef} animation="fadeInUp" style={styles.container}>
+          {/* Back Button */}
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Icon name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+
+          {/* Spacing between the arrow and content */}
+          <View style={styles.spacing} />
+
+          {/* Service Name Input */}
+          <Animatable.Text animation="fadeInLeft" style={styles.label}>Service Name</Animatable.Text>
+          <Animatable.View animation="bounceIn" delay={100}>
+            <TextInput
+              style={[styles.input, touched.serviceName && errors.serviceName ? styles.inputError : null]}
+              placeholder="Enter Service Name"
+              placeholderTextColor="#999"
+              onChangeText={handleChange('serviceName')}
+              onBlur={handleBlur('serviceName')}
+              value={values.serviceName}
+            />
+            {touched.serviceName && errors.serviceName && (
+              <Animatable.Text animation="fadeIn" style={styles.errorText}>{errors.serviceName}</Animatable.Text>
+            )}
+          </Animatable.View>
+
+          {/* Description Input */}
+          <Animatable.Text animation="fadeInLeft" style={styles.label}>Description</Animatable.Text>
+          <Animatable.View animation="bounceIn" delay={200}>
+            <TextInput
+              style={[styles.input, touched.description && errors.description ? styles.inputError : null]}
+              placeholder="Enter Description"
+              placeholderTextColor="#999"
+              onChangeText={handleChange('description')}
+              onBlur={handleBlur('description')}
+              value={values.description}
+              multiline
+            />
+            {touched.description && errors.description && (
+              <Animatable.Text animation="fadeIn" style={styles.errorText}>{errors.description}</Animatable.Text>
+            )}
+          </Animatable.View>
+
+          {/* Subcategory Dropdown */}
+          <Animatable.Text animation="fadeInLeft" style={styles.label}>Subcategory</Animatable.Text>
+          <TouchableOpacity
+            style={[styles.dropdown, { borderColor: selectedSubcategory ? '#fff' : '#FF3B30' }]}
+            onPress={() => setDropdownVisible(prev => !prev)}
+          >
+            <Text style={styles.dropdownText}>
+              {selectedSubcategory || "Select a subcategory"}
+            </Text>
+          </TouchableOpacity>
+
+          {dropdownVisible && (
+            <FlatList
+              data={subcategories}
+              keyExtractor={item => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setSelectedSubcategory(item.name);
+                    setFieldValue('subcategoryId', item.id);
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={styles.dropdownItemText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+
+          {touched.subcategoryId && errors.subcategoryId && (
+            <Animatable.Text animation="fadeIn" style={styles.errorText}>{errors.subcategoryId}</Animatable.Text>
+          )}
+
+          {/* Submit Button */}
+          <Animatable.View animation="pulse" delay={400} style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.button} onPress={handleSubmit as any}>
+              <Text style={styles.buttonText}>Next</Text>
+            </TouchableOpacity>
+          </Animatable.View>
+        </Animatable.View>
+      )}
+    </Formik>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  label: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
+  container: { 
+    flex: 1, 
+    padding: 20, 
+    backgroundColor: '#000',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20, // Position to the top left
+    zIndex: 1,
+    marginBottom: 10, // Add margin bottom for spacing
+  },
+  spacing: {
+    height: 0, // Adjust this value for the desired spacing
+  },
+  label: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#fff', 
+    marginBottom: 5,
+  },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#fff',
+    color: '#fff',
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 10,
     marginBottom: 20,
+    backgroundColor: '#333',
+    fontSize: 16,
+  },
+  inputError: {
+    borderColor: '#FF3B30',
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: '#fff',
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#333',
+    marginBottom: 10,
+  },
+  dropdownText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  dropdownItem: {
+    padding: 10,
+    backgroundColor: '#444',
+    borderBottomWidth: 1,
+    borderBottomColor: '#555',
+  },
+  dropdownItemText: {
+    color: '#fff',
+  },
+  errorText: {
+    color: '#FF3B30', 
+    marginBottom: 10,
+    fontSize: 14,
+  },
+  buttonContainer: {
+    marginTop: 20,
+  },
+  button: {
+    backgroundColor: '#FF3B30', 
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#FF3B30', 
+    shadowOffset: { width: 0, height: 10 }, 
+    shadowOpacity: 0.8, 
+    shadowRadius: 10,
+  },
+  buttonText: {
+    color: '#fff', 
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
