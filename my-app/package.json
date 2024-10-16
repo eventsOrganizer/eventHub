@@ -17,11 +17,8 @@
     "@react-native-community/checkbox": "^0.5.17",
     "@react-native-community/datetimepicker": "^6.7.3",
     "@react-native-community/masked-view": "^0.1.11",
-<<<<<<< HEAD
     "@react-native-community/slider": "^4.5.4",
-=======
     "@react-native-picker/picker": "^2.8.1",
->>>>>>> 607693d1fb5c3c46b494269d895be81215e5c19c
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
