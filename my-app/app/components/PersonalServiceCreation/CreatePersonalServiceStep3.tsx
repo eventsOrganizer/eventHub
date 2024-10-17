@@ -4,10 +4,10 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import RNPickerSelect from 'react-native-picker-select';
 import { RootStackParamList } from '../../navigation/types';
-import { UnifiedCalendar } from './UnifiedCalendar';
+import ServiceCalendar from './ServiceCalendar';
 import { useUser } from '../../UserContext';
 import { showAlert } from '../../utils/util';
-import { addWeeks, addMonths, addYears, format } from 'date-fns';
+import { addWeeks, addMonths, addYears, parse, isValid, format } from 'date-fns';
 
 type CreatePersonalServiceStep3ScreenRouteProp = RouteProp<RootStackParamList, 'CreatePersonalServiceStep3'>;
 type CreatePersonalServiceStep3ScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep3'>;
@@ -19,6 +19,7 @@ const CreatePersonalServiceStep3: React.FC = () => {
   const { userId } = useUser();
 
   const [interval, setInterval] = useState<'Yearly' | 'Monthly' | 'Weekly' | null>(null);
+  const [startDateInput, setStartDateInput] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [exceptionDates, setExceptionDates] = useState<Date[]>([]);
@@ -35,7 +36,9 @@ const CreatePersonalServiceStep3: React.FC = () => {
   const calculateEndDate = (start: string, intervalValue: 'Yearly' | 'Monthly' | 'Weekly' | null) => {
     if (!start || !intervalValue) return;
 
-    const startDateObj = new Date(start);
+    const startDateObj = parse(start, 'yyyy-MM-dd', new Date());
+    if (!isValid(startDateObj)) return;
+
     let endDateObj;
 
     switch (intervalValue) {
@@ -55,10 +58,22 @@ const CreatePersonalServiceStep3: React.FC = () => {
     setEndDate(format(endDateObj, 'yyyy-MM-dd'));
   };
 
-  const handleStartDateChange = (date: string) => {
-    setStartDate(date);
-    if (interval) {
-      calculateEndDate(date, interval);
+  const handleStartDateChange = (text: string) => {
+    setStartDateInput(text);
+    if (text.length === 10) {
+      validateAndSetStartDate(text);
+    }
+  };
+
+  const validateAndSetStartDate = (date: string) => {
+    const parsedDate = parse(date, 'yyyy-MM-dd', new Date());
+    if (isValid(parsedDate)) {
+      setStartDate(date);
+      if (interval) {
+        calculateEndDate(date, interval);
+      }
+    } else {
+      showAlert('Erreur', 'Format de date invalide. Veuillez utiliser AAAA-MM-JJ.');
     }
   };
 
@@ -93,71 +108,70 @@ const CreatePersonalServiceStep3: React.FC = () => {
       depositPercentage: parseFloat(depositPercentage),
     });
   }, [navigation, serviceName, description, subcategoryName, subcategoryId, images, interval, startDate, endDate, exceptionDates, pricePerHour, depositPercentage, userId]);
+
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.label}>Price per Hour</Text>
+      <Text style={styles.label}>Prix par heure</Text>
       <TextInput
         style={styles.input}
         value={pricePerHour}
         onChangeText={setPricePerHour}
         keyboardType="numeric"
-        placeholder="Enter price per hour"
+        placeholder="Entrez le prix par heure"
       />
 
-      <Text style={styles.label}>Deposit Percentage</Text>
+      <Text style={styles.label}>Pourcentage de dépôt</Text>
       <TextInput
         style={styles.input}
         value={depositPercentage}
         onChangeText={setDepositPercentage}
         keyboardType="numeric"
-        placeholder="Enter deposit percentage"
+        placeholder="Entrez le pourcentage de dépôt"
       />
 
-      <Text style={styles.label}>Availability Interval</Text>
+      <Text style={styles.label}>Intervalle de disponibilité</Text>
       <RNPickerSelect
         onValueChange={handleIntervalChange}
         items={[
-          { label: 'Yearly', value: 'Yearly' },
-          { label: 'Monthly', value: 'Monthly' },
-          { label: 'Weekly', value: 'Weekly' },
+          { label: 'Annuel', value: 'Yearly' },
+          { label: 'Mensuel', value: 'Monthly' },
+          { label: 'Hebdomadaire', value: 'Weekly' },
         ]}
         style={pickerSelectStyles}
         value={interval}
-        placeholder={{ label: "Select interval", value: null }}
+        placeholder={{ label: "Sélectionnez un intervalle", value: null }}
       />
 
-      <Text style={styles.label}>Start Date</Text>
+<Text style={styles.label}>Date de début (AAAA-MM-JJ)</Text>
       <TextInput
         style={styles.input}
-        value={startDate}
+        value={startDateInput}
         onChangeText={handleStartDateChange}
-        placeholder="YYYY-MM-DD"
+        placeholder="AAAA-MM-JJ"
         keyboardType="numeric"
+        maxLength={10}
       />
 
-      <Text style={styles.label}>End Date</Text>
+      <Text style={styles.label}>Date de fin</Text>
       <TextInput
         style={styles.input}
         value={endDate}
         editable={false}
-        placeholder="Auto-calculated"
+        placeholder="Calculée automatiquement"
       />
 
       {startDate && endDate && interval && (
-        <>
-          <Text style={styles.label}>Select Exception Dates</Text>
-          <UnifiedCalendar
-            startDate={new Date(startDate)}
-            endDate={new Date(endDate)}
-            selectedDates={exceptionDates}
-            onSelectDate={toggleDateSelection}
-            interval={interval}
-          />
-        </>
+        <ServiceCalendar
+          startDate={new Date(startDate)}
+          endDate={new Date(endDate)}
+          exceptionDates={exceptionDates}
+          onSelectDate={toggleDateSelection}
+          interval={interval}
+        />
       )}
 
       <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-        <Text style={styles.nextButtonText}>Next</Text>
+        <Text style={styles.nextButtonText}>Suivant</Text>
       </TouchableOpacity>
     </ScrollView>
   );

@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { format, eachDayOfInterval, isSameMonth, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths } from 'date-fns';
 
-interface CalendarProps {
+interface UnifiedCalendarProps {
   startDate: Date;
   endDate: Date;
   selectedDates: Date[];
@@ -9,25 +10,15 @@ interface CalendarProps {
   interval: 'Yearly' | 'Monthly' | 'Weekly';
 }
 
-export const UnifiedCalendar: React.FC<CalendarProps> = ({ startDate, endDate, selectedDates, onSelectDate, interval }) => {
-  const getDaysArray = (start: Date, end: Date) => {
-    const arr = [];
-    for (let dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
-      arr.push(new Date(dt));
-    }
-    return arr;
-  };
+type WeekDay = React.ReactNode;
 
-  const daysArray = getDaysArray(startDate, endDate);
-
-  const isDateSelected = (date: Date) => {
-    return selectedDates.some(selectedDate => 
-      selectedDate.getFullYear() === date.getFullYear() &&
-      selectedDate.getMonth() === date.getMonth() &&
-      selectedDate.getDate() === date.getDate()
-    );
-  };
-
+export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
+  startDate,
+  endDate,
+  selectedDates,
+  onSelectDate,
+  interval,
+}) => {
   const renderCalendar = () => {
     switch (interval) {
       case 'Yearly':
@@ -43,24 +34,34 @@ export const UnifiedCalendar: React.FC<CalendarProps> = ({ startDate, endDate, s
 
   const renderYearlyCalendar = () => {
     const months = [];
-    for (let m = 0; m < 12; m++) {
-      const monthStart = new Date(startDate.getFullYear(), m, 1);
-      const monthEnd = new Date(startDate.getFullYear(), m + 1, 0);
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const monthStart = startOfMonth(currentDate);
+      const monthEnd = endOfMonth(currentDate);
       months.push(
-        <View key={m} style={styles.month}>
-          <Text style={styles.monthTitle}>{monthStart.toLocaleString('default', { month: 'long' })}</Text>
-          {renderDays(monthStart, monthEnd)}
+        <View key={currentDate.getTime()} style={styles.month}>
+          <Text style={styles.monthTitle}>{format(monthStart, 'MMMM yyyy')}</Text>
+          {renderDaysOfWeek(monthStart)}
+          {renderMonth(monthStart, monthEnd)}
         </View>
       );
+      currentDate = addDays(monthEnd, 1);
     }
     return <ScrollView>{months}</ScrollView>;
   };
 
   const renderMonthlyCalendar = () => {
+    const currentMonthStart = startOfMonth(startDate);
+    const nextMonthEnd = endOfMonth(addMonths(currentMonthStart, 1));
+    
     return (
       <View style={styles.month}>
-        <Text style={styles.monthTitle}>{startDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</Text>
-        {renderDays(startDate, endDate)}
+        <Text style={styles.monthTitle}>{format(startDate, 'MMMM yyyy')}</Text>
+        {renderDaysOfWeek(startDate)}
+        {renderMonth(startDate, endOfMonth(startDate))}
+        <Text style={styles.monthTitle}>{format(addMonths(startDate, 1), 'MMMM yyyy')}</Text>
+        {renderDaysOfWeek(addMonths(startDate, 1))}
+        {renderMonth(startOfMonth(addMonths(startDate, 1)), nextMonthEnd)}
       </View>
     );
   };
@@ -68,26 +69,77 @@ export const UnifiedCalendar: React.FC<CalendarProps> = ({ startDate, endDate, s
   const renderWeeklyCalendar = () => {
     return (
       <View style={styles.week}>
-        <Text style={styles.weekTitle}>Week of {startDate.toDateString()}</Text>
-        {renderDays(startDate, endDate)}
+        <Text style={styles.weekTitle}>Semaine du {format(startDate, 'd MMMM yyyy')}</Text>
+        {renderDaysOfWeek(startDate)}
+        {renderWeek(startDate, endDate)}
       </View>
     );
   };
 
-  const renderDays = (start: Date, end: Date) => {
-    const days = getDaysArray(start, end);
+  const renderDaysOfWeek = (date: Date) => {
+    const weekStart = startOfWeek(date);
     return (
-      <View style={styles.daysContainer}>
-        {days.map((date, index) => (
+      <View style={styles.daysOfWeek}>
+        {[...Array(7)].map((_, i) => (
+          <Text key={i} style={styles.dayOfWeek}>
+            {format(addDays(weekStart, i), 'EEE')}
+          </Text>
+        ))}
+      </View>
+    );
+  };
+
+  const renderMonth = (start: Date, end: Date) => {
+    const days = eachDayOfInterval({ start: startOfWeek(start), end: endOfWeek(end) });
+    const weeks: WeekDay[][] = [];
+    let week: WeekDay[] = [];
+
+    days.forEach((day, index) => {
+      if (index % 7 === 0 && week.length > 0) {
+        weeks.push(week);
+        week = [];
+      }
+      week.push(
+        <TouchableOpacity
+          key={day.getTime()}
+          style={[
+            styles.day,
+            !isSameMonth(day, start) && styles.outsideMonth,
+            selectedDates.some(d => isSameDay(d, day)) && styles.selectedDay
+          ]}
+          onPress={() => onSelectDate(day)}
+          disabled={day < startDate || day > endDate}
+        >
+          <Text>{format(day, 'd')}</Text>
+        </TouchableOpacity>
+      );
+    });
+
+    if (week.length > 0) {
+      weeks.push(week);
+    }
+
+    return weeks.map((weekDays, index) => (
+      <View key={index} style={styles.week}>
+        {weekDays}
+      </View>
+    ));
+  };
+
+  const renderWeek = (start: Date, end: Date) => {
+    const days = eachDayOfInterval({ start, end });
+    return (
+      <View style={styles.week}>
+        {days.map(day => (
           <TouchableOpacity
-            key={index}
+            key={day.getTime()}
             style={[
               styles.day,
-              isDateSelected(date) && styles.selectedDay
+              selectedDates.some(d => isSameDay(d, day)) && styles.selectedDay
             ]}
-            onPress={() => onSelectDate(date)}
+            onPress={() => onSelectDate(day)}
           >
-            <Text>{date.getDate()}</Text>
+            <Text>{format(day, 'd')}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -114,17 +166,24 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   week: {
-    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 5,
   },
   weekTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  daysContainer: {
+  daysOfWeek: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-around',
+    marginBottom: 5,
+  },
+  dayOfWeek: {
+    width: 40,
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
   day: {
     width: 40,
@@ -133,9 +192,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 2,
     borderRadius: 20,
-    backgroundColor: 'lightgray',
+  },
+  outsideMonth: {
+    opacity: 0.3,
   },
   selectedDay: {
     backgroundColor: 'rgba(255, 0, 0, 0.2)', // Light red for selected dates
   },
 });
+
+export default UnifiedCalendar;
