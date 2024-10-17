@@ -16,6 +16,7 @@ import BeautifulSectionHeader from '../components/event/BeautifulSectionHeader';
 
 type RootStackParamList = {
   Home: undefined;
+  ServiceSelection: undefined; // Add this line
   PersonalsScreen: { category: string };
   ChatList: undefined;
   PersonalDetail: { personalId: number };
@@ -40,11 +41,10 @@ const HomeScreen: React.FC = () => {
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
   const [isFabOpen, setIsFabOpen] = useState(false);
 
-
-
   const toggleFab = () => {
     setIsFabOpen(!isFabOpen);
   };
+
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -196,35 +196,32 @@ const HomeScreen: React.FC = () => {
               type="material"
             />
           </View>
-          <View style={styles.fabContainer}>
-        {isFabOpen && (
-          <>
-            <TouchableOpacity
-              style={[styles.fabItem, { backgroundColor: '#4CAF50' }]}
-              onPress={() => navigation.navigate('CreateService')}
-            >
-              <Ionicons name="briefcase-outline" size={24} color="#fff" />
-              <Text style={styles.fabItemText}>Create Service</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.fabItem, { backgroundColor: '#2196F3' }]}
-              onPress={() => navigation.navigate('EventCreation')}
-            >
-              <Ionicons name="calendar-outline" size={24} color="#fff" />
-              <Text style={styles.fabItemText}>Create Event</Text>
-            </TouchableOpacity>
-          </>
-        )}
-        <TouchableOpacity style={styles.fab} onPress={toggleFab}>
-          <Ionicons name={isFabOpen ? 'close' : 'add'} size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
         </ScrollView>
+        <View style={styles.fabContainer}>
+          {isFabOpen && (
+            <View style={styles.fabItemsContainer}>
+              <TouchableOpacity
+                style={[styles.fabItem, { backgroundColor: '#4CAF50' }]}
+                onPress={() => navigation.navigate('ServiceSelection')} // Navigate to ServiceSelection
+              >
+                <Ionicons name="briefcase-outline" size={24} color="#fff" />
+                <Text style={styles.fabItemText}>Create Service</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.fabItem, { backgroundColor: '#2196F3' }]}
+                onPress={() => navigation.navigate('EventCreation')}
+              >
+                <Ionicons name="calendar-outline" size={24} color="#fff" />
+                <Text style={styles.fabItemText}>Create Event</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          <TouchableOpacity style={styles.fab} onPress={toggleFab}>
+            <Ionicons name={isFabOpen ? 'close' : 'add'} size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </LinearGradient>
     </SafeAreaView>
-    
-
-
   );
 };
 
@@ -296,33 +293,15 @@ const styles = StyleSheet.create({
   },
   fabContainer: {
     position: 'absolute',
-    right: 20,
     bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
   serviceName: {
     fontSize: 16,
     marginRight: 5,
     fontWeight: '600',
-  },
-  sectionContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    marginHorizontal: 10,
-    marginTop: 10,
-    padding: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  fabContainer: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
   },
   fab: {
     width: 56,
@@ -338,13 +317,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: 20,
-    marginBottom: 10,
     elevation: 5,
+    flex: 1,
+    justifyContent: 'center',
+    marginHorizontal: 5,
   },
   fabItemText: {
     color: '#fff',
     marginLeft: 10,
     fontWeight: 'bold', 
-  }
-}) 
+  },
+  fabItemsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+  },
+});
+
 export default HomeScreen;

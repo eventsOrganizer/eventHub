@@ -26,7 +26,7 @@ import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
 import CreateServiceScreen from '../screens/CreateServiceScreen'; // Added CreateService import
 import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
-
+import ServiceSelection from '../screens/ServiceSelection';
 
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
@@ -119,6 +119,7 @@ type EventSetupOptionsScreenProps = {
   CreatePersonalServiceStep5: { serviceName: string; description: string; images: string[]; price: string; availabilityFrom: string; availabilityTo: string; skills: string[]; subcategoryName: string; subcategoryId: number };
   FriendRequests: undefined;
   Saved: undefined;
+  ServiceSelection: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -286,6 +287,10 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="Saved" 
       component={SavedScreen} />  
+
+      <Stack.Screen
+       name ="ServiceSelection" 
+      component={ServiceSelection} />  
 
       </Stack.Navigator>
    
