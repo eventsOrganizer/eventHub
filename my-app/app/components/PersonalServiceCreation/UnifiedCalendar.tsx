@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { format, eachDayOfInterval, isSameMonth, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface UnifiedCalendarProps {
   startDate: Date;
@@ -67,28 +68,26 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
   };
 
   const renderWeeklyCalendar = () => {
+    const weekEnd = addDays(startDate, 6);
     return (
-      <View style={styles.week}>
-        <Text style={styles.weekTitle}>Semaine du {format(startDate, 'd MMMM yyyy')}</Text>
-        {renderDaysOfWeek(startDate)}
-        {renderWeek(startDate, endDate)}
+      <View style={styles.weekContainer}>
+        <Text style={styles.weekTitle}>Semaine du {format(startDate, 'd MMMM yyyy', { locale: fr })}</Text>
+        {renderWeek(startDate, weekEnd)}
       </View>
     );
   };
 
   const renderDaysOfWeek = (date: Date) => {
-    const weekStart = startOfWeek(date);
     return (
       <View style={styles.daysOfWeek}>
         {[...Array(7)].map((_, i) => (
           <Text key={i} style={styles.dayOfWeek}>
-            {format(addDays(weekStart, i), 'EEE')}
+            {format(addDays(date, i), 'EEE', { locale: fr })}
           </Text>
         ))}
       </View>
     );
   };
-
   const renderMonth = (start: Date, end: Date) => {
     const days = eachDayOfInterval({ start: startOfWeek(start), end: endOfWeek(end) });
     const weeks: WeekDay[][] = [];
@@ -139,7 +138,8 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
             ]}
             onPress={() => onSelectDate(day)}
           >
-            <Text>{format(day, 'd')}</Text>
+            <Text style={styles.dayName}>{format(day, 'EEE', { locale: fr })}</Text>
+            <Text style={styles.dayNumber}>{format(day, 'd')}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -165,6 +165,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  weekContainer: {
+    marginBottom: 20,
+  },
   week: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -187,11 +190,19 @@ const styles = StyleSheet.create({
   },
   day: {
     width: 40,
-    height: 40,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     margin: 2,
-    borderRadius: 20,
+    borderRadius: 10,
+  },
+  dayName: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  dayNumber: {
+    fontSize: 16,
   },
   outsideMonth: {
     opacity: 0.3,
