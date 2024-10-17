@@ -26,7 +26,6 @@ export default {
       backgroundColor: "#ffffff",
     },
     permissions: ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
-    
   },
   web: {
     // Web-specific configurations (if needed)
@@ -35,4 +34,17 @@ export default {
     SUPABASE_URL: process.env.SUPABASE_URL, // Load Supabase URL from .env
     SUPABASE_API_KEY: process.env.SUPABASE_API_KEY, // Load Supabase Anon Key from .env
   },
+  plugins: [
+    [
+      "expo-font",
+      {
+        "fonts": [
+          "node_modules/@expo-google-fonts/inter/Inter_400Regular.ttf",
+          "node_modules/@expo-google-fonts/inter/Inter_500Medium.ttf",
+          "node_modules/@expo-google-fonts/inter/Inter_600SemiBold.ttf",
+          "node_modules/@expo-google-fonts/inter/Inter_700Bold.ttf"
+        ]
+      }
+    ]
+  ]
 };
