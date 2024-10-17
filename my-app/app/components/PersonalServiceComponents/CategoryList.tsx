@@ -8,6 +8,7 @@ const categories = [
   { name: 'Security', icon: 'shield-checkmark-outline' },
   { name: 'Waiter', icon: 'cafe-outline' },
   { name: 'Cleaning', icon: 'brush-outline' },
+  { name: 'Music team leader', icon: 'musical-notes-outline' },
 ];
 
 type CategoryListProps = {

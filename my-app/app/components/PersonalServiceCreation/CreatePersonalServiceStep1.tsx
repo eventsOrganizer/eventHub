@@ -12,10 +12,10 @@ type Subcategory = {
 };
 
 const subcategories: Subcategory[] = [
-  { id: 1, name: 'Cooker' },
-  { id: 2, name: 'Security' },
-  { id: 3, name: 'Waiter' },
-  { id: 4, name: 'Cleaning' },
+  { id: 153, name: 'Security' },
+  { id: 154, name: 'Waiter' },
+  { id: 155, name: 'Cooker' },
+  { id: 183, name: 'Music team leader' },
 ];
 
 const CreatePersonalServiceStep1: React.FC = () => {
@@ -33,28 +33,28 @@ const CreatePersonalServiceStep1: React.FC = () => {
         subcategoryId: selectedSubcategory.id
       });
     } else {
-      Alert.alert('Error', 'Please fill in all fields and select a subcategory');
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs et sélectionner une sous-catégorie');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Service Name</Text>
+      <Text style={styles.label}>Nom du service</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter Service Name"
+        placeholder="Entrez le nom du service"
         value={serviceName}
         onChangeText={setServiceName}
       />
       <Text style={styles.label}>Description</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter Description"
+        placeholder="Entrez la description"
         value={description}
         onChangeText={setDescription}
         multiline
       />
-      <Text style={styles.label}>Subcategory</Text>
+      <Text style={styles.label}>Sous-catégorie</Text>
       <Picker
         selectedValue={selectedSubcategory ? selectedSubcategory.id : undefined}
         onValueChange={(itemValue) => {
@@ -63,13 +63,13 @@ const CreatePersonalServiceStep1: React.FC = () => {
         }}
         style={styles.input}
       >
-        <Picker.Item label="Select a subcategory" value={undefined} />
+        <Picker.Item label="Sélectionnez une sous-catégorie" value={undefined} />
         {subcategories.map((subcategory: Subcategory) => (
           <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
         ))}
       </Picker>
       <Button 
-        title="Next" 
+        title="Suivant" 
         onPress={handleNext} 
         disabled={!selectedSubcategory}
       />
