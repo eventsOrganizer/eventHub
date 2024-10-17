@@ -2,18 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, TextInput, Dimensions } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 import SubcategoryList from '../../components/MaterialService/SubcategoryList';
-import { Menu, Provider } from 'react-native-paper';
+import { Menu, Provider, Badge } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
+import BasketIcon from '../../components/MaterialService/BasketIcon';
+import { Material } from '../../types/Material';
 
 // Define your stack's parameter list
 type RootStackParamList = {
   MaterialsScreen: undefined;
-  MaterialDetail: { material: any }; // Define the expected parameters for MaterialDetail
+  MaterialDetail: { material: Material };
 };
 
 // Define the navigation prop type for this screen
@@ -21,16 +23,20 @@ type MaterialsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   'MaterialsScreen'
 >;
+
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width / 2 - 20;
+
 const MaterialsScreen = () => {
-  const [materials, setMaterials] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [selectedSubcategory, setSelectedSubcategory] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
   const [visible, setVisible] = useState(false);
+  const [basket, setBasket] = useState<Material[]>([]);
   const navigation = useNavigation<MaterialsScreenNavigationProp>();
+
   useEffect(() => {
     const fetchMaterials = async () => {
       const { data, error } = await supabase
@@ -63,7 +69,11 @@ const MaterialsScreen = () => {
     );
   });
 
-  const renderMaterialItem = ({ item, index }: { item: any; index: number }) => (
+  const addToBasket = (material: Material) => {
+    setBasket([...basket, material]);
+  };
+
+  const renderMaterialItem = ({ item, index }: { item: Material; index: number }) => (
     <Animated.View
       entering={FadeInDown.delay(index * 100)}
       layout={Layout.springify()}
@@ -90,6 +100,9 @@ const MaterialsScreen = () => {
             />
           </View>
           <View style={styles.iconRow}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => addToBasket(item)}>
+              <Ionicons name="cart" size={20} color="#4A90E2" />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.iconButton}>
               <Ionicons name="heart" size={20} color="#FF6B6B" />
             </TouchableOpacity>
@@ -116,6 +129,7 @@ const MaterialsScreen = () => {
               placeholderTextColor="#999"
             />
           </View>
+          <BasketIcon count={basket.length} onPress={() => console.log('Open basket')} />
           <TouchableOpacity onPress={openMenu} style={styles.menuButton}>
             <Ionicons name="ellipsis-vertical" size={24} color="#333" />
           </TouchableOpacity>
@@ -127,8 +141,8 @@ const MaterialsScreen = () => {
           anchor={<View />}
           style={styles.menu}
         >
+          <Menu.Item onPress={() => navigation.navigate('MaterialsOnboarding')} title="Create a Material Service" />
           <Menu.Item onPress={() => console.log('Update my services')} title="Update My Services" />
-          <Menu.Item onPress={() => console.log('Create a material service')} title="Create a Material Service" />
           <Menu.Item onPress={() => console.log('Delete a material service')} title="Delete a Material Service" />
         </Menu>
 

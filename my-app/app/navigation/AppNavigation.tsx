@@ -57,6 +57,7 @@ import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/Cr
 import CreatePersonalServiceStep5 from '../components/PersonalServiceCreation/CreatePersonalServiceStep5';
 import MaterialScreen from '../screens/MaterialServiceScreens/MaterialScreen';
 import MaterialDetailScreen from '../screens/MaterialServiceScreens/MaterialDetailScreen';
+import { Material } from './types';
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -70,7 +71,7 @@ type RootStackParamList = {
   LandingPage: undefined;
   HomeScreen: undefined;
   MaterialScreen: undefined;
-  MaterialDetailScreen: undefined;
+  MaterialDetail: { material: Material };
   EventDetails: { eventName: string; eventDescription: string; eventType: string };
   CategorySelection: { eventName: string; eventDescription: string; eventType: string };
   SubcategorySelection: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string };
@@ -297,8 +298,8 @@ const AppNavigation: React.FC = () => {
        name ="MaterialScreen" 
       component={MaterialScreen} />
       <Stack.Screen
-       name ="MaterialDetailScreen" 
-      component={MaterialDetailScreen} />
+       name ="MaterialDetail" 
+      component={MaterialDetailScreen as any} />
       </Stack.Navigator>
    
   );
