@@ -90,22 +90,20 @@ export type RootStackParamList = {
     subcategoryName: string;
     subcategoryId: number;
   };
+  Basket: { basket: Material[] };
 };
 export interface Media {
   url: string;
 }
 export interface Material {
-  id: number;
+  id: string;
   name: string;
-   details?: string; // Optional property
-  price: number; // Price for sale
-  price_per_hour: number; // Price for rent
-  sell_or_rent: 'sell' | 'rent'; // To distinguish between sell and rent
-  subcategory_id: number;
-  media: Media[]
-  subcategory: {
-    name: string;
-  }; // Array of media objects
+  price: number;
+  price_per_hour?: number;
+  sell_or_rent: 'sell' | 'rent';
+  details?: string;
+  subcategory: string;
+  media: Array<{ url: string }>;
 }
 export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;
 export type CreateLocalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep5'>;
