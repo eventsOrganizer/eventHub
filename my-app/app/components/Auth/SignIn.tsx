@@ -44,19 +44,19 @@ const Signin = () => {
   return (
     <NativeBaseProvider>
       <ScrollView contentContainerStyle={styles.container}>
-        <Box safeArea p="2" py="8" w="90%" maxW="290">
+        <Box safeArea p="2" py="8" w="90%" maxW="290" alignItems="center">
           <Heading size="lg" fontWeight="600" color="orange.500" _dark={{
             color: "warmGray.50"
-          }}>
+          }} style={styles.heading}>
             Welcome Back
           </Heading>
           <Heading mt="1" _dark={{
             color: "warmGray.200"
-          }} color="orange.400" fontWeight="medium" size="xs">
+          }} color="orange.400" fontWeight="medium" size="xs" style={styles.heading}>
             Sign in to continue!
           </Heading>
 
-          <VStack space={3} mt="5">
+          <VStack space={3} mt="5" alignItems="center">
             <FormControl>
               <FormControl.Label>Identifier</FormControl.Label>
               <Input value={identifier} onChangeText={setIdentifier} />
@@ -85,7 +85,16 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     justifyContent: 'center',
+    alignItems: 'center', // Center horizontally
     backgroundColor: 'white',
+  },
+  heading: {
+    textAlign: 'center', // Center text
+  },
+  input: {
+    height: 50, // Increase the height
+    paddingHorizontal: 15, // Increase horizontal padding
+    fontSize: 16, // Increase font size for better readability
   },
 });
 

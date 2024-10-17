@@ -1,0 +1,288 @@
+[33mcommit 780c68359a11b4ea3be660f7e0f532f01368141e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mchaker[m[33m)[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Sat Oct 12 11:33:35 2024 +0100
+
+    added like and comment to personal service cards, and other details to personalDetail
+
+[33mcommit 684da12eebb1b8526c9f7208545fc138a1c3eb2b[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Fri Oct 11 13:52:50 2024 +0100
+
+    personal staff done
+
+[33mcommit c047ca817e0d6299e87ba0e3df24a679e32c879a[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Thu Oct 10 21:38:47 2024 +0100
+
+    personalsScreen and personalDetail done, with some standard components
+
+[33mcommit 3d66ce2a11e6ab7422678e023dc6f2fa01a19e9e[m[33m ([m[1;31morigin/chaker[m[33m)[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Thu Oct 10 10:46:05 2024 +0100
+
+    fetched data in homeScreen
+
+[33mcommit f86667e24848644d15624b1ebc96d731a61ef0c9[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Merge: 9f729a2 e7e0a70
+Author: mohamed-yesser <159530889+mohamed-yesser@users.noreply.github.com>
+Date:   Wed Oct 9 17:33:34 2024 +0100
+
+    Merge pull request #13 from eventsOrganizer/yesser
+    
+    Yesser
+
+[33mcommit e7e0a701a4136ce9730c3e84f3f37da71b217991[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Wed Oct 9 16:39:19 2024 +0100
+
+    getting user id from seesion and creating a custom hook to get user id
+
+[33mcommit 9f729a2dd25aec9478db898ee386e0404effc21e[m
+Merge: 65ba2a0 682e8be
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Wed Oct 9 16:11:44 2024 +0100
+
+    Merge pull request #12 from eventsOrganizer/chaker
+    
+    Chaker
+
+[33mcommit 682e8bebd8e2274ee8054bf7e85b0ca7ce080653[m
+Merge: c42fd4b 65ba2a0
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Wed Oct 9 16:09:46 2024 +0100
+
+    Merge branch 'main' of https://github.com/eventsOrganizer/eventHub into chaker
+
+[33mcommit c42fd4bef3bcaa2da2c59af345baaf50c5e892b5[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Wed Oct 9 16:08:58 2024 +0100
+
+    update home button
+
+[33mcommit 3189b48ffa1b653c738fadf767c1afc55069155c[m
+Merge: a9579c3 65ba2a0
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Wed Oct 9 14:29:44 2024 +0100
+
+    Merge branch 'main' of https://github.com/eventsOrganizer/eventHub into yesser
+
+[33mcommit a9579c3abf78d5f1c54ebae2cc2a1400f22cb412[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Wed Oct 9 14:29:36 2024 +0100
+
+    pull
+
+[33mcommit 65ba2a03b69e93e644b53fbb47c0e08ae3d73b6b[m
+Merge: d0e3d96 8a577e7
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Wed Oct 9 14:27:58 2024 +0100
+
+    Merge pull request #11 from eventsOrganizer/fedi
+    
+    fix login
+
+[33mcommit 8a577e76d1299fb1e5debba25789d3ead7bc2da5[m
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Wed Oct 9 14:27:26 2024 +0100
+
+    fix login
+
+[33mcommit d0e3d9691e20b19d0c70a602e87909bd9d716d4c[m
+Merge: 9213f83 5ec884e
+Author: chebbifediii <chebifedi43@gmail.com>
+Date:   Wed Oct 9 13:41:36 2024 +0200
+
+    Merge pull request #10 from eventsOrganizer/fedi
+    
+    Fedi
+
+[33mcommit 5ec884e7efde28e84af3e0c43d57212f16de93af[m
+Merge: 713b274 9213f83
+Author: chebbifediii <chebifedi3@gmail.com>
+Date:   Wed Oct 9 13:41:05 2024 +0200
+
+    v2 pushing login and sign up
+
+[33mcommit e0c4f3d221e00221d10909ce992e802a705281d4[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Wed Oct 9 12:32:41 2024 +0100
+
+    updated homeScreen
+
+[33mcommit 713b27497fd1b2169dbb831bfd8c60abab3482d0[m
+Merge: 66475c3 165694f
+Author: chebbifediii <chebifedi3@gmail.com>
+Date:   Wed Oct 9 13:30:35 2024 +0200
+
+    pulling v2
+
+[33mcommit 9213f83992936f5c74a79b5749eddfb81da6757a[m
+Merge: 165694f eef14a9
+Author: siwarameri31 <amerisiwar31@gmail.com>
+Date:   Wed Oct 9 11:48:48 2024 +0100
+
+    Merge pull request #9 from eventsOrganizer/siwar
+    
+    Siwar
+
+[33mcommit eef14a955030f1dc3b42cdeece36ea26c8fc919b[m
+Author: siwarameri31 <siwar.ameri31@gmail.com>
+Date:   Wed Oct 9 11:47:52 2024 +0100
+
+    edit profile
+
+[33mcommit 66475c3dd05162515a6946bf0c4dff31f52041dc[m
+Author: chebbifediii <chebifedi3@gmail.com>
+Date:   Wed Oct 9 12:22:42 2024 +0200
+
+    finished
+
+[33mcommit bf64b2b3a0f42f300e993a3f4004b286cb258db9[m
+Merge: fe07a97 165694f
+Author: siwarameri31 <siwar.ameri31@gmail.com>
+Date:   Wed Oct 9 11:20:49 2024 +0100
+
+    commit
+
+[33mcommit fe07a97d70f3c02766944a841e1ecaafad0f8fc3[m
+Author: siwarameri31 <siwar.ameri31@gmail.com>
+Date:   Wed Oct 9 11:12:14 2024 +0100
+
+    profile of the user
+
+[33mcommit 6f216b2e3ab287c5f4ff38e5334ebc9debbe5fcd[m
+Merge: 5f9c7cb 165694f
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Wed Oct 9 10:41:25 2024 +0100
+
+    Merge branch 'main' of https://github.com/eventsOrganizer/eventHub into yesser
+
+[33mcommit 5f9c7cb1cfea3b73df3a762d0c8cc6fc9c364281[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Wed Oct 9 10:41:13 2024 +0100
+
+    v3
+
+[33mcommit 165694fca955ffd0f221c2d55e0cc64ca507ef20[m
+Merge: 5a6af60 08a932e
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Wed Oct 9 10:39:32 2024 +0100
+
+    Merge pull request #8 from eventsOrganizer/ahmed
+    
+    merging v2
+
+[33mcommit 08a932ee870cf92a2a95bc430e4a1969ce64b9e5[m
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Wed Oct 9 10:38:55 2024 +0100
+
+    merging v2
+
+[33mcommit 5a6af60235b7720ed3880dc0dac15a4d51f6b9d4[m
+Merge: 3dae056 c850316
+Author: mohamed-yesser <159530889+mohamed-yesser@users.noreply.github.com>
+Date:   Wed Oct 9 10:25:30 2024 +0100
+
+    Merge pull request #7 from eventsOrganizer/yesser
+    
+    Yesser
+
+[33mcommit c850316fcffd67efa6a967557222e69a11368a42[m
+Merge: 770699d 3dae056
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Wed Oct 9 10:22:41 2024 +0100
+
+    v2.5
+
+[33mcommit 271359957cfd0e46501db0799693ebb2d7073a03[m
+Author: siwarameri31 <siwar.ameri31@gmail.com>
+Date:   Wed Oct 9 10:22:21 2024 +0100
+
+    AccountScreen is ready
+
+[33mcommit 3dae056a9a50f88bdc1c35308c6366528cd628fb[m
+Merge: b3ec03b 72b6efe
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Wed Oct 9 10:05:51 2024 +0100
+
+    Merge pull request #6 from eventsOrganizer/chaker
+    
+    Chaker
+
+[33mcommit 72b6efea8d2ccbfeec1089269a5a290dd8bc258a[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Wed Oct 9 09:50:39 2024 +0100
+
+    updated
+
+[33mcommit fce643e8567452f4e48c23cd67c4dae731106f5c[m
+Merge: b03656c b3ec03b
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Wed Oct 9 09:42:14 2024 +0100
+
+    pull done
+
+[33mcommit b03656c1397835f7543e6a0be9ce06380ff5b5c7[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Wed Oct 9 09:39:19 2024 +0100
+
+     pull
+
+[33mcommit b3ec03b2fcf46075c7b4da2658e5420d2475bcd2[m
+Merge: 008b166 8f2525a
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Wed Oct 9 09:38:05 2024 +0100
+
+    Merge pull request #5 from eventsOrganizer/ahmed
+    
+    Ahmed
+
+[33mcommit 8f2525a656e3cb25d6887ba265b9b322554e2ab2[m
+Merge: 2b46fc8 008b166
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Wed Oct 9 09:36:35 2024 +0100
+
+    calendar atetmpt 1
+
+[33mcommit 770699d5b56991fc7e0e8ca3b2d65c6f2eb8b22b[m
+Author: mohamed-yesser <yesser305@gmail.com>
+Date:   Wed Oct 9 09:35:47 2024 +0100
+
+    map
+
+[33mcommit 2d53a24c30e9306c1b52aeb02d06cbc7bc2c7408[m
+Author: chebbifediii <chebifedi3@gmail.com>
+Date:   Tue Oct 8 19:11:45 2024 +0200
+
+    done
+
+[33mcommit 2b46fc85fd82e6b060459b93e37706c42b0c0a5c[m
+Merge: d7cfac8 9858972
+Author: AHMD-GTAT <hameda.ahmed2929@gmail.com>
+Date:   Tue Oct 8 16:15:43 2024 +0100
+
+    added onboaridng + home page mixture
+
+[33mcommit 008b166850fe113d12e53178155a102d0a9996bc[m
+Merge: 9858972 688a242
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Tue Oct 8 16:14:47 2024 +0100
+
+    Merge pull request #4 from eventsOrganizer/chaker
+    
+    Chaker
+
+[33mcommit 688a24282c689856074f4887e9551ea89eb2ba78[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Tue Oct 8 15:39:22 2024 +0100
+
+    fixed
+
+[33mcommit 94becedbe1ae1442b8a06d908408fc397e1e9749[m
+Author: chakeradel <chakeradel30@gmail.com>
+Date:   Tue Oct 8 15:33:56 2024 +0100
+
+    setting supabase done
+
+[33mcommit 985897298378cf5376a11cb36859d17d38142a30[m
+Merge: bcbcf80 8

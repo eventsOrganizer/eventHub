@@ -1,7 +1,3 @@
-import dotenv from 'dotenv';
-
-dotenv.config();
-
 export default {
   name: "my-app",
   slug: "my-app",
@@ -17,8 +13,8 @@ export default {
   ios: {
     supportsTablet: true,
     infoPlist: {
-      NSLocationWhenInUseUsageDescription: "This app needs access to location when open."
-    }
+      NSLocationWhenInUseUsageDescription: "This app needs access to location when open.",
+    },
   },
   android: {
     adaptiveIcon: {
@@ -26,13 +22,9 @@ export default {
       backgroundColor: "#ffffff",
     },
     permissions: ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
-    
-  },
-  web: {
-    // Web-specific configurations (if needed)
   },
   extra: {
-    SUPABASE_URL: process.env.SUPABASE_URL, // Load Supabase URL from .env
-    SUPABASE_API_KEY: process.env.SUPABASE_API_KEY, // Load Supabase Anon Key from .env
+    SUPABASE_URL: process.env.SUPABASE_URL, // Set in .env or through Expo secrets
+    SUPABASE_API_KEY: process.env.SUPABASE_API_KEY, // Set in .env or through Expo secrets
   },
 };
