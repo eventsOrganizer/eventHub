@@ -27,6 +27,10 @@ type RootStackParamList = {
   LocalServiceScreen: undefined;
   MaterialServiceDetail: { materialId: number };
   LocalServiceDetails: { localServiceId: number };
+  EventCreation: undefined;
+  MaterialScreen: undefined;
+  MaterialDetailScreen: { materialId: number };
+  
 };
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -124,8 +128,8 @@ const HomeScreen: React.FC = () => {
   const handleSeeAllStaffServices = () => navigation.navigate('PersonalsScreen', { category: 'all' });
   const handleSeeAllLocalServices = () => navigation.navigate('LocalServiceScreen');
   const handleLocalServicePress = (item: any) => navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
-  const handleSeeAllMaterialsAndFoodServices = () => navigation.navigate('MaterialsAndFoodServicesScreen');
-  const handleMaterialsAndFoodServicePress = (item: any) => navigation.navigate('MaterialServiceDetail', { materialId: item.id });
+  const handleSeeAllMaterialsAndFoodServices = () => navigation.navigate('MaterialScreen');
+  const handleMaterialsAndFoodServicePress = (item: any) => navigation.navigate('MaterialDetailScreen', { materialId: item.id });
 
   const renderSectionHeader = (title: string, onPress: () => void) => (
     <View style={styles.sectionHeader}>
@@ -143,7 +147,7 @@ const HomeScreen: React.FC = () => {
         colors={['#FFFFFF', '#E6F3FF', '#CCE7FF']}
         style={styles.gradient}
       >
-        <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
+        <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} onSearch={() => {}} />
         <ScrollView 
           style={styles.scrollView} 
           contentContainerStyle={styles.scrollViewContent}
