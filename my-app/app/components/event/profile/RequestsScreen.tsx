@@ -6,7 +6,7 @@ import { useUser } from '../../../UserContext';
 interface EventRequest {
   id: number;
   user: { id: string; email: string };
-  event: { id: number; name: string };
+  event: { id: number; name: string } | null; // Allow event to be null
 }
 
 const RequestsScreen: React.FC = () => {
@@ -84,7 +84,9 @@ const RequestsScreen: React.FC = () => {
 
   const renderEventRequest = ({ item }: { item: EventRequest }) => (
     <View style={styles.requestItem}>
-      <Text style={styles.requestText}>{item.user.email} wants to join {item.event.name}</Text>
+      <Text style={styles.requestText}>
+        {item.user.email} wants to join {item.event ? item.event.name : 'an unknown event'}
+      </Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, styles.acceptButton]}

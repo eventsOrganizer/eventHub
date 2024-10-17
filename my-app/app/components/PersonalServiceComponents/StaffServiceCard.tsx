@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 
@@ -21,32 +20,28 @@ interface StaffServiceCardProps {
 const StaffServiceCard: React.FC<StaffServiceCardProps> = ({ service, onPress }) => {
   return (
     <TouchableOpacity style={styles.cardContainer} onPress={() => onPress(service)}>
-      <BlurView intensity={90} tint="dark" style={styles.cardFrame}>
-        <View style={styles.topBlackSpace}>
-          <Text style={styles.personalText}>Personal</Text>
+      <BlurView intensity={80} tint="dark" style={styles.cardFrame}>
+        <View style={styles.topBar}>
+          <Text style={styles.topBarText}>Personal</Text>
         </View>
         <Image source={{ uri: service.media[0]?.url }} style={styles.cardImage} />
-        <LinearGradient
-          colors={['#1c1c1c', '#333333', '#FFD780']}
-          style={styles.cardContent}
-        >
+        <View style={styles.cardContent}>
           <Text style={styles.cardName}>{service.name}</Text>
           <View style={styles.cardInfoRow}>
-            <Ionicons name="cash-outline" size={14} color="#FFD700" />
+            <Ionicons name="cash-outline" size={14} color="#A0A0A0" />
             <Text style={styles.cardInfoText}>${service.priceperhour}/hr</Text>
           </View>
           <View style={styles.reviewLikeRow}>
             <View style={styles.reviewContainer}>
-              <Ionicons name="star" size={14} color="#FFD700" />
+              <Ionicons name="star" size={12} color="#A0A0A0" />
               <Text style={styles.reviewText}>{service.reviews || 0} Reviews</Text>
             </View>
             <View style={styles.likeContainer}>
-              <Ionicons name="heart" size={14} color="#FF6347" />
+              <Ionicons name="heart" size={12} color="#A0A0A0" />
               <Text style={styles.likeText}>{service.likes || 0} Likes</Text>
             </View>
           </View>
-        </LinearGradient>
-        <View style={styles.blackBar} />
+        </View>
       </BlurView>
     </TouchableOpacity>
   );
@@ -60,61 +55,55 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 15,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Glassy effect
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   cardFrame: {
     flex: 1,
     borderRadius: 15,
     overflow: 'hidden',
-    backgroundColor: 'rgba(28, 28, 28, 0.6)', // Semi-transparent background
+    backgroundColor: 'rgba(28, 28, 28, 0.6)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 8,
   },
-  topBlackSpace: {
+  topBar: {
     height: '8%',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Slightly transparent
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
   },
-  personalText: {
+  topBarText: {
+    color: 'white',
     fontSize: 10,
     fontWeight: 'bold',
-    color: 'white',
   },
   cardImage: {
     width: '100%',
-    height: '57%',
+    height: '62%',
     resizeMode: 'cover',
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
   },
   cardContent: {
-    height: '35%',
-    justifyContent: 'flex-end',
+    height: '30%',
     padding: 8,
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(40, 40, 40, 0.8)',
   },
   cardName: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginBottom: 4,
     color: 'white',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+    marginBottom: 2,
   },
   cardInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   cardInfoText: {
-    fontSize: 10,
-    color: 'white',
+    fontSize: 12,
+    color: '#A0A0A0',
     fontWeight: 'bold',
     marginLeft: 4,
   },
@@ -127,8 +116,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   reviewText: {
-    fontSize: 8,
-    color: '#FFD700',
+    fontSize: 10,
+    color: '#A0A0A0',
     marginLeft: 2,
   },
   likeContainer: {
@@ -136,15 +125,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   likeText: {
-    fontSize: 8,
-    color: '#FF6347',
+    fontSize: 10,
+    color: '#A0A0A0',
     marginLeft: 2,
-  },
-  blackBar: {
-    height: '5%',
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
   },
 });
 
