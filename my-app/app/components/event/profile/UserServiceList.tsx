@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { supabase } from '../../../services/supabaseClient';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 interface Service {
   id: number;
@@ -8,8 +10,17 @@ interface Service {
   type: string;
 }
 
+const categories = [
+  { name: 'All', icon: 'apps-outline' },
+  { name: 'Personal', icon: 'person-outline' },
+  { name: 'Local', icon: 'home-outline' },
+  { name: 'Material', icon: 'construct-outline' }
+];
+
 const UserServicesList: React.FC<{ userId: string }> = ({ userId }) => {
   const [userServices, setUserServices] = useState<Service[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const navigation = useNavigation();
 
   useEffect(() => {
     fetchUserServices();
@@ -43,16 +54,50 @@ const UserServicesList: React.FC<{ userId: string }> = ({ userId }) => {
     }
   };
 
+  const filteredServices = selectedCategory === 'All'
+    ? userServices
+    : userServices.filter(service => service.type === selectedCategory);
+
+  const handleServicePress = (service: Service) => {
+    if (service.type === 'Personal') {
+      navigation.navigate('PersonalDetail', { personalId: service.id });
+    } else if (service.type === 'Local') {
+      navigation.navigate('LocalServiceDetails', { localServiceId: service.id });
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Your Services</Text>
+      <View style={styles.categoryContainer}>
+        {categories.map(category => (
+          <TouchableOpacity
+            key={category.name}
+            style={[
+              styles.categoryButton,
+              selectedCategory === category.name && styles.selectedCategoryButton
+            ]}
+            onPress={() => setSelectedCategory(category.name)}
+          >
+            <Ionicons name={category.icon} size={20} color={selectedCategory === category.name ? 'white' : 'black'} />
+            <Text style={styles.categoryText}>{category.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
       <FlatList
-        data={userServices}
+        data={filteredServices}
         renderItem={({ item }) => (
-          <View style={styles.serviceItem}>
-            <Text style={styles.serviceName}>{item.name}</Text>
-            <Text style={styles.serviceType}>{item.type}</Text>
-          </View>
+          <TouchableOpacity style={styles.serviceItem} onPress={() => handleServicePress(item)}>
+            <Ionicons
+              name={item.type === 'Personal' ? 'person' : item.type === 'Local' ? 'home' : 'construct'}
+              size={24}
+              color="#666"
+            />
+            <View style={styles.serviceTextContainer}>
+              <Text style={styles.serviceName}>{item.name}</Text>
+              <Text style={styles.serviceType}>{item.type}</Text>
+            </View>
+          </TouchableOpacity>
         )}
         keyExtractor={item => `${item.type}-${item.id}`}
       />
@@ -69,11 +114,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  categoryContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  categoryButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: '#eee',
+    marginHorizontal: 5,
+  },
+  selectedCategoryButton: {
+    backgroundColor: '#ddd',
+  },
+  categoryText: {
+    fontSize: 14,
+    marginLeft: 5,
+  },
   serviceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fff',
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
+  },
+  serviceTextContainer: {
+    marginLeft: 10,
   },
   serviceName: {
     fontSize: 16,

@@ -8,10 +8,6 @@ import { useNavigation } from '@react-navigation/native';
 import RequestsScreen from './RequestsScreen';
 import UserEventsList from './UserEventList';
 import AttendedEventsList from './AttendedEventList';
-import UserServicesList from './UserServiceList';
-import FriendsList from './FriendsList';
-import InterestsList from './InterestsList';
-import Subscriptions from './Subscriptions';
 import FriendRequestBadge from './FriendRequestBadge';
 
 interface UserProfile {
@@ -41,31 +37,31 @@ const UserProfileScreen: React.FC = () => {
 
   const fetchUserProfile = async () => {
     if (!userId) return;
-  
+
     try {
       const { data, error } = await supabase
         .from('user')
         .select('id, email, firstname, lastname, bio')
         .eq('id', userId);
-  
+
       if (error) throw error;
-  
+
       if (!data || data.length === 0) {
         console.error('No user data found');
         setUserProfile(null);
         return;
       }
-  
+
       const userData = data[0];
-  
+
       const { data: mediaData, error: mediaError } = await supabase
         .from('media')
         .select('url')
         .eq('user_id', userId)
         .single();
-  
+
       if (mediaError && mediaError.code !== 'PGRST116') throw mediaError;
-  
+
       setUserProfile({
         ...userData,
         avatar_url: mediaData?.url || 'https://via.placeholder.com/150'
@@ -117,13 +113,10 @@ const UserProfileScreen: React.FC = () => {
             <AttendedEventsList userId={userId as string} />
           </>
         );
-      case 'services':
-        return <UserServicesList userId={userId as string} />;
       case 'friends':
         return (
           <>
-            <FriendsList userId={userId as string} />
-            <InterestsList userId={userId as string} />
+            {/* Friends and Interests List components */}
           </>
         );
       case 'subscriptions':
@@ -145,10 +138,9 @@ const UserProfileScreen: React.FC = () => {
     navigation.navigate('EventCreation' as never);
   };
 
-  const handleCreateService = () => {
-    navigation.navigate('CreateService' as never);
+  const handleNavigateToServices = () => {
+    navigation.navigate('UserServicesScreen', { userId });
   };
- 
 
   const CreateButton: React.FC<{ onPress: () => void; iconName: string; text: string }> = ({ onPress, iconName, text }) => (
     <TouchableOpacity style={styles.createButton} onPress={onPress}>
@@ -163,33 +155,42 @@ const UserProfileScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-    <LinearGradient colors={['#FF4500', '#FFA500']} style={styles.header}>
-      <Image source={{ uri: userProfile.avatar_url }} style={styles.avatar} />
-      <Text style={styles.name}>{`${userProfile.firstname} ${userProfile.lastname}`}</Text>
-      <Text style={styles.email}>{userProfile.email}</Text>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateEvent}>
-          <Ionicons name="add-circle-outline" size={24} color="#fff" />
-          <Text style={styles.createButtonText}>Event</Text>
+      <LinearGradient colors={['#FF4500', '#FFA500']} style={styles.header}>
+        <Image source={{ uri: userProfile.avatar_url }} style={styles.avatar} />
+        <Text style={styles.name}>{`${userProfile.firstname} ${userProfile.lastname}`}</Text>
+        <Text style={styles.email}>{userProfile.email}</Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.createButton} onPress={handleCreateEvent}>
+            <Ionicons name="add-circle-outline" size={24} color="#fff" />
+            <Text style={styles.createButtonText}>Event</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.createButton} onPress={handleNavigateToServices}>
+            <Ionicons name="briefcase-outline" size={24} color="#fff" />
+            <Text style={styles.createButtonText}>Service</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditProfile' as never)}>
+          <Ionicons name="pencil" size={24} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateService}>
-          <Ionicons name="briefcase-outline" size={24} color="#fff" />
-          <Text style={styles.createButtonText}>Service</Text>
-        </TouchableOpacity>
-       
-      </View>
-      <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditProfile' as never)}>
-        <Ionicons name="pencil" size={24} color="#fff" />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.requestsButton} onPress={() => setShowRequests(!showRequests)}>
+        <TouchableOpacity style={styles.requestsButton} onPress={() => setShowRequests(!showRequests)}>
           <Ionicons name="notifications" size={24} color="#FF4500" />
           <Text style={styles.requestsButtonText}>{requestCount}</Text>
         </TouchableOpacity>
         <FriendRequestBadge />
       </LinearGradient>
 
+      {/* Secondary Tabs Section */}
+      <View style={styles.secondaryTabContainer}>
+        <TouchableOpacity style={styles.secondaryTab} onPress={handleNavigateToServices}>
+          <Text style={styles.secondaryTabText}>Your Services</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.secondaryTab} onPress={() => { /* Future navigation for Your Requests */ }}>
+          <Text style={styles.secondaryTabText}>Your Requests</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.tabContainer}>
-        {['events', 'services', 'friends', 'subscriptions'].map((tab) => (
+        {['events', 'friends', 'subscriptions'].map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[styles.tab, activeTab === tab && styles.activeTab]}
@@ -210,8 +211,8 @@ const UserProfileScreen: React.FC = () => {
           </View>
         )}
         ListFooterComponent={() => (
-          <TouchableOpacity 
-            style={styles.chatButton} 
+          <TouchableOpacity
+            style={styles.chatButton}
             onPress={() => navigation.navigate('ChatList' as never)}
           >
             <Ionicons name="chatbubbles" size={24} color="#fff" />
@@ -220,11 +221,11 @@ const UserProfileScreen: React.FC = () => {
         )}
       />
 
-{showRequests && (
+      {showRequests && (
         <View style={styles.requestsOverlay}>
           <RequestsScreen />
-          <TouchableOpacity 
-            style={styles.closeButton} 
+          <TouchableOpacity
+            style={styles.closeButton}
             onPress={() => setShowRequests(false)}
           >
             <Ionicons name="close" size={24} color="#fff" />
@@ -259,13 +260,30 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 24,
-    fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
+    fontWeight: 'bold',
   },
   email: {
     fontSize: 16,
     color: '#fff',
+    marginBottom: 10,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  createButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF4500',
+    padding: 10,
+    borderRadius: 5,
+  },
+  createButtonText: {
+    marginLeft: 5,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   editButton: {
     position: 'absolute',
@@ -274,36 +292,48 @@ const styles = StyleSheet.create({
   },
   requestsButton: {
     position: 'absolute',
-    top: 20,
-    left: 20,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 5,
+    top: 60,
+    right: 20,
   },
   requestsButtonText: {
-    color: '#FF4500',
-    fontWeight: 'bold',
     position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: '#fff',
+    top: 0,
+    right: 0,
+    backgroundColor: 'red',
     borderRadius: 10,
-    width: 20,
-    height: 20,
-    textAlign: 'center',
-    lineHeight: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    color: '#fff',
+    fontSize: 12,
+  },
+  secondaryTabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+    elevation: 1,
+  },
+  secondaryTab: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 10,
+  },
+  secondaryTabText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FF4500',
   },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#fff',
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#fff',
+    elevation: 1,
   },
   tab: {
-    paddingVertical: 5,
-    paddingHorizontal: 20,
+    flex: 1,
+    alignItems: 'center',
+    padding: 10,
   },
   activeTab: {
     borderBottomWidth: 2,
@@ -311,35 +341,33 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 16,
-    color: '#333',
+    color: '#000',
   },
   activeTabText: {
     color: '#FF4500',
     fontWeight: 'bold',
   },
   content: {
-    flex: 1,
-    padding: 20,
+    padding: 10,
   },
   chatButton: {
     backgroundColor: '#FF4500',
-    flexDirection: 'row',
+    borderRadius: 5,
+    padding: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 20,
-    marginBottom: 20,
+    margin: 10,
   },
   chatButtonText: {
     color: '#fff',
-    fontSize: 18,
     fontWeight: 'bold',
-    marginLeft: 10,
   },
   requestsOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -347,30 +375,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 40,
     right: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 20,
-    padding: 5,
-  },
-  createButtonText: {
-    color: '#fff',
-    marginLeft: 5,
-    fontSize: 14,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
-    flexWrap: 'wrap',
-  },
-  createButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    marginHorizontal: 5,
-    marginBottom: 5,
   },
 });
 

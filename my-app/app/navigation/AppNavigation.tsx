@@ -28,6 +28,7 @@ import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ServiceSelection from '../screens/ServiceSelection';
 
+
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
 
@@ -40,8 +41,7 @@ import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
 import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
 import SavedScreen from '../components/event/profile/SavedScreen';
-
-
+import UserServicesScreen from '../screens/UserServicesScreen';
 
 
 import CreateLocalServiceStep1 from '../components/LocalServiceCreation/CreateLocalServiceStep1';
@@ -92,7 +92,7 @@ type RootStackParamList = {
     selectedCategory: string; 
     selectedSubcategory: string 
   };
-  UserProfile: undefined; // or { userId: string } if you pass params
+  UserProfile: { userId: string };  UserServicesScreen: undefined;
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -291,6 +291,10 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="ServiceSelection" 
       component={ServiceSelection} />  
+
+      <Stack.Screen
+       name ="UserServicesScreen" 
+      component={UserServicesScreen} />  
 
       </Stack.Navigator>
    
