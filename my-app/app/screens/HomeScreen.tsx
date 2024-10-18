@@ -39,6 +39,8 @@ const HomeScreen: React.FC = () => {
   const [locals, setLocals] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
   const [isFabOpen, setIsFabOpen] = useState(false);
+  const [filteredEvents, setFilteredEvents] = useState<any[]>(events);
+  const [filteredServices, setFilteredServices] = useState<any[]>(staffServices);
 
 
 
@@ -137,13 +139,45 @@ const HomeScreen: React.FC = () => {
     </View>
   );
 
+
+  const handleSearch = (searchTerm: string) => {
+    if (!searchTerm) {
+      setFilteredEvents(events);
+      setFilteredServices(staffServices);
+      return;
+    }
+
+    const normalizedSearchTerm = searchTerm.toLowerCase();
+
+    const newFilteredEvents = events.filter(event => {
+      const title = event.title?.toLowerCase() || '';
+      const description = event.description?.toLowerCase() || '';
+      return title.includes(normalizedSearchTerm) || description.includes(normalizedSearchTerm);
+    });
+
+    const newFilteredServices = staffServices.filter(service => {
+      const name = service.name?.toLowerCase() || '';
+      const details = service.details?.toLowerCase() || '';
+      return name.includes(normalizedSearchTerm) || details.includes(normalizedSearchTerm);
+    });
+
+    setFilteredEvents(newFilteredEvents);
+    setFilteredServices(newFilteredServices);
+  };
+
+
+
+
+
+
+
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
         colors={['#FFFFFF', '#E6F3FF', '#CCE7FF']}
         style={styles.gradient}
       >
-        <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} />
+        <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter}   onSearch={handleSearch} />
         <ScrollView 
           style={styles.scrollView} 
           contentContainerStyle={styles.scrollViewContent}

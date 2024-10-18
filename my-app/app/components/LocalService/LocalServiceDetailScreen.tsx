@@ -1,26 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
 import AvailabilityList from '../PersonalServiceComponents/AvailabilityList';
 import CommentSection from '../PersonalServiceComponents/CommentSection';
-import { initiatePayment } from '../../services/serviceTypes';
-
+import { paymentData } from '../../payment/fakeData';
 
 type RootStackParamList = {
-  LocalServiceDetails: { localServiceId: number };
+  LocalServiceDetails: undefined;
+    PaymentAction: { price: number; personalId: string };
 };
+// ... existing code ...
+
+// Ensure the function signature matches the arguments being passed
+
+
+// ... existing code ...
 
 type LocalServiceDetailScreenRouteProp = RouteProp<RootStackParamList, 'LocalServiceDetails'>;
+
+interface Media {
+  url: string;
+}
+
+interface Availability {
+  id: number;
+  start: string;
+  end: string;
+  daysofweek: string[];
+  date: string;
+}
+
+interface Comment {
+  id: number;
+  details: string;
+  user_id: string;
+  created_at: string;
+}
 
 interface LocalService {
   id: number;
   name: string;
   details: string;
   priceperhour: number;
-  media: { url: string }[];
-  availability: any[];
-  comment: any[];
+  media: Media[];
+  availability: Availability[];
+  comment: Comment[];
 }
 
 const LocalServiceDetailScreen: React.FC = () => {
@@ -29,7 +54,6 @@ const LocalServiceDetailScreen: React.FC = () => {
   const [service, setService] = useState<LocalService | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isBooking, setIsBooking] = useState(false);
 
   useEffect(() => {
     const fetchServiceDetails = async () => {
@@ -44,7 +68,7 @@ const LocalServiceDetailScreen: React.FC = () => {
 
       try {
         const { data, error } = await supabase
-          .from('local')
+          .from<LocalService>('local')
           .select(`
             *,
             media (url),
@@ -56,7 +80,7 @@ const LocalServiceDetailScreen: React.FC = () => {
 
         if (error) throw error;
         if (!data) throw new Error('No data returned from the query');
-        
+
         console.log('Fetched service data:', data);
         setService(data);
       } catch (error) {
@@ -74,6 +98,15 @@ const LocalServiceDetailScreen: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    Alert.alert('Error', error); // Display error alert
+    return (
+      <View style={styles.container}>
+        <Text>No service details available.</Text>
       </View>
     );
   }
@@ -104,12 +137,14 @@ const LocalServiceDetailScreen: React.FC = () => {
       />
       <TouchableOpacity 
         style={styles.bookButton} 
-        onPress={handleBooking}
-        disabled={isBooking}
+        onPress={() => {
+          navigation.navigate('PaymentAction', {
+            price: paymentData.price,
+            personalId: paymentData.personalId,
+          });
+        }}
       >
-        <Text style={styles.bookButtonText}>
-          {isBooking ? 'Processing...' : 'Book Now'}
-        </Text>
+        <Text style={styles.bookButtonText}>Book Now</Text>
       </TouchableOpacity>
     </ScrollView>
   );

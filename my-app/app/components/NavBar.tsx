@@ -13,6 +13,15 @@ interface NavBarProps {
 const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSearch }) => {
   const navigation = useNavigation();
   const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSubmit = () => {
+    if (typeof onSearch === 'function') {
+      onSearch(searchTerm);
+    } else {
+      console.error('onSearch is not a function');
+    }
+  };
+
   return (
     <LinearGradient
       colors={['#ffffff', '#f0f0f0', '#e0e0e0']}
@@ -25,17 +34,16 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
           <Ionicons name="search" size={20} color="#0000FF" style={styles.searchIcon} />
           <TextInput
             style={styles.searchBar}
-  placeholder="Search events and services..."
+            placeholder="Search events and services..."
             placeholderTextColor="#ccc"
-  value={searchTerm}
-  onChangeText={setSearchTerm}
-  onSubmitEditing={() => onSearch(searchTerm)}
-/>
-
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+            onSubmitEditing={handleSubmit}
+          />
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('UserProfile' as never)}>
-  <Ionicons name="person-outline" size={24} color="#333" />
-</TouchableOpacity>
+          <Ionicons name="person-outline" size={24} color="#333" />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.iconContainer}>
           <Ionicons name="notifications" size={24} color="#0000FF" />
         </TouchableOpacity>
@@ -59,39 +67,10 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
           />
         </View>
       </View>
-      
     </LinearGradient>
   );
 };
 
-// const handleSearch = (searchTerm: string) => {
-//   if (!searchTerm) return; // Ne fait rien si le terme de recherche est vide ou nul
-//   const normalizedSearchTerm = searchTerm.toLowerCase();
-
-//   const filteredEvents = events.filter(event => {
-//     const title = event.title ? event.title.toLowerCase() : ''; // Vérification si 'event.title' est défini
-//     const description = event.description ? event.description.toLowerCase() : ''; // Vérification si 'event.description' est défini
-//     return title.includes(normalizedSearchTerm) || description.includes(normalizedSearchTerm);
-//   });
-
-//   const filteredServices = services.filter(service => {
-//     const name = service.name ? service.name.toLowerCase() : ''; // Vérification si 'service.name' est défini
-//     const details = service.details ? service.details.toLowerCase() : ''; // Vérification si 'service.details' est défini
-//     return name.includes(normalizedSearchTerm) || details.includes(normalizedSearchTerm);
-//   });
-
-//   setEvents(filteredEvents);
-//   setServices(filteredServices);
-// };
-
-// <TextInput
-// style={styles.searchBar}
-// placeholder="Search events and services..."
-// placeholderTextColor="#ccc"
-// value={searchTerm}
-// onChangeText={setSearchTerm}
-// onSubmitEditing={() => onSearch(searchTerm)}
-// />
 
 
 const styles = StyleSheet.create({
