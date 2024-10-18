@@ -131,7 +131,7 @@ const CreatePersonalServiceStep5 = () => {
             personal_id: personalData.id,
             url: imageUrl,
             album_id: albumData.id,
-            user_id: userId,
+            // user_id: userId,
           })
       );
 

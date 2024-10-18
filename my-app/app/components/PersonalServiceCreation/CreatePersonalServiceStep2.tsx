@@ -46,7 +46,6 @@ const CreatePersonalServiceStep2: React.FC = () => {
       <Text style={styles.label}>Service Name: {serviceName}</Text>
       <Text style={styles.label}>Description: {description}</Text>
       <Text style={styles.label}>Category: {subcategoryName}</Text>
-      <Text style={styles.label}>Subcategory ID: {subcategoryId}</Text>
 
       <Button title="Pick Images" onPress={pickImage} />
       {images.length > 0 && (

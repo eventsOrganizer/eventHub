@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { format, eachDayOfInterval, isSameMonth, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -41,14 +41,16 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
       const monthEnd = endOfMonth(currentDate);
       months.push(
         <View key={currentDate.getTime()} style={styles.month}>
-          <Text style={styles.monthTitle}>{format(monthStart, 'MMMM yyyy')}</Text>
+          <View style={styles.monthTitleContainer}>
+            <Text style={styles.monthTitle}>{format(monthStart, 'MMMM yyyy')}</Text>
+          </View>
           {renderDaysOfWeek(monthStart)}
           {renderMonth(monthStart, monthEnd)}
         </View>
       );
       currentDate = addDays(monthEnd, 1);
     }
-    return <ScrollView>{months}</ScrollView>;
+    return <ScrollView horizontal showsHorizontalScrollIndicator={false}>{months}</ScrollView>;
   };
 
   const renderMonthlyCalendar = () => {
@@ -56,14 +58,22 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
     const nextMonthEnd = endOfMonth(addMonths(currentMonthStart, 1));
     
     return (
-      <View style={styles.month}>
-        <Text style={styles.monthTitle}>{format(startDate, 'MMMM yyyy')}</Text>
-        {renderDaysOfWeek(startDate)}
-        {renderMonth(startDate, endOfMonth(startDate))}
-        <Text style={styles.monthTitle}>{format(addMonths(startDate, 1), 'MMMM yyyy')}</Text>
-        {renderDaysOfWeek(addMonths(startDate, 1))}
-        {renderMonth(startOfMonth(addMonths(startDate, 1)), nextMonthEnd)}
-      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.month}>
+          <View style={styles.monthTitleContainer}>
+            <Text style={styles.monthTitle}>{format(startDate, 'MMMM yyyy')}</Text>
+          </View>
+          {renderDaysOfWeek(startDate)}
+          {renderMonth(startDate, endOfMonth(startDate))}
+        </View>
+        <View style={styles.month}>
+          <View style={styles.monthTitleContainer}>
+            <Text style={styles.monthTitle}>{format(addMonths(startDate, 1), 'MMMM yyyy')}</Text>
+          </View>
+          {renderDaysOfWeek(addMonths(startDate, 1))}
+          {renderMonth(startOfMonth(addMonths(startDate, 1)), nextMonthEnd)}
+        </View>
+      </ScrollView>
     );
   };
 
@@ -71,7 +81,10 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
     const weekEnd = addDays(startDate, 6);
     return (
       <View style={styles.weekContainer}>
-        <Text style={styles.weekTitle}>Semaine du {format(startDate, 'd MMMM yyyy', { locale: fr })}</Text>
+        <View style={styles.monthTitleContainer}>
+          <Text style={styles.weekTitle}>Semaine du {format(startDate, 'd MMMM yyyy', { locale: fr })}</Text>
+        </View>
+        {renderDaysOfWeek(startDate)}
         {renderWeek(startDate, weekEnd)}
       </View>
     );
@@ -88,6 +101,7 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
       </View>
     );
   };
+
   const renderMonth = (start: Date, end: Date) => {
     const days = eachDayOfInterval({ start: startOfWeek(start), end: endOfWeek(end) });
     const weeks: WeekDay[][] = [];
@@ -109,7 +123,7 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
           onPress={() => onSelectDate(day)}
           disabled={day < startDate || day > endDate}
         >
-          <Text>{format(day, 'd')}</Text>
+          <Text style={styles.dayText}>{format(day, 'd')}</Text>
         </TouchableOpacity>
       );
     });
@@ -147,54 +161,81 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
   };
 
   return (
-    <View style={styles.calendar}>
-      {renderCalendar()}
+    <View style={styles.calendarContainer}>
+      <ScrollView 
+        horizontal={interval !== 'Weekly'}
+        showsHorizontalScrollIndicator={false} 
+        contentContainerStyle={styles.scrollViewContent}
+      >
+        {renderCalendar()}
+      </ScrollView>
     </View>
   );
 };
 
+const { width } = Dimensions.get('window');
+const CALENDAR_WIDTH = width * 0.90; // 90% of screen width
+
 const styles = StyleSheet.create({
-  calendar: {
+  calendarContainer: {
     flex: 1,
+    width: '100%',
+    alignItems: 'center', // Center the calendar horizontally
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   month: {
-    marginBottom: 20,
+    width: CALENDAR_WIDTH,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  monthTitleContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    paddingVertical: 10,
   },
   monthTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
   },
   weekContainer: {
-    marginBottom: 20,
-  },
-  week: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 5,
+    width: CALENDAR_WIDTH,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   weekTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
+    textAlign: 'center',
+  },
+  week: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   daysOfWeek: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    paddingVertical: 5,
   },
   dayOfWeek: {
-    width: 40,
+    flex: 1,
     textAlign: 'center',
     fontWeight: 'bold',
   },
   day: {
-    width: 40,
+    flex: 1,
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 2,
-    borderRadius: 10,
+    borderRightWidth: 1,
+    borderRightColor: '#e0e0e0',
   },
   dayName: {
     fontSize: 12,
@@ -202,6 +243,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   dayNumber: {
+    fontSize: 16,
+  },
+  dayText: {
     fontSize: 16,
   },
   outsideMonth: {
