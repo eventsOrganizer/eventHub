@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, ActivityIndicator, ScrollView, Animated } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, Image, TouchableOpacity, ActivityIndicator, ScrollView, Animated, RefreshControl, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../services/supabaseClient';
@@ -15,6 +15,8 @@ import Subscriptions from './Subscriptions';
 import FriendRequestBadge from './FriendRequestBadge';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 interface UserProfile {
   id: string;
@@ -33,14 +35,18 @@ const UserProfileScreen: React.FC = () => {
   const [requestCount, setRequestCount] = useState(0);
   const [activeTab, setActiveTab] = useState('events');
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (userId) {
-      fetchUserProfile();
-      fetchRequestCount();
+      await Promise.all([fetchUserProfile(), fetchRequestCount()]);
     }
   }, [userId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -76,8 +82,6 @@ const UserProfileScreen: React.FC = () => {
       });
     } catch (error) {
       console.error('Error fetching user profile:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -109,26 +113,34 @@ const UserProfileScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching request count:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  }, [fetchData]);
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'events':
         return (
-          <>
-            <UserEventsList userId={userId as string} />
+          <View style={tw`space-y-6`}>
             <AttendedEventsList userId={userId as string} />
-          </>
+            <UserEventsList userId={userId as string} />
+          </View>
         );
       case 'services':
         return <UserServicesList userId={userId as string} />;
       case 'friends':
         return (
-          <>
+          <ScrollView nestedScrollEnabled={true}>
             <FriendsList userId={userId as string} />
             <InterestsList userId={userId as string} />
-          </>
+          </ScrollView>
         );
       case 'subscriptions':
         return <Subscriptions />;
@@ -155,32 +167,39 @@ const UserProfileScreen: React.FC = () => {
 
   const ActionButton: React.FC<{ onPress: () => void; iconName: string; text: string; color: string }> = ({ onPress, iconName, text, color }) => (
     <TouchableOpacity
-      style={tw`flex-row items-center justify-center ${color} py-2 px-4 rounded-full shadow-md`}
+      style={tw`flex-1 flex-row items-center justify-center ${color} py-3 px-2 rounded-full shadow-md mx-1`}
       onPress={onPress}
     >
-      <Ionicons name={iconName as any} size={24} color="#FFFFFF" />
-      <Text style={tw`text-white text-base font-bold ml-2`}>{text}</Text>
+      <Ionicons name={iconName as any} size={20} color="#FFFFFF" />
+      <Text style={tw`text-white text-xs font-bold ml-1`}>{text}</Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={tw`flex-1 bg-[#001F3F]`}>
       <LinearGradient
-        colors={['white', '#003366', '#0066CC' , '#00BFFF']}
+        colors={['white', '#003366', '#0066CC', '#00BFFF']}
         style={tw`flex-1`}
       >
-        <ScrollView style={tw`flex-1`}>
+        <ScrollView 
+          style={tw`flex-1`}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <BlurView intensity={80} tint="dark" style={tw`overflow-hidden rounded-3xl mx-4 mt-6 shadow-xl`}>
             <View style={tw`p-6`}>
               <View style={tw`flex-row justify-between items-center mb-4`}>
                 <Text style={tw`text-white text-3xl font-bold`}>Profile</Text>
-                <TouchableOpacity 
-                  style={tw`bg-[#00BFFF] py-2 px-4 rounded-full shadow-md`}
-                  onPress={() => navigation.navigate('ChatList' as never)}
-                >
-                  <Text style={tw`text-white font-bold`}>Open Chat</Text>
-                </TouchableOpacity>
-                <FriendRequestBadge />
+                <View style={tw`flex-row items-center`}>
+                  <TouchableOpacity
+                    style={tw`bg-[#5856D6] py-2 px-4 rounded-full shadow-md mr-2`}
+                    onPress={() => setShowRequests(!showRequests)}
+                  >
+                    <Text style={tw`text-white text-xs font-bold`}>Requests ({requestCount})</Text>
+                  </TouchableOpacity>
+                  <FriendRequestBadge />
+                </View>
               </View>
               
               <View style={tw`flex-row items-center mb-6`}>
@@ -189,25 +208,17 @@ const UserProfileScreen: React.FC = () => {
                   <Text style={tw`text-white text-2xl font-bold mb-2`}>{`${userProfile.firstname} ${userProfile.lastname}`}</Text>
                   <Text style={tw`text-[#00BFFF] text-lg mb-2`}>{userProfile.email}</Text>
                   <Text style={tw`text-gray-300 text-sm italic mb-4`}>{userProfile.bio || 'No bio available'}</Text>
-                
                 </View>
               </View>
               
-              <View style={tw`flex-row justify-between mb-4`}>
-                
+              <View style={tw`flex-row justify-between mb-2`}>
                 <ActionButton onPress={() => navigation.navigate('EventCreation' as never)} iconName="add-circle-outline" text="New Event" color="bg-[#4CD964]" />
                 <ActionButton onPress={() => navigation.navigate('CreateService' as never)} iconName="briefcase-outline" text="New Service" color="bg-[#FF9500]" />
               </View>
               
-              <View style={tw`flex-row justify-between items-center`}>
-                <ActionButton onPress={() => setShowRequests(!showRequests)} iconName="notifications" text={`Requests (${requestCount})`} color="bg-[#5856D6]" />
-            
-                <TouchableOpacity 
-                    style={tw`bg-[#FF3B30] py-2 px-4 rounded-full shadow-md self-start`}
-                    onPress={() => navigation.navigate('EditProfile' as never)}
-                  >
-                    <Text style={tw`text-white font-bold`}>Edit Profile</Text>
-                  </TouchableOpacity>
+              <View style={tw`flex-row justify-between mb-2`}>
+                <ActionButton onPress={() => navigation.navigate('EditProfile' as never)} iconName="pencil" text="Edit Profile" color="bg-[#FF3B30]" />
+                <ActionButton onPress={() => navigation.navigate('ChatList' as never)} iconName="chatbubbles" text="Open Chat" color="bg-[#00BFFF]" />
               </View>
             </View>
           </BlurView>
