@@ -42,6 +42,7 @@ import UserProfileScreen from '../components/event/profile/UserProfileScreen';
 import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
 import SavedScreen from '../components/event/profile/SavedScreen';
 import UserServicesScreen from '../screens/UserServicesScreen';
+import YourRequestsScreen from '../screens/YourRequests';
 
 
 import CreateLocalServiceStep1 from '../components/LocalServiceCreation/CreateLocalServiceStep1';
@@ -120,6 +121,7 @@ type EventSetupOptionsScreenProps = {
   FriendRequests: undefined;
   Saved: undefined;
   ServiceSelection: undefined;
+  YourRequests: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -295,6 +297,10 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="UserServicesScreen" 
       component={UserServicesScreen} />  
+
+      <Stack.Screen
+       name ="YourRequests" 
+      component={YourRequestsScreen} />  
 
       </Stack.Navigator>
    

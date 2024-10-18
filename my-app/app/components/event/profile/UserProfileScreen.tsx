@@ -138,7 +138,11 @@ const UserProfileScreen: React.FC = () => {
     navigation.navigate('EventCreation' as never);
   };
 
-  const handleNavigateToServices = () => {
+  const handleNavigateToServicesSelection = () => {
+    navigation.navigate('ServiceSelection', { userId });
+  };
+
+  const handleNavigateToUserServices = () => {
     navigation.navigate('UserServicesScreen', { userId });
   };
 
@@ -164,7 +168,7 @@ const UserProfileScreen: React.FC = () => {
             <Ionicons name="add-circle-outline" size={24} color="#fff" />
             <Text style={styles.createButtonText}>Event</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.createButton} onPress={handleNavigateToServices}>
+          <TouchableOpacity style={styles.createButton} onPress={handleNavigateToServicesSelection}>
             <Ionicons name="briefcase-outline" size={24} color="#fff" />
             <Text style={styles.createButtonText}>Service</Text>
           </TouchableOpacity>
@@ -181,10 +185,10 @@ const UserProfileScreen: React.FC = () => {
 
       {/* Secondary Tabs Section */}
       <View style={styles.secondaryTabContainer}>
-        <TouchableOpacity style={styles.secondaryTab} onPress={handleNavigateToServices}>
+        <TouchableOpacity style={styles.secondaryTab} onPress={handleNavigateToUserServices}>
           <Text style={styles.secondaryTabText}>Your Services</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryTab} onPress={() => { /* Future navigation for Your Requests */ }}>
+        <TouchableOpacity style={styles.secondaryTab} onPress={() => navigation.navigate('YourRequests' as never)}>
           <Text style={styles.secondaryTabText}>Your Requests</Text>
         </TouchableOpacity>
       </View>
