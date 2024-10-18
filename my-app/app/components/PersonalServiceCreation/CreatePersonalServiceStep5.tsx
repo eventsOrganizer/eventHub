@@ -10,7 +10,7 @@ import { format, parseISO } from 'date-fns';
 type CreatePersonalServiceStep5ScreenRouteProp = RouteProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
 type CreatePersonalServiceStep5ScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
 
-const CreatePersonalServiceStep5 = () => {
+const CreatePersonalServiceStep5: React.FC = () => {
   const navigation = useNavigation<CreatePersonalServiceStep5ScreenNavigationProp>();
   const route = useRoute<CreatePersonalServiceStep5ScreenRouteProp>();
   const { 
@@ -27,11 +27,6 @@ const CreatePersonalServiceStep5 = () => {
   } = route.params;
   const { userId } = useUser();
 
-  const getDayOfWeek = (date: Date): string => {
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    return days[date.getDay()];
-  };
-
   const handleConfirm = async () => {
     if (!userId) {
       Alert.alert('Error', 'You must be logged in to create a service.');
@@ -39,17 +34,6 @@ const CreatePersonalServiceStep5 = () => {
     }
 
     try {
-      console.log('Inserting personal service with data:', {
-        name: serviceName,
-        details: description,
-        priceperhour: pricePerHour,
-        percentage: depositPercentage,
-        subcategory_id: subcategoryId,
-        user_id: userId,
-        startdate: startDate,
-        enddate: endDate
-      });
-
       const { data: personalData, error: personalError } = await supabase
         .from('personal')
         .insert({
@@ -71,46 +55,6 @@ const CreatePersonalServiceStep5 = () => {
         throw new Error('Failed to create personal service');
       }
 
-      console.log('Personal service created:', personalData);
-
-      // Only create availability entries for exception dates
-      const availabilityData = exceptionDates.map(dateString => {
-        const date = parseISO(dateString);
-        return {
-          personal_id: personalData.id,
-          date: dateString,
-          startdate: startDate,
-          enddate: endDate,
-          daysofweek: getDayOfWeek(date),
-          statusday: 'exception'
-        };
-      });
-
-      console.log('Exception availability data to be inserted:', availabilityData);
-
-      if (availabilityData.length > 0) {
-        const { data: availabilityResult, error: availabilityError } = await supabase
-          .from('availability')
-          .insert(availabilityData)
-          .select();
-
-        if (availabilityError) {
-          console.error('Error inserting availability:', availabilityError);
-          throw availabilityError;
-        }
-
-        console.log('Exception availability insertion results:', availabilityResult);
-
-        if (!availabilityResult || availabilityResult.length === 0) {
-          console.warn('Exception availability inserted, but no data returned');
-        } else {
-          console.log(`Successfully inserted ${availabilityResult.length} exception availability records`);
-        }
-      } else {
-        console.log('No exception dates to insert');
-      }
-
-      // Create an album for the service
       const { data: albumData, error: albumError } = await supabase
         .from('album')
         .insert({
@@ -123,7 +67,6 @@ const CreatePersonalServiceStep5 = () => {
 
       if (albumError) throw albumError;
 
-      // Insert images into the media table
       const mediaPromises = images.map(imageUrl => 
         supabase
           .from('media')
@@ -131,17 +74,33 @@ const CreatePersonalServiceStep5 = () => {
             personal_id: personalData.id,
             url: imageUrl,
             album_id: albumData.id,
-            // user_id: userId,
           })
       );
 
       await Promise.all(mediaPromises);
 
-      Alert.alert('Success', 'Service and images submitted successfully!');
+      const availabilityData = exceptionDates.map(dateString => ({
+        personal_id: personalData.id,
+        date: dateString,
+        startdate: startDate,
+        enddate: endDate,
+        daysofweek: format(parseISO(dateString), 'EEEE').toLowerCase(),
+        statusday: 'exception'
+      }));
+
+      if (availabilityData.length > 0) {
+        const { error: availabilityError } = await supabase
+          .from('availability')
+          .insert(availabilityData);
+
+        if (availabilityError) throw availabilityError;
+      }
+
+      Alert.alert('Success', 'Service created successfully!');
       navigation.navigate('Home');
     } catch (error) {
       console.error('Error submitting service:', error);
-      Alert.alert('Error', 'Error submitting service. Please try again.');
+      Alert.alert('Error', 'Error creating service. Please try again.');
     }
   };
 
@@ -163,7 +122,6 @@ const CreatePersonalServiceStep5 = () => {
     </ScrollView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
