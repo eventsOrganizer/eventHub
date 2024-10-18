@@ -63,7 +63,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
     <View style={styles.section}>
       <BlurView
         style={styles.blurBackground}
-        blurType="dark"
+        blurType ="dark " 
         blurAmount={10}
         reducedTransparencyFallbackColor="rgba(0, 0, 0, 0.8)"
       >
