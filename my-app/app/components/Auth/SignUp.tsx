@@ -4,6 +4,7 @@ import useAuth from '../../hooks/useAuth';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack'; // Importing the correct type
 import { AuthStackParamList } from '../../navigation/types'; // Adjust the import path as necessary
+import  useFileUpload  from '../../services/uploadFiles';
 
 const Signup = () => {
     const { signup, error, success } = useAuth();
@@ -13,7 +14,7 @@ const Signup = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
+    const { uploadFile, uploading, error: uploadError } = useFileUpload();
     const handleSubmit =  () => {
         console.log({ firstname, lastname, username, email, password });
          signup(firstname, lastname, username, email, password);

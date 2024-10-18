@@ -3,7 +3,6 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert, TouchableOp
 import { supabase } from '../services/supabaseClient';
 import { useUser } from '../UserContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { FontAwesome } from 'react-native-vector-icons'; // Import additional icon set if needed
 
 interface Request {
   id: number;
@@ -30,19 +29,16 @@ const YourRequests: React.FC = () => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      // Fetch personal service requests with service names, subcategories, and images
       const { data: personalRequests, error: personalError } = await supabase
         .from('personal_user')
         .select(`personal_id, status, personal:personal_id (name, subcategory:subcategory_id (name), media (url))`)
         .eq('user_id', userId);
 
-      // Fetch local service requests with service names, subcategories, and images
       const { data: localRequests, error: localError } = await supabase
         .from('local_user')
         .select(`local_id, status, local:local_id (name, subcategory:subcategory_id (name), media (url))`)
         .eq('user_id', userId);
 
-      // Fetch material service requests with service names, subcategories, and images
       const { data: materialRequests, error: materialError } = await supabase
         .from('material_user')
         .select(`material_id, status, material:material_id (name, subcategory:subcategory_id (name), media (url))`)
@@ -89,7 +85,6 @@ const YourRequests: React.FC = () => {
     }
   };
 
-  // Function to dynamically set the background color based on status
   const getBackgroundColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
@@ -117,7 +112,7 @@ const YourRequests: React.FC = () => {
       case 'confirmed':
         return <Icon name="check-circle" size={20} color="#000" />;
       case 'pending':
-        return <Icon name="hourglass-empty" size={20} color="#000" />;
+        return <Icon name="hourglass-top" size={20} color="#000" />;
       case 'rejected':
         return <Icon name="cancel" size={20} color="#000" />;
       default:
@@ -132,7 +127,7 @@ const YourRequests: React.FC = () => {
       case 'local':
         return <Icon name="location-on" size={20} color="#000" />;
       case 'material':
-        return <Icon name="shopping-cart" size={20} color="#000" />; // Changed to a shopping cart icon
+        return <Icon name="shopping-cart" size={20} color="#000" />;
       default:
         return <Icon name="help-outline" size={20} color="#000" />;
     }
@@ -155,15 +150,15 @@ const YourRequests: React.FC = () => {
               <Text style={[styles.filterText, selectedCategory === 'All' && styles.activeFilterText]}>All</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => filterRequests('Local')} style={styles.filterButton}>
-              <Icon name="location-on" size={24} color={selectedCategory === 'Local' ? '#4CAF50' : '#000'} />
+              {getCategoryIcon('local')}
               <Text style={[styles.filterText, selectedCategory === 'Local' && styles.activeFilterText]}>Local</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => filterRequests('Personal')} style={styles.filterButton}>
-              <Icon name="people" size={24} color={selectedCategory === 'Personal' ? '#4CAF50' : '#000'} />
+              {getCategoryIcon('personal')}
               <Text style={[styles.filterText, selectedCategory === 'Personal' && styles.activeFilterText]}>Personal</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => filterRequests('Material')} style={styles.filterButton}>
-              <Icon name="build" size={24} color={selectedCategory === 'Material' ? '#4CAF50' : '#000'} />
+              {getCategoryIcon('material')}
               <Text style={[styles.filterText, selectedCategory === 'Material' && styles.activeFilterText]}>Material</Text>
             </TouchableOpacity>
           </View>
@@ -172,17 +167,13 @@ const YourRequests: React.FC = () => {
             data={filteredRequests}
             renderItem={({ item }) => (
               <View style={[styles.requestItem, { backgroundColor: getBackgroundColor(item.status) }]}>
-                <View style={styles.requestContent}>
-                  {item.imageUrl && <Image source={{ uri: item.imageUrl }} style={styles.requestImage} />}
-                  <View style={styles.requestTextContainer}>
-                    <View style={styles.requestHeader}>
-                      <Text style={styles.serviceName}>{item.name || 'Unnamed Service'}</Text>
-                      {getCategoryIcon(item.type)}
-                    </View>
-                    <View style={styles.requestDetails}>
-                      <Text style={styles.subcategoryName}>{item.subcategory || 'Unknown Subcategory'}</Text>
-                      {getStatusIcon(item.status)}
-                    </View>
+                <Image source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} style={styles.requestImage} />
+                <View style={styles.requestDetailsContainer}>
+                  <Text style={styles.serviceName}>{item.name}</Text>
+                  <Text style={styles.subcategoryName}>{item.subcategory}</Text>
+                  <View style={styles.iconsContainer}>
+                    {getCategoryIcon(item.type)}
+                    {getStatusIcon(item.status)}
                   </View>
                 </View>
               </View>
@@ -229,50 +220,40 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
   },
   requestItem: {
+    flexDirection: 'row',
     padding: 15,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  requestContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  requestTextContainer: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  requestHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  requestDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  serviceName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  requestType: {
-    fontSize: 16,
-    color: '#555',
-  },
-  subcategoryName: {
-    fontSize: 16,
-    color: '#555',
-  },
-  requestStatus: {
-    fontSize: 16,
-    color: '#666',
+    borderRadius: 10,
+    marginBottom: 15,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   requestImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 5,
+    width: '30%',
+    height: 70,
+    borderRadius: 10,
+    marginRight: 15,
+  },
+  requestDetailsContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  serviceName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  subcategoryName: {
+    fontSize: 14,
+    color: '#757575',
+  },
+  iconsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });
 
