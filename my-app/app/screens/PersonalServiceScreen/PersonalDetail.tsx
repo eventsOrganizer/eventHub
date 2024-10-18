@@ -5,11 +5,11 @@ import { Service } from '../../services/serviceTypes';
 import { fetchPersonalDetail, makeServiceRequest, toggleLike } from '../../services/personalService';
 import PersonalInfo from '../../components/PersonalServiceComponents/PersonalInfo';
 import CommentSection from '../../components/PersonalServiceComponents/CommentSection';
-import Calendar from '../../components/PersonalServiceComponents/personalServiceCalandar';
-import BookingForm from '../../components/PersonalServiceComponents/BookingForm';
+import AvailabilityCalendar from '../../components/PersonalServiceComponents/AvailabilityCalendar';
 import BookingStatus from '../../components/PersonalServiceComponents/BookingStatus';
 import ReviewForm from '../../components/PersonalServiceComponents/ReviewForm';
 import { useUser } from '../../UserContext';
+import { fetchAvailabilityData, AvailabilityData } from '../../services/availabilityService';
 
 const PersonalDetail = () => {
   const route = useRoute();
@@ -18,21 +18,21 @@ const PersonalDetail = () => {
 
   const [personalData, setPersonalData] = useState<Service | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [hours, setHours] = useState('');
   const [requestStatus, setRequestStatus] = useState<'pending' | 'confirmed' | 'rejected' | null>(null);
-
+  const [availabilityData, setAvailabilityData] = useState<AvailabilityData | null>(null);
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await fetchPersonalDetail(personalId);
       setPersonalData(data);
-      if (data && data.availability) {
-        const dates = data.availability.map(a => a.date);
-        setAvailableDates(dates);
-      }
+      const availability = await fetchAvailabilityData(personalId);
+      setAvailabilityData(availability);
     } catch (error) {
       console.error('Error fetching personal detail:', error);
+      Alert.alert('Error', 'Failed to load personal details. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -47,30 +47,30 @@ const PersonalDetail = () => {
       Alert.alert('Authentication Required', 'Please log in to book a service.');
       return;
     }
-    setShowCalendar(true);
+    setShowBookingForm(true);
   };
 
-  const handleConfirm = async (selectedDate: string, hours: string) => {
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+  };
+
+  const handleConfirm = async () => {
     try {
-      if (!userId) {
-        Alert.alert('Authentication Required', 'Please log in to book a service.');
+      if (!userId || !selectedDate || !hours) {
+        Alert.alert('Error', 'Please select a date and enter the number of hours.');
         return;
       }
-      console.log('Making service request with data:', { personalId, hours: parseInt(hours), selectedDate, userId });
       const result = await makeServiceRequest(personalId, parseInt(hours), selectedDate, userId);
       if (result) {
         setRequestStatus('pending');
         Alert.alert('Success', 'Your request has been sent to the service provider for confirmation.');
+        setShowBookingForm(false);
       } else {
         Alert.alert('Error', 'Failed to send request. Please try again.');
       }
     } catch (error) {
       console.error('Error making service request:', error);
-      if (error instanceof Error) {
-        Alert.alert('Error', `An error occurred while sending your request: ${error.message}`);
-      } else {
-        Alert.alert('Error', 'An unknown error occurred while sending your request.');
-      }
+      Alert.alert('Error', 'An error occurred while sending your request. Please try again.');
     }
   };
   const handleLike = async () => {
@@ -92,14 +92,14 @@ const PersonalDetail = () => {
 
   const handleReviewSubmitted = () => {
     Alert.alert('Success', 'Your review has been submitted successfully.');
-    fetchData(); // Refresh the data to show the updated review
+    fetchData();
   };
 
   if (isLoading) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
   }
 
-  if (!personalData) {
+  if (!personalData || !availabilityData) {
     return <View style={styles.container}><Text>No data available</Text></View>;
   }
 
@@ -107,17 +107,33 @@ const PersonalDetail = () => {
     <ScrollView style={styles.container}>
       <PersonalInfo personalData={personalData} onLike={handleLike} />
       
-      {!requestStatus && (
+      {!requestStatus && !showBookingForm && (
         <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
           <Text style={styles.bookButtonText}>Book Now</Text>
         </TouchableOpacity>
       )}
 
-      {showCalendar && !requestStatus && (
-        <BookingForm
-          availableDates={availableDates}
-          onConfirm={handleConfirm}
-        />
+      {showBookingForm && !requestStatus && (
+        <View style={styles.bookingForm}>
+          <TextInput
+            style={styles.input}
+            placeholder="Number of hours"
+            value={hours}
+            onChangeText={setHours}
+            keyboardType="numeric"
+          />
+          <AvailabilityCalendar
+            personalId={personalId}
+            onSelectDate={handleDateSelect}
+            startDate={availabilityData.startDate}
+            endDate={availabilityData.endDate}
+            availability={availabilityData.availability}
+            interval="Monthly"
+          />
+          <TouchableOpacity style={styles.sendRequestButton} onPress={handleConfirm}>
+            <Text style={styles.sendRequestButtonText}>Send Request</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       <BookingStatus status={requestStatus} />
@@ -148,6 +164,29 @@ const styles = StyleSheet.create({
   bookButtonText: {
     color: 'white',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  bookingForm: {
+    marginVertical: 20,
+    padding: 10,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
+  sendRequestButton: {
+    backgroundColor: 'blue',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  sendRequestButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

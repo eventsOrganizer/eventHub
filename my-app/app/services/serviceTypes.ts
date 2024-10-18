@@ -14,12 +14,11 @@ export type Service = {
     };
     media?: { url: string }[];
     imageUrl?: string;
+    startdate: string;
+    enddate: string;
     availability: Array<{
-      id: number;
-      start: string;
-      end: string;
-      daysofweek: string;
       date: string;
+      statusday: 'available' | 'reserved' | 'exception';
     }>;
     comment: Array<{
       details: string;

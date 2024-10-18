@@ -1,8 +1,40 @@
 import { supabase } from './supabaseClient';
 import { Service } from './serviceTypes';
-import { makeServiceRequest } from './requestService';
 
-export { makeServiceRequest };
+
+export const makeServiceRequest = async (personalId: number, hours: number, date: string, userId: string): Promise<boolean> => {
+  try {
+    const { data: personalData, error: personalError } = await supabase
+      .from('personal')
+      .select('priceperhour, percentage')
+      .eq('id', personalId)
+      .single();
+
+    if (personalError) throw personalError;
+
+    const totalPrice = personalData.priceperhour * hours;
+    const depositAmount = totalPrice * (personalData.percentage / 100);
+
+    const { data, error } = await supabase
+      .from('requests')
+      .insert({
+        user_id: userId,
+        personal_id: personalId,
+        status: 'pending',
+        hours: hours,
+        date: date,
+        total_price: totalPrice,
+        deposit_amount: depositAmount
+      });
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error making service request:', error);
+    return false;
+  }
+};
+
 
 
 export const initiatePayment = async (requestId: number, amount: number) => {
@@ -153,3 +185,4 @@ export const toggleLike = async (personalId: number, userId: string | null) => {
     return null;
   }
 };
+
