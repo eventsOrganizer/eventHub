@@ -1,112 +1,98 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 import { useToast } from '../../hooks/useToast';
+import CommentItem from './CommentItem';
+import CommentInput from './CommentInput';
 
 interface Comment {
   id: number;
   details: string;
   user_id: string;
   created_at: string;
+  user: {
+    username: string;
+  };
 }
 
 interface CommentSectionProps {
-  comments: Comment[];
   personalId: number;
   userId: string | null;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ comments, personalId, userId }) => {
-  const [newComment, setNewComment] = useState('');
+const CommentSection: React.FC<CommentSectionProps> = ({ personalId, userId }) => {
+  const [comments, setComments] = useState<Comment[]>([]);
   const { toast } = useToast();
 
-  const handleAddComment = async () => {
-    if (!userId) {
-      toast({
-        title: "Authentification requise",
-        description: "Please log in to add a comment.",
-        variant: "default",
-      });
-      return;
-    }
+  useEffect(() => {
+    fetchComments();
+  }, [personalId]);
 
-    if (newComment.trim() === '') {
-      toast({
-        title: "Error",
-        description: "Comment cannot be empty.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const fetchComments = async () => {
     try {
       const { data, error } = await supabase
         .from('comment')
-        .insert({
-          personal_id: personalId,
-          user_id: userId,
-          details: newComment.trim()
-        })
-        .select();
+        .select(`
+          id,
+          details,
+          user_id,
+          created_at,
+          user:user_id (username)
+        `)
+        .eq('personal_id', personalId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Your comment has been added successfully.",
-        variant: "default",
-      });
-      setNewComment('');
-      // Vous devriez probablement mettre à jour la liste des commentaires ici
+      
+      // Ensure that the data matches the Comment interface
+      const typedComments: Comment[] = (data || []).map(comment => ({
+        id: comment.id,
+        details: comment.details,
+        user_id: comment.user_id,
+        created_at: comment.created_at,
+        user: {
+          username: comment.user[0]?.username || 'Anonymous'
+        }
+      }));
+      
+      setComments(typedComments);
     } catch (error) {
-      console.error('Error adding comment:', error);
+      console.error('Error fetching comments:', error);
       toast({
-        title: "Error",
-        description: "An error occurred while adding the comment.",
+        title: "Erreur",
+        description: "Impossible de charger les commentaires.",
         variant: "destructive",
       });
     }
   };
 
   const renderComment = ({ item }: { item: Comment }) => (
-    <View style={styles.commentItem}>
-      <Text style={styles.commentText}>{item.details}</Text>
-      <Text style={styles.commentDate}>
-        {new Date(item.created_at).toLocaleDateString()}
-      </Text>
-    </View>
+    <CommentItem comment={item} />
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Comments</Text>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={100}
+    >
+      <Text style={styles.title}>Commentaires</Text>
       <FlatList
         data={comments}
         renderItem={renderComment}
-        keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()}
-        ListEmptyComponent={<Text style={styles.emptyText}>No comments yet.</Text>}
+        keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={<Text style={styles.emptyText}>Aucun commentaire pour le moment.</Text>}
+        style={styles.commentList}
+        contentContainerStyle={styles.commentListContent}
       />
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Add a comment..."
-          value={newComment}
-          onChangeText={setNewComment}
-          multiline
-        />
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={handleAddComment}
-        >
-          <Text style={styles.addButtonText}>Add</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+      <CommentInput personalId={personalId} userId={userId} toast={toast} onCommentAdded={fetchComments} />
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 16,
@@ -125,42 +111,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 16,
   },
-  commentItem: {
-    backgroundColor: '#f3f4f6',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
+  commentList: {
+    flex: 1,
   },
-  commentText: {
-    color: '#1f2937',
-  },
-  commentDate: {
-    color: '#6b7280',
-    fontSize: 12,
-    marginTop: 4,
+  commentListContent: {
+    flexGrow: 1,
   },
   emptyText: {
     color: '#6b7280',
-  },
-  inputContainer: {
-    marginTop: 16,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 8,
-  },
-  addButton: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 
