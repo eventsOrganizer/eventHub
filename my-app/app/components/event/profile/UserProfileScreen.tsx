@@ -37,6 +37,7 @@ const UserProfileScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
+  const [activeEventList, setActiveEventList] = useState<'your' | 'attended'>('your');
 
   const fetchData = useCallback(async () => {
     if (userId) {
@@ -129,8 +130,22 @@ const UserProfileScreen: React.FC = () => {
       case 'events':
         return (
           <View style={tw`space-y-6`}>
-            <AttendedEventsList userId={userId as string} />
-            <UserEventsList userId={userId as string} />
+            <View style={tw`flex-row justify-around mb-4`}>
+              <TouchableOpacity
+                style={tw`bg-[#00BFFF] py-2 px-4 rounded-full ${activeEventList === 'your' ? 'opacity-100' : 'opacity-50'}`}
+                onPress={() => setActiveEventList('your')}
+              >
+                <Text style={tw`text-white font-bold`}>Your Events</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={tw`bg-[#00BFFF] py-2 px-4 rounded-full ${activeEventList === 'attended' ? 'opacity-100' : 'opacity-50'}`}
+                onPress={() => setActiveEventList('attended')}
+              >
+                <Text style={tw`text-white font-bold`}>Attended Events</Text>
+              </TouchableOpacity>
+            </View>
+            {activeEventList === 'your' && <UserEventsList userId={userId as string} />}
+            {activeEventList === 'attended' && <AttendedEventsList userId={userId as string} />}
           </View>
         );
       case 'services':

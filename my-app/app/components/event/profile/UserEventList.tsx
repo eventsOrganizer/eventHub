@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Dimensions, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Dimensions, RefreshControl } from 'react-native';
 import { supabase } from '../../../services/supabaseClient';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
+import CustomEventCard from './CustomEventCard';
 
 type RootStackParamList = {
   EventDetails: { eventId: number };
@@ -18,7 +18,7 @@ interface Event {
 }
 
 const { width: screenWidth } = Dimensions.get('window');
-const containerWidth = screenWidth - 40; // Adjust container width
+const containerWidth = screenWidth - 40;
 const cardWidth = (containerWidth - 40) / 3; // 3 cards per row with some gap
 const cardHeight = cardWidth; // Square aspect ratio
 
@@ -54,25 +54,11 @@ const UserEventsList: React.FC<{ userId: string }> = ({ userId }) => {
   }, [fetchUserEvents]);
 
   const renderEventCard = (event: Event) => (
-    <TouchableOpacity
+    <CustomEventCard
       key={event.id}
-      style={styles.cardContainer}
+      event={event}
       onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
-    >
-      <LinearGradient
-        colors={['#1a1a1a', '#2a2a2a']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradientBackground}
-      >
-        <Image source={{ uri: event.media[0]?.url || 'https://via.placeholder.com/150' }} style={styles.image} />
-        <View style={styles.textContainer}>
-          <Text style={styles.eventName} numberOfLines={1} ellipsizeMode="tail">
-            {event.name}
-          </Text>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
+    />
   );
 
   const renderEventPages = () => {
@@ -134,33 +120,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-  },
-  cardContainer: {
-    width: cardWidth,
-    height: cardHeight,
-    marginBottom: 10,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  gradientBackground: {
-    flex: 1,
-  },
-  image: {
-    width: '100%',
-    height: '80%',
-    resizeMode: 'cover',
-  },
-  textContainer: {
-    height: '20%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 2,
-  },
-  eventName: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
   emptyContainer: {
     width: containerWidth,
