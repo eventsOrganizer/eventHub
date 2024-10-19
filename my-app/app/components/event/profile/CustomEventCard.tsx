@@ -40,7 +40,7 @@ const CustomEventCard: React.FC<CustomEventCardProps> = ({ event, onPress }) => 
           <TouchableOpacity style={styles.button}>
             <Ionicons name="share-outline" size={16} color="#fff" />
           </TouchableOpacity>
-          <SuggestToFriendButton itemId={event.id} itemType="event" />
+          <SuggestToFriendButton itemId={event.id} category="event" />
         </View>
       </LinearGradient>
     </TouchableOpacity>

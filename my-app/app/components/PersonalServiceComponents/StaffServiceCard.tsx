@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-
+import SuggestToFriendButton from '../suggestions/SuggestToFriendButton';
 const { width, height } = Dimensions.get('window');
 
 interface StaffServiceCardProps {
@@ -13,6 +13,14 @@ interface StaffServiceCardProps {
     media: { url: string }[];
     reviews?: number;
     likes?: number;
+    subcategory: {
+      category: {
+        id: number;
+        name: string;
+        type: string;
+      };
+      name: string;
+    };
   };
   onPress: (service: any) => void;
 }
@@ -43,6 +51,9 @@ const StaffServiceCard: React.FC<StaffServiceCardProps> = ({ service, onPress })
           </View>
         </View>
       </BlurView>
+      <View style={styles.suggestButtonContainer}>
+        <SuggestToFriendButton itemId={service.id} category={service.subcategory.category} />
+      </View>
     </TouchableOpacity>
   );
 };
@@ -128,6 +139,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#A0A0A0',
     marginLeft: 2,
+  },
+  suggestButtonContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
   },
 });
 

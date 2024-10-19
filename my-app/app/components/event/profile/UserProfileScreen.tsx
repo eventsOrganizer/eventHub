@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../services/supabaseClient';
 import { useUser } from '../../../UserContext';
 import { useNavigation } from '@react-navigation/native';
-import RequestsScreen from './RequestsScreen';
+import EventRequestBadge from './EventRequestBadge';
 import UserEventsList from './UserEventList';
 import AttendedEventsList from './AttendedEventList';
 import UserServicesList from './UserServiceList';
@@ -13,6 +13,7 @@ import FriendsList from './FriendsList';
 import InterestsList from './InterestsList';
 import Subscriptions from './Subscriptions';
 import FriendRequestBadge from './FriendRequestBadge';
+import InvitationButton from './InvitationButton';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
 
@@ -41,7 +42,7 @@ const UserProfileScreen: React.FC = () => {
 
   const fetchData = useCallback(async () => {
     if (userId) {
-      await Promise.all([fetchUserProfile(), fetchRequestCount()]);
+      await Promise.all([fetchUserProfile()]);
     }
   }, [userId]);
 
@@ -57,68 +58,39 @@ const UserProfileScreen: React.FC = () => {
     }).start();
   }, [activeTab]);
 
-  const fetchUserProfile = async () => {
-    if (!userId) return;
+const fetchUserProfile = async () => {
+  if (!userId) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('user')
-        .select('id, email, firstname, lastname, bio')
-        .eq('id', userId)
-        .single();
+  setLoading(true);
+  try {
+    const { data, error } = await supabase
+      .from('user')
+      .select('id, email, firstname, lastname, bio')
+      .eq('id', userId)
+      .single();
 
-      if (error) throw error;
+    if (error) throw error;
 
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('media')
-        .select('url')
-        .eq('user_id', userId)
-        .single();
+    const { data: mediaData, error: mediaError } = await supabase
+      .from('media')
+      .select('url')
+      .eq('user_id', userId)
+      .single();
 
-      if (mediaError && mediaError.code !== 'PGRST116') throw mediaError;
+    if (mediaError && mediaError.code !== 'PGRST116') throw mediaError;
 
-      setUserProfile({
-        ...data,
-        avatar_url: mediaData?.url || 'https://via.placeholder.com/150',
-      });
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
+    setUserProfile({
+      ...data,
+      avatar_url: mediaData?.url || 'https://via.placeholder.com/150',
+    });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const fetchRequestCount = async () => {
-    if (!userId) return;
-
-    try {
-      const { data: userEvents, error: eventError } = await supabase
-        .from('event')
-        .select('id')
-        .eq('user_id', userId);
-
-      if (eventError) throw eventError;
-
-      if (userEvents && userEvents.length > 0) {
-        const eventIds = userEvents.map(event => event.id);
-
-        const { count, error } = await supabase
-          .from('request')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'pending')
-          .in('event_id', eventIds);
-
-        if (error) throw error;
-
-        setRequestCount(count || 0);
-      } else {
-        setRequestCount(0);
-      }
-    } catch (error) {
-      console.error('Error fetching request count:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+ 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchData();
@@ -207,13 +179,9 @@ const UserProfileScreen: React.FC = () => {
               <View style={tw`flex-row justify-between items-center mb-4`}>
                 <Text style={tw`text-white text-3xl font-bold`}>Profile</Text>
                 <View style={tw`flex-row items-center`}>
-                  <TouchableOpacity
-                    style={tw`bg-[#5856D6] py-2 px-4 rounded-full shadow-md mr-2`}
-                    onPress={() => setShowRequests(!showRequests)}
-                  >
-                    <Text style={tw`text-white text-xs font-bold`}>Requests ({requestCount})</Text>
-                  </TouchableOpacity>
-                  <FriendRequestBadge />
+  <EventRequestBadge />
+  <FriendRequestBadge />
+                  <InvitationButton />
                 </View>
               </View>
               
@@ -267,19 +235,7 @@ const UserProfileScreen: React.FC = () => {
           </Animated.View>
         </ScrollView>
 
-        {showRequests && (
-          <BlurView intensity={100} tint="dark" style={tw`absolute inset-0 justify-center items-center`}>
-            <View style={tw`bg-[#001F3F] rounded-3xl p-6 w-11/12 max-h-5/6 shadow-2xl`}>
-              <RequestsScreen />
-              <TouchableOpacity 
-                style={tw`absolute top-4 right-4 bg-[#FF3B30] rounded-full p-3`}
-                onPress={() => setShowRequests(false)}
-              >
-                <Ionicons name="close" size={32} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </BlurView>
-        )}
+        
       </LinearGradient>
     </View>
   );
