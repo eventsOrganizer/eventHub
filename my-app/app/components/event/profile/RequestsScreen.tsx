@@ -46,7 +46,7 @@ const RequestsScreen: React.FC = () => {
       if (error) throw error;
 
       const validRequests = data.filter(request => request.event !== null);
-      setEventRequests(validRequests as EventRequest[]);
+      setEventRequests(validRequests as unknown as EventRequest[]);
     } catch (error) {
       console.error('Error fetching event requests:', error);
       Alert.alert('Error', 'Failed to fetch event requests. Please try again.');

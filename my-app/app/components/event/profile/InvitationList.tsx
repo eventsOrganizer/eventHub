@@ -162,7 +162,7 @@ const InvitationList: React.FC = () => {
         navigation.navigate('PersonalDetail' as any, { personalId: item.personal_id } as any);
         break;
       case 'Local':
-        navigation.navigate('LocalServiceDetails' as any, { localServiceId: item.local_id } as any);
+        navigation.navigate('LocalServiceDetails' as any, { serviceId: item.local_id } as any);
         break;
       case 'Material':
         navigation.navigate('MaterialDetails' as any, { materialId: item.material_id } as any);

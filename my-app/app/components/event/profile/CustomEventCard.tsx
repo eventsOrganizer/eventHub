@@ -3,6 +3,8 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'rea
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import SuggestToFriendButton from '../../suggestions/SuggestToFriendButton';
+import ShareButton from '../../ShareButton';
+
 
 const { width: screenWidth } = Dimensions.get('window');
 const containerWidth = screenWidth - 40;
@@ -34,14 +36,12 @@ const CustomEventCard: React.FC<CustomEventCardProps> = ({ event, onPress }) => 
           </Text>
         </View>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button}>
-            <Ionicons name="bookmark-outline" size={16} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
-            <Ionicons name="share-outline" size={16} color="#fff" />
-          </TouchableOpacity>
-          <SuggestToFriendButton itemId={event.id} category="event" />
-        </View>
+  <TouchableOpacity style={styles.button}>
+    <Ionicons name="bookmark-outline" size={16} color="#fff" />
+  </TouchableOpacity>
+  <ShareButton itemType="event" itemId={event.id} />
+  <SuggestToFriendButton itemId={event.id} category={{ id: event.id, name: event.name, type: 'event' }} />
+</View>
       </LinearGradient>
     </TouchableOpacity>
   );

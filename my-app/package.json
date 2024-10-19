@@ -29,6 +29,7 @@
     "@tailwindcss/typography": "^0.5.15",
     "axios": "^1.7.7",
     "babel-preset-react-native": "^4.0.1",
+    "cloudinary-react-native": "^1.0.1",
     "dotenv": "^16.4.5",
     "expo": "^51.0.37",
     "expo-blur": "~13.0.2",

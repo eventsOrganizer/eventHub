@@ -46,7 +46,7 @@ const EventRequestBadge: React.FC = () => {
   };
 
   const handlePress = () => {
-    navigation.navigate('Requests');
+    navigation.navigate('Requests' as never);
   };
 
   return (
