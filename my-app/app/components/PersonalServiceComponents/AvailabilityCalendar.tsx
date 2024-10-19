@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ViewStyle, Alert } from 'react-native';
 import { format, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, isBefore, isAfter } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '../../services/supabaseClient';
 
 interface AvailabilityCalendarProps {
   personalId: number;
@@ -9,11 +10,16 @@ interface AvailabilityCalendarProps {
   startDate: string;
   endDate: string;
   availability: Array<{
+    id: number;
     date: string;
     statusday: 'exception' | 'reserved' | 'available';
   }>;
   interval: string;
+  selectedDate: string | null;
+  userId: string | null;
 }
+
+type DateStatus = 'exception' | 'reserved' | 'available' | 'disabled' | 'pending';
 
 const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   personalId,
@@ -21,28 +27,114 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   startDate,
   endDate,
   availability,
-  interval
+  interval,
+  selectedDate,
+  userId
 }) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date(startDate));
+  const [dateStatuses, setDateStatuses] = useState<Record<string, DateStatus>>({});
 
-  const getDateStatus = (date: Date) => {
+  useEffect(() => {
+    const fetchDateStatuses = async () => {
+      const { data: availabilityData, error: availabilityError } = await supabase
+        .from('availability')
+        .select('id, date, statusday')
+        .eq('personal_id', personalId);
+
+      if (availabilityError) {
+        console.error('Error fetching availability:', availabilityError);
+        return;
+      }
+
+      const { data: personalUserData, error: personalUserError } = await supabase
+        .from('personal_user')
+        .select('availability_id, status')
+        .eq('personal_id', personalId)
+        .eq('user_id', userId);
+
+      if (personalUserError) {
+        console.error('Error fetching personal_user data:', personalUserError);
+        return;
+      }
+
+      const newDateStatuses: Record<string, DateStatus> = {};
+
+      availabilityData.forEach((item: { id: number; date: string; statusday: DateStatus }) => {
+        newDateStatuses[item.date] = item.statusday;
+      });
+
+      personalUserData.forEach((item: { availability_id: number; status: string }) => {
+        if (item.status === 'pending') {
+          const pendingDate = availabilityData.find((a: { id: number; date: string }) => a.id === item.availability_id)?.date;
+          if (pendingDate) {
+            newDateStatuses[pendingDate] = 'pending';
+          }
+        }
+      });
+
+      setDateStatuses(newDateStatuses);
+    };
+
+    fetchDateStatuses();
+  }, [personalId, userId]);
+
+  const getDateStatus = (date: Date): DateStatus => {
     const dateString = format(date, 'yyyy-MM-dd');
-    const availabilityItem = availability.find(item => item.date === dateString);
-    if (availabilityItem) {
-      return availabilityItem.statusday;
-    }
     if (isBefore(date, new Date(startDate)) || isAfter(date, new Date(endDate))) {
       return 'disabled';
     }
-    return 'available';
+    return dateStatuses[dateString] || 'available';
   };
 
-  const getDateStyle = (status: string) => {
+  const getDateStyle = (status: DateStatus, date: Date): ViewStyle => {
+    const baseStyle: ViewStyle = styles.day;
+    const additionalStyles: ViewStyle = {};
+
     switch (status) {
-      case 'exception': return styles.exceptionDate;
-      case 'reserved': return styles.reservedDate;
-      case 'available': return styles.availableDate;
-      default: return styles.disabledDate;
+      case 'exception':
+        additionalStyles.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+        break;
+      case 'reserved':
+        additionalStyles.backgroundColor = 'yellow';
+        break;
+      case 'available':
+        additionalStyles.backgroundColor = 'lightgreen';
+        break;
+      case 'disabled':
+        additionalStyles.backgroundColor = '#f0f0f0';
+        break;
+      case 'pending':
+        additionalStyles.backgroundColor = 'lightgray';
+        break;
+    }
+
+    if (selectedDate && isSameDay(date, new Date(selectedDate))) {
+      additionalStyles.backgroundColor = 'lightblue';
+    }
+
+    return { ...baseStyle, ...additionalStyles };
+  };
+
+  const handleDatePress = (date: Date) => {
+    const status = getDateStatus(date);
+    const dateString = format(date, 'yyyy-MM-dd');
+
+    switch (status) {
+      case 'available':
+        onSelectDate(dateString);
+        break;
+      case 'exception':
+        Alert.alert('Date non disponible', 'Cette date n\'est pas disponible.');
+        break;
+      case 'reserved':
+        Alert.alert('Date réservée', 'Cette date est déjà réservée.');
+        break;
+      case 'pending':
+        Alert.alert('Demande en attente', 'Vous avez déjà envoyé une demande pour cette date. Veuillez choisir une autre date disponible (en vert).');
+        break;
+      default:
+        // Do nothing for disabled dates
+        break;
     }
   };
 
@@ -61,8 +153,8 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
           return (
             <TouchableOpacity
               key={date.toISOString()}
-              style={[styles.day, getDateStyle(status)]}
-              onPress={() => status !== 'disabled' && onSelectDate(format(date, 'yyyy-MM-dd'))}
+              style={getDateStyle(status, date)}
+              onPress={() => handleDatePress(date)}
               disabled={status === 'disabled'}
             >
               <Text style={[styles.dateText, status === 'disabled' && styles.disabledDateText]}>
@@ -105,6 +197,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -168,18 +261,6 @@ const styles = StyleSheet.create({
   },
   disabledDateText: {
     color: '#ccc',
-  },
-  availableDate: {
-    backgroundColor: 'lightgreen',
-  },
-  reservedDate: {
-    backgroundColor: 'yellow',
-  },
-  exceptionDate: {
-    backgroundColor: 'rgba(255, 0, 0, 0.2)', // Light red for exception dates
-  },
-  disabledDate: {
-    backgroundColor: '#f0f0f0',
   },
 });
 

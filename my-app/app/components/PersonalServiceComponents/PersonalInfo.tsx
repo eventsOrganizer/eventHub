@@ -6,7 +6,7 @@ import { useUser } from '../../UserContext';
 
 interface PersonalInfoProps {
   personalData: Service;
-  onLike: () => void;
+  onLike?: () => void;  // Make onLike optional
 }
 
 const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData, onLike }) => {
@@ -27,10 +27,12 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData, onLike }) => 
       <Text style={styles.details}>{personalData.details}</Text>
       
       <View style={styles.statsContainer}>
-        <TouchableOpacity onPress={onLike} style={styles.likeButton}>
-          <Ionicons name={isLiked ? "heart" : "heart-outline"} size={24} color={isLiked ? "red" : "black"} />
-          <Text>{likes} Likes</Text>
-        </TouchableOpacity>
+        {onLike && (
+          <TouchableOpacity onPress={onLike} style={styles.likeButton}>
+            <Ionicons name={isLiked ? "heart" : "heart-outline"} size={24} color={isLiked ? "red" : "black"} />
+            <Text>{likes} Likes</Text>
+          </TouchableOpacity>
+        )}
         <View style={styles.statItem}>
           <Ionicons name="star" size={24} color="gold" />
           <Text>{reviewCount} Reviews (Avg: {averageRating.toFixed(1)})</Text>

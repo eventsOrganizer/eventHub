@@ -4,6 +4,7 @@ export interface AvailabilityData {
   startDate: string;
   endDate: string;
   availability: Array<{
+    id: number;
     date: string;
     statusday: 'exception' | 'reserved' | 'available';
   }>;
@@ -21,7 +22,7 @@ export const fetchAvailabilityData = async (personalId: number): Promise<Availab
 
     const { data: availabilityData, error: availabilityError } = await supabase
       .from('availability')
-      .select('date, statusday')
+      .select('id, date, statusday')
       .eq('personal_id', personalId);
 
     if (availabilityError) throw availabilityError;
@@ -30,6 +31,7 @@ export const fetchAvailabilityData = async (personalId: number): Promise<Availab
       startDate: personalData.startdate,
       endDate: personalData.enddate,
       availability: availabilityData.map(item => ({
+        id: item.id,
         date: item.date,
         statusday: item.statusday as 'exception' | 'reserved' | 'available'
       })),
