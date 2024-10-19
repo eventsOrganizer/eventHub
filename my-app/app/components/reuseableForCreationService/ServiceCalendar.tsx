@@ -19,7 +19,7 @@ const ServiceCalendar: React.FC<ServiceCalendarProps> = ({
 }) => {
   return (
     <View>
-      <Text style={styles.label}>Sélectionnez les dates d'exception</Text>
+      <Text style={styles.label}>Select exception dates</Text>
       <UnifiedCalendar
         startDate={startDate}
         endDate={endDate}

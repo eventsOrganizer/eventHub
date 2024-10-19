@@ -1,5 +1,15 @@
 import { supabase } from './supabaseClient';
 
+
+
+export type Comment = {
+  id: number;
+  details: string;
+  user_id: string;
+  created_at: string;
+  personal_id: number;
+};
+
 export type Service = {
     id: number;
     name: string;
@@ -20,10 +30,7 @@ export type Service = {
       date: string;
       statusday: 'available' | 'reserved' | 'exception';
     }>;
-    comment: Array<{
-      details: string;
-      user_id: string;
-    }>;
+    comment: Comment[];
     like: Array<{ user_id: string }>;
     order: Array<{
       user_id: string;

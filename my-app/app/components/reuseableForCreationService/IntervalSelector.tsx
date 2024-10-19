@@ -10,17 +10,17 @@ interface IntervalSelectorProps {
 const IntervalSelector: React.FC<IntervalSelectorProps> = ({ interval, setInterval }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Intervalle de disponibilité</Text>
+      <Text style={styles.label}>Availability Interval</Text>
       <RNPickerSelect
         onValueChange={setInterval}
         items={[
-          { label: 'Annuel', value: 'Yearly' },
-          { label: 'Mensuel', value: 'Monthly' },
-          { label: 'Hebdomadaire', value: 'Weekly' },
+          { label: 'Yearly', value: 'Yearly' },
+          { label: 'Monthly', value: 'Monthly' },
+          { label: 'Weekly', value: 'Weekly' },
         ]}
         style={pickerSelectStyles}
         value={interval}
-        placeholder={{ label: "Sélectionnez un intervalle", value: null }}
+        placeholder={{ label: "Select an interval", value: null }}
       />
     </View>
   );

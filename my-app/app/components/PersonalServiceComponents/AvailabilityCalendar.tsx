@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ViewStyle, Alert } from 'react-native';
 import { format, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, isBefore, isAfter } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import { supabase } from '../../services/supabaseClient';
 
 interface AvailabilityCalendarProps {
@@ -124,13 +124,13 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         onSelectDate(dateString);
         break;
       case 'exception':
-        Alert.alert('Date non disponible', 'Cette date n\'est pas disponible.');
+        Alert.alert('Date not available', 'This date is not available.');
         break;
       case 'reserved':
-        Alert.alert('Date réservée', 'Cette date est déjà réservée.');
+        Alert.alert('Date reserved', 'This date is already reserved.');
         break;
       case 'pending':
-        Alert.alert('Demande en attente', 'Vous avez déjà envoyé une demande pour cette date. Veuillez choisir une autre date disponible (en vert).');
+        Alert.alert('Pending request', 'You have already sent a request for this date. Please choose another available date (in green).');
         break;
       default:
         // Do nothing for disabled dates
@@ -181,13 +181,13 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         <TouchableOpacity onPress={goToPreviousMonth}>
           <Text style={styles.navigationButton}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.monthTitle}>{format(currentMonth, 'MMMM yyyy', { locale: fr })}</Text>
+        <Text style={styles.monthTitle}>{format(currentMonth, 'MMMM yyyy', { locale: enUS })}</Text>
         <TouchableOpacity onPress={goToNextMonth}>
           <Text style={styles.navigationButton}>{'>'}</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.weekDaysContainer}>
-        {['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'].map((day, index) => (
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
           <Text key={index} style={styles.weekDayText}>{day}</Text>
         ))}
       </View>
@@ -197,7 +197,6 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {

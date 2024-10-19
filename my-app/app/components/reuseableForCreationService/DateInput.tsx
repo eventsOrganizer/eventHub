@@ -13,12 +13,11 @@ const DateInput: React.FC<DateInputProps> = ({ label, date, setDate, editable = 
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, !editable && styles.disabledInput]}
         value={date}
         onChangeText={setDate}
-        placeholder="AAAA-MM-JJ"
+        placeholder="YYYY-MM-DD"
         keyboardType="numeric"
-        maxLength={10}
         editable={editable}
       />
     </View>
@@ -39,6 +38,9 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
+  },
+  disabledInput: {
+    backgroundColor: '#f0f0f0',
   },
 });
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { format, eachDayOfInterval, isSameMonth, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 
 interface UnifiedCalendarProps {
   startDate: Date;
@@ -42,7 +42,7 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
       months.push(
         <View key={currentDate.getTime()} style={styles.month}>
           <View style={styles.monthTitleContainer}>
-            <Text style={styles.monthTitle}>{format(monthStart, 'MMMM yyyy')}</Text>
+            <Text style={styles.monthTitle}>{format(monthStart, 'MMMM yyyy', { locale: enUS })}</Text>
           </View>
           {renderDaysOfWeek(monthStart)}
           {renderMonth(monthStart, monthEnd)}
@@ -61,14 +61,14 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.month}>
           <View style={styles.monthTitleContainer}>
-            <Text style={styles.monthTitle}>{format(startDate, 'MMMM yyyy')}</Text>
+            <Text style={styles.monthTitle}>{format(startDate, 'MMMM yyyy', { locale: enUS })}</Text>
           </View>
           {renderDaysOfWeek(startDate)}
           {renderMonth(startDate, endOfMonth(startDate))}
         </View>
         <View style={styles.month}>
           <View style={styles.monthTitleContainer}>
-            <Text style={styles.monthTitle}>{format(addMonths(startDate, 1), 'MMMM yyyy')}</Text>
+            <Text style={styles.monthTitle}>{format(addMonths(startDate, 1), 'MMMM yyyy', { locale: enUS })}</Text>
           </View>
           {renderDaysOfWeek(addMonths(startDate, 1))}
           {renderMonth(startOfMonth(addMonths(startDate, 1)), nextMonthEnd)}
@@ -82,7 +82,7 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
     return (
       <View style={styles.weekContainer}>
         <View style={styles.monthTitleContainer}>
-          <Text style={styles.weekTitle}>Semaine du {format(startDate, 'd MMMM yyyy', { locale: fr })}</Text>
+          <Text style={styles.weekTitle}>Week of {format(startDate, 'MMMM d, yyyy', { locale: enUS })}</Text>
         </View>
         {renderDaysOfWeek(startDate)}
         {renderWeek(startDate, weekEnd)}
@@ -93,9 +93,9 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
   const renderDaysOfWeek = (date: Date) => {
     return (
       <View style={styles.daysOfWeek}>
-        {[...Array(7)].map((_, i) => (
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
           <Text key={i} style={styles.dayOfWeek}>
-            {format(addDays(date, i), 'EEE', { locale: fr })}
+            {day}
           </Text>
         ))}
       </View>
@@ -152,7 +152,7 @@ export const UnifiedCalendar: React.FC<UnifiedCalendarProps> = ({
             ]}
             onPress={() => onSelectDate(day)}
           >
-            <Text style={styles.dayName}>{format(day, 'EEE', { locale: fr })}</Text>
+            <Text style={styles.dayName}>{format(day, 'EEE', { locale: enUS })}</Text>
             <Text style={styles.dayNumber}>{format(day, 'd')}</Text>
           </TouchableOpacity>
         ))}

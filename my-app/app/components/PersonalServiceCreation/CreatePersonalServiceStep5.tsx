@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, Button, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -29,7 +29,7 @@ const CreatePersonalServiceStep5: React.FC = () => {
 
   const handleConfirm = async () => {
     if (!userId) {
-      Alert.alert('Error', 'You must be logged in to create a service.');
+      Alert.alert('Erreur', 'Vous devez être connecté pour créer un service.');
       return;
     }
 
@@ -96,37 +96,107 @@ const CreatePersonalServiceStep5: React.FC = () => {
         if (availabilityError) throw availabilityError;
       }
 
-      Alert.alert('Success', 'Service created successfully!');
+      Alert.alert('Succès', 'Service créé avec succès !');
       navigation.navigate('Home');
     } catch (error) {
-      console.error('Error submitting service:', error);
-      Alert.alert('Error', 'Error creating service. Please try again.');
+      console.error('Erreur lors de la soumission du service:', error);
+      Alert.alert('Erreur', 'Erreur lors de la création du service. Veuillez réessayer.');
     }
   };
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.label}>Service Name: {serviceName}</Text>
-      <Text style={styles.label}>Description: {description}</Text>
-      <Text style={styles.label}>Price per hour: ${pricePerHour}</Text>
-      <Text style={styles.label}>Deposit Percentage: {depositPercentage}%</Text>
-      <Text style={styles.label}>Interval: {interval}</Text>
-      <Text style={styles.label}>Start Date: {startDate}</Text>
-      <Text style={styles.label}>End Date: {endDate}</Text>
-      <Text style={styles.label}>Exception Dates: {exceptionDates.join(', ')}</Text>
-      <Text style={styles.label}>Images:</Text>
-      {images.map((imageUri, index) => (
-        <Image key={index} source={{ uri: imageUri }} style={styles.image} />
-      ))}
-      <Button title="Confirm and Submit" onPress={handleConfirm} />
+      <View style={styles.card}>
+        <Text style={styles.title}>Create a Personal Service</Text>
+        <Text style={styles.subtitle}>Étape 5 : Confirmation</Text>
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoText}>Name : {serviceName}</Text>
+          <Text style={styles.infoText}>Description : {description}</Text>
+          <Text style={styles.infoText}>Price perhour: {pricePerHour}€</Text>
+          <Text style={styles.infoText}>Percentage of deposit : {depositPercentage}%</Text>
+          <Text style={styles.infoText}>Interval : {interval}</Text>
+          <Text style={styles.infoText}>Start date : {startDate}</Text>
+          <Text style={styles.infoText}>End date : {endDate}</Text>
+          <Text style={styles.infoText}>Exception date : {exceptionDates.join(', ')}</Text>
+        </View>
+        <Text style={styles.imagesTitle}>Images :</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageContainer}>
+          {images.map((imageUri, index) => (
+            <Image key={index} source={{ uri: imageUri }} style={styles.image} />
+          ))}
+        </ScrollView>
+        <TouchableOpacity style={styles.button} onPress={handleConfirm}>
+          <Text style={styles.buttonText}>Confirm and Submit</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  label: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
-  image: { width: 100, height: 100, marginVertical: 10 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f2f5',
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    margin: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#666',
+    marginBottom: 20,
+  },
+  infoContainer: {
+    marginBottom: 20,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 5,
+  },
+  imagesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  imageContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    marginRight: 10,
+    borderRadius: 10,
+  },
+  button: {
+    backgroundColor: '#4a90e2',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
 });
 
 export default CreatePersonalServiceStep5;

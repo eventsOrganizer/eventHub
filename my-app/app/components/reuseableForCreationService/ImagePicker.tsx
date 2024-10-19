@@ -23,7 +23,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ images, setImages }) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.button} onPress={pickImage}>
-        <Text style={styles.buttonText}>Sélectionner des images</Text>
+        <Text style={styles.buttonText}>Select images</Text>
       </TouchableOpacity>
       <View style={styles.imageContainer}>
         {images.map((uri, index) => (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -16,7 +16,7 @@ const CreatePersonalServiceStep2: React.FC = () => {
 
   const handleNext = () => {
     if (images.length === 0) {
-      Alert.alert('Erreur', 'Veuillez sélectionner au moins une image');
+      Alert.alert('Error', 'Please select at least one image');
     } else {
       navigation.navigate('CreatePersonalServiceStep3', {
         serviceName,
@@ -29,24 +29,80 @@ const CreatePersonalServiceStep2: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Nom du service : {serviceName}</Text>
-      <Text style={styles.label}>Description : {description}</Text>
-      <Text style={styles.label}>Catégorie : {subcategoryName}</Text>
-      <ImagePicker images={images} setImages={setImages} />
-      <Button title="Suivant" onPress={handleNext} />
-    </View>
+    <ScrollView style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Create a Personal Service</Text>
+        <Text style={styles.subtitle}>Step 2: Add Images</Text>
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoText}>Service Name: {serviceName}</Text>
+          <Text style={styles.infoText}>Description: {description}</Text>
+          <Text style={styles.infoText}>Category: {subcategoryName}</Text>
+        </View>
+        <ImagePicker images={images} setImages={setImages} />
+        <TouchableOpacity 
+          style={[styles.button, images.length === 0 && styles.buttonDisabled]}
+          onPress={handleNext}
+          disabled={images.length === 0}
+        >
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#f0f2f5',
   },
-  label: {
-    fontSize: 16,
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    margin: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
     marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#666',
+    marginBottom: 20,
+  },
+  infoContainer: {
+    marginBottom: 20,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 5,
+  },
+  button: {
+    backgroundColor: '#4a90e2',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonDisabled: {
+    backgroundColor: '#a0a0a0',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
 });
 
