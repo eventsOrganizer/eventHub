@@ -12,21 +12,21 @@ const slides = [
     key: '1',
     title: 'Discover Unique Spaces',
     description: 'Find and rent the perfect venue for your events, from cozy halls to spacious venues.',
-    colors: ['#1E1E2F', '#4A4A6A'], // Dark gray to slate gray
+    colors: ['#FF5F00', '#FF0D95'], // Neon orange to neon pink
     image: require('../assets/images/onBoarding1.png'), // Adjust the path as needed
   },
   {
     key: '2',
     title: 'Connect with Professionals',
     description: 'Easily reach out to event crews and service providers to make your event a success.',
-    colors: ['#2B2B3D', '#6D6D8E'], // Darker navy to muted lavender
+    colors: ['#4E00FF', '#A300FF'], // Neon blue to neon purple
     image: require('../assets/images/onBoarding2.png'), // Adjust the path as needed
   },
   {
     key: '3',
     title: 'Plan Your Event Seamlessly',
     description: 'Organize everything from catering to audio-visual setups in one place, hassle-free.',
-    colors: ['#3C3C4C', '#B1A4D8'], // Dark slate to soft lavender
+    colors: ['#0D0DFF', '#FF0D5F'], // Dark blue to dark pink
     image: require('../assets/images/onBoarding3.png'), // Adjust the path as needed
   },
 ];
@@ -86,9 +86,13 @@ const Onboarding: React.FC<OnboardingProps> = ({ navigation }) => {
 
         {/* Buttons Positioned on Each Slide */}
         <View style={styles.buttonRow}>
-          <Button onPress={goToInterests} style={styles.skipButton}>
-            Skip
-          </Button>
+        <Button 
+  onPress={goToInterests} 
+  style={styles.skipButton} 
+  labelStyle={{ color: '#A00000' }} // Set the text color to neon red
+>
+  Skip
+</Button>
           <Button onPress={scrollToNext} style={styles.arrowButton}>
             <MaterialCommunityIcons name="chevron-right" size={24} color="#fff" />
           </Button>
@@ -125,7 +129,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#111', // Dark background to enhance neon colors
   },
   scrollView: {
     flexGrow: 1,
@@ -156,7 +160,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   textBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white for the text box
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Semi-transparent black for better contrast with neon colors
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -169,13 +173,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26, // Increased font size for title
     fontWeight: 'bold',
-    color: '#FF7E00', // Updated title color for better visibility
+    color: '#FF7E00', // Keep bright orange for visibility
     textAlign: 'center',
     marginBottom: 15, // Increased spacing from description
   },
   description: {
     fontSize: 16, // Increased font size for description
-    color: '#333', // Updated description color for better contrast
+    color: '#FFFFFF', // Changed to white for contrast against dark background
     textAlign: 'center',
     paddingHorizontal: 20,
     marginBottom: 30, // Increased margin for spacing
@@ -211,7 +215,7 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     backgroundColor: 'transparent',
-    color: '#007BFF',
+    color: 'green', // Use bright color for the skip button
   },
   arrowButton: {
     backgroundColor: 'transparent', // Keep it transparent

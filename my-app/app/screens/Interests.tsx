@@ -116,7 +116,7 @@ const styles = {
     shadowOpacity: 0.3, // Slightly stronger shadow for a neon effect
     shadowRadius: 5,
     elevation: 3,
-    width: Dimensions.get('window').width / 3.5,
+    width: Dimensions.get('window').width / 4,
   },
 };
 
