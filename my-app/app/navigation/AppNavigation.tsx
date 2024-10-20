@@ -40,7 +40,10 @@ import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
 import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
 import SavedScreen from '../components/event/profile/SavedScreen';
+import InvitationList from '../components/event/profile/InvitationList';
+import EventCreation from '../components/event/EventCreation';
 
+// Inside your Stack.Navigator component, add this new Screen
 
 
 
@@ -53,7 +56,6 @@ import CreateLocalServiceStep5 from '../components/LocalServiceCreation/CreateLo
 import CreatePersonalServiceStep1 from '../components/PersonalServiceCreation/CreatePersonalServiceStep1';
 import CreatePersonalServiceStep2 from '../components/PersonalServiceCreation/CreatePersonalServiceStep2';
 import CreatePersonalServiceStep3 from '../components/PersonalServiceCreation/CreatePersonalServiceStep3';
-import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
 import CreatePersonalServiceStep5 from '../components/PersonalServiceCreation/CreatePersonalServiceStep5';
 import MaterialScreen from '../screens/MaterialServiceScreens/MaterialScreen';
 import MaterialDetailScreen from '../screens/MaterialServiceScreens/MaterialDetailScreen';
@@ -125,6 +127,8 @@ type EventSetupOptionsScreenProps = {
   FriendRequests: undefined;
   Saved: undefined;
   ServiceSelection: undefined;
+  InvitationList: undefined;
+  EventCreation: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -256,43 +260,50 @@ const AppNavigation: React.FC = () => {
           options={{ title: 'Service Details' }}
         />
         <Stack.Screen 
-          name="CreatePersonalServiceStep1" 
-          component={CreatePersonalServiceStep1} 
-          options={{ headerShown: true, title: 'Create Personal Service - Step 1' }} 
-        />
-        <Stack.Screen 
-          name="CreatePersonalServiceStep2" 
-          component={CreatePersonalServiceStep2} 
-          options={{ headerShown: true, title: 'Create Personal Service - Step 2' }} 
-        />
-        <Stack.Screen 
-          name="CreatePersonalServiceStep3" 
-          component={CreatePersonalServiceStep3} 
-          options={{ headerShown: true, title: 'Create Personal Service - Step 3' }} 
-        />
-        <Stack.Screen 
-          name="CreatePersonalServiceStep4" 
-          component={CreatePersonalServiceStep4} 
-          options={{ headerShown: true, title: 'Create Personal Service - Step 4' }} 
-        />
-        <Stack.Screen 
-          name="CreatePersonalServiceStep5" 
-          component={CreatePersonalServiceStep5} 
-          options={{ headerShown: true, title: 'Create Personal Service - Step 5' }} 
-        />
+        name="CreatePersonalServiceStep1" 
+        component={CreatePersonalServiceStep1} 
+        options={{ headerShown: true, title: 'Create Personal Service - Step 1' }} 
+      />
+      <Stack.Screen 
+        name="CreatePersonalServiceStep2" 
+        component={CreatePersonalServiceStep2} 
+        options={{ headerShown: true, title: 'Create Personal Service - Step 2' }} 
+      />
+      <Stack.Screen 
+        name="CreatePersonalServiceStep3" 
+        component={CreatePersonalServiceStep3} 
+        options={{ headerShown: true, title: 'Create Personal Service - Step 3' }} 
+      />
+      <Stack.Screen 
+        name="CreatePersonalServiceStep5" 
+        component={CreatePersonalServiceStep5} 
+        options={{ headerShown: true, title: 'Create Personal Service - Final Step' }} 
+      />
         <Stack.Screen 
           name="UserProfile" 
           component={UserProfileScreen} 
           options={{ headerShown: true }} 
         />
         <Stack.Screen
-       name="FriendRequests" 
-      component={FriendRequestsScreen} />
-    
-      <Stack.Screen
-       name ="Saved" 
-      component={SavedScreen} />  
+          name="FriendRequests" 
+          component={FriendRequestsScreen} />
 
+        <Stack.Screen
+          name ="Saved" 
+          component={SavedScreen} />  
+
+        <Stack.Screen
+          name ="ServiceSelection" 
+          component={ServiceSelection} />  
+
+        <Stack.Screen
+          name ="InvitationList" 
+          component={InvitationList} />  
+
+          <Stack.Screen name="EventCreation"
+           component={EventCreation} />
+
+<<<<<<< HEAD
       <Stack.Screen
        name ="ServiceSelection" 
       component={ServiceSelection} />  
@@ -308,6 +319,9 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="MaterialsOnboarding" 
       component={MaterialsOnboardingScreen} />
+=======
+
+>>>>>>> a5147af5ba73dc090fe26cb310eb41c7cf6a67ec
       </Stack.Navigator>
    
   );

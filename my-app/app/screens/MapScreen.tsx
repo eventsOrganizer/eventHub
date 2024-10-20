@@ -3,7 +3,11 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList } from 'r
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 
-const MapScreen: React.FC = () => {
+interface MapScreenProps {
+  onLocationSelected: (location: { latitude: number; longitude: number }) => void;
+}
+
+const MapScreen: React.FC<MapScreenProps> = ({ onLocationSelected }) => {
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [markedLocation, setMarkedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,7 +57,8 @@ const MapScreen: React.FC = () => {
   };
 
   const handleSearch = (item: { name: string; lat: number; lon: number }) => {
-    setMarkedLocation({ latitude: item.lat, longitude: item.lon });
+    const newLocation = { latitude: item.lat, longitude: item.lon };
+    setMarkedLocation(newLocation);
     setSearchQuery(item.name);
     setSuggestions([]);
     webViewRef.current?.injectJavaScript(`
@@ -63,6 +68,7 @@ const MapScreen: React.FC = () => {
       markedMarker = L.marker([${item.lat}, ${item.lon}]).addTo(map).bindPopup('Marked Location');
       map.setView([${item.lat}, ${item.lon}], 15);
     `);
+    onLocationSelected(newLocation);
   };
 
   const generateMapHTML = () => {
@@ -121,10 +127,12 @@ const MapScreen: React.FC = () => {
 
   const handleMapMessage = (event: any) => {
     const coordinate = JSON.parse(event.nativeEvent.data);
-    setMarkedLocation({ latitude: coordinate.lat, longitude: coordinate.lng });
+    const newLocation = { latitude: coordinate.lat, longitude: coordinate.lng };
+    setMarkedLocation(newLocation);
     webViewRef.current?.injectJavaScript(`
       updateMap(${coordinate.lat}, ${coordinate.lng}, false);
     `);
+    onLocationSelected(newLocation);
   };
 
   useEffect(() => {

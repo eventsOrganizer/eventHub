@@ -1,96 +1,126 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import { addComment } from '../../services/interactionService';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { supabase } from '../../services/supabaseClient';
+import { useToast } from '../../hooks/useToast';
+import CommentItem from './CommentItem';
+import CommentInput from './CommentInput';
 
-interface CommentType {
+interface Comment {
+  id: number;
   details: string;
   user_id: string;
-  user?: {
+  created_at: string;
+  user: {
     username: string;
   };
 }
 
 interface CommentSectionProps {
-  comments: CommentType[] | undefined;
   personalId: number;
   userId: string | null;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ comments, personalId, userId }) => {
-  const [comment, setComment] = useState('');
+const CommentSection: React.FC<CommentSectionProps> = ({ personalId, userId }) => {
+  const [comments, setComments] = useState<Comment[]>([]);
+  const { toast } = useToast();
 
-  const handleAddComment = async () => {
-    if (comment.trim() && userId) {
-      const result = await addComment(personalId, userId, comment);
-      if (result) {
-        // Update comments locally or refetch data
-        setComment('');
-      }
+  useEffect(() => {
+    fetchComments();
+  }, [personalId]);
+
+  const fetchComments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('comment')
+        .select(`
+          id,
+          details,
+          user_id,
+          created_at,
+          user:user_id (username)
+        `)
+        .eq('personal_id', personalId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Ensure that the data matches the Comment interface
+      const typedComments: Comment[] = (data || []).map(comment => ({
+        id: comment.id,
+        details: comment.details,
+        user_id: comment.user_id,
+        created_at: comment.created_at,
+        user: {
+          username: comment.user[0]?.username || 'Anonymous'
+        }
+      }));
+      
+      setComments(typedComments);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les commentaires.",
+        variant: "destructive",
+      });
     }
   };
 
+  const renderComment = ({ item }: { item: Comment }) => (
+    <CommentItem comment={item} />
+  );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Comments</Text>
-      {comments?.map((comment, index) => (
-        <View key={index} style={styles.commentContainer}>
-          <Text style={styles.commentUser}>{comment.user?.username || 'Anonymous'}</Text>
-          <Text>{comment.details}</Text>
-        </View>
-      ))}
-      {userId && (
-        <View style={styles.addCommentContainer}>
-          <TextInput
-            style={styles.commentInput}
-            value={comment}
-            onChangeText={setComment}
-            placeholder="Add a comment..."
-          />
-          <TouchableOpacity onPress={handleAddComment} style={styles.addCommentButton}>
-            <Text style={styles.addCommentButtonText}>Post</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={100}
+    >
+      <Text style={styles.title}>Commentaires</Text>
+      <FlatList
+        data={comments}
+        renderItem={renderComment}
+        keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={<Text style={styles.emptyText}>Aucun commentaire pour le moment.</Text>}
+        style={styles.commentList}
+        contentContainerStyle={styles.commentListContent}
+      />
+      <CommentInput personalId={personalId} userId={userId} toast={toast} onCommentAdded={fetchComments} />
+    </KeyboardAvoidingView>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  commentContainer: {
-    marginBottom: 8,
-  },
-  commentUser: {
-    fontWeight: 'bold',
-  },
-  addCommentContainer: {
-    flexDirection: 'row',
-    marginTop: 16,
-  },
-  commentInput: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 8,
-    marginRight: 8,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
   },
-  addCommentButton: {
-    backgroundColor: '#007AFF',
-    padding: 8,
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 16,
   },
-  addCommentButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  commentList: {
+    flex: 1,
+  },
+  commentListContent: {
+    flexGrow: 1,
+  },
+  emptyText: {
+    color: '#6b7280',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 

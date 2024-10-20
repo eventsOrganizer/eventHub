@@ -8,7 +8,7 @@ interface ServiceItemProps {
   onPress: (id: number) => void;
 }
 
-export const ServiceItem: React.FC<ServiceItemProps> = ({ item, onPress }) => (
+const ServiceItem: React.FC<ServiceItemProps> = ({ item, onPress }) => (
   <TouchableOpacity
     style={styles.serviceItem}
     onPress={() => onPress(item.id)}
