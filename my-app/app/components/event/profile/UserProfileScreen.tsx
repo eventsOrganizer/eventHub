@@ -120,8 +120,6 @@ const fetchUserProfile = async () => {
             {activeEventList === 'attended' && <AttendedEventsList userId={userId as string} />}
           </View>
         );
-      case 'services':
-        return <UserServicesList userId={userId as string} />;
       case 'friends':
         return (
           <ScrollView nestedScrollEnabled={true}>
@@ -135,6 +133,13 @@ const fetchUserProfile = async () => {
         return null;
     }
   };
+
+  // Navigate to UserServicesScreen when the services tab is selected
+  useEffect(() => {
+    if (activeTab === 'services') {
+      navigation.navigate('UserServicesScreen', { userId });
+    }
+  }, [activeTab, navigation, userId]);
 
   if (loading) {
     return (
@@ -196,7 +201,7 @@ const fetchUserProfile = async () => {
               
               <View style={tw`flex-row justify-between mb-2`}>
                 <ActionButton onPress={() => navigation.navigate('EventCreation' as never)} iconName="add-circle-outline" text="New Event" color="bg-[#4CD964]" />
-                <ActionButton onPress={() => navigation.navigate('CreateService' as never)} iconName="briefcase-outline" text="New Service" color="bg-[#FF9500]" />
+                <ActionButton onPress={() => navigation.navigate('ServiceSelection' as never)} iconName="briefcase-outline" text="New Service" color="bg-[#FF9500]" />
               </View>
               
               <View style={tw`flex-row justify-between mb-2`}>
@@ -206,8 +211,23 @@ const fetchUserProfile = async () => {
             </View>
           </BlurView>
 
+          <View style={tw`flex-row justify-around mt-6 mb-4`}>
+            <TouchableOpacity
+              style={tw`bg-[#FF9500] py-3 px-6 rounded-full shadow-md`}
+              onPress={() => navigation.navigate('UserServicesScreen', { userId })}
+            >
+              <Text style={tw`text-white font-bold`}>Services</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={tw`bg-[#4CD964] py-3 px-6 rounded-full shadow-md`}
+              onPress={() => navigation.navigate('YourRequests', { userId })}
+            >
+              <Text style={tw`text-white font-bold`}>Service Requests</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={tw`flex-row justify-around mt-6 mb-2`}>
-            {['events', 'services', 'friends', 'subscriptions'].map((tab) => (
+            {['events', 'friends', 'subscriptions'].map((tab) => (
               <TouchableOpacity
                 key={tab}
                 onPress={() => setActiveTab(tab)}

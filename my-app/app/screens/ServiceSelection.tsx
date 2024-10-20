@@ -3,56 +3,25 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import * as Animatable from 'react-native-animatable';
 
 type RootStackParamList = {
-  LocalServiceCreation: undefined;
-  PersonnelServiceCreation: undefined;
-  MaterialServiceCreation: undefined;
+  CreateLocalServiceStep1: undefined;
+  CreatePersonalServiceStep1: undefined;
+  MaterialServiceCreation: undefined; // Placeholder for future implementation
 };
 
 type ServiceSelectionNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const ServiceSelection: React.FC = () => {
   const navigation = useNavigation<ServiceSelectionNavigationProp>();
-  const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
   const handleCardPress = (cardType: string) => {
-    setExpandedCard(expandedCard === cardType ? null : cardType);
-  };
-
-  const renderExpandedContent = (cardType: string) => {
-    if (expandedCard !== cardType) return null;
-
-    let description = '';
-    let navigateTo = '';
-
-    switch (cardType) {
-      case 'Local':
-        description = 'Local services include location-based offerings.';
-        navigateTo = 'LocalServiceCreation';
-        break;
-      case 'Personnel':
-        description = 'Personnel services involve hiring staff or crew.';
-        navigateTo = 'PersonnelServiceCreation';
-        break;
-      case 'Material':
-        description = 'Material services provide tools and resources.';
-        navigateTo = 'MaterialServiceCreation';
-        break;
+    if (cardType === 'Local') {
+      navigation.navigate('CreateLocalServiceStep1');
+    } else if (cardType === 'Personnel') {
+      navigation.navigate('CreatePersonalServiceStep1');
     }
-
-    return (
-      <View style={styles.expandedContent}>
-        <Text style={styles.description}>{description}</Text>
-        <TouchableOpacity
-          style={styles.navigateButton}
-          onPress={() => navigation.navigate(navigateTo as keyof RootStackParamList)}
-        >
-          <Text style={styles.navigateButtonText}>Go to Creation</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    // No navigation for Material yet
   };
 
   return (
@@ -60,52 +29,34 @@ const ServiceSelection: React.FC = () => {
       <Text style={styles.title}>Select Service Type</Text>
       <View style={styles.cardContainer}>
         {/* Local Service Card */}
-        <Animatable.View
-          animation={expandedCard === 'Local' ? 'slideInLeft' : undefined}
-          duration={500}
-          style={[styles.cardWrapper, expandedCard === 'Local' && styles.expandedCard]}
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => handleCardPress('Local')}
         >
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => handleCardPress('Local')}
-          >
-            <Icon name="location-on" size={40} color="black" />
-            <Text style={styles.cardText}>Local</Text>
-          </TouchableOpacity>
-          {renderExpandedContent('Local')}
-        </Animatable.View>
+          <Icon name="location-on" size={40} color="black" />
+          <Text style={styles.cardText}>Local</Text>
+        </TouchableOpacity>
 
         {/* Personnel Service Card */}
-        <Animatable.View
-          animation={expandedCard === 'Personnel' ? 'slideInLeft' : undefined}
-          duration={500}
-          style={[styles.cardWrapper, expandedCard === 'Personnel' && styles.expandedCard]}
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => handleCardPress('Personnel')}
         >
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => handleCardPress('Personnel')}
-          >
-            <Icon name="people" size={40} color="black" />
-            <Text style={styles.cardText}>Personnel</Text>
-          </TouchableOpacity>
-          {renderExpandedContent('Personnel')}
-        </Animatable.View>
+          <Icon name="people" size={40} color="black" />
+          <Text style={styles.cardText}>Personnel</Text>
+        </TouchableOpacity>
 
         {/* Material Service Card */}
-        <Animatable.View
-          animation={expandedCard === 'Material' ? 'slideInLeft' : undefined}
-          duration={500}
-          style={[styles.cardWrapper, expandedCard === 'Material' && styles.expandedCard]}
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => {
+            // Uncomment when implemented
+            // navigation.navigate('MaterialServiceCreation');
+          }}
         >
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => handleCardPress('Material')}
-          >
-            <Icon name="build" size={40} color="black" />
-            <Text style={styles.cardText}>Material</Text>
-          </TouchableOpacity>
-          {renderExpandedContent('Material')}
-        </Animatable.View>
+          <Icon name="build" size={40} color="black" />
+          <Text style={styles.cardText}>Material</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -126,10 +77,6 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: '80%',
   },
-  cardWrapper: {
-    marginBottom: 20,
-    overflow: 'hidden',
-  },
   card: {
     width: '100%',
     height: 100,
@@ -140,41 +87,13 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     backgroundColor: '#fff',
     elevation: 2,
-  },
-  expandedCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    height: 100,
+    marginBottom: 20,
   },
   cardText: {
     marginTop: 10,
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-  },
-  expandedContent: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 10,
-    marginLeft: 10,
-  },
-  description: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 10,
-  },
-  navigateButton: {
-    backgroundColor: '#4CAF50',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  navigateButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 

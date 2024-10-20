@@ -41,6 +41,8 @@ import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
 import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
 import SavedScreen from '../components/event/profile/SavedScreen';
+import UserServicesScreen from '../screens/UserServicesScreen';
+import YourRequestsScreen from '../screens/YourRequests';
 import InvitationList from '../components/event/profile/InvitationList';
 import EventCreation from '../components/event/EventCreation';
 
@@ -95,7 +97,7 @@ type RootStackParamList = {
     selectedCategory: string; 
     selectedSubcategory: string 
   };
-  UserProfile: undefined; // or { userId: string } if you pass params
+  UserProfile: { userId: string };  UserServicesScreen: undefined;
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -125,6 +127,7 @@ type EventSetupOptionsScreenProps = {
   ServiceSelection: undefined;
   InvitationList: undefined;
   EventCreation: undefined;
+  YourRequests: undefined;
   VideoRooms: undefined;
   VideoCall: { roomUrl: string };
 };
@@ -301,6 +304,14 @@ const AppNavigation: React.FC = () => {
           <Stack.Screen name="EventCreation"
            component={EventCreation} />
 
+
+      <Stack.Screen
+       name ="UserServicesScreen" 
+      component={UserServicesScreen} />  
+
+      <Stack.Screen
+       name ="YourRequests" 
+      component={YourRequestsScreen} />  
         <Stack.Screen
           name="VideoRooms"
           component={VideoRoomsScreen}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 
@@ -6,13 +6,15 @@ interface CommentInputProps {
   personalId: number;
   userId: string | null;
   toast: (props: { title: string; description: string; variant: "default" | "destructive" }) => void;
-  onCommentAdded: () => void;
+  onCommentAdded: (newComment: any) => void;
 }
 
 const CommentInput: React.FC<CommentInputProps> = ({ personalId, userId, toast, onCommentAdded }) => {
   const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const inputRef = useRef<TextInput>(null);
 
-  const handleAddComment = async () => {
+  const handleAddComment = useCallback(async () => {
     if (!userId) {
       toast({
         title: "Authentification requise",
@@ -31,6 +33,8 @@ const CommentInput: React.FC<CommentInputProps> = ({ personalId, userId, toast, 
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const { data, error } = await supabase
         .from('comment')
@@ -39,7 +43,8 @@ const CommentInput: React.FC<CommentInputProps> = ({ personalId, userId, toast, 
           user_id: userId,
           details: newComment.trim()
         })
-        .select();
+        .select('*, user:user_id (username)')
+        .single();
 
       if (error) throw error;
 
@@ -49,31 +54,38 @@ const CommentInput: React.FC<CommentInputProps> = ({ personalId, userId, toast, 
         variant: "default",
       });
       setNewComment('');
-      onCommentAdded();
+      onCommentAdded(data);
     } catch (error) {
       console.error('Erreur lors de l\'ajout du commentaire:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur s'est produite lors de l'ajout du commentaire.",
+        description: "Une erreur s'est produite lors de l'ajout du commentaire. Veuillez réessayer.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }, [newComment, personalId, userId, toast, onCommentAdded]);
 
   return (
     <View style={styles.inputContainer}>
       <TextInput
+        ref={inputRef}
         style={styles.input}
         placeholder="Ajouter un commentaire..."
         value={newComment}
         onChangeText={setNewComment}
         multiline
+        editable={!isSubmitting}
       />
       <TouchableOpacity 
-        style={styles.addButton}
+        style={[styles.addButton, isSubmitting && styles.disabledButton]}
         onPress={handleAddComment}
+        disabled={isSubmitting}
       >
-        <Text style={styles.addButtonText}>Ajouter</Text>
+        <Text style={styles.addButtonText}>
+          {isSubmitting ? 'Envoi...' : 'Ajouter'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -81,14 +93,16 @@ const CommentInput: React.FC<CommentInputProps> = ({ personalId, userId, toast, 
 
 const styles = StyleSheet.create({
   inputContainer: {
-    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   input: {
+    flex: 1,
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 8,
     padding: 8,
-    marginBottom: 8,
+    marginRight: 8,
     maxHeight: 100,
   },
   addButton: {
@@ -96,6 +110,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#9ca3af',
   },
   addButtonText: {
     color: 'white',
