@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal } from 'react-native';
+import { Calendar } from 'react-native-calendars';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
 import CloudinaryUpload from './CloudinaryUpload';
 import MapScreen from '../../screens/MapScreen';
+import tw from 'twrnc';
 
 const EventCreation: React.FC = () => {
   const { userId } = useUser();
@@ -23,8 +26,12 @@ const EventCreation: React.FC = () => {
   });
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
-  const [showPicker, setShowPicker] = useState({ date: false, startTime: false, endTime: false });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     fetchCategories();
@@ -87,7 +94,17 @@ const EventCreation: React.FC = () => {
       return;
     }
 
+    setIsLoading(true);
+    let uploadTimeout = setTimeout(() => {
+      setIsLoading(false);
+      Alert.alert('Error', 'Image upload timed out. Please try again.');
+    }, 20000);
+
     try {
+      // Start Cloudinary upload
+      const imageUrl = await uploadImage();
+      clearTimeout(uploadTimeout);
+
       const { data: newEvent, error: eventError } = await supabase
         .from('event')
         .insert({
@@ -124,240 +141,221 @@ const EventCreation: React.FC = () => {
       // Insert media
       await supabase.from('media').insert({
         event_id: eventId,
-        url: eventData.imageUrl,
+        url: imageUrl,
         type: 'image',
       });
 
+      setIsLoading(false);
       Alert.alert('Success', 'Event created successfully');
     } catch (error) {
       console.error('Error creating event:', error);
+      setIsLoading(false);
       Alert.alert('Error', 'Failed to create event. Please try again.');
     }
   };
 
-  const renderInputField = (label: string, value: string, onChangeText: (text: string) => void, multiline: boolean = false) => (
-    <View style={styles.inputContainer}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={[styles.input, multiline && styles.textArea]}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={`Enter ${label.toLowerCase()}`}
-        multiline={multiline}
-      />
-    </View>
-  );
-
-  const renderButtonGroup = (label: string, options: { value: any; label: string }[], selectedValue: any, onSelect: (value: any) => void) => (
-    <View style={styles.inputContainer}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.buttonGroup}>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option.value}
-            style={[
-              styles.button,
-              eventData[selectedValue as keyof typeof eventData] === option.value && styles.selectedButton
-            ]}
-            onPress={() => onSelect(option.value)}
-          >
-            <Text style={[
-              styles.buttonText,
-              eventData[selectedValue as keyof typeof eventData] === option.value && styles.selectedButtonText
-            ]}>
-              {option.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
-
-  const renderDateTimePicker = (label: string, value: Date, onChange: (date: Date) => void, mode: 'date' | 'time') => (
-    <View style={styles.inputContainer}>
-      <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={() => setShowPicker({ ...showPicker, [mode]: true })}
-      >
-        <Text style={styles.dateButtonText}>
-          {mode === 'date' ? value.toDateString() : value.toLocaleTimeString()}
-        </Text>
-      </TouchableOpacity>
-      {showPicker[mode as keyof typeof showPicker] && (
-        <DateTimePicker
-          value={value}
-          mode={mode}
-          is24Hour={true}
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowPicker({ ...showPicker, [mode]: false });
-            if (selectedDate) onChange(selectedDate);
-          }}
-        />
-      )}
-    </View>
-  );
+  const uploadImage = () => {
+    return new Promise<string>((resolve, reject) => {
+      // Simulating Cloudinary upload with a delay
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setUploadProgress(progress);
+        if (progress >= 100) {
+          clearInterval(interval);
+          resolve(eventData.imageUrl);
+        }
+      }, 500);
+    });
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Create New Event</Text>
+    <ScrollView style={tw`flex-1 bg-gray-100 p-4`}>
+      <Text style={tw`text-3xl font-bold mb-6 text-center text-gray-800`}>Create New Event</Text>
 
       <CloudinaryUpload onImageUploaded={(url) => handleInputChange('imageUrl', url)} />
 
-      {renderInputField('Event Name', eventData.name, (text) => handleInputChange('name', text))}
-      {renderInputField('Event Description', eventData.details, (text) => handleInputChange('details', text), true)}
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Event Name</Text>
+        <TextInput
+          style={tw`bg-white border border-gray-300 rounded-lg p-3 text-base`}
+          value={eventData.name}
+          onChangeText={(text) => handleInputChange('name', text)}
+          placeholder="Enter event name"
+        />
+      </View>
 
-      {renderButtonGroup('Event Type', [
-        { value: 'indoor', label: 'Indoor' },
-        { value: 'outdoor', label: 'Outdoor' },
-        { value: 'online', label: 'Online' },
-      ], 'eventType', (value) => handleInputChange('eventType', value))}
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Event Description</Text>
+        <TextInput
+          style={tw`bg-white border border-gray-300 rounded-lg p-3 text-base h-32`}
+          value={eventData.details}
+          onChangeText={(text) => handleInputChange('details', text)}
+          placeholder="Enter event description"
+          multiline
+        />
+      </View>
 
-      {renderButtonGroup('Privacy', [
-        { value: false, label: 'Public' },
-        { value: true, label: 'Private' },
-      ], 'privacy', (value) => handleInputChange('privacy', value))}
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Event Type</Text>
+        <Picker
+          selectedValue={eventData.eventType}
+          onValueChange={(value) => handleInputChange('eventType', value)}
+          style={tw`bg-white border border-gray-300 rounded-lg`}
+        >
+          <Picker.Item label="Select Event Type" value="" />
+          <Picker.Item label="Indoor" value="indoor" />
+          <Picker.Item label="Outdoor" value="outdoor" />
+          <Picker.Item label="Online" value="online" />
+        </Picker>
+      </View>
 
-      {renderButtonGroup('Category', categories.map(cat => ({ value: cat.id, label: cat.name })), 'selectedCategory', (value) => handleInputChange('selectedCategory', value))}
-      {renderButtonGroup('Subcategory', subcategories.map(subcat => ({ value: subcat.id, label: subcat.name })), 'selectedSubcategory', (value) => handleInputChange('selectedSubcategory', value))}
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Privacy</Text>
+        <Picker
+          selectedValue={eventData.privacy}
+          onValueChange={(value) => handleInputChange('privacy', value)}
+          style={tw`bg-white border border-gray-300 rounded-lg`}
+        >
+          <Picker.Item label="Public" value={false} />
+          <Picker.Item label="Private" value={true} />
+        </Picker>
+      </View>
 
-      {renderDateTimePicker('Date', eventData.date, (date) => handleInputChange('date', date), 'date')}
-      {renderDateTimePicker('Start Time', eventData.startTime, (time) => handleInputChange('startTime', time), 'time')}
-      {renderDateTimePicker('End Time', eventData.endTime, (time) => handleInputChange('endTime', time), 'time')}
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Category</Text>
+        <Picker
+          selectedValue={eventData.selectedCategory}
+          onValueChange={(value) => handleInputChange('selectedCategory', value)}
+          style={tw`bg-white border border-gray-300 rounded-lg`}
+        >
+          <Picker.Item label="Select Category" value="" />
+          {categories.map(cat => (
+            <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
+          ))}
+        </Picker>
+      </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Location</Text>
-        <TouchableOpacity style={styles.locationButton} onPress={() => setShowMap(true)}>
-          <Text style={styles.locationButtonText}>
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Subcategory</Text>
+        <Picker
+          selectedValue={eventData.selectedSubcategory}
+          onValueChange={(value) => handleInputChange('selectedSubcategory', value)}
+          style={tw`bg-white border border-gray-300 rounded-lg`}
+        >
+          <Picker.Item label="Select Subcategory" value="" />
+          {subcategories.map(subcat => (
+            <Picker.Item key={subcat.id} label={subcat.name} value={subcat.id} />
+          ))}
+        </Picker>
+      </View>
+
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Date</Text>
+        <TouchableOpacity
+          style={tw`bg-white border border-gray-300 rounded-lg p-3`}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text>{eventData.date.toDateString()}</Text>
+        </TouchableOpacity>
+        <Calendar
+          style={tw`mt-2`}
+          onDayPress={(day: any) => {
+            handleInputChange('date', new Date(day.timestamp));
+            setShowDatePicker(false);
+          }}
+          markedDates={{
+            [eventData.date.toISOString().split('T')[0]]: { selected: true, selectedColor: '#007AFF' },
+          }}
+          visible={showDatePicker}
+        />
+      </View>
+
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Start Time</Text>
+        <TouchableOpacity
+          style={tw`bg-white border border-gray-300 rounded-lg p-3`}
+          onPress={() => setShowStartTimePicker(true)}
+        >
+          <Text>{eventData.startTime.toLocaleTimeString()}</Text>
+        </TouchableOpacity>
+        <DateTimePickerModal
+          isVisible={showStartTimePicker}
+          mode="time"
+          onConfirm={(time) => {
+            handleInputChange('startTime', time);
+            setShowStartTimePicker(false);
+          }}
+          onCancel={() => setShowStartTimePicker(false)}
+        />
+      </View>
+
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>End Time</Text>
+        <TouchableOpacity
+          style={tw`bg-white border border-gray-300 rounded-lg p-3`}
+          onPress={() => setShowEndTimePicker(true)}
+        >
+          <Text>{eventData.endTime.toLocaleTimeString()}</Text>
+        </TouchableOpacity>
+        <DateTimePickerModal
+          isVisible={showEndTimePicker}
+          mode="time"
+          onConfirm={(time) => {
+            handleInputChange('endTime', time);
+            setShowEndTimePicker(false);
+          }}
+          onCancel={() => setShowEndTimePicker(false)}
+        />
+      </View>
+
+      <View style={tw`mb-4`}>
+        <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Location</Text>
+        <TouchableOpacity
+          style={tw`bg-blue-500 p-3 rounded-lg items-center`}
+          onPress={() => setShowMap(true)}
+        >
+          <Text style={tw`text-white font-semibold`}>
             {eventData.location ? 'Change Location' : 'Select Location'}
           </Text>
         </TouchableOpacity>
         {eventData.location && (
-          <Text style={styles.locationText}>
+          <Text style={tw`mt-2 text-gray-600`}>
             Latitude: {eventData.location.latitude.toFixed(6)}, Longitude: {eventData.location.longitude.toFixed(6)}
           </Text>
         )}
       </View>
 
       {showMap && (
-        <View style={styles.mapContainer}>
+        <View style={tw`w-full aspect-square mb-4 rounded-lg overflow-hidden`}>
           <MapScreen onLocationSelected={handleLocationSelected} />
-          <TouchableOpacity style={styles.closeMapButton} onPress={() => setShowMap(false)}>
-            <Text style={styles.closeMapButtonText}>Close Map</Text>
+          <TouchableOpacity
+            style={tw`absolute bottom-4 left-4 right-4 bg-red-500 p-3 rounded-lg items-center`}
+            onPress={() => setShowMap(false)}
+          >
+            <Text style={tw`text-white font-semibold`}>Close Map</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      <TouchableOpacity style={styles.createButton} onPress={handleCreateEvent}>
-        <Text style={styles.createButtonText}>Create Event</Text>
+      <TouchableOpacity
+        style={tw`bg-green-500 p-4 rounded-lg items-center mb-8`}
+        onPress={handleCreateEvent}
+      >
+        <Text style={tw`text-white font-bold text-lg`}>Create Event</Text>
       </TouchableOpacity>
+
+      <Modal visible={isLoading} transparent={true} animationType="fade">
+        <View style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}>
+          <View style={tw`bg-white p-6 rounded-lg items-center`}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={tw`text-lg font-bold mt-4 text-gray-800`}>Creating Event...</Text>
+            <Text style={tw`text-sm mt-2 text-gray-600`}>Uploading Image: {uploadProgress}%</Text>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#333',
-  },
-  inputContainer: {
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
-    backgroundColor: '#fff',
-  },
-  textArea: {
-    height: 100,
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-  },
-  button: {
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-    marginBottom: 10,
-  },
-  selectedButton: {
-    backgroundColor: '#007BFF',
-  },
-  buttonText: {
-    color: '#333',
-  },
-  selectedButtonText: {
-    color: '#fff',
-  },
-  dateButton: {
-    padding: 10,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
-    backgroundColor: '#fff',
-  },
-  dateButtonText: {
-    color: '#333',
-  },
-  locationButton: {
-    backgroundColor: '#007BFF',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  locationButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  locationText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#666',
-  },
-  mapContainer: {
-    height: 300,
-    marginBottom: 15,
-  },
-  closeMapButton: {
-    backgroundColor: '#ff6347',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  closeMapButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  createButton: {
-    backgroundColor: '#007BFF',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  createButtonText: {
-    color: '#fff',
-    fontSize: 18,
-  },
-});
 
 export default EventCreation;

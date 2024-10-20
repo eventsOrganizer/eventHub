@@ -27,8 +27,8 @@ import CreateServiceScreen from '../screens/CreateServiceScreen'; // Added Creat
 import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ServiceSelection from '../screens/ServiceSelection';
-
-
+import VideoRoomsScreen from '../components/event/video/VideoRoomsScreen';
+import VideoCall from '../components/event/video/VideoCall';
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
 
@@ -128,6 +128,8 @@ type EventSetupOptionsScreenProps = {
   InvitationList: undefined;
   EventCreation: undefined;
   YourRequests: undefined;
+  VideoRooms: undefined;
+  VideoCall: { roomUrl: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -310,6 +312,15 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="YourRequests" 
       component={YourRequestsScreen} />  
+        <Stack.Screen
+          name="VideoRooms"
+          component={VideoRoomsScreen}
+        />  
+
+        <Stack.Screen
+          name="VideoCall"
+          component={VideoCall}
+        />  
 
       </Stack.Navigator>
    
