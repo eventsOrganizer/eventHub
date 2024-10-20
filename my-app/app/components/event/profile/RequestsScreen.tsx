@@ -1,24 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+  RefreshControl,
+  SafeAreaView,
+  Dimensions,
+} from 'react-native';
 import { supabase } from '../../../services/supabaseClient';
 import { useUser } from '../../../UserContext';
 
 interface EventRequest {
   id: number;
   user: { id: string; email: string };
-  event: { id: number; name: string } | null; // Allow event to be null
+  event: { id: number; name: string } | null;
 }
+
+const { width, height } = Dimensions.get('window');
 
 const RequestsScreen: React.FC = () => {
   const [eventRequests, setEventRequests] = useState<EventRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const { userId } = useUser();
 
-  useEffect(() => {
-    fetchEventRequests();
-  }, [userId]);
-
-  const fetchEventRequests = async () => {
+  const fetchEventRequests = useCallback(async () => {
     if (!userId) return;
 
     setLoading(true);
@@ -27,25 +37,30 @@ const RequestsScreen: React.FC = () => {
         .from('request')
         .select(`
           id,
-          event:event_id (id, name),
-          user:user_id (id, email)
+          user:user_id (id, email),
+          event:event_id (id, name)
         `)
         .eq('status', 'pending')
-        .eq('event.user_id', userId)
-        .is('friend_id', null);
+        .eq('event.user_id', userId);
 
       if (error) throw error;
-      setEventRequests(data as unknown as EventRequest[]);
+
+      const validRequests = data.filter(request => request.event !== null);
+      setEventRequests(validRequests as unknown as EventRequest[]);
     } catch (error) {
       console.error('Error fetching event requests:', error);
       Alert.alert('Error', 'Failed to fetch event requests. Please try again.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchEventRequests();
+  }, [fetchEventRequests]);
 
   const handleEventRequest = async (requestId: number, status: 'accepted' | 'rejected') => {
-    setLoading(true);
     try {
       if (status === 'accepted') {
         const { error } = await supabase
@@ -77,15 +92,13 @@ const RequestsScreen: React.FC = () => {
     } catch (error) {
       console.error('Error handling event request:', error);
       Alert.alert('Error', 'Failed to handle request. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
   const renderEventRequest = ({ item }: { item: EventRequest }) => (
     <View style={styles.requestItem}>
       <Text style={styles.requestText}>
-        {item.user.email} wants to join {item.event ? item.event.name : 'an unknown event'}
+        {item.user.email} wants to join {item.event?.name}
       </Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -104,60 +117,82 @@ const RequestsScreen: React.FC = () => {
     </View>
   );
 
-  if (loading) {
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchEventRequests();
+  }, [fetchEventRequests]);
+
+  if (loading && !refreshing) {
     return (
-      <View style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Event Requests</Text>
       {eventRequests.length > 0 ? (
         <FlatList
           data={eventRequests}
           renderItem={renderEventRequest}
           keyExtractor={item => item.id.toString()}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          contentContainerStyle={styles.listContainer}
         />
       ) : (
         <Text style={styles.emptyText}>No pending event requests</Text>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
     padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#f5f5f5',
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 20,
+    textAlign: 'center',
+    marginVertical: 20,
+    color: '#333',
+  },
+  listContainer: {
+    flexGrow: 1,
   },
   requestItem: {
     backgroundColor: '#ffffff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    elevation: 2,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: '#333',
+    padding: 20,
+    marginBottom: 20,
   },
   requestText: {
-    fontSize: 16,
-    marginBottom: 10,
+    fontSize: 18,
+    marginBottom: 15,
+    color: '#333',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   button: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
     flex: 1,
     marginHorizontal: 5,
   },
@@ -171,16 +206,13 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     textAlign: 'center',
     fontWeight: 'bold',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 16,
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 20,
     textAlign: 'center',
     color: '#666',
+    marginTop: height * 0.3,
   },
 });
 

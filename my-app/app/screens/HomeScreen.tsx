@@ -72,15 +72,15 @@ const HomeScreen: React.FC = () => {
   const fetchLocals = async () => {
     const { data, error } = await supabase
       .from('local')
-      .select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`);
+      .select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`)
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data || []).filter(item => item.subcategory !== null);
   };
 
   const fetchStaffServices = async () => {
     const { data, error } = await supabase
       .from('personal')
-      .select('*, subcategory (name), media (url)')
+      .select('*, subcategory (id,name,category(id,name)), media (url) ')
       .limit(5);
     if (error) throw new Error(error.message);
     return data || [];
@@ -165,13 +165,16 @@ const HomeScreen: React.FC = () => {
     type="staff"
   />
 
-  <SectionComponent 
-    title="LOCAL SERVICES" 
-    data={locals} 
-    onSeeAll={() => navigation.navigate('LocalServiceScreen')}
-    onItemPress={(item) => navigation.navigate('LocalServiceDetails', { localServiceId: item.id })}
-    type="local"
-  />
+<SectionComponent 
+  title="LOCAL SERVICES" 
+  data={locals} 
+  onSeeAll={() => navigation.navigate('LocalServiceScreen')}
+  onItemPress={(item) => {
+    console.log('Local service item:', item);
+    navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
+  }}
+  type="local"
+/>
   
   <SectionComponent 
     title="MATERIALS & FOOD" 

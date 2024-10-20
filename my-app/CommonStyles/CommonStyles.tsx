@@ -45,6 +45,16 @@ export const commonStyles = {
   chatButtonText: tw`text-[${colors.text.light}] text-[${typography.fontSize.large}] font-bold ml-2.5`,
   requestsOverlay: tw`absolute inset-0 bg-black/70 justify-center items-center`,
   closeButton: tw`absolute top-10 right-5 bg-white/30 rounded-full p-1.25`,
+  loadingContainer: tw`flex-1 justify-center items-center bg-gray-900`,
+  profileHeader: tw`flex-row justify-between items-center mb-6 border-b border-white/30 pb-4`,
+  profileTitle: tw`text-white text-3xl font-bold`,
+  profileImage: tw`w-32 h-32 rounded-full mr-6 border-4 border-white/50`,
+  profileName: tw`text-white text-2xl font-semibold`,
+  profileEmail: tw`text-gray-300 text-lg mt-2`,
+  tabButton: tw`py-3 px-6`,
+  activeTabButton: tw`bg-white/30 rounded-full`,
+  tabButtonText: tw`text-white text-xl`,
+  activeTabButtonText: tw`font-bold`,
 };
 
 export default {

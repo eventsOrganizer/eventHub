@@ -27,7 +27,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
       case 'event':
         return <EventCard key={item.id} event={item} onPress={() => onItemPress(item)} />;
       case 'local':
-      case 'material':
+      // case 'material':
         return <LocalServiceCard key={item.id} item={item} onPress={() => onItemPress(item)} />;
       default:
         return null;
