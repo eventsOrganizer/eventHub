@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, RefreshControl, SafeAreaView, ImageBackground, Animated } from 'react-native';
+import { View, ScrollView, RefreshControl, SafeAreaView, ImageBackground, Animated, Button } from 'react-native'; // Import Button
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BlurView } from 'expo-blur';
@@ -123,67 +123,72 @@ const HomeScreen: React.FC = () => {
           </Animated.View>
           
           <Animated.ScrollView
-  style={tw`flex-1`}
-  contentContainerStyle={tw`pb-20 pt-4`}
-  refreshControl={
-    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-  }
-  onScroll={Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    { useNativeDriver: false }
-  )}
-  scrollEventThrottle={16}
->
-  <EventMarquee events={events.slice(0, 10)} />
-  <View style={tw`px-4 py-6`}>
-    <ServiceIcons />
-  </View>
+            style={tw`flex-1`}
+            contentContainerStyle={tw`pb-20 pt-4`}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: false }
+            )}
+            scrollEventThrottle={16}
+          >
+            <EventMarquee events={events.slice(0, 10)} />
+            <View style={tw`px-4 py-6`}>
+              <ServiceIcons />
+            </View>
 
-  <Banner title="Events" />
-  <EventSection 
-    title="YOUR EVENTS" 
-    events={events} 
-    navigation={navigation}
-    onSeeAll={() => navigation.navigate('AllEvents')}
-    isTopEvents={false}
-  />
+            <Banner title="Events" />
+            <EventSection 
+              title="YOUR EVENTS" 
+              events={events} 
+              navigation={navigation}
+              onSeeAll={() => navigation.navigate('AllEvents')}
+              isTopEvents={false}
+            />
 
-  <EventSection 
-    title="HOT EVENTS" 
-    events={topEvents} 
-    navigation={navigation}
-    onSeeAll={() => navigation.navigate('AllEvents')}
-    isTopEvents={true}
-  />
+            <EventSection 
+              title="HOT EVENTS" 
+              events={topEvents} 
+              navigation={navigation}
+              onSeeAll={() => navigation.navigate('AllEvents')}
+              isTopEvents={true}
+            />
 
-  <Banner title="Services" />
-  <SectionComponent 
-    title="TOP STAFF SERVICES"
-    data={staffServices}
-    onSeeAll={() => navigation.navigate('PersonalsScreen', { category: 'all' })}
-    onItemPress={(item) => navigation.navigate('PersonalDetail', { personalId: item.id })}
-    type="staff"
-  />
+            <Banner title="Services" />
+            <SectionComponent 
+              title="TOP STAFF SERVICES"
+              data={staffServices}
+              onSeeAll={() => navigation.navigate('PersonalsScreen', { category: 'all' })}
+              onItemPress={(item) => navigation.navigate('PersonalDetail', { personalId: item.id })}
+              type="staff"
+            />
 
-<SectionComponent 
-  title="LOCAL SERVICES" 
-  data={locals} 
-  onSeeAll={() => navigation.navigate('LocalServiceScreen')}
-  onItemPress={(item) => {
-    console.log('Local service item:', item);
-    navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
-  }}
-  type="local"
-/>
-  
-  <SectionComponent 
-    title="MATERIALS & FOOD" 
-    data={materialsAndFoodServices} 
-    onSeeAll={() => navigation.navigate('MaterialsAndFoodServicesScreen')}
-    onItemPress={(item) => navigation.navigate('MaterialServiceDetail', { materialId: item.id })}
-    type="material"
-  />
-</Animated.ScrollView>
+            <SectionComponent 
+              title="LOCAL SERVICES" 
+              data={locals} 
+              onSeeAll={() => navigation.navigate('LocalServiceScreen')}
+              onItemPress={(item) => {
+                console.log('Local service item:', item);
+                navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
+              }}
+              type="local"
+            />
+            
+            <SectionComponent 
+              title="MATERIALS & FOOD" 
+              data={materialsAndFoodServices} 
+              onSeeAll={() => navigation.navigate('MaterialsAndFoodServicesScreen')}
+              onItemPress={(item) => navigation.navigate('MaterialServiceDetail', { materialId: item.id })}
+              type="material"
+            />
+
+            <Button
+              title="Go to Video Rooms"
+              onPress={() => navigation.navigate('VideoRooms')}
+            />
+          </Animated.ScrollView>
           <FAB 
             isFabOpen={isFabOpen}
             toggleFab={toggleFab}
