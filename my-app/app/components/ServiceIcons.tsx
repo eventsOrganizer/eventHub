@@ -5,18 +5,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
-// All categories have the same red color now
 const categories = [
-  { name: 'Music', icon: 'musical-notes', color: '#E63946' },
-  { name: 'Food', icon: 'restaurant', color: '#E63946' },
-  { name: 'Photo', icon: 'camera', color: '#E63946' },
-  { name: 'Sports', icon: 'basketball', color: '#E63946' },
-  { name: 'Politics', icon: 'megaphone', color: '#E63946' },
-  { name: 'Art', icon: 'color-palette', color: '#E63946' },
-  { name: 'Home', icon: 'home', color: '#E63946' },
-  { name: 'Business', icon: 'briefcase', color: '#E63946' },
-  { name: 'Education', icon: 'school', color: '#E63946' },
-  { name: 'Tech', icon: 'hardware-chip', color: '#E63946' },
+  { name: 'Music', icon: 'musical-notes', color: '#FF2D55' },
+  { name: 'Food', icon: 'restaurant', color: '#FF9500' },
+  { name: 'Photo', icon: 'camera', color: '#5856D6' },
+  { name: 'Sports', icon: 'basketball', color: '#FF3B30' },
+  { name: 'Politics', icon: 'megaphone', color: '#5AC8FA' },
+  { name: 'Art', icon: 'color-palette', color: '#4CD964' },
+  { name: 'Home', icon: 'home', color: '#007AFF' },
+  { name: 'Business', icon: 'briefcase', color: '#FF2D55' },
+  { name: 'Education', icon: 'school', color: '#FFCC00' },
+  { name: 'Tech', icon: 'hardware-chip', color: '#5856D6' },
 ];
 
 const ServiceIcons: React.FC = () => {
@@ -32,21 +31,20 @@ const ServiceIcons: React.FC = () => {
       >
         {categories.map((category, index) => (
           <TouchableOpacity key={index} style={styles.categoryContainer}>
-            <LinearGradient
-              colors={[category.color, category.color + 'AA']}
-              style={styles.iconBackground}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Ionicons name={category.icon as keyof typeof Ionicons.glyphMap} size={35} color="white" />
-            </LinearGradient>
+            <View style={[styles.iconBackground, { backgroundColor: category.color }]}>
+              <Ionicons name={category.icon as keyof typeof Ionicons.glyphMap} size={30} color="#FFFFFF" />
+            </View>
             <Text style={styles.categoryName}>{category.name}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* Flat surface stand for all icons */}
-      <View style={styles.flatSurface} />
+      <LinearGradient
+        colors={['rgba(255,255,255,0.8)', 'rgba(255,255,255,0.2)']}
+        style={styles.flatSurface}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
     </View>
   );
 };
@@ -66,38 +64,31 @@ const styles = StyleSheet.create({
     width: width / 5 - 10,
   },
   iconBackground: {
-    width: 70,
-    height: 70,
+    width: 60,
+    height: 60,
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#111',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.7,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 5,
   },
   categoryName: {
-    marginTop: 5,
-    fontSize: 12,
-    fontWeight: '700',
+    marginTop: 8,
+    fontSize: 11,
+    fontWeight: '500',
     textAlign: 'center',
-    color: '#222',
+    color: '#000000',
   },
   flatSurface: {
     position: 'absolute',
-    bottom: -15, // Lowered to -15 to avoid text interference
-    width: '90%',
-    height: 10,
-    backgroundColor: '#333',
-    borderRadius: 5,
+    bottom: -15,
+    width: '95%',
+    height: 15,
+    borderRadius: 10,
     zIndex: -1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
-    elevation: 5,
   },
 });
 

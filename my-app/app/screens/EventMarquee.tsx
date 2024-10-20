@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 interface EventMarqueeProps {
   events: Array<{ name: string }>;
@@ -12,43 +12,58 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
   const scrollX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const textWidth = events.reduce((acc, event) => acc + event.name.length * 15, 0);
+    const textWidth = events.reduce((acc, event) => acc + event.name.length * 16 + 300, 0); // Added extra space
     const duration = textWidth * 50;
 
-    Animated.loop(
-      Animated.timing(scrollX, {
-        toValue: -textWidth,
-        duration: duration,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    ).start();
+    const animation = Animated.timing(scrollX, {
+      toValue: -textWidth,
+      duration: duration,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    });
+
+    Animated.loop(animation).start();
+
+    return () => {
+      animation.stop();
+    };
   }, [events]);
 
   return (
-    <LinearGradient
-      colors={['#ffffff', '#0066cc']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={styles.container}
-    >
-      <View style={styles.marqueeContainer}>
-        <Animated.View style={[styles.textContainer, { transform: [{ translateX: scrollX }] }]}>
-          {events.concat(events).map((event, index) => (
-            <Text key={index} style={styles.text}>
-              {event.name.toUpperCase()} •{' '}
-            </Text>
-          ))}
-        </Animated.View>
-      </View>
-      <View style={styles.bottomLine} />
-    </LinearGradient>
+    <View style={styles.container}>
+      <BlurView intensity={90} tint="dark" style={styles.blurContainer}>
+        <View style={styles.marqueeContainer}>
+          <Animated.View 
+            style={[
+              styles.textContainer, 
+              { 
+                transform: [{ translateX: scrollX }],
+                width: events.reduce((acc, event) => acc + event.name.length * 16 + 30, 0) * 2, // Double width for seamless loop
+              }
+            ]}
+          >
+            {[...events, ...events].map((event, index) => (
+              <View key={index} style={styles.eventContainer}>
+                <Text style={styles.text}>{event.name.toUpperCase()}</Text>
+                <Text style={styles.bullet}>•</Text>
+              </View>
+            ))}
+          </Animated.View>
+        </View>
+      </BlurView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    height: 40,
+    height: 50,
+    justifyContent: 'center',
+    marginBottom: 15,
+    overflow: 'hidden',
+  },
+  blurContainer: {
+    flex: 1,
     justifyContent: 'center',
   },
   marqueeContainer: {
@@ -59,18 +74,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  text: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  eventContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginRight: 20,
   },
-  bottomLine: {
-    height: 4,
-    backgroundColor: '#ff0000',
-    width: '100%',
-    position: 'absolute',
-    bottom: 0,
+  text: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    fontFamily: 'System',
+  },
+  bullet: {
+    color: '#FFA500',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 10,
   },
 });
 

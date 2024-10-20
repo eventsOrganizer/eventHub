@@ -24,15 +24,21 @@ const FriendsList: React.FC<{ userId: string }> = ({ userId }) => {
   }, [userId]);
 
   const fetchFriends = async () => {
-    const { data, error } = await supabase
+    // Fetch friendships where the user is either user_id or friend_id
+    const { data: friendships, error } = await supabase
       .from('friend')
-      .select('friend_id')
-      .eq('user_id', userId);
+      .select('user_id, friend_id')
+      .or(`user_id.eq.${userId},friend_id.eq.${userId}`);
   
     if (error) {
-      console.error('Error fetching friends:', error);
-    } else if (data) {
-      const friendIds = data.map(item => item.friend_id);
+      console.error('Error fetching friendships:', error);
+    } else if (friendships) {
+      // Extract friend IDs, excluding the user's own ID
+      const friendIds = friendships.map(friendship => 
+        friendship.user_id === userId ? friendship.friend_id : friendship.user_id
+      );
+  
+      // Fetch friend details
       const { data: friendsData, error: friendsError } = await supabase
         .from('user')
         .select('id, firstname, lastname')

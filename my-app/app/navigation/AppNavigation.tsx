@@ -26,7 +26,7 @@ import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
 import CreateServiceScreen from '../screens/CreateServiceScreen'; // Added CreateService import
 import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
-
+import ServiceSelection from '../screens/ServiceSelection';
 
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
@@ -40,7 +40,10 @@ import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
 import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
 import SavedScreen from '../components/event/profile/SavedScreen';
+import InvitationList from '../components/event/profile/InvitationList';
+import EventCreation from '../components/event/EventCreation';
 
+// Inside your Stack.Navigator component, add this new Screen
 
 
 
@@ -118,6 +121,9 @@ type EventSetupOptionsScreenProps = {
   CreatePersonalServiceStep5: { serviceName: string; description: string; images: string[]; price: string; availabilityFrom: string; availabilityTo: string; skills: string[]; subcategoryName: string; subcategoryId: number };
   FriendRequests: undefined;
   Saved: undefined;
+  ServiceSelection: undefined;
+  InvitationList: undefined;
+  EventCreation: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -274,12 +280,24 @@ const AppNavigation: React.FC = () => {
           options={{ headerShown: true }} 
         />
         <Stack.Screen
-       name="FriendRequests" 
-      component={FriendRequestsScreen} />
-    
-      <Stack.Screen
-       name ="Saved" 
-      component={SavedScreen} />  
+          name="FriendRequests" 
+          component={FriendRequestsScreen} />
+
+        <Stack.Screen
+          name ="Saved" 
+          component={SavedScreen} />  
+
+        <Stack.Screen
+          name ="ServiceSelection" 
+          component={ServiceSelection} />  
+
+        <Stack.Screen
+          name ="InvitationList" 
+          component={InvitationList} />  
+
+          <Stack.Screen name="EventCreation"
+           component={EventCreation} />
+
 
       </Stack.Navigator>
    
