@@ -2,33 +2,28 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
 import { Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importing icon library
 
 const { width, height } = Dimensions.get('window');
 
 const slides = [
   {
     key: '1',
-    title: 'Welcome to EventHub!',
-    description: 'Create and manage your events easily.',
-    colors: ['#FF7E00', '#FFCC00'], // Orange to yellow
+    title: 'Discover Unique Spaces',
+    description: 'Find and rent the perfect venue for your events, from cozy halls to spacious venues.',
+    colors: ['#C2E3FF', '#A0D2FF'], // Light blue to soft blue
   },
   {
     key: '2',
-    title: 'Step 1',
-    description: 'Fill in event details like title, description, and date.',
-    colors: ['#FFB300', '#FF9800'], // Bright yellow to orange
+    title: 'Connect with Professionals',
+    description: 'Easily reach out to event crews and service providers to make your event a success.',
+    colors: ['#FFB6C1', '#FF69B4'], // Light pink to hot pink
   },
   {
     key: '3',
-    title: 'Step 2',
-    description: 'Invite participants and manage tickets.',
-    colors: ['#FF8C00', '#FFC107'], // Vibrant orange to yellow
-  },
-  {
-    key: '4',
-    title: 'Get Started!',
-    description: 'Let’s create your first event.',
-    colors: ['#FF5722', '#FF3D00'], // Red to vibrant orange
+    title: 'Plan Your Event Seamlessly',
+    description: 'Organize everything from catering to audio-visual setups in one place, hassle-free.',
+    colors: ['#D8BFD8', '#DDA0DD'], // Thistle to plum
   },
 ];
 
@@ -39,6 +34,7 @@ interface OnboardingProps {
 
 const Onboarding: React.FC<OnboardingProps> = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollViewRef = useRef<Animated.ScrollView>(null);
   const buttonOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -59,6 +55,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ navigation }) => {
     setCurrentIndex(index);
   };
 
+  const scrollToNext = () => {
+    if (currentIndex < slides.length - 1) {
+      scrollViewRef.current?.scrollTo({ x: (currentIndex + 1) * width, animated: true });
+    } else {
+      navigation.navigate('Interests', { onFinish: () => console.log('Finished!') });
+    }
+  };
+
   const goToInterests = () => {
     navigation.navigate('Interests', { onFinish: () => console.log('Finished!') });
   };
@@ -68,17 +72,22 @@ const Onboarding: React.FC<OnboardingProps> = ({ navigation }) => {
       <View key={slide.key} style={styles.slide}>
         <LinearGradient colors={slide.colors} style={styles.gradientBackground}>
           <View style={styles.contentContainer}>
-            <Text style={styles.title}>{slide.title}</Text>
-            <Text style={styles.description}>{slide.description}</Text>
-            {index === slides.length - 1 && (
-              <Animated.View style={[styles.buttonContainer, { opacity: buttonOpacity }]}>
-                <Button mode="contained" onPress={goToInterests} style={styles.button}>
-                  Let's Go!
-                </Button>
-              </Animated.View>
-            )}
+            <View style={styles.textBox}>
+              <Text style={styles.title}>{slide.title}</Text>
+              <Text style={styles.description}>{slide.description}</Text>
+            </View>
           </View>
         </LinearGradient>
+
+        {/* Buttons Positioned on Each Slide */}
+        <View style={styles.buttonRow}>
+          <Button onPress={goToInterests} style={styles.skipButton}>
+            Skip
+          </Button>
+          <Button onPress={scrollToNext} style={styles.arrowButton}>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#fff" />
+          </Button>
+        </View>
       </View>
     ));
   };
@@ -94,6 +103,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ navigation }) => {
         ))}
       </View>
       <Animated.ScrollView
+        ref={scrollViewRef}
         horizontal
         pagingEnabled
         onScroll={handleScroll}
@@ -102,11 +112,6 @@ const Onboarding: React.FC<OnboardingProps> = ({ navigation }) => {
       >
         {renderSlides()}
       </Animated.ScrollView>
-      <View style={styles.skipContainer}>
-        <Button onPress={goToInterests} style={styles.skipButton}>
-          Skip
-        </Button>
-      </View>
     </View>
   );
 };
@@ -129,64 +134,78 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 20,
+    margin: 20,
+    overflow: 'hidden',
   },
   contentContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: 80,
+    paddingHorizontal: 20,
+  },
+  textBox: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    alignItems: 'center', // Center items in the text box
+    width: '115%',
+    position: 'absolute',
+    bottom: -308, // Adjust this if needed for positioning
+    height: 250, // You can adjust the height as needed
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#333',
     textAlign: 'center',
-    marginBottom: 5,
+    marginBottom: 10,
   },
   description: {
-    fontSize: 18,
-    color: 'white',
+    fontSize: 14,
+    color: '#666',
     textAlign: 'center',
     paddingHorizontal: 20,
+    marginBottom: 20, // Add margin for spacing
   },
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
     position: 'absolute',
-    top: 80,
+    top: 60,
     left: 0,
     right: 0,
   },
   dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     marginHorizontal: 5,
   },
   activeDot: {
-    backgroundColor: '#ffcc00',
+    backgroundColor: '#FF7E00',
   },
   inactiveDot: {
     backgroundColor: '#CCCCCC',
   },
-  button: {
-    width: '100%',
-    height: 60,
-    justifyContent: 'center',
-    backgroundColor: '#007BFF',
-    borderRadius: 10,
-  },
-  buttonContainer: {
-    marginTop: 20,
-    paddingHorizontal: 40,
-  },
-  skipContainer: {
+  buttonRow: {
     position: 'absolute',
-    top: 40,
-    right: 20,
+    top: 30, // Adjust the top position for buttons
+    left: 20, // Skip button on the left
+    right: 20, // Arrow button on the right
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%', // Take full width
   },
   skipButton: {
     backgroundColor: 'transparent',
     color: '#007BFF',
+  },
+  arrowButton: {
+    backgroundColor: 'transparent', // Keep it transparent
+    padding: 10,
+    marginLeft: 190, // Adjust margin to decrease space between buttons
   },
 });
 

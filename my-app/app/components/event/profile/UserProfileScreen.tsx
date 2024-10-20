@@ -8,6 +8,10 @@ import { useNavigation } from '@react-navigation/native';
 import EventRequestBadge from './EventRequestBadge';
 import UserEventsList from './UserEventList';
 import AttendedEventsList from './AttendedEventList';
+import UserServicesList from './UserServiceList';
+import FriendsList from './FriendsList';
+import InterestsList from './InterestsList';
+import Subscriptions from './Subscriptions';
 import FriendRequestBadge from './FriendRequestBadge';
 import InvitationButton from './InvitationButton';
 import { BlurView } from 'expo-blur';
@@ -97,10 +101,24 @@ const fetchUserProfile = async () => {
     switch (activeTab) {
       case 'events':
         return (
-          <>
-            <UserEventsList userId={userId as string} />
-            <AttendedEventsList userId={userId as string} />
-          </>
+          <View style={tw`space-y-6`}>
+            <View style={tw`flex-row justify-around mb-4`}>
+              <TouchableOpacity
+                style={tw`bg-[#00BFFF] py-2 px-4 rounded-full ${activeEventList === 'your' ? 'opacity-100' : 'opacity-50'}`}
+                onPress={() => setActiveEventList('your')}
+              >
+                <Text style={tw`text-white font-bold`}>Your Events</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={tw`bg-[#00BFFF] py-2 px-4 rounded-full ${activeEventList === 'attended' ? 'opacity-100' : 'opacity-50'}`}
+                onPress={() => setActiveEventList('attended')}
+              >
+                <Text style={tw`text-white font-bold`}>Attended Events</Text>
+              </TouchableOpacity>
+            </View>
+            {activeEventList === 'your' && <UserEventsList userId={userId as string} />}
+            {activeEventList === 'attended' && <AttendedEventsList userId={userId as string} />}
+          </View>
         );
       case 'friends':
         return (
@@ -115,6 +133,13 @@ const fetchUserProfile = async () => {
         return null;
     }
   };
+
+  // Navigate to UserServicesScreen when the services tab is selected
+  useEffect(() => {
+    if (activeTab === 'services') {
+      navigation.navigate('UserServicesScreen', { userId });
+    }
+  }, [activeTab, navigation, userId]);
 
   if (loading) {
     return (
@@ -131,17 +156,6 @@ const fetchUserProfile = async () => {
       </View>
     );
   }
-  const handleCreateEvent = () => {
-    navigation.navigate('EventCreation' as never);
-  };
-
-  const handleNavigateToServicesSelection = () => {
-    navigation.navigate('ServiceSelection', { userId });
-  };
-
-  const handleNavigateToUserServices = () => {
-    navigation.navigate('UserServicesScreen', { userId });
-  };
 
   const ActionButton: React.FC<{ onPress: () => void; iconName: string; text: string; color: string }> = ({ onPress, iconName, text, color }) => (
     <TouchableOpacity
@@ -187,7 +201,7 @@ const fetchUserProfile = async () => {
               
               <View style={tw`flex-row justify-between mb-2`}>
                 <ActionButton onPress={() => navigation.navigate('EventCreation' as never)} iconName="add-circle-outline" text="New Event" color="bg-[#4CD964]" />
-                <ActionButton onPress={() => navigation.navigate('CreateService' as never)} iconName="briefcase-outline" text="New Service" color="bg-[#FF9500]" />
+                <ActionButton onPress={() => navigation.navigate('ServiceSelection' as never)} iconName="briefcase-outline" text="New Service" color="bg-[#FF9500]" />
               </View>
               
               <View style={tw`flex-row justify-between mb-2`}>
@@ -197,19 +211,31 @@ const fetchUserProfile = async () => {
             </View>
           </BlurView>
 
-      <View style={styles.tabContainer}>
-        {['events', 'friends', 'subscriptions'].map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.activeTab]}
-            onPress={() => setActiveTab(tab)}
-          >
-            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+          <View style={tw`flex-row justify-around mt-6 mb-4`}>
+            <TouchableOpacity
+              style={tw`bg-[#FF9500] py-3 px-6 rounded-full shadow-md`}
+              onPress={() => navigation.navigate('UserServicesScreen', { userId })}
+            >
+              <Text style={tw`text-white font-bold`}>Services</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={tw`bg-[#4CD964] py-3 px-6 rounded-full shadow-md`}
+              onPress={() => navigation.navigate('YourRequests', { userId })}
+            >
+              <Text style={tw`text-white font-bold`}>Service Requests</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={tw`flex-row justify-around mt-6 mb-2`}>
+            {['events', 'friends', 'subscriptions'].map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => setActiveTab(tab)}
+              >
+                <Text style={tw`text-${activeTab === tab ? '[#FF9500]' : 'white'} font-bold capitalize text-lg`}>{tab}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           <Animated.View
             style={[
@@ -226,30 +252,11 @@ const fetchUserProfile = async () => {
             ]}
           >
             {renderTabContent()}
-          </View>
-        )}
-        ListFooterComponent={() => (
-          <TouchableOpacity
-            style={styles.chatButton}
-            onPress={() => navigation.navigate('ChatList' as never)}
-          >
-            <Ionicons name="chatbubbles" size={24} color="#fff" />
-            <Text style={styles.chatButtonText}>Open Chat</Text>
-          </TouchableOpacity>
-        )}
-      />
+          </Animated.View>
+        </ScrollView>
 
-      {showRequests && (
-        <View style={styles.requestsOverlay}>
-          <RequestsScreen />
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setShowRequests(false)}
-          >
-            <Ionicons name="close" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      )}
+        
+      </LinearGradient>
     </View>
   );
 };
