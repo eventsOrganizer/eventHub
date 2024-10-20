@@ -14,7 +14,7 @@ const ServiceDescriptionInput: React.FC<ServiceDescriptionInputProps> = ({ descr
         style={styles.input}
         value={description}
         onChangeText={setDescription}
-        placeholder="Entrez la description du service"
+        placeholder="Enter the service description"
         multiline
         numberOfLines={4}
       />

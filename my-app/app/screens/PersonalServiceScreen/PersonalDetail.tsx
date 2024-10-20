@@ -1,20 +1,16 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { Service } from '../../services/serviceTypes';
 import { fetchPersonalDetail, toggleLike } from '../../services/personalService';
 import { fetchAvailabilityData, AvailabilityData } from '../../services/availabilityService';
 import { useUser } from '../../UserContext';
+import { useToast } from '../../hooks/useToast';
 import PersonalInfo from '../../components/PersonalServiceComponents/PersonalInfo';
 import CommentSection from '../../components/PersonalServiceComponents/CommentSection';
 import ReviewForm from '../../components/PersonalServiceComponents/ReviewForm';
 import BookingForm from './components/BookingForm';
 import ServiceDetails from './components/ServiceDetails';
-import { useToast } from '../../hooks/useToast';
-
-type RenderItemData = {
-  key: 'personalInfo' | 'serviceDetails' | 'bookingForm' | 'reviewForm' | 'commentSection';
-};
 
 const PersonalDetail = () => {
   const route = useRoute();
@@ -79,54 +75,45 @@ const PersonalDetail = () => {
     fetchData();
   };
 
-  if (isLoading) {
+  if (isLoading || !personalData || !availabilityData) {
     return <View style={styles.centeredContainer}><Text style={styles.loadingText}>Chargement...</Text></View>;
   }
 
-  if (!personalData || !availabilityData) {
-    return <View style={styles.centeredContainer}><Text style={styles.loadingText}>Aucune donnée disponible</Text></View>;
-  }
-
-  const renderItem = ({ item }: { item: RenderItemData }) => (
+  const renderItem = () => (
     <View style={styles.content}>
-      {item.key === 'personalInfo' && <PersonalInfo personalData={personalData} onLike={handleLike} />}
-      {item.key === 'serviceDetails' && <ServiceDetails personalData={personalData} />}
-      {item.key === 'bookingForm' && (
-        <BookingForm
-          personalId={personalId}
-          userId={userId}
-          availabilityData={availabilityData}
-          onBookingComplete={fetchData}
-        />
-      )}
-      {item.key === 'reviewForm' && <ReviewForm personalId={personalData.id} onReviewSubmitted={handleReviewSubmitted} />}
-      {item.key === 'commentSection' && (
-        <CommentSection 
-          comments={personalData.comment} 
-          personalId={personalData.id}
-          userId={userId}
-        />
-      )}
+      <PersonalInfo personalData={personalData} onLike={handleLike} />
+      <ServiceDetails personalData={personalData} />
+      <BookingForm
+        personalId={personalId}
+        userId={userId}
+        availabilityData={availabilityData}
+        onBookingComplete={fetchData}
+      />
+      <ReviewForm personalId={personalData.id} onReviewSubmitted={handleReviewSubmitted} />
+      <CommentSection 
+        comments={personalData.comment.map(comment => ({
+          ...comment,
+          user: (comment as any).user || { username: "anonymous" }
+        }))}  
+        personalId={personalData.id}
+        userId={userId}
+      />
     </View>
   );
 
-  const data: RenderItemData[] = [
-    { key: 'personalInfo' },
-    { key: 'serviceDetails' },
-    { key: 'bookingForm' },
-    { key: 'reviewForm' },
-    { key: 'commentSection' },
-  ];
-
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    >
       <FlatList
-        data={data}
+        data={[{ key: 'content' }]}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}
       />
       {ToastComponent}
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

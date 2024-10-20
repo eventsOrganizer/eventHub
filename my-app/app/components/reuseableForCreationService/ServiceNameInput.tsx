@@ -9,12 +9,12 @@ interface ServiceNameInputProps {
 const ServiceNameInput: React.FC<ServiceNameInputProps> = ({ serviceName, setServiceName }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Nom du service</Text>
+      <Text style={styles.label}>Name of the service person</Text>
       <TextInput
         style={styles.input}
         value={serviceName}
         onChangeText={setServiceName}
-        placeholder="Entrez le nom du service"
+        placeholder="Enter the name of the service person"
       />
     </View>
   );

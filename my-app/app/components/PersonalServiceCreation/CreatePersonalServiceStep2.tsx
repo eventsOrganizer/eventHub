@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'rea
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import ImagePicker from '../reuseableForCreationService/ImagePicker';
+import CloudinaryUpload from '../event/CloudinaryUpload';
 
 type CreatePersonalServiceStep2RouteProp = RouteProp<RootStackParamList, 'CreatePersonalServiceStep2'>;
 type CreatePersonalServiceStep2NavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep2'>;
@@ -14,9 +14,13 @@ const CreatePersonalServiceStep2: React.FC = () => {
   const { serviceName, description, subcategoryName, subcategoryId } = route.params;
   const [images, setImages] = React.useState<string[]>([]);
 
+  const handleImageUploaded = (url: string) => {
+    setImages([...images, url]);
+  };
+
   const handleNext = () => {
     if (images.length === 0) {
-      Alert.alert('Error', 'Please select at least one image');
+      Alert.alert('Error', 'Please upload at least one image');
     } else {
       navigation.navigate('CreatePersonalServiceStep3', {
         serviceName,
@@ -34,11 +38,16 @@ const CreatePersonalServiceStep2: React.FC = () => {
         <Text style={styles.title}>Create a Personal Service</Text>
         <Text style={styles.subtitle}>Step 2: Add Images</Text>
         <View style={styles.infoContainer}>
-          <Text style={styles.infoText}>Service Name: {serviceName}</Text>
+          <Text style={styles.infoText}>Person service Name: {serviceName}</Text>
           <Text style={styles.infoText}>Description: {description}</Text>
           <Text style={styles.infoText}>Category: {subcategoryName}</Text>
         </View>
-        <ImagePicker images={images} setImages={setImages} />
+        <CloudinaryUpload onImageUploaded={handleImageUploaded} />
+        <View style={styles.imagePreviewContainer}>
+          {images.map((url, index) => (
+            <Text key={index} style={styles.imagePreviewText}>Image {index + 1} uploaded</Text>
+          ))}
+        </View>
         <TouchableOpacity 
           style={[styles.button, images.length === 0 && styles.buttonDisabled]}
           onPress={handleNext}
@@ -87,6 +96,14 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 16,
     color: '#444',
+    marginBottom: 5,
+  },
+  imagePreviewContainer: {
+    marginTop: 10,
+  },
+  imagePreviewText: {
+    fontSize: 14,
+    color: '#4a90e2',
     marginBottom: 5,
   },
   button: {
