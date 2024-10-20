@@ -30,6 +30,8 @@ CREATE TABLE personal (
     subcategory_id INTEGER NOT NULL,
     user_id UUID NOT NULL,
     priceperhour INTEGER,
+    startdate DATE,
+    enddate DATE,
     name TEXT,
     details VARCHAR(45),
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
@@ -56,6 +58,8 @@ CREATE TABLE local (
     subcategory_id INTEGER NOT NULL,
     user_id UUID NOT NULL,
     priceperhour INTEGER,
+    startdate DATE,
+    enddate DATE,
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id)
   
@@ -63,14 +67,17 @@ CREATE TABLE local (
 
 CREATE TABLE availability (
     id SERIAL PRIMARY KEY,
-    start VARCHAR(45) NOT NULL,
-    "end" VARCHAR(45) NOT NULL,
+    start VARCHAR(45) ,
+    "end" VARCHAR(45) ,
     daysofweek VARCHAR(9) CHECK (daysofweek IN ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')),
     personal_id INTEGER,
     event_id INTEGER,
     local_id INTEGER,
     material_id INTEGER, -- New foreign key for material
     date DATE,
+    startdate DATE,
+    enddate DATE,
+    statusday VARCHAR(9) DEFAULT 'available' CHECK (statusday IN ('available', 'reserved', 'exception')),
     FOREIGN KEY (personal_id) REFERENCES personal(id),
     FOREIGN KEY (event_id) REFERENCES event(id),
     FOREIGN KEY (local_id) REFERENCES local(id),
@@ -101,13 +108,12 @@ CREATE TABLE material (
     user_id UUID NOT NULL,
     quantity INTEGER,
     price INTEGER,
-
+    startdate DATE,
+    enddate DATE,
     price_per_hour INTEGER, -- New column for price per hour
     sell_or_rent VARCHAR(4) CHECK (sell_or_rent IN ('sell', 'rent')), -- Using VARCHAR with a CHECK constraint
     name VARCHAR(45),
     details VARCHAR(255),
-    sell_or_rent VARCHAR(4) CHECK (sell_or_rent IN ('sell', 'rent')),
-    price_per_hour INTEGER,
     FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
     FOREIGN KEY (user_id) REFERENCES "user"(id)
 );

@@ -56,7 +56,6 @@ import CreateLocalServiceStep5 from '../components/LocalServiceCreation/CreateLo
 import CreatePersonalServiceStep1 from '../components/PersonalServiceCreation/CreatePersonalServiceStep1';
 import CreatePersonalServiceStep2 from '../components/PersonalServiceCreation/CreatePersonalServiceStep2';
 import CreatePersonalServiceStep3 from '../components/PersonalServiceCreation/CreatePersonalServiceStep3';
-import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
 import CreatePersonalServiceStep5 from '../components/PersonalServiceCreation/CreatePersonalServiceStep5';
 
 type RootStackParamList = {
@@ -256,30 +255,25 @@ const AppNavigation: React.FC = () => {
           options={{ title: 'Service Details' }}
         />
         <Stack.Screen 
-          name="CreatePersonalServiceStep1" 
-          component={CreatePersonalServiceStep1} 
-          options={{ headerShown: true, title: 'Create Personal Service - Step 1' }} 
-        />
-        <Stack.Screen 
-          name="CreatePersonalServiceStep2" 
-          component={CreatePersonalServiceStep2} 
-          options={{ headerShown: true, title: 'Create Personal Service - Step 2' }} 
-        />
-        <Stack.Screen 
-          name="CreatePersonalServiceStep3" 
-          component={CreatePersonalServiceStep3} 
-          options={{ headerShown: true, title: 'Create Personal Service - Step 3' }} 
-        />
-        <Stack.Screen 
-          name="CreatePersonalServiceStep4" 
-          component={CreatePersonalServiceStep4} 
-          options={{ headerShown: true, title: 'Create Personal Service - Step 4' }} 
-        />
-        <Stack.Screen 
-          name="CreatePersonalServiceStep5" 
-          component={CreatePersonalServiceStep5} 
-          options={{ headerShown: true, title: 'Create Personal Service - Step 5' }} 
-        />
+        name="CreatePersonalServiceStep1" 
+        component={CreatePersonalServiceStep1} 
+        options={{ headerShown: true, title: 'Create Personal Service - Step 1' }} 
+      />
+      <Stack.Screen 
+        name="CreatePersonalServiceStep2" 
+        component={CreatePersonalServiceStep2} 
+        options={{ headerShown: true, title: 'Create Personal Service - Step 2' }} 
+      />
+      <Stack.Screen 
+        name="CreatePersonalServiceStep3" 
+        component={CreatePersonalServiceStep3} 
+        options={{ headerShown: true, title: 'Create Personal Service - Step 3' }} 
+      />
+      <Stack.Screen 
+        name="CreatePersonalServiceStep5" 
+        component={CreatePersonalServiceStep5} 
+        options={{ headerShown: true, title: 'Create Personal Service - Final Step' }} 
+      />
         <Stack.Screen 
           name="UserProfile" 
           component={UserProfileScreen} 
