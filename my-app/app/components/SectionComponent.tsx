@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import StaffServiceCard from './PersonalServiceComponents/StaffServiceCard';
 import EventCard from './event/EventCard';
 import LocalServiceCard from './LocalService/LocalServiceCard';
@@ -27,7 +27,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
       case 'event':
         return <EventCard key={item.id} event={item} onPress={() => onItemPress(item)} />;
       case 'local':
-      case 'material':
+      // case 'material':
         return <LocalServiceCard key={item.id} item={item} onPress={() => onItemPress(item)} />;
       default:
         return null;
@@ -61,51 +61,48 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
 
   return (
     <View style={styles.section}>
-      <LinearGradient
-        colors={['#1a1a1a', '#2c2c2c', '#3d3d3d']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerContainer}
+      <BlurView
+        style={styles.blurBackground}
+        blurType ="dark " 
+        blurAmount={10}
+        reducedTransparencyFallbackColor="rgba(0, 0, 0, 0.8)"
       >
-        <Text style={styles.sectionTitle}>{title.toUpperCase()}</Text>
-        <TouchableOpacity onPress={onSeeAll} style={styles.seeAllButton}>
-          <Text style={styles.seeAllButtonText}>See All</Text>
-          <Ionicons name="chevron-forward" size={16} color="#fff" />
-        </TouchableOpacity>
-      </LinearGradient>
-      <LinearGradient
-        colors={['#1a1a1a', '#2c2c2c', '#3d3d3d']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.contentContainer}
-      >
-        {type === 'local' ? (
-          <>
+        <View style={styles.headerContainer}>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          <TouchableOpacity onPress={onSeeAll} style={styles.seeAllButton}>
+            <Text style={styles.seeAllButtonText}>See All</Text>
+            <Ionicons name="chevron-forward" size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.contentContainer}>
+          {type === 'local' ? (
+            <>
+              <ScrollView
+                ref={scrollViewRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={handleScroll}
+              >
+                {renderLocalServices()}
+              </ScrollView>
+              {totalPages > 1 && (
+                <View style={styles.pagination}>
+                  <Text style={styles.pageIndicator}>{`${currentPage + 1}/${totalPages}`}</Text>
+                </View>
+              )}
+            </>
+          ) : (
             <ScrollView
-              ref={scrollViewRef}
               horizontal
-              pagingEnabled
               showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={handleScroll}
+              contentContainerStyle={styles.scrollViewContent}
             >
-              {renderLocalServices()}
+              {data.map(renderItem)}
             </ScrollView>
-            {totalPages > 1 && (
-              <View style={styles.pagination}>
-                <Text style={styles.pageIndicator}>{`${currentPage + 1}/${totalPages}`}</Text>
-              </View>
-            )}
-          </>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.scrollViewContent}
-          >
-            {data.map(renderItem)}
-          </ScrollView>
-        )}
-      </LinearGradient>
+          )}
+        </View>
+      </BlurView>
     </View>
   );
 };
@@ -124,12 +121,17 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 6,
   },
+  blurBackground: {
+    borderRadius: 15,
+  },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
   },
   contentContainer: {
     paddingVertical: 15,
@@ -139,14 +141,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#fff',
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
   },
   seeAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 20,

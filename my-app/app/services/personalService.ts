@@ -1,38 +1,70 @@
 import { supabase } from './supabaseClient';
 import { Service } from './serviceTypes';
-import { makeServiceRequest } from './requestService';
-
-export { makeServiceRequest };
 
 
-export const initiatePayment = async (requestId: number, amount: number) => {
-  const FLOUCI_APP_TOKEN = "4c1e07ef-8533-4e83-bbeb-7f61c0b21931";
-  const FLOUCI_APP_SECRET = "ee9d6f08-30c8-4dbb-8578-d51293ff2535";
+// export const makeServiceRequest = async (personalId: number, hours: number, date: string, userId: string): Promise<boolean> => {
+//   try {
+//     const { data: personalData, error: personalError } = await supabase
+//       .from('personal')
+//       .select('priceperhour, percentage')
+//       .eq('id', personalId)
+//       .single();
 
-  try {
-    const response = await fetch('https://api.flouci.com/payment', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${FLOUCI_APP_TOKEN}`
-      },
-      body: JSON.stringify({
-        app_token: FLOUCI_APP_TOKEN,
-        app_secret: FLOUCI_APP_SECRET,
-        amount: amount,
-        accept_url: `https://yourapp.com/payment-success?requestId=${requestId}`,
-        cancel_url: `https://yourapp.com/payment-cancel?requestId=${requestId}`,
-        decline_url: `https://yourapp.com/payment-decline?requestId=${requestId}`,
-      })
-    });
+//     if (personalError) throw personalError;
 
-    const paymentData = await response.json();
-    return paymentData;
-  } catch (error) {
-    console.error('Error initiating Flouci payment:', error);
-    return null;
-  }
-};
+//     const totalPrice = personalData.priceperhour * hours;
+//     const depositAmount = totalPrice * (personalData.percentage / 100);
+
+//     const { data, error } = await supabase
+//       .from('requests')
+//       .insert({
+//         user_id: userId,
+//         personal_id: personalId,
+//         status: 'pending',
+//         hours: hours,
+//         date: date,
+//         total_price: totalPrice,
+//         deposit_amount: depositAmount
+//       });
+
+//     if (error) throw error;
+//     return true;
+//   } catch (error) {
+//     console.error('Error making service request:', error);
+//     return false;
+//   }
+// };
+
+
+
+// export const initiatePayment = async (requestId: number, amount: number) => {
+//   const FLOUCI_APP_TOKEN = "4c1e07ef-8533-4e83-bbeb-7f61c0b21931";
+//   const FLOUCI_APP_SECRET = "ee9d6f08-30c8-4dbb-8578-d51293ff2535";
+
+//   try {
+//     const response = await fetch('https://api.flouci.com/payment', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${FLOUCI_APP_TOKEN}`
+//       },
+//       body: JSON.stringify({
+//         app_token: FLOUCI_APP_TOKEN,
+//         app_secret: FLOUCI_APP_SECRET,
+//         amount: amount,
+//         accept_url: `https://yourapp.com/payment-success?requestId=${requestId}`,
+//         cancel_url: `https://yourapp.com/payment-cancel?requestId=${requestId}`,
+//         decline_url: `https://yourapp.com/payment-decline?requestId=${requestId}`,
+//       })
+//     });
+
+//     const paymentData = await response.json();
+//     return paymentData;
+//   } catch (error) {
+//     console.error('Error initiating Flouci payment:', error);
+//     return null;
+//   }
+// };
 
 export const fetchStaffServices = async (): Promise<Service[]> => {
   try {
@@ -153,3 +185,4 @@ export const toggleLike = async (personalId: number, userId: string | null) => {
     return null;
   }
 };
+

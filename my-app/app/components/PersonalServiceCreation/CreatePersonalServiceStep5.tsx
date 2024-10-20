@@ -1,69 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, Button, StyleSheet, ScrollView, Alert } from 'react-native';
+import React from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
+import { format, parseISO } from 'date-fns';
 
 type CreatePersonalServiceStep5ScreenRouteProp = RouteProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
 type CreatePersonalServiceStep5ScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
 
-const CreatePersonalServiceStep5 = () => {
+const CreatePersonalServiceStep5: React.FC = () => {
   const navigation = useNavigation<CreatePersonalServiceStep5ScreenNavigationProp>();
   const route = useRoute<CreatePersonalServiceStep5ScreenRouteProp>();
-  const { serviceName, description, images, price, skills, subcategoryName } = route.params;
-
+  const { 
+    serviceName, 
+    description, 
+    images, 
+    pricePerHour, 
+    depositPercentage, 
+    subcategoryId, 
+    interval, 
+    startDate, 
+    endDate, 
+    exceptionDates = []
+  } = route.params;
   const { userId } = useUser();
-  const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
-
-  useEffect(() => {
-    const fetchSubcategoryId = async () => {
-      const { data, error } = await supabase
-        .from('subcategory')
-        .select('id')
-        .eq('name', subcategoryName)
-        .single();
-
-      if (error) {
-        console.error('Error fetching subcategory:', error);
-        Alert.alert('Error', 'Failed to fetch subcategory. Please try again.');
-      } else if (data) {
-        setSubcategoryId(data.id);
-      }
-    };
-
-    fetchSubcategoryId();
-  }, [subcategoryName]);
 
   const handleConfirm = async () => {
     if (!userId) {
-      Alert.alert('Error', 'You must be logged in to create a service.');
-      return;
-    }
-
-    if (!subcategoryId) {
-      Alert.alert('Error', 'Failed to fetch subcategory. Please try again.');
+      Alert.alert('Erreur', 'Vous devez être connecté pour créer un service.');
       return;
     }
 
     try {
-      // Insert the personal service
       const { data: personalData, error: personalError } = await supabase
         .from('personal')
         .insert({
           name: serviceName,
           details: description,
-          priceperhour: parseFloat(price),
+          priceperhour: pricePerHour,
+          percentage: depositPercentage,
           subcategory_id: subcategoryId,
           user_id: userId,
+          startdate: startDate,
+          enddate: endDate
         })
         .select()
         .single();
 
       if (personalError) throw personalError;
 
-      // Create an album for the service
+      if (!personalData) {
+        throw new Error('Failed to create personal service');
+      }
+
       const { data: albumData, error: albumError } = await supabase
         .from('album')
         .insert({
@@ -76,7 +67,6 @@ const CreatePersonalServiceStep5 = () => {
 
       if (albumError) throw albumError;
 
-      // Insert images into the media table
       const mediaPromises = images.map(imageUrl => 
         supabase
           .from('media')
@@ -84,52 +74,129 @@ const CreatePersonalServiceStep5 = () => {
             personal_id: personalData.id,
             url: imageUrl,
             album_id: albumData.id,
-            user_id: userId,
           })
       );
 
       await Promise.all(mediaPromises);
 
-      // Insert skills
-      const skillPromises = skills.map(skill =>
-        supabase
-          .from('skill')
-          .insert({
-            personal_id: personalData.id,
-            name: skill,
-          })
-      );
+      const availabilityData = exceptionDates.map(dateString => ({
+        personal_id: personalData.id,
+        date: dateString,
+        startdate: startDate,
+        enddate: endDate,
+        daysofweek: format(parseISO(dateString), 'EEEE').toLowerCase(),
+        statusday: 'exception'
+      }));
 
-      await Promise.all(skillPromises);
+      if (availabilityData.length > 0) {
+        const { error: availabilityError } = await supabase
+          .from('availability')
+          .insert(availabilityData);
 
-      Alert.alert('Success', 'Service and images submitted successfully!');
+        if (availabilityError) throw availabilityError;
+      }
+
+      Alert.alert('Succès', 'Service créé avec succès !');
       navigation.navigate('Home');
     } catch (error) {
-      console.error('Error submitting service:', error);
-      Alert.alert('Error', 'Error submitting service. Please try again.');
+      console.error('Erreur lors de la soumission du service:', error);
+      Alert.alert('Erreur', 'Erreur lors de la création du service. Veuillez réessayer.');
     }
   };
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.label}>Service Name: {serviceName}</Text>
-      <Text style={styles.label}>Description: {description}</Text>
-      <Text style={styles.label}>Subcategory: {subcategoryName}</Text>
-      <Text style={styles.label}>Price per hour: {price}</Text>
-      <Text style={styles.label}>Skills: {skills.join(', ')}</Text>
-      <Text style={styles.label}>Images:</Text>
-      {images.map((imageUri, index) => (
-        <Image key={index} source={{ uri: imageUri }} style={styles.image} />
-      ))}
-      <Button title="Confirm and Submit" onPress={handleConfirm} />
+      <View style={styles.card}>
+        <Text style={styles.title}>Create a Personal Service</Text>
+        <Text style={styles.subtitle}>Étape 5 : Confirmation</Text>
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoText}>Name : {serviceName}</Text>
+          <Text style={styles.infoText}>Description : {description}</Text>
+          <Text style={styles.infoText}>Price perhour: {pricePerHour}€</Text>
+          <Text style={styles.infoText}>Percentage of deposit : {depositPercentage}%</Text>
+          <Text style={styles.infoText}>Interval : {interval}</Text>
+          <Text style={styles.infoText}>Start date : {startDate}</Text>
+          <Text style={styles.infoText}>End date : {endDate}</Text>
+          <Text style={styles.infoText}>Exception date : {exceptionDates.join(', ')}</Text>
+        </View>
+        <Text style={styles.imagesTitle}>Images :</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageContainer}>
+          {images.map((imageUri, index) => (
+            <Image key={index} source={{ uri: imageUri }} style={styles.image} />
+          ))}
+        </ScrollView>
+        <TouchableOpacity style={styles.button} onPress={handleConfirm}>
+          <Text style={styles.buttonText}>Confirm and Submit</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  label: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
-  image: { width: 100, height: 100, marginVertical: 10 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f2f5',
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    margin: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#666',
+    marginBottom: 20,
+  },
+  infoContainer: {
+    marginBottom: 20,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 5,
+  },
+  imagesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  imageContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    marginRight: 10,
+    borderRadius: 10,
+  },
+  button: {
+    backgroundColor: '#4a90e2',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
 });
 
 export default CreatePersonalServiceStep5;

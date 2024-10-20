@@ -73,26 +73,21 @@ export type RootStackParamList = {
     subcategoryName: string;
     subcategoryId: number;
   };
-  CreatePersonalServiceStep4: {
-    serviceName: string;
-    description: string;
-    images: string[];
-    price: string;
-    subcategoryName: string;
-    subcategoryId: number;
-  };
   CreatePersonalServiceStep5: {
     serviceName: string;
     description: string;
-    images: string[];
-    price: string;
-    skills: string[];
     subcategoryName: string;
     subcategoryId: number;
+    images: string[];
+    interval: 'Yearly' | 'Monthly' | 'Weekly';
+    startDate: string;
+    endDate: string;
+    exceptionDates: string[];
+    pricePerHour: number;
+    depositPercentage: number;
   };
 };
 
-export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;
 export type CreateLocalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep5'>;
 export type PersonalScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'PersonalsScreen'>;
 export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -100,5 +95,4 @@ export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamL
 export type CreatePersonalServiceStep1NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep1'>;
 export type CreatePersonalServiceStep2NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep2'>;
 export type CreatePersonalServiceStep3NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep3'>;
-export type CreatePersonalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep4'>;
 export type CreatePersonalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
