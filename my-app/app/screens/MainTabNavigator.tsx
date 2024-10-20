@@ -21,7 +21,6 @@ const MainTabNavigator: React.FC = () => {
   return (
     <Tab.Navigator>
       <Tab.Screen name="Home" component={HomeScreen}  options={{ headerShown: false }} />
-    
       <Tab.Screen name="Calendar" component={CalendarScreen}  options={{ headerShown: false }} />
       <Tab.Screen name="Map" component={MapScreen}  options={{ headerShown: false }} />
       <Tab.Screen name="Signup" component={Signup}  options={{ headerShown: false }}/>
