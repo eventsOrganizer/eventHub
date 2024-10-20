@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Animated, Image } from 'react-native';
 import { Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Importing icon library
+import TestImageComponent from './TestImageComponent';
 
 const { width, height } = Dimensions.get('window');
 
@@ -11,19 +12,22 @@ const slides = [
     key: '1',
     title: 'Discover Unique Spaces',
     description: 'Find and rent the perfect venue for your events, from cozy halls to spacious venues.',
-    colors: ['#C2E3FF', '#A0D2FF'], // Light blue to soft blue
+    colors: ['#1E1E2F', '#4A4A6A'], // Dark gray to slate gray
+    image: require('../assets/images/onBoarding1.png'), // Adjust the path as needed
   },
   {
     key: '2',
     title: 'Connect with Professionals',
     description: 'Easily reach out to event crews and service providers to make your event a success.',
-    colors: ['#FFB6C1', '#FF69B4'], // Light pink to hot pink
+    colors: ['#2B2B3D', '#6D6D8E'], // Darker navy to muted lavender
+    image: require('../assets/images/onBoarding2.png'), // Adjust the path as needed
   },
   {
     key: '3',
     title: 'Plan Your Event Seamlessly',
     description: 'Organize everything from catering to audio-visual setups in one place, hassle-free.',
-    colors: ['#D8BFD8', '#DDA0DD'], // Thistle to plum
+    colors: ['#3C3C4C', '#B1A4D8'], // Dark slate to soft lavender
+    image: require('../assets/images/onBoarding3.png'), // Adjust the path as needed
   },
 ];
 
@@ -72,6 +76,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ navigation }) => {
       <View key={slide.key} style={styles.slide}>
         <LinearGradient colors={slide.colors} style={styles.gradientBackground}>
           <View style={styles.contentContainer}>
+            <TestImageComponent images={[slide.image]} />
             <View style={styles.textBox}>
               <Text style={styles.title}>{slide.title}</Text>
               <Text style={styles.description}>{slide.description}</Text>
@@ -144,30 +149,36 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
     paddingHorizontal: 20,
   },
+  image: {
+    width: '80%',
+    height: '40%',
+    resizeMode: 'contain',
+    marginBottom: 20,
+  },
   textBox: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white for the text box
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    alignItems: 'center', // Center items in the text box
+    alignItems: 'center',
     width: '115%',
     position: 'absolute',
-    bottom: -308, // Adjust this if needed for positioning
+    bottom: -8, // Adjust this if needed for positioning
     height: 250, // You can adjust the height as needed
   },
   title: {
-    fontSize: 24,
+    fontSize: 26, // Increased font size for title
     fontWeight: 'bold',
-    color: '#333',
+    color: '#FF7E00', // Updated title color for better visibility
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 15, // Increased spacing from description
   },
   description: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 16, // Increased font size for description
+    color: '#333', // Updated description color for better contrast
     textAlign: 'center',
     paddingHorizontal: 20,
-    marginBottom: 20, // Add margin for spacing
+    marginBottom: 30, // Increased margin for spacing
   },
   pagination: {
     flexDirection: 'row',
@@ -178,9 +189,9 @@ const styles = StyleSheet.create({
     right: 0,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10, // Increased dot size for better visibility
+    height: 10,
+    borderRadius: 5,
     marginHorizontal: 5,
   },
   activeDot: {
