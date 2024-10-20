@@ -58,6 +58,8 @@ import CreatePersonalServiceStep5 from '../components/PersonalServiceCreation/Cr
 import MaterialScreen from '../screens/MaterialServiceScreens/MaterialScreen';
 import MaterialDetailScreen from '../screens/MaterialServiceScreens/MaterialDetailScreen';
 import { Material } from './types';
+import BasketScreen from '../screens/BasketScreen';
+import MaterialsOnboardingScreen from '../screens/MaterialServiceScreens/MaterialsOnboardingScreen';
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -78,7 +80,7 @@ type RootStackParamList = {
   VenueSelection: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string };
   MusicAndEntertainment: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; venue: string };
   EventTimeline: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; venue: string; music: string };
-  
+  Basket: { basket: Material[] };
   GuestManagement: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
   TeamCollaboration: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
   Notifications: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
@@ -300,6 +302,12 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="MaterialDetail" 
       component={MaterialDetailScreen as any} />
+      <Stack.Screen
+       name ="Basket" 
+      component={BasketScreen} />
+      <Stack.Screen
+       name ="MaterialsOnboarding" 
+      component={MaterialsOnboardingScreen} />
       </Stack.Navigator>
    
   );

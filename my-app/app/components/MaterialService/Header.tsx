@@ -4,23 +4,27 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import BasketIcon from './BasketIcon';
 import { Menu } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../navigation/types';
+
+type HeaderNavigationProp = StackNavigationProp<RootStackParamList, 'MaterialScreen'>;
 
 interface HeaderProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   basketCount: number;
   onBasketPress: () => void;
-  navigation: any;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   searchQuery, 
   setSearchQuery, 
   basketCount, 
-  onBasketPress,
-  navigation 
+  onBasketPress
 }) => {
   const [menuVisible, setMenuVisible] = React.useState(false);
+  const navigation = useNavigation<HeaderNavigationProp>();
 
   return (
     <BlurView intensity={100} style={styles.header}>

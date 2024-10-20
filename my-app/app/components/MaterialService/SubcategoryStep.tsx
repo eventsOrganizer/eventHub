@@ -19,9 +19,15 @@ const SubcategoryStep: React.FC<SubcategoryStepProps> = ({ formData, setFormData
           style={styles.picker}
         >
           <Picker.Item label="Select Subcategory" value="" />
-          <Picker.Item label="Sound Equipment" value="sound" />
-          <Picker.Item label="Lighting" value="lighting" />
-          <Picker.Item label="Tents" value="tents" />
+          <Picker.Item label="Audio Visual" value="Audio Visual" />
+          <Picker.Item label="Furniture" value="Furniture" />
+          <Picker.Item label="Plates" value="Plates" />
+          <Picker.Item label="Cutlery" value="Cutlery" />
+          <Picker.Item label="Glassware" value="Glassware" />
+          <Picker.Item label="Bar Equipment" value="Bar Equipment" />
+          <Picker.Item label="Cleaning" value="Cleaning" />
+          <Picker.Item label="Decoration" value="Decoration" />
+          <Picker.Item label="Tableware" value="Tableware" />
         </Picker>
       </View>
     </Animated.View>

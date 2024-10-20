@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b3a52c4f-9147-45ab-aab1-110060bf4890" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/Auth/SignIn.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/Auth/SignIn.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/Auth/SignUp.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/Auth/SignUp.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/Header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/Header.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/SubcategoryList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/SubcategoryList.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/SubcategoryStep.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/SubcategoryStep.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/event/profile/UserProfileScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/event/profile/UserProfileScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/navigation/AppNavigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/navigation/AppNavigation.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/navigation/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/navigation/types.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/HomeScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/HomeScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/MaterialServiceScreens/MaterialDetailScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/MaterialServiceScreens/MaterialDetailScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/MaterialServiceScreens/MaterialScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/MaterialServiceScreens/MaterialScreen.tsx" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;chebbifediii&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/eventsOrganizer/eventHub.git&quot;,
+    &quot;accountId&quot;: &quot;49f5f9f1-86f2-4659-84da-c7bb1f08c23d&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="2nZZpyOZzljyHgmCrWeHM51J2UY" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;fadi&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;AndroidSdkUpdater&quot;
+  }
+}</component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b3a52c4f-9147-45ab-aab1-110060bf4890" name="Changes" comment="" />
+      <created>1729182745770</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1729182745770</updated>
+    </task>
+    <servers />
+  </component>
+</project>

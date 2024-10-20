@@ -1,12 +1,18 @@
 import React from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
+import {MaterialIcons} from '@expo/vector-icons';
 const subcategories = [
   { id: null, name: 'All', icon: 'apps-outline' },
   { id: 159, name: 'Audio Visual', icon: 'headset-outline' },
   { id: 160, name: 'Furniture', icon: 'bed-outline' },
   { id: 161, name: 'Plates', icon: 'restaurant-outline' },
+  { id: 162, name: 'Cutlery', icon: 'restaurant' },
+  { id: 163, name: 'Glassware', icon: 'wine' },
+  { id: 164, name: 'Bar Equipment', icon: 'beer' },
+  { id: 165, name: 'Cleaning', icon: 'cleaning-services' },
+  { id: 166, name: 'Decoration', icon: 'star' },
+  { id: 167, name: 'Tableware', icon: 'table-bar' },
 ];
 
 type SubcategoryListProps = {
@@ -32,6 +38,7 @@ const SubcategoryList: React.FC<SubcategoryListProps> = ({ selectedSubcategory, 
               size={24}
               color={selectedSubcategory === subcategory.id ? "white" : "black"}
             />
+            
             <Text style={[
               styles.subcategoryName,
               selectedSubcategory === subcategory.id && styles.selectedSubcategoryText

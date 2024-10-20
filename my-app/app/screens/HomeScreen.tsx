@@ -113,7 +113,7 @@ const HomeScreen: React.FC = () => {
   };
 
   const fetchMaterialsAndFoodServices = async () => {
-    const { data, error } = await supabase.from('material').select('*').limit(5);
+    const { data, error } = await supabase.from('material').select('*, subcategory (name), media (url),price,price_per_hour').limit(5);
     if (error) throw new Error(error.message);
     return data || [];
   };

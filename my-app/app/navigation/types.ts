@@ -91,6 +91,8 @@ export type RootStackParamList = {
     subcategoryId: number;
   };
   Basket: { basket: Material[] };
+  MaterialScreen: { materials: Material[] };
+  MaterialsOnboarding: undefined;
 };
 export interface Media {
   url: string;
@@ -102,7 +104,7 @@ export interface Material {
   price_per_hour?: number;
   sell_or_rent: 'sell' | 'rent';
   details?: string;
-  subcategory: string;
+  subcategory_id: number; // Changed from subcategory to subcategory_id
   media: Array<{ url: string }>;
 }
 export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;

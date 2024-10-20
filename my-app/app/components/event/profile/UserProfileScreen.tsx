@@ -13,6 +13,7 @@ import FriendsList from './FriendsList';
 import InterestsList from './InterestsList';
 import Subscriptions from './Subscriptions';
 import FriendRequestBadge from './FriendRequestBadge';
+import ServiceRequestsList from '../../../components/ServiceRequestsList';
 
 interface UserProfile {
   id: string;
@@ -128,6 +129,8 @@ const UserProfileScreen: React.FC = () => {
         );
       case 'subscriptions':
         return <Subscriptions />;
+      case 'requests':
+        return <ServiceRequestsList userId={userId as string} />;
       default:
         return null;
     }
@@ -148,9 +151,8 @@ const UserProfileScreen: React.FC = () => {
   const handleCreateService = () => {
     navigation.navigate('CreateService' as never);
   };
- 
 
-  const CreateButton: React.FC<{ onPress: () => void; iconName: string; text: string }> = ({ onPress, iconName, text }) => (
+  const CreateButton: React.FC<{ onPress: () => void; iconName: keyof typeof Ionicons.glyphMap; text: string }> = ({ onPress, iconName, text }) => (
     <TouchableOpacity style={styles.createButton} onPress={onPress}>
       <Ionicons name={iconName} size={24} color="#fff" />
       <Text style={styles.createButtonText}>{text}</Text>
@@ -163,25 +165,24 @@ const UserProfileScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-    <LinearGradient colors={['#FF4500', '#FFA500']} style={styles.header}>
-      <Image source={{ uri: userProfile.avatar_url }} style={styles.avatar} />
-      <Text style={styles.name}>{`${userProfile.firstname} ${userProfile.lastname}`}</Text>
-      <Text style={styles.email}>{userProfile.email}</Text>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateEvent}>
-          <Ionicons name="add-circle-outline" size={24} color="#fff" />
-          <Text style={styles.createButtonText}>Event</Text>
+      <LinearGradient colors={['#FF4500', '#FFA500']} style={styles.header}>
+        <Image source={{ uri: userProfile.avatar_url }} style={styles.avatar} />
+        <Text style={styles.name}>{`${userProfile.firstname} ${userProfile.lastname}`}</Text>
+        <Text style={styles.email}>{userProfile.email}</Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.createButton} onPress={handleCreateEvent}>
+            <Ionicons name="add-circle-outline" size={24} color="#fff" />
+            <Text style={styles.createButtonText}>Event</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.createButton} onPress={handleCreateService}>
+            <Ionicons name="briefcase-outline" size={24} color="#fff" />
+            <Text style={styles.createButtonText}>Service</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditProfile' as never)}>
+          <Ionicons name="pencil" size={24} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateService}>
-          <Ionicons name="briefcase-outline" size={24} color="#fff" />
-          <Text style={styles.createButtonText}>Service</Text>
-        </TouchableOpacity>
-       
-      </View>
-      <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditProfile' as never)}>
-        <Ionicons name="pencil" size={24} color="#fff" />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.requestsButton} onPress={() => setShowRequests(!showRequests)}>
+        <TouchableOpacity style={styles.requestsButton} onPress={() => setShowRequests(!showRequests)}>
           <Ionicons name="notifications" size={24} color="#FF4500" />
           <Text style={styles.requestsButtonText}>{requestCount}</Text>
         </TouchableOpacity>
@@ -189,7 +190,7 @@ const UserProfileScreen: React.FC = () => {
       </LinearGradient>
 
       <View style={styles.tabContainer}>
-        {['events', 'services', 'friends', 'subscriptions'].map((tab) => (
+        {['events', 'services', 'friends', 'subscriptions', 'requests'].map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[styles.tab, activeTab === tab && styles.activeTab]}
@@ -220,7 +221,7 @@ const UserProfileScreen: React.FC = () => {
         )}
       />
 
-{showRequests && (
+      {showRequests && (
         <View style={styles.requestsOverlay}>
           <RequestsScreen />
           <TouchableOpacity 

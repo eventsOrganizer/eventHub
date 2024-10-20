@@ -3,14 +3,15 @@ import { View, StyleSheet } from 'react-native';
 import { Provider } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '../../../lib/supabase';
 import { Material } from '../../navigation/types';
 import Header from '../../components/MaterialService/Header';
 import FilterSection from '../../components/MaterialService/FilterSection';
 import MaterialList from '../../components/MaterialService/MaterialList';
-import { RootStackParamList } from '../../navigation/types';
+    import { RootStackParamList } from '../../navigation/types';
+    import { Button } from 'react-native-paper'; 
 
-type MaterialsScreenNavigationProp = StackNavigationProp<RootStackParamList, keyof RootStackParamList>;
+    type MaterialsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MaterialScreen'>;
 
 const MaterialsScreen = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -28,25 +29,20 @@ const MaterialsScreen = () => {
   const fetchMaterials = async () => {
     const { data, error } = await supabase
       .from('material')
-      .select('id, name, price, price_per_hour, sell_or_rent, subcategory, media (url), details');
+      .select('id, name, price, price_per_hour, sell_or_rent, subcategory_id, media (url), details');
 
     if (error) {
       console.error('Error fetching materials:', error);
     } else {
-      setMaterials(data ? data.map(material => ({
-        ...material,
-        subcategory: material.subcategory,
-      })) : []);
+      setMaterials(data?.map((item: Material) => ({
+        ...item,
+        subcategory: item.subcategory_id // Map subcategory_id to subcategory for compatibility
+      })) || []);
     }
   };
 
   const addToBasket = (material: Material) => {
-    if (material.sell_or_rent === 'sell') {
-      setBasket([...basket, material]);
-    } else {
-      // For rent items, we'll implement the request logic in the BasketScreen
-      setBasket([...basket, material]);
-    }
+    setBasket([...basket, material]);
   };
 
   const filteredMaterials = materials.filter(material => {
@@ -56,7 +52,7 @@ const MaterialsScreen = () => {
     
     return (
       inPriceRange &&
-      (selectedSubcategory ? material.subcategory === String(selectedSubcategory) : true) &&
+      (selectedSubcategory ? material.subcategory_id === selectedSubcategory : true) &&
       (searchQuery ? material.name.toLowerCase().includes(searchQuery.toLowerCase()) : true)
     );
   });
@@ -64,7 +60,9 @@ const MaterialsScreen = () => {
   const navigateToBasket = () => {
     navigation.navigate('Basket', { basket });
   };
-
+  const navigateToOnboarding = () => {
+    navigation.navigate('MaterialsOnboarding');
+  };
   return (
     <Provider>
       <View style={styles.container}>
@@ -73,8 +71,11 @@ const MaterialsScreen = () => {
           setSearchQuery={setSearchQuery} 
           basketCount={basket.length}
           onBasketPress={navigateToBasket}
-          navigation={navigation}
+         
         />
+        <Button onPress={navigateToOnboarding} mode="contained">
+        Add New Material
+      </Button>
         <FilterSection
           minPrice={minPrice}
           maxPrice={maxPrice}
