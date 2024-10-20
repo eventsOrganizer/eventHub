@@ -156,6 +156,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 2,
   },
+  serviceTextContainer: {
+    marginLeft: 10,
+  },
   serviceName: {
     color: '#fff',
     fontSize: 10,

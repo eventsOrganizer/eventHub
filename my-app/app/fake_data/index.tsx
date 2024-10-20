@@ -6,6 +6,7 @@ import { injectLocations } from "./createLocation";
 import { createDataForAllCategories } from "./createServices";
 import { createSeviceCategory } from "./createServiceCategory";
 import { fetchImages } from "./fetchImages";
+import { createUserAssignments } from "./createServiceForUser";
 // createEventCategoriesAndSubcategories();
 export const createFakeData = async () => {
 // await createEventCategoriesAndSubcategories();
@@ -15,6 +16,7 @@ export const createFakeData = async () => {
 //   await createAvailabilityData();
 //   await injectMedia();
 //   await injectLocations();
+// await createUserAssignments();
 };
-// createFakeData
-console.log("images",fetchImages("nature", 10));
+// createFakeData()
+// console.log("images",fetchImages("nature", 10));
