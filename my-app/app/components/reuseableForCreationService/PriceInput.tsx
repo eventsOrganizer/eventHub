@@ -16,7 +16,7 @@ const PriceInput: React.FC<PriceInputProps> = ({ price, setPrice, label = "Prix 
         value={price}
         onChangeText={setPrice}
         keyboardType="numeric"
-        placeholder="Entrez le prix"
+        placeholder="Enter the price"
       />
     </View>
   );

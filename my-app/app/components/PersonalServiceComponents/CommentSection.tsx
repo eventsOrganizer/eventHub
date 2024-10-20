@@ -1,10 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  StyleSheet, 
+  KeyboardAvoidingView, 
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback
+} from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 import { useToast } from '../../hooks/useToast';
 import CommentItem from './CommentItem';
 import CommentInput from './CommentInput';
-
 interface Comment {
   id: number;
   details: string;
@@ -16,6 +24,14 @@ interface Comment {
 }
 
 interface CommentSectionProps {
+  comments: Array<{
+    user: { username: string };
+    id: number;
+    details: string;
+    user_id: string;
+    created_at: string;
+    personal_id: number;
+  }>;
   personalId: number;
   userId: string | null;
 }
@@ -23,12 +39,9 @@ interface CommentSectionProps {
 const CommentSection: React.FC<CommentSectionProps> = ({ personalId, userId }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const { toast } = useToast();
+  const flatListRef = useRef<FlatList>(null);
 
-  useEffect(() => {
-    fetchComments();
-  }, [personalId]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('comment')
@@ -44,7 +57,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ personalId, userId }) =
 
       if (error) throw error;
       
-      // Ensure that the data matches the Comment interface
       const typedComments: Comment[] = (data || []).map(comment => ({
         id: comment.id,
         details: comment.details,
@@ -64,28 +76,58 @@ const CommentSection: React.FC<CommentSectionProps> = ({ personalId, userId }) =
         variant: "destructive",
       });
     }
-  };
+  }, [personalId, toast]);
 
-  const renderComment = ({ item }: { item: Comment }) => (
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
+
+  const renderComment = useCallback(({ item }: { item: Comment }) => (
     <CommentItem comment={item} />
-  );
+  ), []);
+
+  const handleCommentAdded = useCallback((newComment: Comment) => {
+    setComments(prevComments => [newComment, ...prevComments]);
+    flatListRef.current?.scrollToOffset({ animated: true, offset: 0 });
+  }, []);
+
+  const ListHeaderComponent = useCallback(() => (
+    <Text style={styles.title}>Commentaires</Text>
+  ), []);
+
+  const ListEmptyComponent = useCallback(() => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>Aucun commentaire pour le moment.</Text>
+    </View>
+  ), []);
 
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
-      keyboardVerticalOffset={100}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
     >
-      <Text style={styles.title}>Commentaires</Text>
-      <FlatList
-        data={comments}
-        renderItem={renderComment}
-        keyExtractor={(item) => item.id.toString()}
-        ListEmptyComponent={<Text style={styles.emptyText}>Aucun commentaire pour le moment.</Text>}
-        style={styles.commentList}
-        contentContainerStyle={styles.commentListContent}
-      />
-      <CommentInput personalId={personalId} userId={userId} toast={toast} onCommentAdded={fetchComments} />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.inner}>
+          <FlatList
+            ref={flatListRef}
+            data={comments}
+            renderItem={renderComment}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.commentList}
+            ListHeaderComponent={ListHeaderComponent}
+            ListEmptyComponent={ListEmptyComponent}
+          />
+          <View style={styles.inputWrapper}>
+            <CommentInput 
+              personalId={personalId} 
+              userId={userId} 
+              toast={toast} 
+              onCommentAdded={handleCommentAdded} 
+            />
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 };
@@ -94,33 +136,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    elevation: 4,
+  },
+  inner: {
+    flex: 1,
   },
   title: {
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   commentList: {
-    flex: 1,
-  },
-  commentListContent: {
     flexGrow: 1,
+    paddingHorizontal: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
   },
   emptyText: {
     color: '#6b7280',
     textAlign: 'center',
-    marginTop: 20,
+  },
+  inputWrapper: {
+    padding: 16,
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
   },
 });
 
