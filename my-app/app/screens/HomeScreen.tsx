@@ -7,7 +7,6 @@ import NavBar from '../components/NavBar';
 import ServiceIcons from '../components/ServiceIcons';
 import EventSection from '../components/event/EventSection';
 import SectionComponent from '../components/SectionComponent';
-<<<<<<< HEAD
 import EventMarquee from '../screens/EventMarquee';
 import VIPServicesContainer from '../components/VIPServicesContainer';
 import EventSectionContainer from '../components/event/EventSectionContainer';
@@ -32,15 +31,13 @@ type RootStackParamList = {
   
 };
 
-=======
-import EventMarquee from './EventMarquee';
+
 import FAB from '../components/FAB';
 import tw from 'twrnc';
 import { supabase } from '../services/supabaseClient';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '../navigation/types';
 import Banner from '../components/event/Banner';
->>>>>>> a5147af5ba73dc090fe26cb310eb41c7cf6a67ec
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 const HomeScreen: React.FC = () => {
@@ -124,7 +121,6 @@ const HomeScreen: React.FC = () => {
     loadData().then(() => setRefreshing(false));
   }, []);
 
-<<<<<<< HEAD
   const handleSeeAllEvents = () => navigation.navigate('AllEvents');
   const handleStaffServicePress = (item: any) => navigation.navigate('PersonalDetail', { personalId: item.id });
   const handleSeeAllStaffServices = () => navigation.navigate('PersonalsScreen', { category: 'all' });
@@ -132,9 +128,7 @@ const HomeScreen: React.FC = () => {
   const handleLocalServicePress = (item: any) => navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
   const handleSeeAllMaterialsAndFoodServices = () => navigation.navigate('MaterialScreen');
   const handleMaterialsAndFoodServicePress = (item: any) => navigation.navigate('MaterialDetailScreen', { materialId: item.id });
-=======
   const toggleFab = () => setIsFabOpen(!isFabOpen);
->>>>>>> a5147af5ba73dc090fe26cb310eb41c7cf6a67ec
 
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 100],
@@ -148,7 +142,6 @@ const HomeScreen: React.FC = () => {
         source={{ uri: 'https://thumbs.dreamstime.com/b/disco-club-colored-lighting-abstract-scene-night-bright-rays-light-smoke-296592406.jpg' }}
         style={tw`flex-1 w-full h-full`}
       >
-<<<<<<< HEAD
         <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} onSearch={() => {}} />
         <ScrollView 
           style={styles.scrollView} 
@@ -159,7 +152,6 @@ const HomeScreen: React.FC = () => {
         >
           <EventMarquee events={events.slice(0, 10)} />
           <ServiceIcons />
-=======
         <LinearGradient
           colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.3)']}
           style={tw`absolute inset-0`}
@@ -170,7 +162,6 @@ const HomeScreen: React.FC = () => {
               <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} onSearch={() => {}} />
             </BlurView>
           </Animated.View>
->>>>>>> a5147af5ba73dc090fe26cb310eb41c7cf6a67ec
           
           <Animated.ScrollView
   style={tw`flex-1`}
