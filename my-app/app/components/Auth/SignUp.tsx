@@ -20,18 +20,17 @@ const Signup = () => {
     const [file, setFile] = useState<File | null>(null); // Store the file object
 
     const handleSubmit = async () => {
-        // const { user, error } = await signup(firstname, lastname, username, email, password);
+        const { user, error } = await signup(firstname, lastname, username, email, password);
 
-        // if (user) {
-            // Optionally upload the selected image after signup
-            if (file) { // Check if file is available
+        if (user) {
+            if (file) {
                 await uploadFile(file, {
-                    userId: "051ee8da-a509-4f97-8abe-1b05a67f1dec",
-                    type: 'image', // Assuming profile picture
+                    userId: user.id, // Use the actual user ID from the signup response
+                    type: 'image',
                 });
             }
-            // navigation.navigate('Signin'); // Navigate on successful signup
-        // }
+            navigation.navigate('Signin');
+        }
     };
 
     const handleImagePick = async () => {
@@ -95,14 +94,12 @@ const Signup = () => {
             {selectedImage && <Text>Profile image selected</Text>}
 
             <Button title="Sign Up" onPress={handleSubmit} />
-{/* 
+
             {authError && <Text style={styles.error}>{authError}</Text>}
             {uploadError && <Text style={styles.error}>{uploadError}</Text>}
-
-          
             {uploading && <Text>Uploading image...</Text>}
             {uploadSuccess && <Text style={styles.success}>Image uploaded successfully!</Text>}
-            {success && <Text style={styles.success}>{success}</Text>} */}
+            {success && <Text style={styles.success}>{success}</Text>}
         </View>
     );
 };
