@@ -1,54 +1,15 @@
-// import React, { useState } from 'react';
-// import useAuth from '../../hooks/useAuth';
-
-// const Login = () => {
-//     // Updated the type definition for useAuth to include login
-//     const { login, error, success }: { login: (identifier: string, password: string) => Promise<void>; error: string | null; success: string | null; } = useAuth();
-//     const [identifier, setIdentifier] = useState('');
-//     const [password, setPassword] = useState('');
-
-//     const handleSubmit = async (e: React.FormEvent) => {
-//         e.preventDefault();
-//         try {
-//             await login(identifier, password);
-//             // Handle success (e.g., redirect or show a success message)
-//         } catch (err) {
-//             // Handle error (e.g., show an error message)
-//         }
-//     };
-
-//     return (
-//         <form onSubmit={handleSubmit}>
-//             <input
-//                 type="text"
-//                 value={identifier}
-//                 onChange={(e) => setIdentifier(e.target.value)}
-//                 placeholder="Identifier"
-//                 required
-//             />
-//             <input
-//                 type="password"
-//                 value={password}
-//                 onChange={(e) => setPassword(e.target.value)}
-//                 placeholder="Password"
-//                 required
-//             />
-//             <button type="submit">Login</button>
-//             {error && <p>{error}</p>}
-//             {success && <p>{success}</p>}
-//         </form>
-//     );
-// };
-
-// export default Login;
-
-
+import React, { useState } from 'react';
+import { View, TextInput, TouchableOpacity, Text, Alert, StyleSheet, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
-import React, { useState } from 'react';
-import { View, TextInput, Button, Text, Alert, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
 import useAuth from '../../hooks/useAuth';
+import tw from 'twrnc';
+
+const { width, height } = Dimensions.get('window');
 
 const Login = () => {
     const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>();
@@ -78,47 +39,47 @@ const Login = () => {
     };
 
     return (
-        <View style={styles.container}>
-            <TextInput
-                placeholder="Identifier"
-                value={identifier}
-                onChangeText={setIdentifier}
-                style={styles.input}
-            />
-            <TextInput
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                style={styles.input}
-            />
-            <Button title="Login" onPress={handleSubmit} />
-            {validationError && <Text style={styles.errorText}>{validationError}</Text>}
-            {error && <Text style={styles.errorText}>{error}</Text>}
-            {success && <Text style={styles.successText}>{success}</Text>}
-        </View>
+        <LinearGradient
+            colors={['#FF5F00', '#FF0D95']}
+            style={tw`flex-1 justify-center items-center`}
+        >
+            <BlurView intensity={80} tint="dark" style={tw`w-11/12 rounded-3xl overflow-hidden`}>
+                <View style={tw`p-6`}>
+                    <Text style={tw`text-white text-3xl font-bold mb-6 text-center`}>Login</Text>
+                    <View style={tw`bg-white bg-opacity-20 rounded-full px-4 py-2 mb-4 flex-row items-center`}>
+                        <Ionicons name="person-outline" size={24} color="#fff" style={tw`mr-2`} />
+                        <TextInput
+                            placeholder="Username or Email"
+                            placeholderTextColor="#rgba(255,255,255,0.7)"
+                            value={identifier}
+                            onChangeText={setIdentifier}
+                            style={tw`flex-1 text-white text-base`}
+                        />
+                    </View>
+                    <View style={tw`bg-white bg-opacity-20 rounded-full px-4 py-2 mb-6 flex-row items-center`}>
+                        <Ionicons name="lock-closed-outline" size={24} color="#fff" style={tw`mr-2`} />
+                        <TextInput
+                            placeholder="Password"
+                            placeholderTextColor="#rgba(255,255,255,0.7)"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry
+                            style={tw`flex-1 text-white text-base`}
+                        />
+                    </View>
+                    <TouchableOpacity
+                        onPress={handleSubmit}
+                        style={tw`bg-white rounded-full py-3 px-6`}
+                    >
+                        <Text style={tw`text-[#FF0D95] text-center font-bold text-lg`}>Login</Text>
+                    </TouchableOpacity>
+                    {validationError && <Text style={tw`text-red-500 mt-4 text-center`}>{validationError}</Text>}
+                    {error && <Text style={tw`text-red-500 mt-4 text-center`}>{error}</Text>}
+                    {success && <Text style={tw`text-green-500 mt-4 text-center`}>{success}</Text>}
+                </View>
+            </BlurView>
+        </LinearGradient>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        padding: 20,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        marginBottom: 10,
-        borderRadius: 5,
-    },
-    errorText: {
-        color: 'red',
-        marginTop: 10,
-    },
-    successText: {
-        color: 'green',
-        marginTop: 10,
-    },
-});
 
 export default Login;

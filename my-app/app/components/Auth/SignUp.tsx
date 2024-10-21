@@ -1,41 +1,55 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
-import useAuth from '../../hooks/useAuth';
+import { View, TextInput, TouchableOpacity, Text, Alert, StyleSheet, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
+import useAuth from '../../hooks/useAuth';
 import useFileUpload from '../../services/uploadFiles';
-import * as ImagePicker from 'expo-image-picker'; // For handling file/image upload
+import * as ImagePicker from 'expo-image-picker';
+import tw from 'twrnc';
+
+const { width, height } = Dimensions.get('window');
 
 const Signup = () => {
-    const { signup, error: authError, success } = useAuth();
     const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>();
+    const { signup, error: authError, success } = useAuth();
+    const { uploadFile, uploading, uploadSuccess, error: uploadError } = useFileUpload();
     const [firstname, setFirstname] = useState('');
     const [lastname, setLastname] = useState('');
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { uploadFile, uploading, uploadSuccess, error: uploadError } = useFileUpload();
-    const [selectedImage, setSelectedImage] = useState<string | null>(null); // For file uploads
-    const [file, setFile] = useState<File | null>(null); // Store the file object
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [file, setFile] = useState<File | null>(null);
+    const [validationError, setValidationError] = useState('');
 
     const handleSubmit = async () => {
-        // const { user, error } = await signup(firstname, lastname, username, email, password);
+        if (!firstname || !lastname || !username || !email || !password) {
+            setValidationError('All fields are required.');
+            return;
+        }
 
-        // if (user) {
-            // Optionally upload the selected image after signup
-            if (file) { // Check if file is available
+        setValidationError('');
+        const { user, error } = await signup(firstname, lastname, username, email, password);
+
+        if (user) {
+            if (file) {
                 await uploadFile(file, {
-                    userId: "051ee8da-a509-4f97-8abe-1b05a67f1dec",
-                    type: 'image', // Assuming profile picture
+                    userId: user.id,
+                    type: 'image',
                 });
             }
-            // navigation.navigate('Signin'); // Navigate on successful signup
-        // }
+            Alert.alert('Success', 'You have signed up successfully.');
+            navigation.navigate('Signin');
+        } else if (error) {
+            Alert.alert('Error', error);
+        }
     };
 
     const handleImagePick = async () => {
-        // Let user pick an image from their device
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -44,92 +58,97 @@ const Signup = () => {
         });
 
         if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri); // Store the URI of the selected image
-            console.log("Selected Image URI: ", result.assets[0].uri);
-
-            // Convert the selected image to the File type
+            setSelectedImage(result.assets[0].uri);
             const response = await fetch(result.assets[0].uri);
             const blob = await response.blob();
-            //@ts-ignore
-            const newFile = new File([blob], result.assets[0].fileName, { type: result.assets[0].type });
-            console.log("newFile", newFile);
-            setFile(newFile); // Set the File object
+            const newFile = new File([blob], 'profileImage.jpg', { type: 'image/jpeg' });
+            setFile(newFile);
         }
     };
 
     return (
-        <View style={styles.container}>
-            <TextInput
-                style={styles.input}
-                placeholder="First Name"
-                value={firstname}
-                onChangeText={setFirstname}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Last Name"
-                value={lastname}
-                onChangeText={setLastname}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Username"
-                value={username}
-                onChangeText={setUsername}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            
-            <Button title="Select Profile Image" onPress={handleImagePick} />
-            {selectedImage && <Text>Profile image selected</Text>}
-
-            <Button title="Sign Up" onPress={handleSubmit} />
-{/* 
-            {authError && <Text style={styles.error}>{authError}</Text>}
-            {uploadError && <Text style={styles.error}>{uploadError}</Text>}
-
-          
-            {uploading && <Text>Uploading image...</Text>}
-            {uploadSuccess && <Text style={styles.success}>Image uploaded successfully!</Text>}
-            {success && <Text style={styles.success}>{success}</Text>} */}
-        </View>
+        <LinearGradient
+            colors={['#FF5F00', '#FF0D95']}
+            style={tw`flex-1 justify-center items-center`}
+        >
+            <BlurView intensity={80} tint="dark" style={tw`w-11/12 rounded-3xl overflow-hidden`}>
+                <View style={tw`p-6`}>
+                    <Text style={tw`text-white text-3xl font-bold mb-6 text-center`}>Sign Up</Text>
+                    <View style={tw`bg-white bg-opacity-20 rounded-full px-4 py-2 mb-4 flex-row items-center`}>
+                        <Ionicons name="person-outline" size={24} color="#fff" style={tw`mr-2`} />
+                        <TextInput
+                            placeholder="First Name"
+                            placeholderTextColor="#rgba(255,255,255,0.7)"
+                            value={firstname}
+                            onChangeText={setFirstname}
+                            style={tw`flex-1 text-white text-base`}
+                        />
+                    </View>
+                    <View style={tw`bg-white bg-opacity-20 rounded-full px-4 py-2 mb-4 flex-row items-center`}>
+                        <Ionicons name="person-outline" size={24} color="#fff" style={tw`mr-2`} />
+                        <TextInput
+                            placeholder="Last Name"
+                            placeholderTextColor="#rgba(255,255,255,0.7)"
+                            value={lastname}
+                            onChangeText={setLastname}
+                            style={tw`flex-1 text-white text-base`}
+                        />
+                    </View>
+                    <View style={tw`bg-white bg-opacity-20 rounded-full px-4 py-2 mb-4 flex-row items-center`}>
+                        <Ionicons name="at-outline" size={24} color="#fff" style={tw`mr-2`} />
+                        <TextInput
+                            placeholder="Username"
+                            placeholderTextColor="#rgba(255,255,255,0.7)"
+                            value={username}
+                            onChangeText={setUsername}
+                            style={tw`flex-1 text-white text-base`}
+                        />
+                    </View>
+                    <View style={tw`bg-white bg-opacity-20 rounded-full px-4 py-2 mb-4 flex-row items-center`}>
+                        <Ionicons name="mail-outline" size={24} color="#fff" style={tw`mr-2`} />
+                        <TextInput
+                            placeholder="Email"
+                            placeholderTextColor="#rgba(255,255,255,0.7)"
+                            value={email}
+                            onChangeText={setEmail}
+                            style={tw`flex-1 text-white text-base`}
+                        />
+                    </View>
+                    <View style={tw`bg-white bg-opacity-20 rounded-full px-4 py-2 mb-6 flex-row items-center`}>
+                        <Ionicons name="lock-closed-outline" size={24} color="#fff" style={tw`mr-2`} />
+                        <TextInput
+                            placeholder="Password"
+                            placeholderTextColor="#rgba(255,255,255,0.7)"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry
+                            style={tw`flex-1 text-white text-base`}
+                        />
+                    </View>
+                    <TouchableOpacity
+                        onPress={handleImagePick}
+                        style={tw`bg-white bg-opacity-20 rounded-full py-3 px-6 mb-4`}
+                    >
+                        <Text style={tw`text-white text-center font-bold text-lg`}>
+                            {selectedImage ? 'Change Profile Image' : 'Select Profile Image'}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={handleSubmit}
+                        style={tw`bg-white rounded-full py-3 px-6`}
+                    >
+                        <Text style={tw`text-[#FF0D95] text-center font-bold text-lg`}>Sign Up</Text>
+                    </TouchableOpacity>
+                    {validationError && <Text style={tw`text-red-500 mt-4 text-center`}>{validationError}</Text>}
+                    {authError && <Text style={tw`text-red-500 mt-4 text-center`}>{authError}</Text>}
+                    {uploadError && <Text style={tw`text-red-500 mt-4 text-center`}>{uploadError}</Text>}
+                    {uploading && <Text style={tw`text-white mt-4 text-center`}>Uploading image...</Text>}
+                    {uploadSuccess && <Text style={tw`text-green-500 mt-4 text-center`}>Image uploaded successfully!</Text>}
+                    {success && <Text style={tw`text-green-500 mt-4 text-center`}>{success}</Text>}
+                </View>
+            </BlurView>
+        </LinearGradient>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 16,
-    },
-    error: {
-        color: 'red',
-        marginVertical: 8,
-    },
-    success: {
-        color: 'green',
-        marginVertical: 8,
-    },
-    input: {
-        height: 40,
-        borderColor: 'gray',
-        borderWidth: 1,
-        marginBottom: 10,
-        paddingHorizontal: 10,
-        width: '80%',
-    },
-});
 
 export default Signup;

@@ -22,7 +22,8 @@ const FriendButton: React.FC<FriendButtonProps> = ({ targetUserId }) => {
     const { data, error } = await supabase
       .from('friend')
       .select('*')
-      .match({ user_id: userId, friend_id: targetUserId });
+      .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+      .or(`user_id.eq.${targetUserId},friend_id.eq.${targetUserId}`);
 
     if (error) {
       console.error('Error checking friendship status:', error);
@@ -62,7 +63,7 @@ const FriendButton: React.FC<FriendButtonProps> = ({ targetUserId }) => {
     const { error } = await supabase
       .from('friend')
       .delete()
-      .match({ user_id: userId, friend_id: targetUserId });
+      .or(`and(user_id.eq.${userId},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${userId})`);
 
     if (error) {
       console.error('Error removing friend:', error);
