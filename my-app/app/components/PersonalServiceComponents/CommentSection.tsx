@@ -1,96 +1,171 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import { addComment } from '../../services/interactionService';
-
-interface CommentType {
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  StyleSheet, 
+  KeyboardAvoidingView, 
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback
+} from 'react-native';
+import { supabase } from '../../services/supabaseClient';
+import { useToast } from '../../hooks/useToast';
+import CommentItem from './CommentItem';
+import CommentInput from './CommentInput';
+interface Comment {
+  id: number;
   details: string;
   user_id: string;
-  user?: {
+  created_at: string;
+  user: {
     username: string;
   };
 }
 
 interface CommentSectionProps {
-  comments: CommentType[] | undefined;
+  comments: Array<{
+    user: { username: string };
+    id: number;
+    details: string;
+    user_id: string;
+    created_at: string;
+    personal_id: number;
+  }>;
   personalId: number;
   userId: string | null;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ comments, personalId, userId }) => {
-  const [comment, setComment] = useState('');
+const CommentSection: React.FC<CommentSectionProps> = ({ personalId, userId }) => {
+  const [comments, setComments] = useState<Comment[]>([]);
+  const { toast } = useToast();
+  const flatListRef = useRef<FlatList>(null);
 
-  const handleAddComment = async () => {
-    if (comment.trim() && userId) {
-      const result = await addComment(personalId, userId, comment);
-      if (result) {
-        // Update comments locally or refetch data
-        setComment('');
-      }
+  const fetchComments = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('comment')
+        .select(`
+          id,
+          details,
+          user_id,
+          created_at,
+          user:user_id (username)
+        `)
+        .eq('personal_id', personalId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const typedComments: Comment[] = (data || []).map(comment => ({
+        id: comment.id,
+        details: comment.details,
+        user_id: comment.user_id,
+        created_at: comment.created_at,
+        user: {
+          username: comment.user[0]?.username || 'Anonymous'
+        }
+      }));
+      
+      setComments(typedComments);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les commentaires.",
+        variant: "destructive",
+      });
     }
-  };
+  }, [personalId, toast]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
+
+  const renderComment = useCallback(({ item }: { item: Comment }) => (
+    <CommentItem comment={item} />
+  ), []);
+
+  const handleCommentAdded = useCallback((newComment: Comment) => {
+    setComments(prevComments => [newComment, ...prevComments]);
+    flatListRef.current?.scrollToOffset({ animated: true, offset: 0 });
+  }, []);
+
+  const ListHeaderComponent = useCallback(() => (
+    <Text style={styles.title}>Commentaires</Text>
+  ), []);
+
+  const ListEmptyComponent = useCallback(() => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyText}>Aucun commentaire pour le moment.</Text>
+    </View>
+  ), []);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Comments</Text>
-      {comments?.map((comment, index) => (
-        <View key={index} style={styles.commentContainer}>
-          <Text style={styles.commentUser}>{comment.user?.username || 'Anonymous'}</Text>
-          <Text>{comment.details}</Text>
-        </View>
-      ))}
-      {userId && (
-        <View style={styles.addCommentContainer}>
-          <TextInput
-            style={styles.commentInput}
-            value={comment}
-            onChangeText={setComment}
-            placeholder="Add a comment..."
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.inner}>
+          <FlatList
+            ref={flatListRef}
+            data={comments}
+            renderItem={renderComment}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.commentList}
+            ListHeaderComponent={ListHeaderComponent}
+            ListEmptyComponent={ListEmptyComponent}
           />
-          <TouchableOpacity onPress={handleAddComment} style={styles.addCommentButton}>
-            <Text style={styles.addCommentButtonText}>Post</Text>
-          </TouchableOpacity>
+          <View style={styles.inputWrapper}>
+            <CommentInput 
+              personalId={personalId} 
+              userId={userId} 
+              toast={toast} 
+              onCommentAdded={handleCommentAdded} 
+            />
+          </View>
         </View>
-      )}
-    </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  commentContainer: {
-    marginBottom: 8,
-  },
-  commentUser: {
-    fontWeight: 'bold',
-  },
-  addCommentContainer: {
-    flexDirection: 'row',
-    marginTop: 16,
-  },
-  commentInput: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 8,
-    marginRight: 8,
+    backgroundColor: 'white',
   },
-  addCommentButton: {
-    backgroundColor: '#007AFF',
-    padding: 8,
-    borderRadius: 4,
+  inner: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  commentList: {
+    flexGrow: 1,
+    paddingHorizontal: 16,
+  },
+  emptyContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 20,
   },
-  addCommentButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  emptyText: {
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  inputWrapper: {
+    padding: 16,
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
   },
 });
 

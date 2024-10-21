@@ -1,81 +1,57 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { Service } from '../../services/serviceTypes';
-import { fetchPersonalDetail, makeServiceRequest, toggleLike } from '../../services/personalService';
+import { fetchPersonalDetail, toggleLike } from '../../services/personalService';
+import { fetchAvailabilityData, AvailabilityData } from '../../services/availabilityService';
+import { useUser } from '../../UserContext';
+import { useToast } from '../../hooks/useToast';
 import PersonalInfo from '../../components/PersonalServiceComponents/PersonalInfo';
 import CommentSection from '../../components/PersonalServiceComponents/CommentSection';
-import Calendar from '../../components/PersonalServiceComponents/personalServiceCalandar';
-import BookingForm from '../../components/PersonalServiceComponents/BookingForm';
-import BookingStatus from '../../components/PersonalServiceComponents/BookingStatus';
 import ReviewForm from '../../components/PersonalServiceComponents/ReviewForm';
-import { useUser } from '../../UserContext';
+import BookingForm from './components/BookingForm';
+import ServiceDetails from './components/ServiceDetails';
 
 const PersonalDetail = () => {
   const route = useRoute();
   const { personalId } = route.params as { personalId: number };
   const { userId } = useUser();
+  const { toast, ToastComponent } = useToast();
 
   const [personalData, setPersonalData] = useState<Service | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [availableDates, setAvailableDates] = useState<string[]>([]);
-  const [requestStatus, setRequestStatus] = useState<'pending' | 'confirmed' | 'rejected' | null>(null);
+  const [availabilityData, setAvailabilityData] = useState<AvailabilityData | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await fetchPersonalDetail(personalId);
       setPersonalData(data);
-      if (data && data.availability) {
-        const dates = data.availability.map(a => a.date);
-        setAvailableDates(dates);
-      }
+      const availability = await fetchAvailabilityData(personalId);
+      setAvailabilityData(availability);
     } catch (error) {
       console.error('Error fetching personal detail:', error);
+      toast({
+        title: "Error",
+        description: "Impossible de charger les détails du service. Veuillez réessayer.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [personalId]);
+  }, [personalId, toast]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const handleBooking = () => {
-    if (!userId) {
-      Alert.alert('Authentication Required', 'Please log in to book a service.');
-      return;
-    }
-    setShowCalendar(true);
-  };
-
-  const handleConfirm = async (selectedDate: string, hours: string) => {
-    try {
-      if (!userId) {
-        Alert.alert('Authentication Required', 'Please log in to book a service.');
-        return;
-      }
-      console.log('Making service request with data:', { personalId, hours: parseInt(hours), selectedDate, userId });
-      const result = await makeServiceRequest(personalId, parseInt(hours), selectedDate, userId);
-      if (result) {
-        setRequestStatus('pending');
-        Alert.alert('Success', 'Your request has been sent to the service provider for confirmation.');
-      } else {
-        Alert.alert('Error', 'Failed to send request. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error making service request:', error);
-      if (error instanceof Error) {
-        Alert.alert('Error', `An error occurred while sending your request: ${error.message}`);
-      } else {
-        Alert.alert('Error', 'An unknown error occurred while sending your request.');
-      }
-    }
-  };
   const handleLike = async () => {
     if (!userId) {
-      Alert.alert('Authentication Required', 'Please log in to like a service.');
+      toast({
+        title: "Authentification requise",
+        description: "Veuillez vous connecter pour aimer un service.",
+        variant: "default",
+      });
       return;
     }
     const result = await toggleLike(personalId, userId);
@@ -91,64 +67,71 @@ const PersonalDetail = () => {
   };
 
   const handleReviewSubmitted = () => {
-    Alert.alert('Success', 'Your review has been submitted successfully.');
-    fetchData(); // Refresh the data to show the updated review
+    toast({
+      title: "Succès",
+      description: "Votre avis a été soumis avec succès.",
+      variant: "default",
+    });
+    fetchData();
   };
 
-  if (isLoading) {
-    return <View style={styles.container}><Text>Loading...</Text></View>;
+  if (isLoading || !personalData || !availabilityData) {
+    return <View style={styles.centeredContainer}><Text style={styles.loadingText}>Chargement...</Text></View>;
   }
 
-  if (!personalData) {
-    return <View style={styles.container}><Text>No data available</Text></View>;
-  }
-
-  return (
-    <ScrollView style={styles.container}>
+  const renderItem = () => (
+    <View style={styles.content}>
       <PersonalInfo personalData={personalData} onLike={handleLike} />
-      
-      {!requestStatus && (
-        <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
-          <Text style={styles.bookButtonText}>Book Now</Text>
-        </TouchableOpacity>
-      )}
-
-      {showCalendar && !requestStatus && (
-        <BookingForm
-          availableDates={availableDates}
-          onConfirm={handleConfirm}
-        />
-      )}
-
-      <BookingStatus status={requestStatus} />
-
+      <ServiceDetails personalData={personalData} />
+      <BookingForm
+        personalId={personalId}
+        userId={userId}
+        availabilityData={availabilityData}
+        onBookingComplete={fetchData}
+      />
       <ReviewForm personalId={personalData.id} onReviewSubmitted={handleReviewSubmitted} />
-
       <CommentSection 
-        comments={personalData.comment} 
+        comments={personalData.comment.map(comment => ({
+          ...comment,
+          user: (comment as any).user || { username: "anonymous" }
+        }))}  
         personalId={personalData.id}
         userId={userId}
       />
-    </ScrollView>
+    </View>
+  );
+
+  return (
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    >
+      <FlatList
+        data={[{ key: 'content' }]}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.key}
+      />
+      {ToastComponent}
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#f5f5f5',
   },
-  bookButton: {
-    backgroundColor: 'blue',
-    padding: 15,
-    margin: 10,
-    borderRadius: 5,
+  content: {
+    padding: 16,
+  },
+  centeredContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  bookButtonText: {
-    color: 'white',
+  loadingText: {
     fontSize: 18,
-    fontWeight: 'bold',
   },
 });
 

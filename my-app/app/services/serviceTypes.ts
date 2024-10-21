@@ -1,44 +1,54 @@
 import { supabase } from './supabaseClient';
 import { Linking } from 'react-native';
 
-export type Service = {
+
+
+export type Comment = {
   id: number;
-  name: string;
-  priceperhour: number;
   details: string;
   user_id: string;
-  subcategory?: { 
-    name: string;
-    category?: {
-      name: string;
-    };
-  };
-  media?: { url: string }[];
-  imageUrl?: string;
-  availability: Array<{
+  created_at: string;
+  personal_id: number;
+};
+
+export type Service = {
     id: number;
-    start: string;
-    end: string;
-    daysofweek: string;
-    date: string;
-  }>;
-  comment: Array<{
+    name: string;
+    priceperhour: number;
     details: string;
     user_id: string;
-  }>;
-  like: Array<{ user_id: string }>;
-  order: Array<{
-    user_id: string;
-    ticket_id: string;
-  }>;
-  personal_user: Array<{
-    user_id: string;
-    status: string;
-  }>;
-  review: Array<{
-    user_id: string;
-    rate: number;
-  }>;
+    subcategory?: { 
+      name: string;
+      category?: {
+        name: string;
+      };
+    };
+    media?: { url: string }[];
+    imageUrl?: string;
+    availability: Array<{
+      id: number;
+      start: string;
+      end: string;
+      daysofweek: string;
+      date: string;
+    }>;
+    comment: Array<{
+      details: string;
+      user_id: string;
+    }>;
+    like: Array<{ user_id: string }>;
+    order: Array<{
+      user_id: string;
+      ticket_id: string;
+    }>;
+    personal_user: Array<{
+      user_id: string;
+      status: string;
+    }>;
+    review: Array<{
+      user_id: string;
+      rate: number;
+    }>;
 };
 
 export type ServiceRequest = {

@@ -27,34 +27,23 @@ export const makeServiceRequest = async (personalId: number, hours: number, date
     const totalPrice = personalData.priceperhour * hours;
     const depositAmount = totalPrice * 0.25; // 25% deposit
 
-    console.log('Inserting request with data:', {
-      user_id: userId,
-      personal_id: personalId,
-      status: 'pending',
-      created_at: new Date().toISOString(),
+    // Start a transaction
+    const { data, error } = await supabase.rpc('create_service_request', {
+      p_user_id: userId,
+      p_personal_id: personalId,
+      p_hours: hours,
+      p_total_price: totalPrice,
+      p_deposit_amount: depositAmount,
+      p_date: date
     });
 
-    const { data, error } = await supabase
-      .from('request')
-      .insert({
-        user_id: userId,
-        personal_id: personalId,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      })
-      .select();
-
     if (error) {
-      console.error('Error inserting request:', error);
-      throw new Error(`Failed to insert request: ${error.message}`);
+      console.error('Error creating service request:', error);
+      throw new Error(`Failed to create service request: ${error.message}`);
     }
 
-    if (!data || data.length === 0) {
-      throw new Error('Request was inserted but no data was returned');
-    }
-
-    console.log('Request inserted successfully:', data[0]);
-    return { requestData: data[0], depositAmount };
+    console.log('Service request created successfully:', data);
+    return { requestData: data, depositAmount };
   } catch (error) {
     console.error('Error making service request:', error);
     if (error instanceof Error) {
@@ -63,4 +52,20 @@ export const makeServiceRequest = async (personalId: number, hours: number, date
       throw new Error('An unknown error occurred while making the service request');
     }
   }
+};
+
+export const checkExistingRequest = async (personalId: number, userId: string) => {
+  const { data, error } = await supabase
+    .from('personal_user')
+    .select('*')
+    .eq('personal_id', personalId)
+    .eq('user_id', userId)
+    .eq('status', 'pending');
+
+  if (error) {
+    console.error('Error checking existing request:', error);
+    throw error;
+  }
+
+  return data.length > 0;
 };

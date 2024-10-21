@@ -5,7 +5,7 @@ import { PersonalScreenNavigationProp } from '../../navigation/types';
 import { Service } from '../../services/serviceTypes';
 import { fetchStaffServices } from '../../services/personalService';
 import CategoryList from '../../components/PersonalServiceComponents/CategoryList';
-import { ServiceItem } from './ServiceItem';
+import ServiceItem from './ServiceItem';
 import { styles } from './styles';
 
 const PersonalsScreen: React.FC = () => {
@@ -40,14 +40,14 @@ const PersonalsScreen: React.FC = () => {
 
   useEffect(() => {
     if (category) {
-      setSelectedCategory(category);
+      setSelectedCategory(category === 'All' ? null : category);
     }
     loadServices();
   }, [category, loadServices]);
 
   useEffect(() => {
     const filtered = staffServices.filter(service => 
-      (!selectedCategory || 
+      (!selectedCategory || selectedCategory === 'all' || 
         service.subcategory?.name === selectedCategory || 
         service.subcategory?.category?.name === selectedCategory) &&
       (!searchQuery || service.name.toLowerCase().includes(searchQuery.toLowerCase())) &&

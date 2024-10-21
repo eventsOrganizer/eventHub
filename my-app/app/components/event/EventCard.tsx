@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import SuggestToFriendButton from '../suggestions/SuggestToFriendButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -13,7 +14,9 @@ interface EventCardProps {
     media: { url: string }[];
     subcategory: {
       category: {
+        id: number;
         name: string;
+        type: string;
       };
       name: string;
     };
@@ -43,6 +46,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, onPress, children }) => {
           />
           <View style={styles.joinButtonContainer}>
             {children}
+          </View>
+          <View style={styles.suggestButtonContainer}>
+            <SuggestToFriendButton itemId={event.id} category={event.subcategory.category} />
           </View>
         </View>
         <View style={styles.eventInfoContainer}>
@@ -127,6 +133,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 5,
     right: 5,
+    zIndex: 1,
+  },
+  suggestButtonContainer: {
+    position: 'absolute',
+    top: 5,
+    left: 5,
     zIndex: 1,
   },
 });

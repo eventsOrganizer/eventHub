@@ -1,16 +1,26 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
+import SuggestToFriendButton from '../suggestions/SuggestToFriendButton';
 
 const { width } = Dimensions.get('window');
 
 interface LocalServiceCardProps {
   item: {
-    id?: number;
-    name?: string;
-    priceperhour?: number;
-    media?: { url: string }[];
-    subcategory?: { name: string };
+    id: number;
+    name: string;
+    priceperhour: number;
+    media: { url: string }[];
+    reviews?: number;
+    likes?: number;
+    subcategory: {
+      category: {
+        id: number;
+        name: string;
+        type: string;
+      };
+      name: string;
+    };
   };
   onPress: () => void;
 }
@@ -32,6 +42,9 @@ const LocalServiceCard: React.FC<LocalServiceCardProps> = ({ item, onPress }) =>
           )}
         </View>
       </BlurView>
+      <View style={styles.suggestButtonContainer}>
+        <SuggestToFriendButton itemId={item.id} category={item.subcategory.category} />
+      </View>
     </TouchableOpacity>
   );
 };
@@ -77,6 +90,12 @@ const styles = StyleSheet.create({
   category: {
     fontSize: 10,
     color: '#333',
+  },
+  suggestButtonContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
   },
 });
 

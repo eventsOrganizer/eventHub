@@ -1,36 +1,35 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
+import ServiceNameInput from '../reuseableForCreationService/ServiceNameInput';
+import ServiceDescriptionInput from '../reuseableForCreationService/ServiceDescriptionInput';
+import CategorySelector from '../reuseableForCreationService/CategorySelector';
 
-type CreatePersonalServiceStep1NavigationProp = NavigationProp<RootStackParamList, 'CreatePersonalServiceStep1'>;
+type CreatePersonalServiceStep1NavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep1'>;
 
-type Subcategory = {
-  id: number;
-  name: string;
-};
-
-const subcategories: Subcategory[] = [
-  { id: 1, name: 'Cooker' },
-  { id: 2, name: 'Security' },
-  { id: 3, name: 'Waiter' },
-  { id: 4, name: 'Cleaning' },
+const subcategories = [
+  { id: 153, name: 'Security' },
+  { id: 154, name: 'Waiter' },
+  { id: 155, name: 'Cooker' },
+  { id: 183, name: 'Music team leader' },
+  { id: 182, name: 'Cleaning' }
 ];
 
 const CreatePersonalServiceStep1: React.FC = () => {
   const [serviceName, setServiceName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedSubcategory, setSelectedSubcategory] = useState<Subcategory | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<{ id: number; name: string } | null>(null);
   const navigation = useNavigation<CreatePersonalServiceStep1NavigationProp>();
 
   const handleNext = () => {
-    if (serviceName && description && selectedSubcategory) {
+    if (serviceName && description && selectedCategory) {
       navigation.navigate('CreatePersonalServiceStep2', { 
         serviceName, 
         description, 
-        subcategoryName: selectedSubcategory.name,
-        subcategoryId: selectedSubcategory.id
+        subcategoryName: selectedCategory.name,
+        subcategoryId: selectedCategory.id
       });
     } else {
       Alert.alert('Error', 'Please fill in all fields and select a subcategory');
@@ -38,54 +37,77 @@ const CreatePersonalServiceStep1: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Service Name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Service Name"
-        value={serviceName}
-        onChangeText={setServiceName}
-      />
-      <Text style={styles.label}>Description</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Description"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
-      <Text style={styles.label}>Subcategory</Text>
-      <Picker
-        selectedValue={selectedSubcategory ? selectedSubcategory.id : undefined}
-        onValueChange={(itemValue) => {
-          const selected = subcategories.find(sub => sub.id === itemValue);
-          setSelectedSubcategory(selected || null);
-        }}
-        style={styles.input}
-      >
-        <Picker.Item label="Select a subcategory" value={undefined} />
-        {subcategories.map((subcategory: Subcategory) => (
-          <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
-        ))}
-      </Picker>
-      <Button 
-        title="Next" 
-        onPress={handleNext} 
-        disabled={!selectedSubcategory}
-      />
-    </View>
+    <ScrollView style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.title}>Create a Personal Service</Text>
+        <Text style={styles.subtitle}>Step 1: Basic Information</Text>
+        <View style={styles.inputContainer}>
+          <ServiceNameInput serviceName={serviceName} setServiceName={setServiceName} />
+          <ServiceDescriptionInput description={description} setDescription={setDescription} />
+          <CategorySelector
+            categories={subcategories}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+          />
+        </View>
+        <TouchableOpacity 
+          style={[styles.button, !selectedCategory && styles.buttonDisabled]}
+          onPress={handleNext} 
+          disabled={!selectedCategory}
+        >
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  label: { fontSize: 16, fontWeight: 'bold', marginBottom: 5 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    borderRadius: 5,
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f2f5',
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    margin: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: '#666',
     marginBottom: 20,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  button: {
+    backgroundColor: '#4a90e2',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#a0a0a0',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
 });
 
