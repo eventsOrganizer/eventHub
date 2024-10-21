@@ -1,25 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react'; 
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import RNPickerSelect from 'react-native-picker-select';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+  SearchResultsScreen: { searchTerm: string };
+  // ... other screens
+};
+
 
 interface NavBarProps {
   selectedFilter: string | null;
   setSelectedFilter: (value: string | null) => void;
   onSearch: (searchTerm: string) => void;
 }
+
 const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSearch }) => {
-  const navigation = useNavigation();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleSubmit = () => {
-    if (typeof onSearch === 'function') {
-      onSearch(searchTerm);
-    } else {
-      console.error('onSearch is not a function');
-    }
+
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const handleSearch = () => {
+   // ... existing code ...
+  if (searchTerm.trim()) {
+    navigation.navigate('SearchResultsScreen', { searchTerm: searchTerm.trim() });
+    setSearchTerm('');
+  }
   };
 
   return (
@@ -33,29 +42,37 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#0000FF" style={styles.searchIcon} />
           <TextInput
-            style={styles.searchBar}
-            placeholder="Search events and services..."
-            placeholderTextColor="#ccc"
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-            onSubmitEditing={handleSubmit}
-          />
+      placeholder="Search..."
+      value={searchTerm}
+      onChangeText={setSearchTerm}
+      onSubmitEditing={handleSearch} // Ensure this triggers handleSearch
+      style={styles.searchBar}
+    />
+          {searchTerm ? ( // Clear button
+            <TouchableOpacity onPress={() => setSearchTerm('')}>
+              <Ionicons name="close-circle" size={20} color="#0000FF" />
+            </TouchableOpacity>
+          ) : null}
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('UserProfile' as never)}>
+
+        <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
           <Ionicons name="person-outline" size={24} color="#333" />
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.iconContainer}>
           <Ionicons name="notifications" size={24} color="#0000FF" />
         </TouchableOpacity>
+
         <TouchableOpacity 
           style={styles.iconContainer}
-          onPress={() => navigation.navigate('ChatList' as never)}
+          onPress={() => navigation.navigate('ChatList')}
         >
           <Ionicons name="chatbubbles-outline" size={24} color="#0000FF" />
         </TouchableOpacity>
+
         <View style={styles.pickerContainer}>
           <RNPickerSelect
-            onValueChange={(value) => setSelectedFilter(value)}
+            onValueChange={setSelectedFilter}
             items={[
               { label: 'All', value: 'all' },
               { label: 'This Week', value: 'this_week' },
@@ -70,8 +87,6 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
     </LinearGradient>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -117,7 +132,7 @@ const pickerSelectStyles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 10,
     color: '#000',
-    paddingRight: 30,
+    paddingRight: 30, 
   },
   inputAndroid: {
     fontSize: 16,

@@ -3,10 +3,11 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+
 // Import screens
 import Onboarding from '../screens/OnBoarding';
 import Interests from '../screens/Interests';
-import Home from '../screens/Home';
+import HomeScreen from '../screens/HomeScreen';
 import MapScreen from '../screens/MapScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import ProfileScreen from '../screens/AccountScreen';
@@ -23,8 +24,8 @@ import MusicAndEntertainmentScreen from '../screens/MusicAndEntertainmentScreen'
 import EventTimelineScreen from '../screens/EventTimelineScreen';
 import GuestManagementScreen from '../screens/GuestManagementScreen';
 import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
-import CreateServiceScreen from '../screens/CreateServiceScreen'; // Added CreateService import
-import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
+import CreateServiceScreen from '../screens/CreateServiceScreen';
+import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen'
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
 import ChatListScreen from '../components/event/ChatListScreen';
@@ -46,9 +47,13 @@ import CreatePersonalServiceStep2 from '../components/PersonalServiceCreation/Cr
 import CreatePersonalServiceStep3 from '../components/PersonalServiceCreation/CreatePersonalServiceStep3';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
 import CreatePersonalServiceStep5 from '../components/PersonalServiceCreation/CreatePersonalServiceStep5';
-import HomeScreen from '../screens/HomeScreen';
-import PaymentActionScreen from '../payment/PaymentActionScreen'; // Import the payment screen
+import PaymentActionScreen from '../payment/PaymentActionScreen';
+import SearchResultsScreen from '../screens/SearchResultsScreen';
 
+import NotificationsScreen from '../screens/NotificationsScreen';
+import TicketingScreen from '../screens/TicketingScreen';
+import EventSummaryScreen from '../screens/EventSummaryScreen';
+import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail'
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -82,7 +87,9 @@ type RootStackParamList = {
     selectedSubcategory: string 
   };
   UserProfile: undefined;
-  PaymentAction: { price: number; personalId: string }; // Add the payment screen to the type definition
+  PaymentAction: { price: number; personalId: string };
+  SearchResultsScreen: { initialSearchTerm: string };
+  ServiceDetails: { serviceId: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -94,21 +101,26 @@ const AppNavigation: React.FC = () => {
 
   return (
     <Stack.Navigator initialRouteName="Onboarding">
-      {/* Onboarding Screen */}
       <Stack.Screen
         name="Onboarding"
         component={Onboarding}
         options={{ headerShown: false }}
       />
-      
-      {/* Interests Screen */}
       <Stack.Screen
         name="Interests"
         component={Interests}
         initialParams={{ onComplete: handleOnComplete }}
         options={{ headerShown: false }}
       />
-      <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen 
+      name="Home" 
+      component={HomeScreen} />
+
+      
+      <Stack.Screen 
+      name="SearchResultsScreen" 
+      component={SearchResultsScreen} />
+
       <Stack.Screen 
         name="Map" 
         component={MapScreen} 
@@ -117,26 +129,6 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen 
         name="Calendar" 
         component={CalendarScreen} 
-        options={{ headerShown: true }} 
-      />
-      <Stack.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        options={{ headerShown: true }} 
-      />
-      <Stack.Screen 
-        name="EditProfile" 
-        component={EditProfileScreen} 
-        options={{ headerShown: true }} 
-      />
-      <Stack.Screen 
-        name="Signup" 
-        component={Signup}  
-        options={{ headerShown: true }} 
-      />
-      <Stack.Screen 
-        name="Signin" 
-        component={Signin}  
         options={{ headerShown: true }} 
       />
       <Stack.Screen 
@@ -154,7 +146,7 @@ const AppNavigation: React.FC = () => {
         component={EventDetailsScreen} 
         options={{ headerShown: true }} 
       />
-      <Stack.Screen 
+      <Stack.Screen   
         name="OrganizerProfile" 
         component={OrganizerProfileScreen} 
         options={{ headerShown: true }} 
@@ -249,11 +241,57 @@ const AppNavigation: React.FC = () => {
         component={SavedScreen} 
         options={{ headerShown: true }} 
       />
-     <Stack.Screen
-  name="PaymentAction"
-  component={PaymentActionScreen}
-  options={{ headerShown: true, title: 'Payment' }}
-  initialParams={{ price: 200, personalId: '1' }} // Default values
+      <Stack.Screen
+        name="PaymentAction"
+        component={PaymentActionScreen}
+        options={{ headerShown: true, title: 'Payment' }}
+        initialParams={{ price: 200, personalId: '1' }}
+      />
+   <Stack.Screen name="EventCreation" component={EventCreationScreen} />
+   <Stack.Screen name="CategorySelection" component={CategorySelectionScreen} />
+<Stack.Screen
+  name="SubcategorySelection"
+  component={SubcategorySelectionScreen}
+  options={{ headerShown: true, title: 'Subcategory Selection' }}
+/>
+
+<Stack.Screen
+  name="EventSetupOptions"
+  component={EventSetupOptionsScreen}
+  options={{ headerShown: true, title: 'Event Setup Options' }}
+/>
+<Stack.Screen 
+                name="EventTimeline" 
+                component={EventTimelineScreen} 
+            />
+             <Stack.Screen 
+                name="GuestManagement" 
+                component={GuestManagementScreen} 
+            />
+             <Stack.Screen 
+                name="TeamCollaboration" 
+                component={TeamCollaborationScreen} 
+            />
+           <Stack.Screen 
+                name="MusicAndEntertainment" 
+                component={MusicAndEntertainmentScreen} 
+            />
+            <Stack.Screen 
+                name="Notifications" 
+                component={NotificationsScreen} 
+            />
+             <Stack.Screen 
+                name="Ticketing" 
+                component={TicketingScreen} 
+            />
+ <Stack.Screen 
+                name="EventSummary" 
+                component={EventSummaryScreen} 
+            />
+         <Stack.Screen
+  name="ServiceDetails"
+  component={ServiceDetailsScreen}
+  options={{ headerShown: true, title: 'Service Details' }}
 />
     </Stack.Navigator>
   );

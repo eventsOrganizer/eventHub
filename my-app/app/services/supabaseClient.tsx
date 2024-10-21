@@ -25,4 +25,5 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_API_KEY, {
   },
 });
 
+
 console.log('Supabase client initialized');

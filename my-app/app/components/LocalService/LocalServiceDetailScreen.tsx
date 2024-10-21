@@ -4,18 +4,12 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
 import AvailabilityList from '../PersonalServiceComponents/AvailabilityList';
 import CommentSection from '../PersonalServiceComponents/CommentSection';
-import { paymentData } from '../../payment/fakeData';
+import useStripePayment from '../../payment/UseStripePayment'; // Import the custom hook
 
 type RootStackParamList = {
-  LocalServiceDetails: undefined;
-    PaymentAction: { price: number; personalId: string };
+  LocalServiceDetails: { localServiceId: number };
+  PaymentAction: { price: number; personalId: string };
 };
-// ... existing code ...
-
-// Ensure the function signature matches the arguments being passed
-
-
-// ... existing code ...
 
 type LocalServiceDetailScreenRouteProp = RouteProp<RootStackParamList, 'LocalServiceDetails'>;
 
@@ -46,6 +40,7 @@ interface LocalService {
   media: Media[];
   availability: Availability[];
   comment: Comment[];
+  userId: string;
 }
 
 const LocalServiceDetailScreen: React.FC = () => {
@@ -54,6 +49,7 @@ const LocalServiceDetailScreen: React.FC = () => {
   const [service, setService] = useState<LocalService | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { handlePayment, loading } = useStripePayment(); // Use the custom hook
 
   useEffect(() => {
     const fetchServiceDetails = async () => {
@@ -68,7 +64,7 @@ const LocalServiceDetailScreen: React.FC = () => {
 
       try {
         const { data, error } = await supabase
-          .from<LocalService>('local')
+          .from('local')
           .select(`
             *,
             media (url),
@@ -128,23 +124,23 @@ const LocalServiceDetailScreen: React.FC = () => {
         <Text style={styles.details}>{service.details}</Text>
       </View>
       <AvailabilityList 
-        availability={service.availability} 
+        availability={service.availability.map(item => ({
+          ...item,
+          daysofweek: Array.isArray(item.daysofweek) ? item.daysofweek.join(', ') : 'N/A'
+        }))} 
         personalId={service.id} 
       />
       <CommentSection 
         comments={service.comment}
         personalId={service.id}
+        userId={service.userId}
       />
       <TouchableOpacity 
         style={styles.bookButton} 
-        onPress={() => {
-          navigation.navigate('PaymentAction', {
-            price: paymentData.price,
-            personalId: paymentData.personalId,
-          });
-        }}
+        onPress={() => handlePayment(service.id.toString(), service.priceperhour)}
+        disabled={loading}
       >
-        <Text style={styles.bookButtonText}>Book Now</Text>
+        <Text style={styles.bookButtonText}>{loading ? 'Processing...' : 'Book Now'}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -153,46 +149,54 @@ const LocalServiceDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f8f8', // Softer background color for a modern feel
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center', // Center the loading indicator vertically and horizontally
   },
   image: {
     width: '100%',
-    height: 200,
-    resizeMode: 'cover',
+    height: 250, // Slightly larger image to display more of the media
+    resizeMode: 'cover', // Maintain aspect ratio while filling the area
+    borderBottomLeftRadius: 20, // Rounded corners for the image
+    borderBottomRightRadius: 20,
+    marginBottom: 20, // Space between the image and the content below
   },
   infoContainer: {
-    padding: 20,
+    paddingHorizontal: 16, // Reduced padding for a more compact look
+    paddingBottom: 20, // Extra padding at the bottom of the info section
   },
   name: {
-    fontSize: 24,
+    fontSize: 26, // Slightly larger font size for the name
     fontWeight: 'bold',
+    color: '#333', // Darker color for better contrast
     marginBottom: 10,
   },
   price: {
-    fontSize: 18,
-    color: 'green',
-    marginBottom: 10,
+    fontSize: 20, // Increased size to emphasize the price
+    color: 'green', // Keep the price green for easy recognition
+    marginBottom: 15, // Increased margin for better spacing
   },
   details: {
     fontSize: 16,
-    marginBottom: 20,
+    color: '#666', // Lighter color for secondary information
+    lineHeight: 24, // Improve readability by increasing line height
   },
   bookButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 5,
+    backgroundColor: '#007AFF', // Vibrant blue color for the button
+    paddingVertical: 15, // Increase vertical padding for a larger touch target
+    borderRadius: 25, // Fully rounded button for a more modern look
     alignItems: 'center',
-    margin: 20,
+    marginHorizontal: 40, // Add horizontal margin for centering and balance
+    marginBottom: 30, // Extra bottom margin for spacing
+    elevation: 3, // Add shadow for a raised button effect on Android
   },
   bookButtonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold', // Emphasize the button text
   },
 });
 
