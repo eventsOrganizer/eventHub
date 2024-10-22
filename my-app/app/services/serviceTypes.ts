@@ -24,6 +24,7 @@ export type Service = {
     };
     media?: { url: string }[];
     imageUrl?: string;
+    image: string;
     startdate: string;
     enddate: string;
     availability: Array<{

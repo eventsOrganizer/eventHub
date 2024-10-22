@@ -31,7 +31,7 @@ import VideoRoomsScreen from '../components/event/video/VideoRoomsScreen';
 import VideoCall from '../components/event/video/VideoCall';
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
-
+import CreatePersonalServiceStack from '../components/PersonalServiceCreation/createPersonalServiceStack';
 import ChatListScreen from '../components/event/ChatListScreen';
 import RequestsScreen from '../components/event/profile/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
@@ -95,6 +95,7 @@ type RootStackParamList = {
   Ticketing: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
   EventSummary: { eventId: string };
   EventCreation: { eventType: string };
+  PersonalServiceCreationStack: undefined;
   
   // Add the CreateService screen and pass serviceType as a param
   CreateService: { serviceType: string };
@@ -359,7 +360,11 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="MaterialsOnboarding" 
       component={MaterialsOnboardingScreen} />
-
+      <Stack.Screen
+        name="CreatePersonalServiceStack"
+        component={CreatePersonalServiceStack}
+        options={{ headerShown: false }}
+      />
       </Stack.Navigator>
    
   );

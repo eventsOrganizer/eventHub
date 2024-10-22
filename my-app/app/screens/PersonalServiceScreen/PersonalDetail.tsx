@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text, ScrollView } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Service } from '../../services/serviceTypes';
 import { fetchPersonalDetail, toggleLike } from '../../services/personalService';
 import { fetchAvailabilityData, AvailabilityData } from '../../services/availabilityService';
@@ -17,6 +18,12 @@ type RootStackParamList = {
   PersonalDetail: { personalId: number };
   Signin: undefined;
 };
+// type ServiceDetailsProps = {
+//   personalData: Service;
+//   onReviewPress: () => void;
+//   onCommentPress: () => void;
+//   onBookPress: () => void;
+// };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type PersonalDetailRouteProp = RouteProp<RootStackParamList, 'PersonalDetail'>;
@@ -114,49 +121,62 @@ const PersonalDetail: React.FC = () => {
   }, [handleAuthenticatedAction, navigation, personalId, availabilityData, userId]);
 
   if (isLoading || !personalData || !availabilityData) {
-    return <View style={styles.centeredContainer}><Text style={styles.loadingText}>Loading...</Text></View>;
+    return (
+      <LinearGradient
+        colors={['#E6F2FF', '#C2E0FF', '#99CCFF', '#66B2FF']}
+        style={styles.container}
+      >
+        <View style={styles.centeredContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </LinearGradient>
+    );
   }
 
   const renderItem = () => (
-    <View style={styles.content}>
-      <PersonalInfo 
-        personalData={personalData} 
-        onLike={handleLike} 
-        averageRating={averageRating}
-        reviewCount={reviewCount}
-      />
-      <ServiceDetails personalData={personalData} />
-      <TouchableOpacity style={styles.button} onPress={navigateToReviewScreen}>
-        <Text style={styles.buttonText}>Submit a Review</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={navigateToCommentScreen}>
-        <Text style={styles.buttonText}>View & Leave Comments</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={navigateToBookingScreen}>
-        <Text style={styles.buttonText}>Book Now</Text>
-      </TouchableOpacity>
-    </View>
+    <ScrollView style={styles.content}>
+      <View style={styles.card}>
+        <PersonalInfo 
+          personalData={personalData} 
+          onLike={handleLike} 
+          averageRating={averageRating}
+          reviewCount={reviewCount}
+        />
+      </View>
+      <View style={styles.card}>
+      <ServiceDetails 
+  personalData={personalData}
+  onReviewPress={navigateToReviewScreen}
+  onCommentPress={navigateToCommentScreen}
+  onBookPress={navigateToBookingScreen}
+/>
+      </View>
+    </ScrollView>
   );
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <LinearGradient
+      colors={['#E6F2FF', '#C2E0FF', '#99CCFF', '#66B2FF']}
       style={styles.container}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
-      <FlatList
-        data={[{ key: 'content' }]}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.key}
-      />
-    </KeyboardAvoidingView>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      >
+        <FlatList
+          data={[{ key: 'content' }]}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.key}
+        />
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   content: {
     padding: 16,
@@ -168,17 +188,13 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 18,
+    color: '#4A90E2',
   },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  card: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 16,
   },
 });
 
