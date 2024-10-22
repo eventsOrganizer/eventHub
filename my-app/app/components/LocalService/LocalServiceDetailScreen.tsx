@@ -4,6 +4,7 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
 import AvailabilityList from '../PersonalServiceComponents/AvailabilityList';
 import CommentSection from '../PersonalServiceComponents/CommentSection';
+import useStripePayment from '../../payment/useStripePayment'
 
 type RootStackParamList = {
   LocalServiceDetails: { localServiceId: number };
@@ -28,10 +29,11 @@ const LocalServiceDetailScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { createPaymentIntent, loading: paymentLoading, error: paymentError } = useStripePayment();
+
   useEffect(() => {
     const fetchServiceDetails = async () => {
       const localServiceId = route.params?.localServiceId;
-      console.log('Fetching service details for id:', localServiceId);
 
       if (!localServiceId) {
         setError('No service ID provided');
@@ -42,22 +44,18 @@ const LocalServiceDetailScreen: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('local')
-          .select(`
-            *,
-            media (url),
-            availability (id, start, end, daysofweek, date),
-            comment (id, details, user_id, created_at)
-          `)
+          .select(`*,
+                    media (url),
+                    availability (id, start, end, daysofweek, date),
+                    comment (id, details, user_id, created_at)`)
           .eq('id', localServiceId)
           .single();
 
         if (error) throw error;
         if (!data) throw new Error('No data returned from the query');
-        
-        console.log('Fetched service data:', data);
+
         setService(data);
       } catch (error) {
-        console.error('Error fetching service details:', error);
         setError('Failed to load service details');
       } finally {
         setIsLoading(false);
@@ -67,20 +65,28 @@ const LocalServiceDetailScreen: React.FC = () => {
     fetchServiceDetails();
   }, [route.params?.localServiceId]);
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
+  const handleBooking = async () => {
+    if (!service) return;
+
+    const amount = service.priceperhour * 100; // Assuming price is in dollars and you need cents
+
+    const clientSecret = await createPaymentIntent(amount);
+
+    if (clientSecret) {
+      navigation.navigate('PaymentScreen', { clientSecret });
+    }
+  };
+
+  if (isLoading || paymentLoading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
+
+  if (paymentError) {
+    return <Text>Error: {paymentError}</Text>;
   }
 
   if (!service) {
-    return (
-      <View style={styles.container}>
-        <Text>No service details available.</Text>
-      </View>
-    );
+    return <Text>No service details available.</Text>;
   }
 
   return (
@@ -91,21 +97,9 @@ const LocalServiceDetailScreen: React.FC = () => {
         <Text style={styles.price}>${service.priceperhour}/hr</Text>
         <Text style={styles.details}>{service.details}</Text>
       </View>
-      <AvailabilityList 
-        availability={service.availability} 
-        personalId={service.id} 
-      />
-      <CommentSection 
-        comments={service.comment}
-        personalId={service.id}
-      />
-      <TouchableOpacity 
-        style={styles.bookButton} 
-        onPress={() => {
-          // Implement booking logic here
-          console.log('Booking service:', service.id);
-        }}
-      >
+      <AvailabilityList availability={service.availability} personalId={service.id} />
+      <CommentSection comments={service.comment} personalId={service.id} />
+      <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
         <Text style={styles.bookButtonText}>Book Now</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -116,11 +110,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   image: {
     width: '100%',

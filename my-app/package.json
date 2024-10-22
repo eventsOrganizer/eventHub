@@ -24,6 +24,7 @@
     "@react-navigation/native-stack": "^6.11.0",
     "@react-navigation/stack": "^6.4.1",
     "@reduxjs/toolkit": "^2.2.7",
+    "@stripe/stripe-react-native": "^0.39.0",
     "@supabase/supabase-js": "^2.45.4",
     "@tailwindcss/forms": "^0.5.9",
     "@tailwindcss/typography": "^0.5.15",
@@ -33,7 +34,9 @@
     "date-fns": "^2.30.0",
     "dotenv": "^16.4.5",
     "expo": "^51.0.37",
+    "expo-av": "~14.0.7",
     "expo-blur": "~13.0.2",
+    "expo-camera": "~15.0.16",
     "expo-image-picker": "^15.0.7",
     "expo-linear-gradient": "~13.0.2",
     "expo-location": "~17.0.1",
@@ -74,9 +77,7 @@
     "react-redux": "^9.1.2",
     "tailwind-rn": "^4.2.0",
     "twrnc": "^4.5.1",
-    "yup": "^1.4.0",
-    "expo-camera": "~15.0.16",
-    "expo-av": "~14.0.7"
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
