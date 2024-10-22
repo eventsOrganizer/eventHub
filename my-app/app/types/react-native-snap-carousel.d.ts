@@ -1,7 +1,6 @@
 declare module 'react-native-snap-carousel' {
     import { Component } from 'react';
     import { StyleProp, ViewStyle } from 'react-native';
-  
     export interface CarouselProps<T> {
       data: T[];
       renderItem: (item: { item: T; index: number }) => React.ReactNode;
@@ -22,3 +21,5 @@ declare module 'react-native-snap-carousel' {
   
     export default class Carousel<T> extends Component<CarouselProps<T>> {}
   }
+
+  declare module 'react-native-vector-icons/FontAwesome';

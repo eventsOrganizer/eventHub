@@ -84,7 +84,7 @@ export type ServiceRequest = {
           personal_id: personalId,
           status: 'pending',
           created_at: new Date().toISOString(),
-          hours: hours,
+          // hours: hours,
           total_price: totalPrice,
           deposit_amount: depositAmount
         })

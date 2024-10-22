@@ -1,5 +1,6 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AvailabilityData } from '../services/availabilityService';
 
 export type AuthStackParamList = {
     signIn: undefined,
@@ -86,6 +87,23 @@ export type RootStackParamList = {
     pricePerHour: number;
     depositPercentage: number;
   };
+  BookingScreen: {
+    personalId: number;
+    userId: string | null;
+    availabilityData: AvailabilityData;
+  };
+  CommentsScreen: {
+    personalId: number;
+    userId: string | null;
+  };
+  AddReviewScreen: {
+    personalId: number;
+    userId: string | null;
+  };
+
+
+
+
   Basket: { basket: Material[] }; 
   MaterialScreen: { materials: Material[] };
   MaterialsOnboarding: undefined;
@@ -110,6 +128,9 @@ export interface Material {
 }
 
 export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;
+export type BookingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'BookingScreen'>;
+export type CommentsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CommentsScreen'>;
+export type AddReviewScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AddReviewScreen'>;
 export type CreateLocalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep5'>;
 export type PersonalScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'PersonalsScreen'>;
 export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;

@@ -1,17 +1,19 @@
-// components/CustomButton.tsx
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-interface ButtonProps {
-  title: string;
-  onPress: () => void;
-  style?: ViewStyle;
+interface CustomButtonProps {
+  children: string;
+  variant?: 'primary' | 'secondary';
+  onPress?: () => void;
 }
 
-const CustomButton: React.FC<ButtonProps> = ({ title, onPress, style }) => {
+const CustomButton: React.FC<CustomButtonProps> = ({ children, variant = 'primary', onPress }) => {
   return (
-    <TouchableOpacity style={[styles.button, style]} onPress={onPress}>
-      <Text style={styles.buttonText}>{title}</Text>
+    <TouchableOpacity 
+      style={[styles.button, variant === 'primary' ? styles.primaryButton : styles.secondaryButton]} 
+      onPress={onPress}
+    >
+      <Text style={styles.buttonText}>{children}</Text>
     </TouchableOpacity>
   );
 };
@@ -19,14 +21,20 @@ const CustomButton: React.FC<ButtonProps> = ({ title, onPress, style }) => {
 const styles = StyleSheet.create({
   button: {
     padding: 10,
-    backgroundColor: '#4CAF50',
     borderRadius: 5,
     alignItems: 'center',
-    marginVertical: 5,
+    justifyContent: 'center',
+  },
+  primaryButton: {
+    backgroundColor: '#007AFF',
+  },
+  secondaryButton: {
+    backgroundColor: '#E5E5EA',
   },
   buttonText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 
