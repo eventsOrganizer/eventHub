@@ -134,7 +134,7 @@ const Signup = () => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#000',
+    backgroundColor: 'linear-gradient(89.7deg, rgb(0, 32, 95) 2.8%, rgb(132, 53, 142) 97.8%)',
     padding: 20,
     justifyContent: 'center',
   },

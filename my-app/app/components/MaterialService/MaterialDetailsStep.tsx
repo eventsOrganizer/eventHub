@@ -23,11 +23,12 @@ const MaterialDetailsStep: React.FC<MaterialDetailsStepProps> = ({ formData, set
   };
 
   return (
-    <Animated.View entering={FadeInRight} exiting={FadeOutLeft}>
+    <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.container}>
       <Text style={styles.label}>Material Title</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter title"
+        placeholderTextColor="#a0a0a0"
         value={formData.title}
         onChangeText={(text) => setFormData({ ...formData, title: text })}
       />
@@ -35,6 +36,7 @@ const MaterialDetailsStep: React.FC<MaterialDetailsStepProps> = ({ formData, set
       <TextInput
         style={[styles.input, styles.textArea]}
         placeholder="Enter details"
+        placeholderTextColor="#a0a0a0"
         value={formData.details}
         onChangeText={(text) => setFormData({ ...formData, details: text })}
         multiline
@@ -42,7 +44,7 @@ const MaterialDetailsStep: React.FC<MaterialDetailsStepProps> = ({ formData, set
       />
       <Text style={styles.label}>Upload a Photo</Text>
       <TouchableOpacity onPress={handleImageUpload} style={styles.uploadButton}>
-        <MaterialIcons name="cloud-upload" size={24} color="#007AFF" />
+        <MaterialIcons name="cloud-upload" size={24} color="#fff" />
         <Text style={styles.uploadText}>Choose Photo</Text>
       </TouchableOpacity>
       {formData.image && <Image source={{ uri: formData.image }} style={styles.image} />}
@@ -51,19 +53,27 @@ const MaterialDetailsStep: React.FC<MaterialDetailsStepProps> = ({ formData, set
 };
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 20,
+  },
   label: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 10,
-    color: '#555',
+    color: '#fff',
   },
   input: {
     height: 50,
-    borderColor: '#ccc',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     borderWidth: 1,
     borderRadius: 10,
     padding: 10,
     marginBottom: 20,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    color: '#fff',
   },
   textArea: {
     height: 100,
@@ -73,16 +83,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     padding: 15,
     borderRadius: 10,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    borderStyle: 'dashed',
   },
   uploadText: {
-    color: '#007AFF',
+    color: '#fff',
     fontSize: 16,
     marginLeft: 10,
   },

@@ -645,3 +645,17 @@ CREATE TABLE public.invitation (
 CREATE INDEX idx_invitation_sender ON public.invitation (sender_id);
 CREATE INDEX idx_invitation_receiver ON public.invitation (receiver_id);
 CREATE INDEX idx_invitation_status ON public.invitation (status);
+
+
+
+create table
+  public.videoroom (
+    id serial not null,
+    url text not null,
+    creator_id uuid not null,
+    is_connected boolean null default false,
+    created_at timestamp with time zone null default current_timestamp,
+    constraint videoroom_pkey primary key (id),
+    constraint fk_creator foreign key (creator_id) references "user" (id) on delete cascade
+  ) tablespace pg_default;
+

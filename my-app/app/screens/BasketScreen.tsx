@@ -1,14 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
-import { Material } from '../navigation/types';
-import { Swipeable } from 'react-native-gesture-handler';
-import { AntDesign } from '@expo/vector-icons';
-import LottieView from 'lottie-react-native';
+import { RootStackParamList, Material } from '../navigation/types';
 import { useToast } from "../hooks/use-toast"
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AnimatedBackground } from '../components/AnimatedBackground';
 import { BasketItem } from '../components/basket/BasketItem';
 import { EmptyBasket } from '../components/basket/EmptyBasket';
@@ -22,18 +17,12 @@ const BasketScreen = () => {
   const [basket, setBasket] = useState<Material[]>(initialBasket);
   const { toast } = useToast();
 
-  const handleCheckout = (item: Material) => {
-    if (item.sell_or_rent === 'sell') {
-      toast({
-        title: "Item Added to Cart",
-        description: `${item.name} has been added to your cart for purchase.`,
-      })
-    } else {
-      toast({
-        title: "Rental Request Sent",
-        description: `A request for ${item.name} has been sent to the owner for approval.`,
-      })
-    }
+  const handleCheckout = () => {
+    toast({
+      title: "Checkout Initiated",
+      description: "Your order is being processed.",
+    });
+    // Implement checkout logic here
   };
 
   const removeItem = (id: string) => {
@@ -42,28 +31,37 @@ const BasketScreen = () => {
       title: "Item Removed",
       description: "The item has been removed from your basket.",
       variant: "destructive",
-    })
+    });
   };
 
   const renderItem = ({ item }: { item: Material }) => (
     <BasketItem
       item={item}
-      onCheckout={handleCheckout}
       onRemove={removeItem}
     />
   );
+
+  const totalPrice = basket.reduce((sum, item) => sum + (item.sell_or_rent === 'sell' ? item.price : item.price_per_hour), 0);
 
   return (
     <AnimatedBackground>
       <View style={styles.container}>
         <Text style={styles.title}>Your Basket</Text>
         {basket.length > 0 ? (
-          <FlatList
-            data={basket}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.listContainer}
-          />
+          <>
+            <FlatList
+              data={basket}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.listContainer}
+            />
+            <View style={styles.summaryContainer}>
+              <Text style={styles.totalText}>Total: ${totalPrice.toFixed(2)}</Text>
+              <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
+                <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         ) : (
           <EmptyBasket onStartShopping={() => navigation.goBack()} />
         )}
@@ -84,7 +82,29 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   listContainer: {
-    paddingBottom: 20,
+    flexGrow: 1,
+  },
+  summaryContainer: {
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    paddingTop: 20,
+    marginTop: 20,
+  },
+  totalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  checkoutButton: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+  },
+  checkoutButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

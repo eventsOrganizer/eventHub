@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, RefreshControl, SafeAreaView, ImageBackground, Animated } from 'react-native';
+import { View, ScrollView, RefreshControl, SafeAreaView, ImageBackground, Animated, Button } from 'react-native'; // Import Button
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BlurView } from 'expo-blur';
@@ -7,31 +7,7 @@ import NavBar from '../components/NavBar';
 import ServiceIcons from '../components/ServiceIcons';
 import EventSection from '../components/event/EventSection';
 import SectionComponent from '../components/SectionComponent';
-import EventMarquee from '../screens/EventMarquee';
-import VIPServicesContainer from '../components/VIPServicesContainer';
-import EventSectionContainer from '../components/event/EventSectionContainer';
-import BeautifulSectionHeader from '../components/event/BeautifulSectionHeader';
-
-type RootStackParamList = {
-  Home: undefined;
-  ServiceSelection: undefined; // Add this line
-  PersonalsScreen: { category: string };
-  ChatList: undefined;
-  PersonalDetail: { personalId: number };
-  EventDetails: { eventId: number };
-  AllEvents: undefined;
-  LocalServicesScreen: undefined;
-  MaterialsAndFoodServicesScreen: undefined;
-  LocalServiceScreen: undefined;
-  MaterialServiceDetail: { materialId: number };
-  LocalServiceDetails: { localServiceId: number };
-  EventCreation: undefined;
-  MaterialScreen: undefined;
-  MaterialDetailScreen: { materialId: number };
-  
-};
-
-
+import EventMarquee from './EventMarquee';
 import FAB from '../components/FAB';
 import tw from 'twrnc';
 import { supabase } from '../services/supabaseClient';
@@ -56,23 +32,58 @@ const HomeScreen: React.FC = () => {
     loadData();
   }, []);
 
+  const fetchMaterials = async () => {
+    console.log('Fetching materials...'); 
+    const { data, error } = await supabase
+      .from('material')
+      .select('id, name, price, price_per_hour, sell_or_rent, subcategory_id, media (url), details');
+  
+    if (error) {
+      console.error('Error fetching materials:', error); 
+      return [];
+    } else {
+      console.log('Materials fetched:', data); 
+      return data?.map((item: Material) => ({
+        ...item,
+        subcategory: item.subcategory_id // Ensure correct mapping
+      })) || [];
+    }
+  };
+
   const loadData = async () => {
     try {
-      const [eventsData, topEventsData, localsData, staffServicesData, materialsAndFoodServicesData] = await Promise.all([
+      console.log('Loading data...'); // Log when loading starts
+      const [
+        eventsData,
+        topEventsData,
+        localsData,
+        staffServicesData,
+        materialsData // Add materialsData here
+      ] = await Promise.all([
         fetchEvents(),
         fetchTopEvents(),
         fetchLocals(),
         fetchStaffServices(),
-        fetchMaterialsAndFoodServices()
+        fetchMaterials() // Call fetchMaterials here
       ]);
+
+      console.log('Data loaded:', {
+        eventsData,
+        topEventsData,
+        localsData,
+        staffServicesData,
+        materialsData
+      }); // Log all loaded data
 
       setEvents(eventsData);
       setTopEvents(topEventsData);
       setLocals(localsData);
       setStaffServices(staffServicesData);
-      setMaterialsAndFoodServices(materialsAndFoodServicesData);
+      setMaterialsAndFoodServices(materialsData); // Set materials data
+
+      console.log('Materials and Food Services:', materialsData); // Log materials data
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching data:', error); // Log any errors during loading
     }
   };
 
@@ -110,24 +121,11 @@ const HomeScreen: React.FC = () => {
     return data || [];
   };
 
-  const fetchMaterialsAndFoodServices = async () => {
-    const { data, error } = await supabase.from('material').select('*, subcategory (name), media (url),price,price_per_hour').limit(5);
-    if (error) throw new Error(error.message);
-    return data || [];
-  };
-
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     loadData().then(() => setRefreshing(false));
   }, []);
 
-  const handleSeeAllEvents = () => navigation.navigate('AllEvents');
-  const handleStaffServicePress = (item: any) => navigation.navigate('PersonalDetail', { personalId: item.id });
-  const handleSeeAllStaffServices = () => navigation.navigate('PersonalsScreen', { category: 'all' });
-  const handleSeeAllLocalServices = () => navigation.navigate('LocalServiceScreen');
-  const handleLocalServicePress = (item: any) => navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
-  const handleSeeAllMaterialsAndFoodServices = () => navigation.navigate('MaterialScreen');
-  const handleMaterialsAndFoodServicePress = (item: any) => navigation.navigate('MaterialDetailScreen', { materialId: item.id });
   const toggleFab = () => setIsFabOpen(!isFabOpen);
 
   const headerOpacity = scrollY.interpolate({
@@ -142,16 +140,6 @@ const HomeScreen: React.FC = () => {
         source={{ uri: 'https://thumbs.dreamstime.com/b/disco-club-colored-lighting-abstract-scene-night-bright-rays-light-smoke-296592406.jpg' }}
         style={tw`flex-1 w-full h-full`}
       >
-        <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} onSearch={() => {}} />
-        <ScrollView 
-          style={styles.scrollView} 
-          contentContainerStyle={styles.scrollViewContent}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <EventMarquee events={events.slice(0, 10)} />
-          <ServiceIcons />
         <LinearGradient
           colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.3)']}
           style={tw`absolute inset-0`}
@@ -164,67 +152,72 @@ const HomeScreen: React.FC = () => {
           </Animated.View>
           
           <Animated.ScrollView
-  style={tw`flex-1`}
-  contentContainerStyle={tw`pb-20 pt-4`}
-  refreshControl={
-    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-  }
-  onScroll={Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    { useNativeDriver: false }
-  )}
-  scrollEventThrottle={16}
->
-  <EventMarquee events={events.slice(0, 10)} />
-  <View style={tw`px-4 py-6`}>
-    <ServiceIcons />
-  </View>
+            style={tw`flex-1`}
+            contentContainerStyle={tw`pb-20 pt-4`}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: false }
+            )}
+            scrollEventThrottle={16}
+          >
+            <EventMarquee events={events.slice(0, 10)} />
+            <View style={tw`px-4 py-6`}>
+              <ServiceIcons />
+            </View>
 
-  <Banner title="Events" />
-  <EventSection 
-    title="YOUR EVENTS" 
-    events={events} 
-    navigation={navigation}
-    onSeeAll={() => navigation.navigate('AllEvents')}
-    isTopEvents={false}
-  />
+            <Banner title="Events" />
+            <EventSection 
+              title="YOUR EVENTS" 
+              events={events} 
+              navigation={navigation}
+              onSeeAll={() => navigation.navigate('AllEvents')}
+              isTopEvents={false}
+            />
 
-  <EventSection 
-    title="HOT EVENTS" 
-    events={topEvents} 
-    navigation={navigation}
-    onSeeAll={() => navigation.navigate('AllEvents')}
-    isTopEvents={true}
-  />
+            <EventSection 
+              title="HOT EVENTS" 
+              events={topEvents} 
+              navigation={navigation}
+              onSeeAll={() => navigation.navigate('AllEvents')}
+              isTopEvents={true}
+            />
 
-  <Banner title="Services" />
-  <SectionComponent 
-    title="TOP STAFF SERVICES"
-    data={staffServices}
-    onSeeAll={() => navigation.navigate('PersonalsScreen', { category: 'all' })}
-    onItemPress={(item) => navigation.navigate('PersonalDetail', { personalId: item.id })}
-    type="staff"
-  />
+            <Banner title="Services" />
+            <SectionComponent 
+              title="TOP STAFF SERVICES"
+              data={staffServices}
+              onSeeAll={() => navigation.navigate('PersonalsScreen', { category: 'all' })}
+              onItemPress={(item) => navigation.navigate('PersonalDetail', { personalId: item.id })}
+              type="staff"
+            />
 
-<SectionComponent 
-  title="LOCAL SERVICES" 
-  data={locals} 
-  onSeeAll={() => navigation.navigate('LocalServiceScreen')}
-  onItemPress={(item) => {
-    console.log('Local service item:', item);
-    navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
-  }}
-  type="local"
-/>
-  
-  <SectionComponent 
-    title="MATERIALS & FOOD" 
-    data={materialsAndFoodServices} 
-    onSeeAll={() => navigation.navigate('MaterialsAndFoodServicesScreen')}
-    onItemPress={(item) => navigation.navigate('MaterialServiceDetail', { materialId: item.id })}
-    type="material"
-  />
-</Animated.ScrollView>
+            <SectionComponent 
+              title="LOCAL SERVICES" 
+              data={locals} 
+              onSeeAll={() => navigation.navigate('LocalServiceScreen')}
+              onItemPress={(item) => {
+                console.log('Local service item:', item);
+                navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
+              }}
+              type="local"
+            />
+            
+            <SectionComponent 
+              title="MATERIALS & FOOD" 
+              data={materialsAndFoodServices} 
+              onSeeAll={() => navigation.navigate('MaterialScreen')}
+              onItemPress={(item) => navigation.navigate('MaterialDetailScreen', { materialId: item.id })}
+              type="material"
+            />
+
+            <Button
+              title="Go to Video Rooms"
+              onPress={() => navigation.navigate('VideoRooms')}
+            />
+          </Animated.ScrollView>
           <FAB 
             isFabOpen={isFabOpen}
             toggleFab={toggleFab}

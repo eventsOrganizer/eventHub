@@ -10,7 +10,7 @@ interface SubcategoryStepProps {
 
 const SubcategoryStep: React.FC<SubcategoryStepProps> = ({ formData, setFormData }) => {
   return (
-    <Animated.View entering={FadeInRight} exiting={FadeOutLeft}>
+    <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.container}>
       <Text style={styles.label}>Choose Subcategory</Text>
       <View style={styles.pickerContainer}>
         <Picker
@@ -35,19 +35,26 @@ const SubcategoryStep: React.FC<SubcategoryStepProps> = ({ formData, setFormData
 };
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 20,
+  },
   label: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: '#555',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#fff',
   },
   pickerContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 10,
-    marginBottom: 20,
     overflow: 'hidden',
   },
   picker: {
     height: 50,
+    color: '#fff',
   },
 });
 

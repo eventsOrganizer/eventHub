@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import LottieView from 'lottie-react-native';
 
 interface EmptyBasketProps {
@@ -8,46 +8,45 @@ interface EmptyBasketProps {
 
 export const EmptyBasket: React.FC<EmptyBasketProps> = ({ onStartShopping }) => {
   return (
-    <View style={styles.emptyContainer}>
+    <View style={styles.container}>
       <LottieView
-        source={require('../../assets/empty-cart.png')}
+        // source={require('../../assets/animations/empty-cart.JPG')}
         autoPlay
         loop
-        style={styles.emptyAnimation}
+        style={styles.animation}
       />
-      <Text style={styles.emptyBasket}>Your basket is empty</Text>
-      <TouchableOpacity style={styles.shopButton} onPress={onStartShopping}>
-        <Text style={styles.shopButtonText}>Start Shopping</Text>
+      <Text style={styles.text}>Your basket is empty</Text>
+      <TouchableOpacity style={styles.button} onPress={onStartShopping}>
+        <Text style={styles.buttonText}>Start Shopping</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  emptyContainer: {
+  container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  emptyAnimation: {
+  animation: {
     width: 200,
     height: 200,
   },
-  emptyBasket: {
-    fontSize: 20,
-    textAlign: 'center',
-    marginTop: 20,
+  text: {
+    fontSize: 18,
     color: '#666',
+    marginVertical: 20,
   },
-  shopButton: {
+  button: {
     backgroundColor: '#4A90E2',
+    borderRadius: 10,
     padding: 15,
-    borderRadius: 25,
-    marginTop: 20,
+    alignItems: 'center',
   },
-  shopButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  buttonText: {
+    color: 'white',
     fontSize: 16,
+    fontWeight: 'bold',
   },
 });

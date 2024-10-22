@@ -10,21 +10,21 @@ interface RentOrSaleStepProps {
 
 const RentOrSaleStep: React.FC<RentOrSaleStepProps> = ({ formData, setFormData }) => {
   return (
-    <Animated.View entering={FadeInRight} exiting={FadeOutLeft}>
+    <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.container}>
       <Text style={styles.label}>Is it for Rent or Sale?</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, formData.rentOrSale === 'rent' && styles.selected]}
           onPress={() => setFormData({ ...formData, rentOrSale: 'rent' })}
         >
-          <MaterialIcons name="attach-money" size={24} color={formData.rentOrSale === 'rent' ? '#fff' : '#007AFF'} />
+          <MaterialIcons name="attach-money" size={24} color={formData.rentOrSale === 'rent' ? '#192f6a' : '#fff'} />
           <Text style={[styles.buttonText, formData.rentOrSale === 'rent' && styles.selectedText]}>Rent</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, formData.rentOrSale === 'sale' && styles.selected]}
           onPress={() => setFormData({ ...formData, rentOrSale: 'sale' })}
         >
-          <MaterialIcons name="shopping-cart" size={24} color={formData.rentOrSale === 'sale' ? '#fff' : '#007AFF'} />
+          <MaterialIcons name="shopping-cart" size={24} color={formData.rentOrSale === 'sale' ? '#192f6a' : '#fff'} />
           <Text style={[styles.buttonText, formData.rentOrSale === 'sale' && styles.selectedText]}>Sale</Text>
         </TouchableOpacity>
       </View>
@@ -33,15 +33,21 @@ const RentOrSaleStep: React.FC<RentOrSaleStepProps> = ({ formData, setFormData }
 };
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 20,
+  },
   label: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: '#555',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#fff',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
   },
   button: {
     flex: 1,
@@ -49,22 +55,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 15,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 10,
     marginHorizontal: 5,
-    borderWidth: 1,
-    borderColor: '#007AFF',
   },
   selected: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#fff',
   },
   buttonText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: '#fff',
     marginLeft: 10,
   },
   selectedText: {
-    color: '#fff',
+    color: '#192f6a',
   },
 });
 

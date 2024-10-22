@@ -27,7 +27,8 @@ import CreateServiceScreen from '../screens/CreateServiceScreen'; // Added Creat
 import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen';
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ServiceSelection from '../screens/ServiceSelection';
-
+import VideoRoomsScreen from '../components/event/video/VideoRoomsScreen';
+import VideoCall from '../components/event/video/VideoCall';
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
 
@@ -40,6 +41,8 @@ import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
 import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
 import SavedScreen from '../components/event/profile/SavedScreen';
+import UserServicesScreen from '../screens/UserServicesScreen';
+import YourRequestsScreen from '../screens/YourRequests';
 import InvitationList from '../components/event/profile/InvitationList';
 import EventCreation from '../components/event/EventCreation';
 
@@ -99,7 +102,7 @@ type RootStackParamList = {
     selectedCategory: string; 
     selectedSubcategory: string 
   };
-  UserProfile: undefined; // or { userId: string } if you pass params
+  UserProfile: { userId: string };  UserServicesScreen: undefined;
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -129,6 +132,9 @@ type EventSetupOptionsScreenProps = {
   ServiceSelection: undefined;
   InvitationList: undefined;
   EventCreation: undefined;
+  YourRequests: undefined;
+  VideoRooms: undefined;
+  VideoCall: { roomUrl: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -303,10 +309,24 @@ const AppNavigation: React.FC = () => {
           <Stack.Screen name="EventCreation"
            component={EventCreation} />
 
-<<<<<<< HEAD
+
       <Stack.Screen
-       name ="ServiceSelection" 
-      component={ServiceSelection} />  
+       name ="UserServicesScreen" 
+      component={UserServicesScreen} />  
+
+      <Stack.Screen
+       name ="YourRequests" 
+      component={YourRequestsScreen} />  
+        <Stack.Screen
+          name="VideoRooms"
+          component={VideoRoomsScreen}
+        />  
+
+        <Stack.Screen
+          name="VideoCall"
+          component={VideoCall}
+        />  
+      
       <Stack.Screen
        name ="MaterialScreen" 
       component={MaterialScreen} />
@@ -319,9 +339,7 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="MaterialsOnboarding" 
       component={MaterialsOnboardingScreen} />
-=======
 
->>>>>>> a5147af5ba73dc090fe26cb310eb41c7cf6a67ec
       </Stack.Navigator>
    
   );

@@ -25,7 +25,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({ categories, selecte
         }}
         style={styles.picker}
       >
-        <Picker.Item label="Sélectionnez une catégorie" value={undefined} />
+        <Picker.Item label="Select a category" value={undefined} />
         {categories.map((category) => (
           <Picker.Item key={category.id} label={category.name} value={category.id} />
         ))}

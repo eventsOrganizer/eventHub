@@ -1,6 +1,5 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
 
 interface NextButtonProps {
   onPress: () => void;
@@ -11,40 +10,32 @@ interface NextButtonProps {
 const NextButton: React.FC<NextButtonProps> = ({ onPress, disabled, isLastStep }) => {
   return (
     <TouchableOpacity
-      style={[styles.nextButton, disabled && styles.disabledButton]}
+      style={[styles.button, disabled && styles.disabledButton]}
       onPress={onPress}
       disabled={disabled}
     >
-      <Text style={styles.nextButtonText}>
-        {isLastStep ? 'Finish' : 'Next'}
-      </Text>
-      <MaterialIcons
-        name={isLastStep ? 'check' : 'arrow-forward'}
-        size={24}
-        color="#fff"
-      />
+      <Text style={styles.buttonText}>{isLastStep ? 'Finish' : 'Next'}</Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  nextButton: {
-    flexDirection: 'row',
+  button: {
+    backgroundColor: '#4c669f',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 10,
     marginTop: 20,
   },
   disabledButton: {
-    backgroundColor: '#ccc',
+    opacity: 0.5,
   },
-  nextButtonText: {
+  buttonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-    marginRight: 10,
   },
 });
 
