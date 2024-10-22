@@ -12,6 +12,7 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_API_KEY) {
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_API_KEY, {
+  // export const supabase = createClient("https://cdvnddjpkcdvspccjvre.supabase.co/","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkdm5kZGpwa2NkdnNwY2NqdnJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjgzMzc1NzksImV4cCI6MjA0MzkxMzU3OX0.A0Z32L8JCwX29nuq2lbrJCiEZo2ai5k1Emf7PMClLJE" , {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,

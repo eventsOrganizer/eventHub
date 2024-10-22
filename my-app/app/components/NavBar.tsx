@@ -16,6 +16,11 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
   const navigation = useNavigation();
   const [searchTerm, setSearchTerm] = useState('');
 
+  const handleSearch = () => {
+    onSearch(searchTerm);
+    navigation.navigate('SearchResultsScreen', { initialSearchTerm: searchTerm });
+  };
+
   return (
     <BlurView intensity={80} tint="dark" style={tw`py-4 px-3`}>
       <View style={tw`flex-row items-center justify-between`}>
@@ -27,8 +32,11 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
             placeholderTextColor="#ccc"
             value={searchTerm}
             onChangeText={setSearchTerm}
-            onSubmitEditing={() => onSearch(searchTerm)}
           />
+          {/* Add a search button */}
+          <TouchableOpacity onPress={handleSearch} style={tw`ml-2`}>
+            <Ionicons name="arrow-forward" size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('UserProfile' as never)} style={tw`p-2`}>
           <Ionicons name="person-outline" size={24} color="#fff" />
