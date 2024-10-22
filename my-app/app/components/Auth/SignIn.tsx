@@ -1,85 +1,185 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text, Alert, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import { Ionicons } from '@expo/vector-icons';
 import useAuth from '../../hooks/useAuth';
-import tw from 'twrnc';
+import { Ionicons } from '@expo/vector-icons';
+import SocialLoginButtons from '../SocialLoginButtons';
+import CustomInput from '../CustomInput';
 
-const { width, height } = Dimensions.get('window');
+const SignIn = () => {
+  const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>();
+  const { login, error, success } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
-const Login = () => {
-    const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>();
-    const { login, error, success } = useAuth();
-    const [identifier, setIdentifier] = useState('');
-    const [password, setPassword] = useState('');
-    const [validationError, setValidationError] = useState('');
+  const handleSubmit = async () => {
+    try {
+      await login(email, password);
+      if (success) {
+        // Navigate to Home screen or show success message
+      }
+    } catch (err) {
+      // Error is handled by useAuth hook
+    }
+  };
 
-    const handleSubmit = async () => {
-        if (!identifier || !password) {
-            setValidationError('Both fields are required.');
-            return;
-        }
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Welcome Back</Text>
+      <Text style={styles.subtitle}>Please enter your details to sign in.</Text>
 
-        setValidationError('');
-        try {
-            await login(identifier, password);
-            if (success) {
-                Alert.alert('Success', 'You have logged in successfully.');
-                navigation.navigate('Home');
-            }
-        } catch (err) {
-            if (error) {
-                Alert.alert('Error', error);
-            }
-        }
-    };
+      <SocialLoginButtons />
 
-    return (
-        <LinearGradient
-            colors={['#FF5F00', '#FF0D95']}
-            style={tw`flex-1 justify-center items-center`}
-        >
-            <BlurView intensity={80} tint="dark" style={tw`w-11/12 rounded-3xl overflow-hidden`}>
-                <View style={tw`p-6`}>
-                    <Text style={tw`text-white text-3xl font-bold mb-6 text-center`}>Login</Text>
-                    <View style={tw`bg-white bg-opacity-20 rounded-full px-4 py-2 mb-4 flex-row items-center`}>
-                        <Ionicons name="person-outline" size={24} color="#fff" style={tw`mr-2`} />
-                        <TextInput
-                            placeholder="Username or Email"
-                            placeholderTextColor="#rgba(255,255,255,0.7)"
-                            value={identifier}
-                            onChangeText={setIdentifier}
-                            style={tw`flex-1 text-white text-base`}
-                        />
-                    </View>
-                    <View style={tw`bg-white bg-opacity-20 rounded-full px-4 py-2 mb-6 flex-row items-center`}>
-                        <Ionicons name="lock-closed-outline" size={24} color="#fff" style={tw`mr-2`} />
-                        <TextInput
-                            placeholder="Password"
-                            placeholderTextColor="#rgba(255,255,255,0.7)"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                            style={tw`flex-1 text-white text-base`}
-                        />
-                    </View>
-                    <TouchableOpacity
-                        onPress={handleSubmit}
-                        style={tw`bg-white rounded-full py-3 px-6`}
-                    >
-                        <Text style={tw`text-[#FF0D95] text-center font-bold text-lg`}>Login</Text>
-                    </TouchableOpacity>
-                    {validationError && <Text style={tw`text-red-500 mt-4 text-center`}>{validationError}</Text>}
-                    {error && <Text style={tw`text-red-500 mt-4 text-center`}>{error}</Text>}
-                    {success && <Text style={tw`text-green-500 mt-4 text-center`}>{success}</Text>}
-                </View>
-            </BlurView>
-        </LinearGradient>
-    );
+      <View style={styles.divider}>
+        <View style={styles.line} />
+        <Text style={styles.orText}>OR</Text>
+        <View style={styles.line} />
+      </View>
+
+      <CustomInput
+        label="E-mail address"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="Enter your e-mail id"
+      />
+
+      <CustomInput
+        label="Password"
+        value={password}
+        onChangeText={setPassword}
+        placeholder="Enter your password"
+        secureTextEntry
+        showPassword={showPassword}
+        toggleShowPassword={() => setShowPassword(!showPassword)}
+      />
+
+      <View style={styles.optionsContainer}>
+        <TouchableOpacity onPress={() => setRememberMe(!rememberMe)} style={styles.checkboxContainer}>
+          <View style={[styles.checkbox, rememberMe && styles.checked]}>
+            {rememberMe && <Ionicons name="checkmark" size={16} color="#fff" />}
+          </View>
+          <Text style={styles.checkboxLabel}>Remember Me</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => {/* Handle forgot password */}}>
+          <Text style={styles.forgotPassword}>Forgot password?</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity style={styles.signInButton} onPress={handleSubmit}>
+        <Text style={styles.signInButtonText}>Sign In</Text>
+      </TouchableOpacity>
+
+      <View style={styles.signUpContainer}>
+        <Text style={styles.signUpText}>Don't have an account yet? </Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+          <Text style={styles.signUpLink}>Sign Up</Text>
+        </TouchableOpacity>
+      </View>
+
+      {error && <Text style={styles.errorText}>{error}</Text>}
+      {success && <Text style={styles.successText}>{success}</Text>}
+    </View>
+  );
 };
 
-export default Login;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'linear-gradient(89.7deg, rgb(0, 32, 95) 2.8%, rgb(132, 53, 142) 97.8%)',
+    padding: 20,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#333',
+  },
+  orText: {
+    color: '#888',
+    paddingHorizontal: 10,
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 1,
+    borderColor: '#fff',
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checked: {
+    backgroundColor: '#00C2FF',
+  },
+  checkboxLabel: {
+    color: '#fff',
+  },
+  forgotPassword: {
+    color: '#00C2FF',
+  },
+  signInButton: {
+    backgroundColor: '#00C2FF',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  signInButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  signUpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  signUpText: {
+    color: '#888',
+  },
+  signUpLink: {
+    color: '#00C2FF',
+    fontWeight: 'bold',
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  successText: {
+    color: 'green',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+});
+
+export default SignIn;

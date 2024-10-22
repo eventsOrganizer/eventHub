@@ -28,35 +28,62 @@ const HomeScreen: React.FC = () => {
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      loadData();
-    }, [])
-  );
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const fetchMaterials = async () => {
+    console.log('Fetching materials...'); 
+    const { data, error } = await supabase
+      .from('material')
+      .select('id, name, price, price_per_hour, sell_or_rent, subcategory_id, media (url), details');
+  
+    if (error) {
+      console.error('Error fetching materials:', error); 
+      return [];
+    } else {
+      console.log('Materials fetched:', data); 
+      return data?.map((item: Material) => ({
+        ...item,
+        subcategory: item.subcategory_id // Ensure correct mapping
+      })) || [];
+    }
+  };
 
   const loadData = async () => {
     try {
-      setEvents([]);
-      setTopEvents([]);
-      setLocals([]);
-      setStaffServices([]);
-      setMaterialsAndFoodServices([]);
-  
-      const [eventsData, topEventsData, localsData, staffServicesData, materialsAndFoodServicesData] = await Promise.all([
+      console.log('Loading data...'); // Log when loading starts
+      const [
+        eventsData,
+        topEventsData,
+        localsData,
+        staffServicesData,
+        materialsData // Add materialsData here
+      ] = await Promise.all([
         fetchEvents(),
         fetchTopEvents(),
         fetchLocals(),
         fetchStaffServices(),
-        fetchMaterialsAndFoodServices()
+        fetchMaterials() // Call fetchMaterials here
       ]);
-  
+
+      console.log('Data loaded:', {
+        eventsData,
+        topEventsData,
+        localsData,
+        staffServicesData,
+        materialsData
+      }); // Log all loaded data
+
       setEvents(eventsData);
       setTopEvents(topEventsData);
       setLocals(localsData);
       setStaffServices(staffServicesData);
-      setMaterialsAndFoodServices(materialsAndFoodServicesData);
+      setMaterialsAndFoodServices(materialsData); // Set materials data
+
+      console.log('Materials and Food Services:', materialsData); // Log materials data
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching data:', error); // Log any errors during loading
     }
   };
 
@@ -90,12 +117,6 @@ const HomeScreen: React.FC = () => {
       .from('personal')
       .select('*, subcategory (id,name,category(id,name)), media (url) ')
       .limit(5);
-    if (error) throw new Error(error.message);
-    return data || [];
-  };
-
-  const fetchMaterialsAndFoodServices = async () => {
-    const { data, error } = await supabase.from('material').select('*').limit(5);
     if (error) throw new Error(error.message);
     return data || [];
   };
@@ -173,8 +194,8 @@ const HomeScreen: React.FC = () => {
             <SectionComponent 
               title="MATERIALS & FOOD" 
               data={materialsAndFoodServices} 
-              onSeeAll={() => navigation.navigate('MaterialsAndFoodServicesScreen')}
-              onItemPress={(item) => navigation.navigate('MaterialServiceDetail', { materialId: item.id })}
+              onSeeAll={() => navigation.navigate('MaterialScreen')}
+              onItemPress={(item) => navigation.navigate('MaterialDetailScreen', { materialId: item.id })}
               type="material"
             />
           </View>

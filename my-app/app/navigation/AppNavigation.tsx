@@ -45,6 +45,9 @@ import UserServicesScreen from '../screens/UserServicesScreen';
 import YourRequestsScreen from '../screens/YourRequests';
 import InvitationList from '../components/event/profile/InvitationList';
 import EventCreation from '../components/event/EventCreation';
+import BookingScreen from '../screens/PersonalServiceScreen/BookingScreen';
+import CommentsScreen from '../screens/PersonalServiceScreen/CommentsScreen';
+import AddReviewScreen from '../screens/PersonalServiceScreen/AddReviewScreen';
 
 // Inside your Stack.Navigator component, add this new Screen
 
@@ -60,7 +63,11 @@ import CreatePersonalServiceStep1 from '../components/PersonalServiceCreation/Cr
 import CreatePersonalServiceStep2 from '../components/PersonalServiceCreation/CreatePersonalServiceStep2';
 import CreatePersonalServiceStep3 from '../components/PersonalServiceCreation/CreatePersonalServiceStep3';
 import CreatePersonalServiceStep5 from '../components/PersonalServiceCreation/CreatePersonalServiceStep5';
-
+import MaterialScreen from '../screens/MaterialServiceScreens/MaterialScreen';
+import MaterialDetailScreen from '../screens/MaterialServiceScreens/MaterialDetailScreen';
+import { Material } from './types';
+import BasketScreen from '../screens/BasketScreen';
+import MaterialsOnboardingScreen from '../screens/MaterialServiceScreens/MaterialsOnboardingScreen';
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -73,14 +80,15 @@ type RootStackParamList = {
   Signin: undefined;
   LandingPage: undefined;
   HomeScreen: undefined;
- 
+  MaterialScreen: undefined;
+  MaterialDetail: { material: Material };
   EventDetails: { eventName: string; eventDescription: string; eventType: string };
   CategorySelection: { eventName: string; eventDescription: string; eventType: string };
   SubcategorySelection: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string };
   VenueSelection: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string };
   MusicAndEntertainment: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; venue: string };
   EventTimeline: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; venue: string; music: string };
-  
+  Basket: { basket: Material[] };
   GuestManagement: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
   TeamCollaboration: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
   Notifications: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
@@ -130,6 +138,8 @@ type EventSetupOptionsScreenProps = {
   YourRequests: undefined;
   VideoRooms: undefined;
   VideoCall: { roomUrl: string };
+ 
+
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -320,7 +330,35 @@ const AppNavigation: React.FC = () => {
         <Stack.Screen
           name="VideoCall"
           component={VideoCall}
-        />  
+        />
+         <Stack.Screen 
+        name="BookingScreen" 
+        component={BookingScreen}
+        options={{ headerShown: true, title: 'Réservation' }}
+      />
+      <Stack.Screen 
+        name="CommentsScreen" 
+        component={CommentsScreen}
+        options={{ headerShown: true, title: 'Commentaires' }}
+      />
+      <Stack.Screen 
+        name="AddReviewScreen" 
+        component={AddReviewScreen}
+        options={{ headerShown: true, title: 'Ajouter un avis' }}
+      />
+      
+      <Stack.Screen
+       name ="MaterialScreen" 
+      component={MaterialScreen} />
+      <Stack.Screen
+       name ="MaterialDetail" 
+      component={MaterialDetailScreen as any} />
+      <Stack.Screen
+       name ="Basket" 
+      component={BasketScreen} />
+      <Stack.Screen
+       name ="MaterialsOnboarding" 
+      component={MaterialsOnboardingScreen} />
 
       </Stack.Navigator>
    

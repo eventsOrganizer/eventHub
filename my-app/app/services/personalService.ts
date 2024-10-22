@@ -186,3 +186,21 @@ export const toggleLike = async (personalId: number, userId: string | null) => {
   }
 };
 
+export const addReview = async (personalId: number, userId: string, rating: number): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('review')
+      .insert({
+        personal_id: personalId,
+        user_id: userId,
+        rate: rating,
+      });
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error adding review:', error);
+    return false;
+  }
+};
+
