@@ -101,16 +101,39 @@ export type RootStackParamList = {
     userId: string | null;
   };
 
+
+
+
+  Basket: { basket: Material[] }; 
+  MaterialScreen: { materials: Material[] };
+  MaterialsOnboarding: undefined;
 };
 
+export interface Media {
+  url: string;
+}
+
+export interface Material {
+  id: string;
+  name: string;
+  price: number;
+  price_per_hour: number;
+  sell_or_rent: 'sell' | 'rent';
+  subcategory_id: number;
+  subcategory?: number;
+  media: { url: string }[];
+  details: string;
+  likes?: number;
+  average_rating?: number;
+}
+
+export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;
 export type BookingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'BookingScreen'>;
 export type CommentsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CommentsScreen'>;
 export type AddReviewScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AddReviewScreen'>;
-
 export type CreateLocalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep5'>;
 export type PersonalScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'PersonalsScreen'>;
 export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-
 export type CreatePersonalServiceStep1NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep1'>;
 export type CreatePersonalServiceStep2NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep2'>;
 export type CreatePersonalServiceStep3NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep3'>;
