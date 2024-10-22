@@ -1,26 +1,38 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text, TouchableOpacity } from 'react-native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Service } from '../../services/serviceTypes';
 import { fetchPersonalDetail, toggleLike } from '../../services/personalService';
 import { fetchAvailabilityData, AvailabilityData } from '../../services/availabilityService';
 import { useUser } from '../../UserContext';
 import { useToast } from '../../hooks/useToast';
 import PersonalInfo from '../../components/PersonalServiceComponents/PersonalInfo';
-import CommentSection from '../../components/PersonalServiceComponents/CommentSection';
-import ReviewForm from '../../components/PersonalServiceComponents/ReviewForm';
-import BookingForm from './components/BookingForm';
 import ServiceDetails from './components/ServiceDetails';
 
-const PersonalDetail = () => {
-  const route = useRoute();
-  const { personalId } = route.params as { personalId: number };
+type RootStackParamList = {
+  AddReviewScreen: { personalId: number; userId: string | null };
+  CommentsScreen: { personalId: number; userId: string | null };
+  BookingScreen: { personalId: number; userId: string | null; availabilityData: AvailabilityData | null };
+  PersonalDetail: { personalId: number };
+  Signin: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type PersonalDetailRouteProp = RouteProp<RootStackParamList, 'PersonalDetail'>;
+
+const PersonalDetail: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<PersonalDetailRouteProp>();
+  const { personalId } = route.params;
   const { userId } = useUser();
-  const { toast, ToastComponent } = useToast();
+  const { toast } = useToast();
 
   const [personalData, setPersonalData] = useState<Service | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [availabilityData, setAvailabilityData] = useState<AvailabilityData | null>(null);
+  const [averageRating, setAverageRating] = useState<number | null>(null);
+  const [reviewCount, setReviewCount] = useState<number>(0);
 
   const fetchData = useCallback(async () => {
     try {
@@ -29,11 +41,17 @@ const PersonalDetail = () => {
       setPersonalData(data);
       const availability = await fetchAvailabilityData(personalId);
       setAvailabilityData(availability);
+      
+      if (data?.review && data.review.length > 0) {
+        const totalRating = data.review.reduce((sum, review) => sum + review.rate, 0);
+        setAverageRating(totalRating / data.review.length);
+        setReviewCount(data.review.length);
+      }
     } catch (error) {
       console.error('Error fetching personal detail:', error);
       toast({
         title: "Error",
-        description: "Impossible de charger les détails du service. Veuillez réessayer.",
+        description: "Unable to load service details. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -45,13 +63,22 @@ const PersonalDetail = () => {
     fetchData();
   }, [fetchData]);
 
-  const handleLike = async () => {
+  const handleAuthenticatedAction = useCallback((action: () => void) => {
     if (!userId) {
       toast({
-        title: "Authentification requise",
-        description: "Veuillez vous connecter pour aimer un service.",
+        title: "Authentication Required",
+        description: "Please log in to perform this action.",
         variant: "default",
       });
+      navigation.navigate('Signin');
+    } else {
+      action();
+    }
+  }, [userId, toast, navigation]);
+
+  const handleLike = useCallback(async () => {
+    if (!userId) {
+      handleAuthenticatedAction(() => {});
       return;
     }
     const result = await toggleLike(personalId, userId);
@@ -64,40 +91,50 @@ const PersonalDetail = () => {
         return { ...prevData, like: newLikes };
       });
     }
-  };
+  }, [userId, personalId, handleAuthenticatedAction]);
 
-  const handleReviewSubmitted = () => {
-    toast({
-      title: "Succès",
-      description: "Votre avis a été soumis avec succès.",
-      variant: "default",
+  const navigateToReviewScreen = useCallback(() => {
+    handleAuthenticatedAction(() => {
+      navigation.navigate('AddReviewScreen', { personalId, userId });
     });
-    fetchData();
-  };
+  }, [handleAuthenticatedAction, navigation, personalId, userId]);
+
+  const navigateToCommentScreen = useCallback(() => {
+    handleAuthenticatedAction(() => {
+      navigation.navigate('CommentsScreen', { personalId, userId });
+    });
+  }, [handleAuthenticatedAction, navigation, personalId, userId]);
+
+  const navigateToBookingScreen = useCallback(() => {
+    handleAuthenticatedAction(() => {
+      if (userId && availabilityData) {
+        navigation.navigate('BookingScreen', { personalId, userId, availabilityData });
+      }
+    });
+  }, [handleAuthenticatedAction, navigation, personalId, availabilityData, userId]);
 
   if (isLoading || !personalData || !availabilityData) {
-    return <View style={styles.centeredContainer}><Text style={styles.loadingText}>Chargement...</Text></View>;
+    return <View style={styles.centeredContainer}><Text style={styles.loadingText}>Loading...</Text></View>;
   }
 
   const renderItem = () => (
     <View style={styles.content}>
-      <PersonalInfo personalData={personalData} onLike={handleLike} />
+      <PersonalInfo 
+        personalData={personalData} 
+        onLike={handleLike} 
+        averageRating={averageRating}
+        reviewCount={reviewCount}
+      />
       <ServiceDetails personalData={personalData} />
-      <BookingForm
-        personalId={personalId}
-        userId={userId}
-        availabilityData={availabilityData}
-        onBookingComplete={fetchData}
-      />
-      <ReviewForm personalId={personalData.id} onReviewSubmitted={handleReviewSubmitted} />
-      <CommentSection 
-        comments={personalData.comment.map(comment => ({
-          ...comment,
-          user: (comment as any).user || { username: "anonymous" }
-        }))}  
-        personalId={personalData.id}
-        userId={userId}
-      />
+      <TouchableOpacity style={styles.button} onPress={navigateToReviewScreen}>
+        <Text style={styles.buttonText}>Submit a Review</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={navigateToCommentScreen}>
+        <Text style={styles.buttonText}>View & Leave Comments</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={navigateToBookingScreen}>
+        <Text style={styles.buttonText}>Book Now</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -112,7 +149,6 @@ const PersonalDetail = () => {
         renderItem={renderItem}
         keyExtractor={(item) => item.key}
       />
-      {ToastComponent}
     </KeyboardAvoidingView>
   );
 };
@@ -132,6 +168,17 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 18,
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 

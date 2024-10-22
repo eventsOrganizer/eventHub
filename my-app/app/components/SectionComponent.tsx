@@ -5,7 +5,7 @@ import { BlurView } from 'expo-blur';
 import StaffServiceCard from './PersonalServiceComponents/StaffServiceCard';
 import EventCard from './event/EventCard';
 import LocalServiceCard from './LocalService/LocalServiceCard';
-
+import MaterialCard from './MaterialService/MaterialCard';
 const { width } = Dimensions.get('window');
 
 interface SectionComponentProps {
@@ -27,12 +27,17 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
       case 'event':
         return <EventCard key={item.id} event={item} onPress={() => onItemPress(item)} />;
       case 'local':
-      // case 'material':
         return <LocalServiceCard key={item.id} item={item} onPress={() => onItemPress(item)} />;
+      case 'material':
+        // Ensure this is the correct component for "material"
+        return <MaterialCard key={item.id} item={item} onPress={() => onItemPress(item)} />;
       default:
         return null;
     }
   };
+
+  // Debugging: Check if items are being rendered
+  console.log('Rendering items for type:', type, 'Data:', data);
 
   const renderLocalServices = () => {
     const pages = [];

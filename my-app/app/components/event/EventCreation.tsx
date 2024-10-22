@@ -8,6 +8,7 @@ import { useUser } from '../../UserContext';
 import CloudinaryUpload from './CloudinaryUpload';
 import MapScreen from '../../screens/MapScreen';
 import tw from 'twrnc';
+import { createUpdate } from './profile/notification/CreateUpdate';
 
 const EventCreation: React.FC = () => {
   const { userId } = useUser();
@@ -144,6 +145,9 @@ const EventCreation: React.FC = () => {
         url: imageUrl,
         type: 'image',
       });
+
+      // Create update notification
+      await createUpdate(userId, 'event', eventId);
 
       setIsLoading(false);
       Alert.alert('Success', 'Event created successfully');

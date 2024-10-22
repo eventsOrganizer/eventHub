@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, RefreshControl, SafeAreaView, ImageBackground, Animated, Button } from 'react-native'; // Import Button
-import { useNavigation } from '@react-navigation/native';
+import React, { useState , useEffect } from 'react';
+import { View, ScrollView, RefreshControl, SafeAreaView, Button } from 'react-native';
+import { useNavigation , } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BlurView } from 'expo-blur';
 import NavBar from '../components/NavBar';
@@ -14,6 +14,7 @@ import { supabase } from '../services/supabaseClient';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '../navigation/types';
 import Banner from '../components/event/Banner';
+
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 const HomeScreen: React.FC = () => {
@@ -26,29 +27,62 @@ const HomeScreen: React.FC = () => {
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const scrollY = new Animated.Value(0);
 
   useEffect(() => {
     loadData();
   }, []);
 
+  const fetchMaterials = async (): Promise<Material[]> => {
+    const { data, error } = await supabase
+      .from('material')
+      .select('*, subcategory:subcategory_id(*)');
+  
+    if (error) {
+      console.error('Error fetching materials:', error);
+      return [];
+    } else {
+      console.log('Materials fetched:', data);
+      return data?.map((item: any) => ({
+        ...item,
+        subcategory: item.subcategory // Assuming the join query returns subcategory data
+      })) || [];
+    }
+  };
+
   const loadData = async () => {
     try {
-      const [eventsData, topEventsData, localsData, staffServicesData, materialsAndFoodServicesData] = await Promise.all([
+      console.log('Loading data...'); // Log when loading starts
+      const [
+        eventsData,
+        topEventsData,
+        localsData,
+        staffServicesData,
+        materialsData // Add materialsData here
+      ] = await Promise.all([
         fetchEvents(),
         fetchTopEvents(),
         fetchLocals(),
         fetchStaffServices(),
-        fetchMaterialsAndFoodServices()
+        fetchMaterials() // Call fetchMaterials here
       ]);
+
+      console.log('Data loaded:', {
+        eventsData,
+        topEventsData,
+        localsData,
+        staffServicesData,
+        materialsData
+      }); // Log all loaded data
 
       setEvents(eventsData);
       setTopEvents(topEventsData);
       setLocals(localsData);
       setStaffServices(staffServicesData);
-      setMaterialsAndFoodServices(materialsAndFoodServicesData);
+      setMaterialsAndFoodServices(materialsData); // Set materials data
+
+      console.log('Materials and Food Services:', materialsData); // Log materials data
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching data:', error); // Log any errors during loading
     }
   };
 
@@ -86,12 +120,6 @@ const HomeScreen: React.FC = () => {
     return data || [];
   };
 
-  const fetchMaterialsAndFoodServices = async () => {
-    const { data, error } = await supabase.from('material').select('*').limit(5);
-    if (error) throw new Error(error.message);
-    return data || [];
-  };
-
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     loadData().then(() => setRefreshing(false));
@@ -99,46 +127,30 @@ const HomeScreen: React.FC = () => {
 
   const toggleFab = () => setIsFabOpen(!isFabOpen);
 
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
-
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-900`}>
-      <ImageBackground
-        source={{ uri: 'https://thumbs.dreamstime.com/b/disco-club-colored-lighting-abstract-scene-night-bright-rays-light-smoke-296592406.jpg' }}
-        style={tw`flex-1 w-full h-full`}
+    <SafeAreaView style={tw`flex-1 bg-[#001F3F]`}>
+      <LinearGradient
+        colors={['#4B0082', '#0066CC', '#00BFFF', 'white']}
+        style={tw`flex-1`}
       >
-        <LinearGradient
-          colors={['rgba(0,0,0,0.7)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.3)']}
-          style={tw`absolute inset-0`}
-        />
-        <BlurView intensity={80} tint="dark" style={tw`flex-1`}>
-          <Animated.View style={[tw`absolute top-0 left-0 right-0 z-10`, { opacity: headerOpacity }]}>
-            <BlurView intensity={100} tint="dark" style={tw`py-4`}>
-              <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} onSearch={() => {}} />
-            </BlurView>
-          </Animated.View>
-          
-          <Animated.ScrollView
-            style={tw`flex-1`}
-            contentContainerStyle={tw`pb-20 pt-4`}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: false }
-            )}
-            scrollEventThrottle={16}
-          >
-            <EventMarquee events={events.slice(0, 10)} />
-            <View style={tw`px-4 py-6`}>
-              <ServiceIcons />
-            </View>
+        <BlurView intensity={100} tint="dark" style={tw`py-4`}>
+          <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} onSearch={() => {}} />
+        </BlurView>
+        
+        <ScrollView
+          style={tw`flex-1`}
+          contentContainerStyle={tw`pb-20 pt-4`}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <EventMarquee events={events.slice(0, 10)} />
 
+          <View style={tw`mt-6`}>
+            <ServiceIcons />
+          </View>
+
+          <View style={tw`mt-6`}>
             <Banner title="Events" />
             <EventSection 
               title="YOUR EVENTS" 
@@ -155,7 +167,9 @@ const HomeScreen: React.FC = () => {
               onSeeAll={() => navigation.navigate('AllEvents')}
               isTopEvents={true}
             />
+          </View>
 
+          <View style={tw`mt-6`}>
             <Banner title="Services" />
             <SectionComponent 
               title="TOP STAFF SERVICES"
@@ -179,24 +193,26 @@ const HomeScreen: React.FC = () => {
             <SectionComponent 
               title="MATERIALS & FOOD" 
               data={materialsAndFoodServices} 
-              onSeeAll={() => navigation.navigate('MaterialsAndFoodServicesScreen')}
-              onItemPress={(item) => navigation.navigate('MaterialServiceDetail', { materialId: item.id })}
+              onSeeAll={() => navigation.navigate('MaterialScreen')}
+              onItemPress={(item) => navigation.navigate('MaterialDetailScreen', { materialId: item.id })}
               type="material"
             />
+          </View>
 
+          <View style={tw`mt-6 mb-4`}>
             <Button
               title="Go to Video Rooms"
               onPress={() => navigation.navigate('VideoRooms')}
             />
-          </Animated.ScrollView>
-          <FAB 
-            isFabOpen={isFabOpen}
-            toggleFab={toggleFab}
-            onCreateService={() => navigation.navigate('ServiceSelection')}
-            onCreateEvent={() => navigation.navigate('EventCreation')}
-          />
-        </BlurView>
-      </ImageBackground>
+          </View>
+        </ScrollView>
+        <FAB 
+          isFabOpen={isFabOpen}
+          toggleFab={toggleFab}
+          onCreateService={() => navigation.navigate('ServiceSelection')}
+          onCreateEvent={() => navigation.navigate('EventCreation')}
+        />
+      </LinearGradient>
     </SafeAreaView>
   );
 };
