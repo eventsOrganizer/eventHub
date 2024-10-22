@@ -72,7 +72,7 @@ const LocalServiceScreen: React.FC = () => {
       <View style={styles.searchBar}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search local services"
+          placeholder="Search venues"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />

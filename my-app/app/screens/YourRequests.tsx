@@ -151,15 +151,15 @@ const YourRequests: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => filterRequests('Local')} style={styles.filterButton}>
               {getCategoryIcon('local')}
-              <Text style={[styles.filterText, selectedCategory === 'Local' && styles.activeFilterText]}>Local</Text>
+              <Text style={[styles.filterText, selectedCategory === 'Local' && styles.activeFilterText]}>Venue</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => filterRequests('Personal')} style={styles.filterButton}>
               {getCategoryIcon('personal')}
-              <Text style={[styles.filterText, selectedCategory === 'Personal' && styles.activeFilterText]}>Personal</Text>
+              <Text style={[styles.filterText, selectedCategory === 'Personal' && styles.activeFilterText]}>Crew</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => filterRequests('Material')} style={styles.filterButton}>
               {getCategoryIcon('material')}
-              <Text style={[styles.filterText, selectedCategory === 'Material' && styles.activeFilterText]}>Material</Text>
+              <Text style={[styles.filterText, selectedCategory === 'Material' && styles.activeFilterText]}>Product</Text>
             </TouchableOpacity>
           </View>
 

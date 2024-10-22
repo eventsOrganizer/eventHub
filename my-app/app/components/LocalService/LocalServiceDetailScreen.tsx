@@ -1,161 +1,200 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import React, { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../../services/supabaseClient';
-import AvailabilityList from '../PersonalServiceComponents/AvailabilityList';
-import CommentSection from '../PersonalServiceComponents/CommentSection';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text } from 'react-native';
+import { useRoute } from '@react-navigation/native';
+import { fetchLocalDetail, toggleLikeLocal } from '../../services/localService';
+import { fetchLocalAvailabilityData, LocalAvailabilityData } from '../../services/availabilityService';
+import { useUser } from '../../UserContext';
+import { useToast } from '../../hooks/useToast';
+import LocalInfo from './LocalInfo';
+import LocalBookingForm from './LocalBookingForm';
+import { LocalService } from '../../services/serviceTypes';
+import LocalDetails from './LocalDetails';
+import LocalReviewForm from './LocalReviewForm';
+import LocalCommentSection from './LocalCommentSection';
 
-type RootStackParamList = {
-  LocalServiceDetails: { localServiceId: number };
-};
+const LocalServiceDetailScreen = () => {
+  const route = useRoute();
+  const { localServiceId } = route.params as { localServiceId: number };
+  const { userId } = useUser();
+  const { toast, ToastComponent } = useToast();
 
-type LocalServiceDetailScreenRouteProp = RouteProp<RootStackParamList, 'LocalServiceDetails'>;
-
-interface LocalService {
-  id: number;
-  name: string;
-  details: string;
-  priceperhour: number;
-  media: { url: string }[];
-  availability: any[];
-  comment: any[];
-}
-
-const LocalServiceDetailScreen: React.FC = () => {
-  const route = useRoute<LocalServiceDetailScreenRouteProp>();
-  const navigation = useNavigation();
-  const [service, setService] = useState<LocalService | null>(null);
+  const [localServiceData, setLocalServiceData] = useState<LocalService | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [availabilityData, setAvailabilityData] = useState<LocalAvailabilityData | null>(null);
+  const [likes, setLikes] = useState(0);
+  const [userHasLiked, setUserHasLiked] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('local')
+        .select(`*, 
+          subcategory (name),
+          media (url),
+          availability (id, start, end, daysofweek, date),
+          comment (id, details, user_id, created_at),
+          like (user_id),
+          review (id) 
+        `)
+        .eq('id', localServiceId)
+        .single();
+  
+      if (error) throw error;
+      if (!data) {
+        throw new Error('No data returned from the query');
+      }
+  
+      // Ensure 'data' is of type 'LocalService | null' before calling setLocalServiceData
+      if (isValidLocalServiceData(data)) {
+        // Ensure 'review' is an array
+        data.review = Array.isArray(data.review) ? data.review : [];
+        setLocalServiceData(data);
+      } else {
+        console.error("Invalid data received:", data);
+        setLocalServiceData(null); // or handle the error appropriately
+      }
+  
+      // Fetch availability data
+      const availability = await fetchLocalAvailabilityData(localServiceId);
+      setAvailabilityData(availability);
+  
+      // Fetch the number of likes
+      const { count: likesCount } = await supabase
+        .from('like')
+        .select('id', { count: 'exact' })
+        .eq('local_id', localServiceId);
+  
+      setLikes(likesCount || 0);
+  
+      // Check if the current user has liked
+      const { data: userLike } = await supabase
+        .from('like')
+        .select('*')
+        .eq('local_id', localServiceId)
+        .eq('user_id', userId)
+        .single();
+  
+      setUserHasLiked(!!userLike);
+    } catch (error) {
+      console.error('Error fetching local service details:', error);
+      toast({
+        title: "Error",
+        description: "Impossible de charger les détails du service. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [localServiceId, userId, toast]);
+  
 
   useEffect(() => {
-    const fetchServiceDetails = async () => {
-      const localServiceId = route.params?.localServiceId;
-      console.log('Fetching service details for id:', localServiceId);
+    fetchData();
+  }, [fetchData]);
 
-      if (!localServiceId) {
-        setError('No service ID provided');
-        setIsLoading(false);
-        return;
-      }
+  const handleLike = async () => {
+    if (!userId) {
+      toast({
+        title: "Authentification requise",
+        description: "Veuillez vous connecter pour aimer un service.",
+        variant: "default",
+      });
+      return;
+    }
 
-      try {
-        const { data, error } = await supabase
-          .from('local')
-          .select(`
-            *,
-            media (url),
-            availability (id, start, end, daysofweek, date),
-            comment (id, details, user_id, created_at)
-          `)
-          .eq('id', localServiceId)
-          .single();
+    const result = await toggleLikeLocal(localServiceId, userId);
 
-        if (error) throw error;
-        if (!data) throw new Error('No data returned from the query');
-        
-        console.log('Fetched service data:', data);
-        setService(data);
-      } catch (error) {
-        console.error('Error fetching service details:', error);
-        setError('Failed to load service details');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (result !== null) {
+      setUserHasLiked(result);
+      setLikes(prev => (result ? prev + 1 : prev - 1));
+    }
+  };
 
-    fetchServiceDetails();
-  }, [route.params?.localServiceId]);
+  const handleReviewSubmitted = () => {
+    toast({
+      title: "Succès",
+      description: "Votre avis a été soumis avec succès.",
+      variant: "default",
+    });
+    fetchData();
+  };
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
+  if (isLoading || !localServiceData || !availabilityData) {
+    return <View style={styles.centeredContainer}><Text style={styles.loadingText}>Chargement...</Text></View>;
   }
 
-  if (!service) {
-    return (
-      <View style={styles.container}>
-        <Text>No service details available.</Text>
-      </View>
-    );
-  }
+  const renderItem = () => (
+     <View style={styles.content}>
+    {localServiceData && (
+      <LocalInfo
+        localData={localServiceData}
+        likes={likes}
+        reviewsCount={Array.isArray(localServiceData.review) ? localServiceData.review.length : 0} // Ensure this is present
+        userHasLiked={userHasLiked}
+        onLike={handleLike}
+      />
+
+    )}
+     
+      <LocalDetails localData={localServiceData} />
+      <LocalBookingForm
+        localId={localServiceId}
+        userId={userId}
+        availabilityData={availabilityData}
+        onBookingComplete={fetchData}
+      />
+      <LocalReviewForm localId={localServiceData.id} onReviewSubmitted={handleReviewSubmitted} />
+      <LocalCommentSection 
+        comments={localServiceData.comment.map(comment => ({
+          ...comment,
+          user: (comment as any).user || { username: "anonymous" }
+        }))}
+        localId={localServiceData.id}
+        userId={userId}
+      />
+    </View>
+  );
 
   return (
-    <ScrollView style={styles.container}>
-      <Image source={{ uri: service.media[0]?.url }} style={styles.image} />
-      <View style={styles.infoContainer}>
-        <Text style={styles.name}>{service.name}</Text>
-        <Text style={styles.price}>${service.priceperhour}/hr</Text>
-        <Text style={styles.details}>{service.details}</Text>
-      </View>
-      <AvailabilityList 
-        availability={service.availability} 
-        personalId={service.id} 
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+    >
+      <FlatList
+        data={[{ key: 'content' }]}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.key}
       />
-      <CommentSection 
-        comments={service.comment}
-        personalId={service.id}
-      />
-      <TouchableOpacity 
-        style={styles.bookButton} 
-        onPress={() => {
-          // Implement booking logic here
-          console.log('Booking service:', service.id);
-        }}
-      >
-        <Text style={styles.bookButtonText}>Book Now</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      {ToastComponent}
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
-  loadingContainer: {
+  content: {
+    padding: 16,
+  },
+  centeredContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  image: {
-    width: '100%',
-    height: 200,
-    resizeMode: 'cover',
-  },
-  infoContainer: {
-    padding: 20,
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  price: {
+  loadingText: {
     fontSize: 18,
-    color: 'green',
-    marginBottom: 10,
-  },
-  details: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  bookButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    margin: 20,
-  },
-  bookButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
 });
 
 export default LocalServiceDetailScreen;
+
+// Helper function to validate data type
+function isValidLocalServiceData(data: any): data is LocalService {
+    // Implement validation logic here
+    return true; // Replace with actual validation
+}
