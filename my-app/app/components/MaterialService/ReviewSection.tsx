@@ -1,158 +1,94 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
-import { Card, Title, Paragraph, Button, TextInput } from 'react-native-paper';
-import { supabase } from '../../../lib/supabase';
-import { useToast } from "../../hooks/use-toast";
-import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity } from 'react-native';
-interface Review {
-  id: string;
-  user_id: string;
-  content: string;
-  rating: number;
-  created_at: string;
-}
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { TextInput, Button, Text } from 'react-native-paper';
+import { Star } from 'lucide-react-native';
 
 interface ReviewSectionProps {
   materialId: string;
 }
 
 const ReviewSection: React.FC<ReviewSectionProps> = ({ materialId }) => {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [newReview, setNewReview] = useState('');
-  const [newRating, setNewRating] = useState(5);
-  const { toast } = useToast();
+  const [review, setReview] = useState('');
+  const [rating, setRating] = useState(0);
 
-  useEffect(() => {
-    fetchReviews();
-  }, []);
-
-  const fetchReviews = async () => {
-    const { data, error } = await supabase
-      .from('reviews')
-      .select('*')
-      .eq('material_id', materialId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching reviews:', error);
-    } else {
-      setReviews(data || []);
-    }
+  const handleSubmitReview = () => {
+    // Implement review submission logic here
+    console.log('Submitting review:', { materialId, review, rating });
+    // Reset form after submission
+    setReview('');
+    setRating(0);
   };
-
-  const submitReview = async () => {
-    const { data, error } = await supabase
-      .from('reviews')
-      .insert({
-        material_id: materialId,
-        content: newReview,
-        rating: newRating,
-        user_id: 'user123', // Replace with actual user ID
-      });
-
-    if (error) {
-      console.error('Error submitting review:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit review. Please try again.",
-        variant: "destructive",
-      });
-    } else {
-      fetchReviews();
-      setNewReview('');
-      setNewRating(5);
-      toast({
-        title: "Review Submitted",
-        description: "Your review has been successfully added.",
-      });
-    }
-  };
-
-  const renderReviewItem = ({ item }: { item: Review }) => (
-    <Card style={styles.reviewCard}>
-      <Card.Content>
-        <Paragraph>{item.content}</Paragraph>
-        <View style={styles.ratingContainer}>
-          {[...Array(5)].map((_, index) => (
-            <Ionicons
-              key={index}
-              name={index < item.rating ? 'star' : 'star-outline'}
-              size={16}
-              color="#FFD700"
-            />
-          ))}
-        </View>
-      </Card.Content>
-    </Card>
-  );
 
   return (
     <View style={styles.container}>
-      <Title style={styles.title}>Reviews</Title>
-      <FlatList
-        data={reviews}
-        renderItem={renderReviewItem}
-        keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Paragraph>No reviews yet.</Paragraph>}
+      <Text style={styles.title}>Reviews</Text>
+      <Text style={styles.subtitle}>No reviews yet.</Text>
+      <TextInput
+        mode="outlined"
+        label="Write a review"
+        value={review}
+        onChangeText={setReview}
+        multiline
+        numberOfLines={4}
+        style={styles.input}
       />
-      <Card style={styles.newReviewCard}>
-        <Card.Content>
-          <TextInput
-            label="Write a review"
-            value={newReview}
-            onChangeText={setNewReview}
-            multiline
+      <View style={styles.ratingContainer}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            size={24}
+            color={star <= rating ? '#FFD700' : '#E1E8ED'}
+            onPress={() => setRating(star)}
           />
-          <View style={styles.ratingInput}>
-            {[...Array(5)].map((_, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => setNewRating(index + 1)}
-              >
-                <Ionicons
-                  name={index < newRating ? 'star' : 'star-outline'}
-                  size={24}
-                  color="#FFD700"
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-          <Button mode="contained" onPress={submitReview} style={styles.submitButton}>
-            Submit Review
-          </Button>
-        </Card.Content>
-      </Card>
+        ))}
+      </View>
+      <Button
+        mode="contained"
+        onPress={handleSubmitReview}
+        style={styles.submitButton}
+        labelStyle={styles.submitButtonLabel}
+      >
+        Submit Review
+      </Button>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: 'white',
+    borderRadius: 8,
     padding: 16,
+    marginBottom: 16,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
     marginBottom: 16,
   },
-  reviewCard: {
-    marginBottom: 8,
+  input: {
+    marginBottom: 16,
+    backgroundColor: '#F0F4F8',
   },
   ratingContainer: {
     flexDirection: 'row',
-    marginTop: 8,
-  },
-  newReviewCard: {
-    marginTop: 16,
-  },
-  ratingInput: {
-    flexDirection: 'row',
     justifyContent: 'center',
-    marginVertical: 16,
+    marginBottom: 16,
   },
   submitButton: {
-    marginTop: 16,
+    backgroundColor: '#7E57C2',
+    borderRadius: 8,
+  },
+  submitButtonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
 

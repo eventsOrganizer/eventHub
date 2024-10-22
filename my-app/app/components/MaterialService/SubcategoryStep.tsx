@@ -1,35 +1,48 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 
 interface SubcategoryStepProps {
   formData: any;
   setFormData: (data: any) => void;
 }
 
+const subcategories = [
+  { id: 'audioVisual', label: 'Audio Visual', icon: 'headset' },
+  { id: 'furniture', label: 'Furniture', icon: 'bed' },
+  { id: 'plates', label: 'Plates', icon: 'restaurant' },
+  { id: 'cutlery', label: 'Cutlery', icon: 'restaurant-outline' },
+  { id: 'glassware', label: 'Glassware', icon: 'wine' },
+  { id: 'barEquipment', label: 'Bar Equipment', icon: 'beer' },
+  { id: 'cleaning', label: 'Cleaning', icon: 'brush' },
+  { id: 'decoration', label: 'Decoration', icon: 'color-palette' },
+  { id: 'tableware', label: 'Tableware', icon: 'cafe' },
+];
+
 const SubcategoryStep: React.FC<SubcategoryStepProps> = ({ formData, setFormData }) => {
   return (
     <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.container}>
       <Text style={styles.label}>Choose Subcategory</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={formData.subcategory}
-          onValueChange={(itemValue) => setFormData({ ...formData, subcategory: itemValue })}
-          style={styles.picker}
-        >
-          <Picker.Item label="Select Subcategory" value="" />
-          <Picker.Item label="Audio Visual" value="Audio Visual" />
-          <Picker.Item label="Furniture" value="Furniture" />
-          <Picker.Item label="Plates" value="Plates" />
-          <Picker.Item label="Cutlery" value="Cutlery" />
-          <Picker.Item label="Glassware" value="Glassware" />
-          <Picker.Item label="Bar Equipment" value="Bar Equipment" />
-          <Picker.Item label="Cleaning" value="Cleaning" />
-          <Picker.Item label="Decoration" value="Decoration" />
-          <Picker.Item label="Tableware" value="Tableware" />
-        </Picker>
-      </View>
+      <ScrollView contentContainerStyle={styles.gridContainer}>
+        {subcategories.map((subcategory) => (
+          <TouchableOpacity
+            key={subcategory.id}
+            style={[
+              styles.iconContainer,
+              formData.subcategory === subcategory.id && styles.selectedIconContainer,
+            ]}
+            onPress={() => setFormData({ ...formData, subcategory: subcategory.id })}
+          >
+            <Ionicons
+              name={subcategory.icon as any}
+              size={32}
+              color={formData.subcategory === subcategory.id ? '#4A90E2' : '#fff'}
+            />
+            <Text style={styles.iconLabel}>{subcategory.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </Animated.View>
   );
 };
@@ -47,14 +60,28 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: '#fff',
   },
-  pickerContainer: {
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  iconContainer: {
+    width: '30%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 10,
-    overflow: 'hidden',
+    marginBottom: 10,
   },
-  picker: {
-    height: 50,
+  selectedIconContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  iconLabel: {
+    marginTop: 5,
+    fontSize: 12,
     color: '#fff',
+    textAlign: 'center',
   },
 });
 

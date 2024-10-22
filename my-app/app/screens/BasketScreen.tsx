@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList, Material } from '../navigation/types';
 import { useToast } from "../hooks/use-toast"
-import { AnimatedBackground } from '../components/AnimatedBackground';
+import { AnimatedForBasket } from '../components/MaterialService/AnimatedForBasket';
 import { BasketItem } from '../components/basket/BasketItem';
 import { EmptyBasket } from '../components/basket/EmptyBasket';
 
@@ -13,9 +13,14 @@ type BasketScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Baske
 const BasketScreen = () => {
   const navigation = useNavigation<BasketScreenNavigationProp>();
   const route = useRoute();
-  const { basket: initialBasket } = route.params as { basket: Material[] };
-  const [basket, setBasket] = useState<Material[]>(initialBasket);
+  const [basket, setBasket] = useState<Material[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (route.params && 'basket' in route.params) {
+      setBasket(route.params.basket as Material[]);
+    }
+  }, [route.params]);
 
   const handleCheckout = () => {
     toast({
@@ -37,16 +42,16 @@ const BasketScreen = () => {
   const renderItem = ({ item }: { item: Material }) => (
     <BasketItem
       item={item}
-      onRemove={removeItem}
+      onRemove={() => removeItem(item.id)}
     />
   );
 
   const totalPrice = basket.reduce((sum, item) => sum + (item.sell_or_rent === 'sell' ? item.price : item.price_per_hour), 0);
 
   return (
-    <AnimatedBackground>
+    <AnimatedForBasket>
       <View style={styles.container}>
-        <Text style={styles.title}>Your Basket</Text>
+        <Text style={styles.title}> Basket</Text>
         {basket.length > 0 ? (
           <>
             <FlatList
@@ -66,7 +71,7 @@ const BasketScreen = () => {
           <EmptyBasket onStartShopping={() => navigation.goBack()} />
         )}
       </View>
-    </AnimatedBackground>
+    </AnimatedForBasket>
   );
 };
 

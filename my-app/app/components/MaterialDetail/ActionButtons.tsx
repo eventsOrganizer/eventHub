@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
-import { Heart } from 'lucide-react-native';
+import { Calendar, Heart } from 'lucide-react-native';
 import { Material } from '../../navigation/types';
 
 interface ActionButtonsProps {
@@ -22,13 +22,12 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       <Button
         mode="contained"
         onPress={() => onAddToBasket(material)}
-        icon={material.sell_or_rent === 'sell' ? 'cart' : 'calendar'}
-        style={styles.button}
+        icon={({ size }) => <Calendar size={size} color="white" />}
+        style={styles.requestRentalButton}
         contentStyle={styles.buttonContent}
         labelStyle={styles.buttonLabel}
-        color="#4A90E2"
       >
-        {material.sell_or_rent === 'sell' ? 'Add to Cart' : 'Request Rental'}
+        Request Rental
       </Button>
       <Button
         mode="outlined"
@@ -38,10 +37,9 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         )}
         style={styles.wishlistButton}
         contentStyle={styles.buttonContent}
-        labelStyle={styles.buttonLabel}
-        color="#4A90E2"
+        labelStyle={styles.wishlistButtonLabel}
       >
-        {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
+        {isWishlisted ? 'Added to Wishlist' : 'Add to Wishlist'}
       </Button>
     </View>
   );
@@ -54,9 +52,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#E1E8ED',
   },
-  button: {
+  requestRentalButton: {
     marginBottom: 8,
     borderRadius: 8,
+    backgroundColor: '#7E57C2',
+  },
+  wishlistButton: {
+    borderRadius: 8,
+    borderColor: '#7E57C2',
   },
   buttonContent: {
     height: 48,
@@ -64,10 +67,12 @@ const styles = StyleSheet.create({
   buttonLabel: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: 'white',
   },
-  wishlistButton: {
-    borderRadius: 8,
-    borderColor: '#4A90E2',
+  wishlistButtonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#7E57C2',
   },
 });
 

@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import LottieView from 'lottie-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+// import LottieView from 'lottie-react-native';
 
 interface EmptyBasketProps {
   onStartShopping: () => void;
@@ -9,11 +9,9 @@ interface EmptyBasketProps {
 export const EmptyBasket: React.FC<EmptyBasketProps> = ({ onStartShopping }) => {
   return (
     <View style={styles.container}>
-      <LottieView
-        // source={require('../../assets/animations/empty-cart.JPG')}
-        autoPlay
-        loop
-        style={styles.animation}
+      <Image
+        source={require('../../assets/empty-cart.png')}
+        style={styles.image}
       />
       <Text style={styles.text}>Your basket is empty</Text>
       <TouchableOpacity style={styles.button} onPress={onStartShopping}>
@@ -29,9 +27,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  animation: {
+  image: {
     width: 200,
     height: 200,
+    resizeMode: 'contain',
   },
   text: {
     fontSize: 18,
