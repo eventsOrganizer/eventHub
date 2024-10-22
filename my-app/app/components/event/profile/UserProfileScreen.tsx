@@ -13,6 +13,7 @@ import InterestsList from './InterestsList';
 import Subscriptions from './Subscriptions';
 import FriendRequestBadge from './FriendRequestBadge';
 import InvitationButton from './InvitationButton';
+import NotificationComponent from './notification/NotificationComponent';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
 
@@ -36,6 +37,7 @@ const UserProfileScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
   const [activeEventList, setActiveEventList] = useState<'your' | 'attended'>('your');
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (userId) {
@@ -92,7 +94,6 @@ const UserProfileScreen: React.FC = () => {
     await fetchData();
     setRefreshing(false);
   }, [fetchData]);
-
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -170,6 +171,11 @@ const UserProfileScreen: React.FC = () => {
       colors={['#1E3A8A', '#3B82F6', '#93C5FD']}
       style={tw`flex-1`}
     >
+      {showNotifications && (
+        <View style={tw`absolute top-20 right-4 z-10 w-80 max-h-96 bg-white rounded-lg shadow-lg`}>
+          <NotificationComponent />
+        </View>
+      )}
       <ScrollView 
         style={tw`flex-1`}
         contentContainerStyle={tw`pb-10`}
@@ -179,6 +185,9 @@ const UserProfileScreen: React.FC = () => {
             <View style={tw`flex-row justify-between items-center mb-6`}>
               <Text style={tw`text-white text-2xl font-bold`}>Profile</Text>
               <View style={tw`flex-row items-center`}>
+                <TouchableOpacity onPress={() => setShowNotifications(!showNotifications)}>
+                  <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
+                </TouchableOpacity>
                 <EventRequestBadge />
                 <FriendRequestBadge />
                 <InvitationButton />

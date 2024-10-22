@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import { View, ScrollView, RefreshControl, SafeAreaView, Button } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation , } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BlurView } from 'expo-blur';
 import NavBar from '../components/NavBar';
@@ -32,20 +32,19 @@ const HomeScreen: React.FC = () => {
     loadData();
   }, []);
 
-  const fetchMaterials = async () => {
-    console.log('Fetching materials...'); 
+  const fetchMaterials = async (): Promise<Material[]> => {
     const { data, error } = await supabase
       .from('material')
-      .select('id, name, price, price_per_hour, sell_or_rent, subcategory_id, media (url), details');
+      .select('*, subcategory:subcategory_id(*)');
   
     if (error) {
-      console.error('Error fetching materials:', error); 
+      console.error('Error fetching materials:', error);
       return [];
     } else {
-      console.log('Materials fetched:', data); 
-      return data?.map((item: Material) => ({
+      console.log('Materials fetched:', data);
+      return data?.map((item: any) => ({
         ...item,
-        subcategory: item.subcategory_id // Ensure correct mapping
+        subcategory: item.subcategory // Assuming the join query returns subcategory data
       })) || [];
     }
   };
