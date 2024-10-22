@@ -7,13 +7,12 @@ import { StackNavigationProp } from '@react-navigation/stack';
 type RootStackParamList = {
   SearchResults: { initialSearchTerm: string };
   EventDetails: { eventId: string };
-  ServiceDetail: { serviceId: string }; // Ensure this is defined
+  LocalServiceDetails: { localServiceId: string };
+  PersonalDetails: { personalId: string };
+  MaterialDetails: { materialId: string }; // Assuming you have a MaterialDetails screen
 };
 
-type SearchResultsScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'SearchResults'
->;
+type SearchResultsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SearchResults'>;
 
 type Props = {
   navigation: SearchResultsScreenNavigationProp;
@@ -24,70 +23,96 @@ const SearchResultsScreen: React.FC<Props> = ({ navigation, route }) => {
   const initialSearchTerm = route.params?.initialSearchTerm || '';
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [eventResults, setEventResults] = useState<any[]>([]);
-  const [serviceResults, setServiceResults] = useState<any[]>([]);
+  const [localResults, setLocalResults] = useState<any[]>([]);
+  const [personalResults, setPersonalResults] = useState<any[]>([]);
+  const [materialResults, setMaterialResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchForServices, setSearchForServices] = useState(false); // New state to toggle between event and service search
+  const [searchForServices, setSearchForServices] = useState(false);
 
   useEffect(() => {
-    let isMounted = true; // flag to track if component is still mounted
-
     const fetchData = async () => {
       if (searchTerm.trim() === '') return;
       setLoading(true);
-    
+
       try {
-        console.log('Searching for:', searchTerm); // Log the search term
-    
+        console.log('Searching for:', searchTerm);
+
         // Fetch events
         const { data: eventData, error: eventError } = await supabase
           .from('event')
           .select('id, name, details')
           .ilike('name', `%${searchTerm}%`);
-    
+
         if (eventError) throw eventError;
-    
-        console.log('Event Data:', eventData); // Log the event data
-    
-        if (isMounted) {
-          setEventResults(eventData?.map(item => ({ ...item, type: 'event' })) || []);
-        }
-    
-        // Fetch services if searching for services
-        if (searchForServices) {
-          const { data: serviceData, error: serviceError } = await supabase
-            .from('service') // Assuming you have a service table
-            .select('id, name, details')
-            .ilike('name', `%${searchTerm}%`);
-    
-          if (serviceError) throw serviceError;
-    
-          console.log('Service Data:', serviceData); // Log the service data
-    
-          if (isMounted) {
-            setServiceResults(serviceData?.map(item => ({ ...item, type: 'service' })) || []);
-          }
-        }
+
+        // Adding type 'event' to each item
+        const eventsWithType = eventData?.map(item => ({ ...item, type: 'event' })) || [];
+        setEventResults(eventsWithType);
+
+        // Fetch locals
+        const { data: localData, error: localError } = await supabase
+          .from('local')
+          .select('id, name, details, priceperhour, media (url)')
+          .ilike('name', `%${searchTerm}%`);
+
+        if (localError) throw localError;
+
+        // Adding type 'local' to each item
+        const localsWithType = localData?.map(item => ({ ...item, type: 'local' })) || [];
+        setLocalResults(localsWithType);
+
+        // Fetch personal services
+        const { data: personalData, error: personalError } = await supabase
+          .from('personal')
+          .select('id, name, details')
+          .ilike('name', `%${searchTerm}%`);
+
+        if (personalError) throw personalError;
+
+        // Adding type 'personal' to each item
+        const personalsWithType = personalData?.map(item => ({ ...item, type: 'personal' })) || [];
+        setPersonalResults(personalsWithType);
+
+        // Fetch materials
+        const { data: materialData, error: materialError } = await supabase
+          .from('material')
+          .select('id, name, details')
+          .ilike('name', `%${searchTerm}%`);
+
+        if (materialError) throw materialError;
+
+        // Adding type 'material' to each item
+        const materialsWithType = materialData?.map(item => ({ ...item, type: 'material' })) || [];
+        setMaterialResults(materialsWithType);
+
+        // Log the fetched data for debugging
+        console.log('Fetched Events:', eventsWithType);
+        console.log('Fetched Locals:', localsWithType);
+        console.log('Fetched Personals:', personalsWithType);
+        console.log('Fetched Materials:', materialsWithType);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
     fetchData();
+  }, [searchTerm]);
 
-    return () => {
-      isMounted = false; // Cleanup if component unmounts
-    };
-  }, [searchTerm, searchForServices]);
+  const handleItemPress = (item: { id: string; type: string }) => {
+    console.log('Item pressed:', item); // Log the entire item
 
-  const handleItemPress = (item: { id: string, type: string }) => {
     if (item.type === 'event') {
       navigation.navigate('EventDetails', { eventId: item.id });
-    } else if (item.type === 'service') {
-      navigation.navigate('ServiceDetail', { serviceId: item.id });
+    } else if (item.type === 'local') {
+      navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
+    } else if (item.type === 'personal') {
+      navigation.navigate('PersonalDetail', { personalId: item.id });
+    } else if (item.type === 'material') {
+      navigation.navigate('MaterialDetails', { materialId: item.id });
+    } else {
+      console.warn('Unknown item type:', item.type); // Log the unknown type
     }
   };
 
@@ -117,18 +142,19 @@ const SearchResultsScreen: React.FC<Props> = ({ navigation, route }) => {
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <FlatList
-          data={searchForServices ? serviceResults : eventResults}
+          data={searchForServices ? [...personalResults, ...localResults, ...materialResults] : eventResults}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity onPress={() => handleItemPress(item)} style={styles.itemContainer}>
-              {item.image_url ? (
-                <Image source={{ uri: item.image_url }} style={styles.itemImage} />
+              {item.media && item.media.length > 0 && item.media[0].url ? (
+                <Image source={{ uri: item.media[0].url }} style={styles.itemImage} />
               ) : (
                 <View style={styles.placeholderImage} />
               )}
               <View style={styles.textContainer}>
                 <Text style={styles.itemName}>{item.name}</Text>
                 <Text style={styles.itemDescription}>{item.details}</Text>
+                {item.priceperhour && <Text style={styles.itemPrice}>${item.priceperhour}/hr</Text>}
               </View>
             </TouchableOpacity>
           )}
@@ -197,6 +223,10 @@ const styles = StyleSheet.create({
   itemDescription: {
     fontSize: 14,
     color: 'gray',
+  },
+  itemPrice: {
+    fontSize: 16,
+    color: 'green',
   },
 });
 

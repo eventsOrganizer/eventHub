@@ -269,11 +269,11 @@ const AppNavigation: React.FC = () => {
     options={{ title: 'Local Services' }}
   />
 
-  <Stack.Screen
-    name="LocalServiceDetails"
+<Stack.Screen
+    name="LocalServiceDetails" // Ensure this is unique
     component={LocalServiceDetailScreen}
-    options={{ title: 'Service Details' }}
-  />
+    options={{ headerShown: true, title: 'Local Service Details' }}
+/>
 
   <Stack.Screen 
     name="CreatePersonalServiceStep1" 

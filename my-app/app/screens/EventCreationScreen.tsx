@@ -43,13 +43,17 @@ const EventCreation: React.FC = () => {
   }, [eventData.selectedCategory]);
 
   const fetchCategories = async () => {
-    const { data, error } = await supabase.from('category').select('*');
-    if (error) {
-      console.error('Error fetching categories:', error);
-    } else {
-      setCategories(data || []);
-    }
-  };
+  const { data, error } = await supabase
+    .from('category')
+    .select('*')
+    .eq('type', 'event'); // Fetch only categories of type 'event'
+  
+  if (error) {
+    console.error('Error fetching categories:', error);
+  } else {
+    setCategories(data || []);
+  }
+};
 
   const fetchSubcategories = async (categoryId: string) => {
     const { data, error } = await supabase
