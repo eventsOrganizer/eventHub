@@ -659,3 +659,18 @@ create table
     constraint fk_creator foreign key (creator_id) references "user" (id) on delete cascade
   ) tablespace pg_default;
 
+create table
+  public.group_has_user (
+    id serial not null,
+    user_id uuid not null,
+    group_id integer not null,
+    created_at timestamp with time zone null default current_timestamp,
+    constraint group_has_user_pkey primary key (id),
+    constraint unique_user_group unique (user_id, group_id),
+    constraint fk_group foreign key (group_id) references "group" (id) on delete cascade,
+    constraint fk_user foreign key (user_id) references "user" (id) on delete cascade
+  ) tablespace pg_default;
+
+create index if not exists idx_group_has_user_user on public.group_has_user using btree (user_id) tablespace pg_default;
+
+create index if not exists idx_group_has_user_group on public.group_has_user using btree (group_id) tablespace pg_default;
