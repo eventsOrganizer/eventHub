@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 interface BannerProps {
   title: string;
@@ -9,47 +10,47 @@ interface BannerProps {
 
 const Banner: React.FC<BannerProps> = ({ title }) => {
   return (
-    <View>
+    <View style={styles.container}>
       <LinearGradient
-        colors={['#000000', '#8B0000']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        colors={['rgba(255,255,255,0.8)', 'rgba(255,255,255,0.4)', 'transparent']}
         style={styles.banner}
       >
         <Text style={styles.text}>{title}</Text>
         <TouchableOpacity style={styles.addButton}>
-          <Ionicons name="add" size={24} color="#fff" />
+          <BlurView intensity={80} tint="dark" style={styles.blurView}>
+            <Ionicons name="add" size={24} color="#fff" />
+          </BlurView>
         </TouchableOpacity>
       </LinearGradient>
-      <View style={styles.separator} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    marginVertical: 10,
+  },
   banner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    marginVertical: 10,
+    borderRadius: 10,
   },
   text: {
-    fontSize: 40, 
+    fontSize: 40,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#1a2a4a', // Darker shade of blue
   },
   addButton: {
-    backgroundColor: '#8B0000',
+    overflow: 'hidden',
     borderRadius: 20,
+  },
+  blurView: {
     padding: 10,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  separator: {
-    height: 20, // Half the height of the banner
-    backgroundColor: 'transparent',
   },
 });
 
