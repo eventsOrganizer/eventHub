@@ -5,17 +5,56 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b3a52c4f-9147-45ab-aab1-110060bf4890" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/my-app/app/assets/images/onBoarding1.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my-app/app/assets/images/onBoarding2.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my-app/app/assets/images/onBoarding3.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my-app/app/components/event/video/VideoCall.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my-app/app/components/event/video/VideoRoomsScreen.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my-app/app/fake_data/createServiceForUser.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my-app/app/screens/TestImageComponent.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my-app/app/screens/UserServicesScreen.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my-app/app/screens/YourRequests.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my-app/app/services/uploadFiles.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/my-app/app/types/filesTypes.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/components/Auth/SignIn.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/Auth/SignIn.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/components/Auth/SignUp.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/Auth/SignUp.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/Header.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/Header.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/MaterialCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/MaterialCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/MaterialDetailsStep.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/MaterialDetailsStep.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/NextButton.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/NextButton.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/PriceStep.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/PriceStep.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/RentOrSaleStep.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/RentOrSaleStep.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/SubcategoryList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/SubcategoryList.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/components/MaterialService/SubcategoryStep.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/MaterialService/SubcategoryStep.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/PersonalServiceComponents/CommentInput.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/PersonalServiceComponents/CommentInput.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/PersonalServiceComponents/CommentSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/PersonalServiceComponents/CommentSection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/PersonalServiceCreation/CreatePersonalServiceStep2.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/PersonalServiceCreation/CreatePersonalServiceStep2.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/SectionComponent.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/SectionComponent.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/basket/BasketItem.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/basket/BasketItem.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/basket/EmptyBasket.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/basket/EmptyBasket.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/event/EventCreation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/event/EventCreation.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/components/event/profile/UserProfileScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/event/profile/UserProfileScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/event/profile/UserServiceList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/event/profile/UserServiceList.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/reuseableForCreationService/CategorySelector.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/reuseableForCreationService/CategorySelector.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/reuseableForCreationService/PriceInput.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/reuseableForCreationService/PriceInput.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/reuseableForCreationService/ServiceDescriptionInput.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/reuseableForCreationService/ServiceDescriptionInput.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/reuseableForCreationService/ServiceNameInput.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/reuseableForCreationService/ServiceNameInput.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/fake_data/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/fake_data/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/navigation/AppNavigation.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/navigation/AppNavigation.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/navigation/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/navigation/types.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/BasketScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/BasketScreen.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/screens/HomeScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/HomeScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/Interests.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/Interests.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/screens/MaterialServiceScreens/MaterialDetailScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/MaterialServiceScreens/MaterialDetailScreen.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/screens/MaterialServiceScreens/MaterialScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/MaterialServiceScreens/MaterialScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/MaterialServiceScreens/MaterialsOnboardingScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/MaterialServiceScreens/MaterialsOnboardingScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/OnBoarding.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/OnBoarding.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/PersonalServiceScreen/PersonalDetail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/PersonalServiceScreen/PersonalDetail.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/ServiceSelection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/ServiceSelection.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/clean.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/sqlFolder/supaBase.sql" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/sqlFolder/supaBase.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,18 +88,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;fadi&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;AndroidSdkUpdater&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "Merging fadi",
+    "kotlin-language-version-configured": "true",
+    "settings.editor.selected.configurable": "AndroidSdkUpdater"
   }
-}</component>
+}]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
