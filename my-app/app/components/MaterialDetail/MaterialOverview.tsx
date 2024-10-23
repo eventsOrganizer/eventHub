@@ -4,6 +4,7 @@ import { Card, Title, Paragraph, Chip } from 'react-native-paper';
 import { Star, Tag, Heart } from 'lucide-react-native';
 import { Material } from '../../navigation/types';
 import { getSubcategoryIcon } from '../../utils/subcategoryIcons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface MaterialOverviewProps {
   material: Material;
@@ -14,32 +15,45 @@ const MaterialOverview: React.FC<MaterialOverviewProps> = ({ material }) => {
 
   return (
     <Card style={styles.card}>
-      <Card.Content>
-        <View style={styles.titleContainer}>
-          <Title style={styles.title}>{material.name}</Title>
-          {SubcategoryIcon && <SubcategoryIcon size={24} color="#4A90E2" />}
-        </View>
-        <View style={styles.priceRatingContainer}>
-          <Paragraph style={styles.price}>
-            ${material.price} {material.sell_or_rent === 'rent' ? '/ hour' : ''}
-          </Paragraph>
-          <View style={styles.ratingContainer}>
-            <Star size={20} color="#FFD700" />
-            <Paragraph style={styles.ratingText}>
-              {material.average_rating?.toFixed(1) || 'N/A'}
-            </Paragraph>
+      <LinearGradient
+        colors={['rgba(126, 87, 194, 0.1)', 'rgba(74, 144, 226, 0.1)']}
+        style={styles.gradient}
+      >
+        <Card.Content>
+          <View style={styles.titleContainer}>
+            <Title style={styles.title}>{material.name}</Title>
+            {SubcategoryIcon && <SubcategoryIcon size={24} color="#7E57C2" />}
           </View>
-        </View>
-        <View style={styles.chipContainer}>
-          <Chip icon={({ size, color }) => <Tag size={size} color={color} />} style={styles.chip} textStyle={styles.chipText}>
-            {material.sell_or_rent === 'rent' ? 'For Rent' : 'For Sale'}
-          </Chip>
-          <Chip icon={({ size, color }) => <Heart size={size} color={color} />} style={styles.chip} textStyle={styles.chipText}>
-            {material.likes || 0} Likes
-          </Chip>
-        </View>
-        <Paragraph style={styles.description}>{material.details}</Paragraph>
-      </Card.Content>
+          <View style={styles.priceRatingContainer}>
+            <Paragraph style={styles.price}>
+              ${material.price} {material.sell_or_rent === 'rent' ? '/ hour' : ''}
+            </Paragraph>
+            <View style={styles.ratingContainer}>
+              <Star size={20} color="#FFD700" />
+              <Paragraph style={styles.ratingText}>
+                {material.average_rating?.toFixed(1) || 'N/A'}
+              </Paragraph>
+            </View>
+          </View>
+          <View style={styles.chipContainer}>
+            <Chip 
+              icon={({ size }) => <Tag size={size} color="#7E57C2" />} 
+              style={styles.chip} 
+              textStyle={styles.chipText}
+            >
+              {material.sell_or_rent === 'rent' ? 'For Rent' : 'For Sale'}
+            </Chip>
+            <Chip 
+              icon={({ size }) => <Heart size={size} color="#7E57C2" />} 
+              style={styles.chip} 
+              textStyle={styles.chipText}
+            >
+              {material.likes || 0} Likes
+            </Chip>
+          </View>
+          <Paragraph style={styles.description}>{material.details}</Paragraph>
+        </Card.Content>
+      </LinearGradient>
     </Card>
   );
 };
@@ -48,8 +62,11 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 16,
     elevation: 4,
-    borderRadius: 12,
-    backgroundColor: 'white',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  gradient: {
+    padding: 16,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -72,7 +89,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#4A90E2',
+    color: '#7E57C2',
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -87,13 +104,13 @@ const styles = StyleSheet.create({
   chipContainer: {
     flexDirection: 'row',
     marginBottom: 12,
+    gap: 8,
   },
   chip: {
-    marginRight: 8,
-    backgroundColor: '#E1E8ED',
+    backgroundColor: 'rgba(126, 87, 194, 0.1)',
   },
   chipText: {
-    color: '#4A90E2',
+    color: '#7E57C2',
   },
   description: {
     fontSize: 16,

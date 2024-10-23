@@ -48,9 +48,9 @@ import EventCreation from '../components/event/EventCreation';
 import BookingScreen from '../screens/PersonalServiceScreen/BookingScreen';
 import CommentsScreen from '../screens/PersonalServiceScreen/CommentsScreen';
 import AddReviewScreen from '../screens/PersonalServiceScreen/AddReviewScreen';
-
+import ReviewScreen from '../screens/MaterialServiceScreens/ReviewScreen';
 // Inside your Stack.Navigator component, add this new Screen
-
+import CommentScreen from '../screens/MaterialServiceScreens/CommentScreen';
 
 
 import CreateLocalServiceStep1 from '../components/LocalServiceCreation/CreateLocalServiceStep1';
@@ -82,6 +82,7 @@ type RootStackParamList = {
   HomeScreen: undefined;
   MaterialScreen: undefined;
   MaterialDetail: { material: Material };
+  ReviewScreen: { materialId: string };
   EventDetails: { eventName: string; eventDescription: string; eventType: string };
   CategorySelection: { eventName: string; eventDescription: string; eventType: string };
   SubcategorySelection: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string };
@@ -95,7 +96,7 @@ type RootStackParamList = {
   Ticketing: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
   EventSummary: { eventId: string };
   EventCreation: { eventType: string };
-  
+  CommentScreen: { materialId: string };
   // Add the CreateService screen and pass serviceType as a param
   CreateService: { serviceType: string };
   EventSetupOptions: { 
@@ -359,6 +360,12 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="MaterialsOnboarding" 
       component={MaterialsOnboardingScreen} />
+      <Stack.Screen
+       name ="ReviewScreen" 
+      component={ReviewScreen} />
+      <Stack.Screen
+       name ="CommentScreen" 
+      component={CommentScreen} />
 
       </Stack.Navigator>
    

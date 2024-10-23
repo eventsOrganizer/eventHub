@@ -30,7 +30,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
         return <LocalServiceCard key={item.id} item={item} onPress={() => onItemPress(item)} />;
       case 'material':
         // Ensure this is the correct component for "material"
-        return <MaterialCard key={item.id} item={item} onPress={() => onItemPress(item)} />;
+        return <MaterialCard key={item.id} material={item} onPress={() => onItemPress(item)} />;
       default:
         return null;
     }

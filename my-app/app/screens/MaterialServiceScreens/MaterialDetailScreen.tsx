@@ -1,15 +1,16 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, StatusBar, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, StatusBar, Image, Dimensions, TouchableOpacity } from 'react-native';
 import { MaterialTopTabScreenProps } from '@react-navigation/material-top-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Material, RootStackParamList } from '../../navigation/types';
 import Header from '../../components/MaterialDetail/Header';
 import MaterialOverview from '../../components/MaterialDetail/MaterialOverview';
 import AvailabilityCalendar from '../../components/MaterialDetail/AvailabilityCalendar';
-import ReviewSection from '../../components/MaterialService/ReviewSection';
+import { MessageCircle, Star, MessageSquare } from 'lucide-react-native';
 import ActionButtons from '../../components/MaterialDetail/ActionButtons';
 import { useBasket } from '../../hooks/useBasket';
 import { useWishlist } from '../../hooks/useWishlist';
+import { Text } from 'react-native-paper';
 
 type MaterialDetailScreenProps = MaterialTopTabScreenProps<RootStackParamList, 'MaterialDetail'>;
 
@@ -20,9 +21,17 @@ const MaterialDetailScreen: React.FC<MaterialDetailScreenProps> = ({ route, navi
   const { addToBasket, basketCount } = useBasket();
   const { toggleWishlist, isWishlisted } = useWishlist();
 
+  const handleReviewPress = () => {
+    navigation.navigate('ReviewScreen', { materialId: material.id });
+  };
+
+  const handleCommentPress = () => {
+    navigation.navigate('CommentScreen', { materialId: material.id });
+  };
+
   return (
     <LinearGradient
-      colors={['#F0F4F8', '#E1E8ED', '#D2DCE5', '#C3D0D9']}
+      colors={['#7E57C2', '#4A90E2']}
       style={styles.container}
     >
       <StatusBar barStyle="light-content" />
@@ -44,7 +53,34 @@ const MaterialDetailScreen: React.FC<MaterialDetailScreenProps> = ({ route, navi
           {material.sell_or_rent === 'rent' && (
             <AvailabilityCalendar materialId={material.id} />
           )}
-          <ReviewSection materialId={material.id} />
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity onPress={handleReviewPress} style={styles.actionButton}>
+              <LinearGradient
+                colors={['#7E57C2', '#4A90E2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.actionGradient}
+              >
+                <View style={styles.actionContent}>
+                  <MessageCircle size={24} color="white" />
+                  <Text style={styles.actionTitle}>Reviews</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleCommentPress} style={styles.actionButton}>
+              <LinearGradient
+                colors={['#7E57C2', '#4A90E2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.actionGradient}
+              >
+                <View style={styles.actionContent}>
+                  <MessageSquare size={24} color="white" />
+                  <Text style={styles.actionTitle}>Comments</Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
       <ActionButtons 
@@ -70,12 +106,38 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   contentContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     marginTop: -20,
     paddingTop: 20,
     paddingHorizontal: 16,
+  },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 16,
+  },
+  actionButton: {
+    flex: 1,
+    marginHorizontal: 8,
+    borderRadius: 15,
+    overflow: 'hidden',
+    elevation: 5,
+  },
+  actionGradient: {
+    padding: 16,
+  },
+  actionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
 });
 

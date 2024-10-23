@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import { Calendar, Heart } from 'lucide-react-native';
 import { Material } from '../../navigation/types';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface ActionButtonsProps {
   material: Material;
@@ -18,7 +19,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   isWishlisted,
 }) => {
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['rgba(255,255,255,0.9)', 'white']}
+      style={styles.container}
+    >
       <Button
         mode="contained"
         onPress={() => onAddToBasket(material)}
@@ -41,24 +45,23 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       >
         {isWishlisted ? 'Added to Wishlist' : 'Add to Wishlist'}
       </Button>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    backgroundColor: 'white',
     borderTopWidth: 1,
-    borderTopColor: '#E1E8ED',
+    borderTopColor: 'rgba(255,255,255,0.2)',
   },
   requestRentalButton: {
     marginBottom: 8,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: '#7E57C2',
   },
   wishlistButton: {
-    borderRadius: 8,
+    borderRadius: 12,
     borderColor: '#7E57C2',
   },
   buttonContent: {

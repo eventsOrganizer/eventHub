@@ -100,13 +100,14 @@ export type RootStackParamList = {
     personalId: number;
     userId: string | null;
   };
-
-
+  ReviewScreen: { materialId: string };
+  CommentScreen: { materialId: string };
 
 
   Basket: { basket: Material[] }; 
   MaterialScreen: { materials: Material[] };
   MaterialsOnboarding: undefined;
+  MaterialDetail: { material: Material };
 };
 
 export interface Media {
