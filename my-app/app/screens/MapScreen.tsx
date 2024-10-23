@@ -6,6 +6,10 @@ import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import FilterAdvanced from './FilterAdvanced';
 
+
+
+
+
 const MapScreen: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -263,22 +267,25 @@ const MapScreen: React.FC = () => {
           </View>
         </Modal>
       )}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showFilter}
-        onRequestClose={() => setShowFilter(false)}
-      >
-        <View style={tw`flex-1 justify-start mt-20 bg-white rounded-t-3xl`}>
-          <FilterAdvanced onEventsLoaded={handleEventsLoaded} />
-          <TouchableOpacity
-            style={tw`bg-blue-500 p-4 m-4 rounded-full`}
-            onPress={() => setShowFilter(false)}
-          >
-            <Text style={tw`text-white text-center font-bold`}>Apply Filter</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
+     <Modal
+  animationType="slide"
+  transparent={true}
+  visible={showFilter}
+  onRequestClose={() => setShowFilter(false)}
+>
+  <View style={tw`flex-1 justify-start mt-20 bg-white rounded-t-3xl`}>
+    <FilterAdvanced 
+      onEventsLoaded={handleEventsLoaded} 
+      currentLocation={currentLocation}
+    />
+    <TouchableOpacity
+      style={tw`bg-blue-500 p-4 m-4 rounded-full`}
+      onPress={() => setShowFilter(false)}
+    >
+      <Text style={tw`text-white text-center font-bold`}>Close Filter</Text>
+    </TouchableOpacity>
+  </View>
+</Modal>
     </View>
   );
 };
