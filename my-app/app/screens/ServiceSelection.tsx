@@ -36,7 +36,7 @@ const ServiceSelection: React.FC = () => {
 
   const handleCardPress = (cardType: string) => {
     if (cardType === 'Local') {
-      navigation.navigate('CreateLocalServiceStep1');
+      navigation.navigate('CreateLocalServiceStack');
     } else if (cardType === 'Personnel') {
       navigation.navigate('CreatePersonalServiceStep1');
     }

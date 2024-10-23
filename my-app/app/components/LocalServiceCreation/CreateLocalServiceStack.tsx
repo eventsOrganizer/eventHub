@@ -1,23 +1,116 @@
-import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
-import CreateLocalServiceStep1 from './CreateLocalServiceStep1';
-import CreateLocalServiceStep2 from './CreateLocalServiceStep2';
-import CreateLocalServiceStep3 from './CreateLocalServiceStep3';
-import CreateLocalServiceStep4 from './CreateLocalServiceStep4';
-import CreateLocalServiceStep5 from './CreateLocalServiceStep5';  
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Toast from 'react-native-toast-message';
+import LocalStepIndicator from './LocalStepIndicator';
+import LocalSubcategoryStep from './LocalSubcategoryStep';
+import LocalDetailsStep from './LocalDetailStep';
+import LocalPriceStep from './LocalPriceStep';
+import LocalAvailabilityStep from './LocalAvailabilityStep';
+import LocalNextButton from './LocalNextButton';
 
-const Stack = createStackNavigator();
+type FormData = {
+  subcategory: string;
+  title: string;
+  details: string;
+  price: string;
+  image: string | null;
+  availableDates: { [date: string]: boolean };
+  requiresAvailability: boolean;
+};
 
-const CreateLocalServiceStack: React.FC = () => {
+const LocalOnboardingScreen: React.FC = () => {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState<FormData>({
+    subcategory: '',
+    title: '',
+    details: '',
+    price: '',
+    image: null as string | null,
+    availableDates: {} as { [date: string]: boolean },
+    requiresAvailability: false,
+  });
+
+  const getSteps = () => {
+    const baseSteps = ['Subcategory', 'Local Details', 'Price'];
+    return formData.requiresAvailability ? [...baseSteps, 'Availability'] : baseSteps;
+  };
+
+  const steps = getSteps();
+
+  const handleNext = () => {
+    if (step < steps.length) {
+      setStep(step + 1);
+    } else {
+      handleFinish();
+    }
+  };
+
+  const handleFinish = () => {
+    // Handle form submission
+    console.log('Form submitted:', formData);
+    
+    // Show success toast
+    Toast.show({
+      type: 'success',
+      text1: 'Success',
+      text2: 'Your local service has been created successfully!',
+      visibilityTime: 4000,
+      autoHide: true,
+      topOffset: 30,
+      bottomOffset: 40,
+    });
+
+    // Reset form and step
+    setFormData({
+      subcategory: '',
+      title: '',
+      details: '',
+      price: '',
+      image: null,
+      availableDates: {},
+      requiresAvailability: false,
+    });
+    setStep(1);
+  };
+
+  const renderStepContent = () => {
+    switch (step) {
+      case 1:
+        return <LocalSubcategoryStep formData={formData} setFormData={setFormData} />;
+      case 2:
+        return <LocalDetailsStep formData={formData} setFormData={setFormData} />;
+      case 3:
+        return <LocalPriceStep formData={formData} setFormData={setFormData} />;
+      case 4:
+        return formData.requiresAvailability ? <LocalAvailabilityStep formData={formData} setFormData={setFormData} /> : null;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <Stack.Navigator initialRouteName="CreateLocalServiceStep1">
-      <Stack.Screen name="CreateLocalServiceStep1" component={CreateLocalServiceStep1} options={{ headerShown: false }}/>
-      <Stack.Screen name="CreateLocalServiceStep2" component={CreateLocalServiceStep2} options={{ headerShown: false }}/>
-      <Stack.Screen name="CreateLocalServiceStep3" component={CreateLocalServiceStep3} options={{ headerShown: false }}/>
-      <Stack.Screen name="CreateLocalServiceStep4" component={CreateLocalServiceStep4} options={{ headerShown: false }}/>
-      <Stack.Screen name="CreateLocalServiceStep5" component={CreateLocalServiceStep5} options={{ headerShown: false }}/>
-    </Stack.Navigator>
+    <LinearGradient
+      colors={['#4c669f', '#3b5998', '#192f6a']}
+      style={styles.container}
+    >
+      <ScrollView style={styles.scrollView}>
+        <LocalStepIndicator currentStep={step} steps={steps} />
+        {renderStepContent()}
+        <LocalNextButton onPress={handleNext} disabled={false} isLastStep={step === steps.length} />
+      </ScrollView>
+      <Toast ref={(ref) => Toast.setRef(ref)} />
+    </LinearGradient>
   );
 };
 
-export default CreateLocalServiceStack;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    padding: 20,
+  },
+});
+
+export default LocalOnboardingScreen;

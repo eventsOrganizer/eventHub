@@ -7,9 +7,11 @@ import { useUser } from '../../UserContext';
 interface PersonalInfoProps {
   personalData: Service;
   onLike: () => void;
+  averageRating: number | null;
+  reviewCount: number;
 }
 
-const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData, onLike }) => {
+const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData, onLike, averageRating, reviewCount }) => {
   const { userId } = useUser();
   const isLiked = personalData.like?.some(like => like.user_id === userId) || false;
   const likes = personalData.like?.length || 0;
@@ -36,8 +38,13 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData, onLike }) => 
         <View style={styles.reviewContainer}>
           <Ionicons name="star" size={24} color="gold" />
           <Text style={styles.reviewText}>
-            {personalData.review?.length || 0} Reviews
+            {reviewCount} Reviews
           </Text>
+          {averageRating !== null && (
+            <Text style={styles.ratingText}>
+              ({averageRating.toFixed(1)})
+            </Text>
+          )}
         </View>
       </View>
     </View>
@@ -97,6 +104,10 @@ const styles = StyleSheet.create({
   },
   reviewText: {
     marginLeft: 8,
+  },
+  ratingText: {
+    marginLeft: 4,
+    fontWeight: 'bold',
   },
 });
 
