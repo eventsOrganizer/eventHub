@@ -8,6 +8,7 @@ import LocalDetailsStep from './LocalDetailStep';
 import LocalPriceStep from './LocalPriceStep';
 import LocalAvailabilityStep from './LocalAvailabilityStep';
 import LocalNextButton from './LocalNextButton';
+import LocalServiceDateManager from './LocalServiceDateManager';
 
 type FormData = {
   subcategory: string;
@@ -32,8 +33,7 @@ const LocalOnboardingScreen: React.FC = () => {
   });
 
   const getSteps = () => {
-    const baseSteps = ['Subcategory', 'Local Details', 'Price'];
-    return formData.requiresAvailability ? [...baseSteps, 'Availability'] : baseSteps;
+    return ['Subcategory', 'Local Details', 'Price', 'Availability', 'Service Date Management'];
   };
 
   const steps = getSteps();
@@ -83,7 +83,9 @@ const LocalOnboardingScreen: React.FC = () => {
       case 3:
         return <LocalPriceStep formData={formData} setFormData={setFormData} />;
       case 4:
-        return formData.requiresAvailability ? <LocalAvailabilityStep formData={formData} setFormData={setFormData} /> : null;
+        return <LocalAvailabilityStep formData={formData} setFormData={setFormData} />;
+      case 5:
+        return <LocalServiceDateManager formData={formData} setFormData={setFormData} />;
       default:
         return null;
     }
