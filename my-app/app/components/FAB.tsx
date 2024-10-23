@@ -11,7 +11,7 @@ interface FABProps {
 }
 const FAB: React.FC<FABProps> = ({ isFabOpen, toggleFab, onCreateService, onCreateEvent }) => {
   return (
-    <View style={tw`absolute bottom-5 right-5 items-end`}>
+    <View style={tw`absolute bottom-20 right-5 items-end`}>
       {isFabOpen && (
         <View style={tw`mb-2`}>
           <TouchableOpacity
