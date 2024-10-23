@@ -12,7 +12,7 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
   const scrollX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const textWidth = events.reduce((acc, event) => acc + event.name.length * 16 + 300, 0); // Added extra space
+    const textWidth = events.reduce((acc, event) => acc + event.name.length * 16 + 300, 0);
     const duration = textWidth * 50;
 
     const animation = Animated.timing(scrollX, {
@@ -22,10 +22,18 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
       useNativeDriver: true,
     });
 
-    Animated.loop(animation).start();
+    const resetAnimation = Animated.timing(scrollX, {
+      toValue: 0,
+      duration: 0,
+      useNativeDriver: true,
+    });
+
+    const sequenceAnimation = Animated.sequence([animation, resetAnimation]);
+
+    Animated.loop(sequenceAnimation).start();
 
     return () => {
-      animation.stop();
+      sequenceAnimation.stop();
     };
   }, [events]);
 
@@ -38,7 +46,7 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
               styles.textContainer, 
               { 
                 transform: [{ translateX: scrollX }],
-                width: events.reduce((acc, event) => acc + event.name.length * 16 + 30, 0) * 2, // Double width for seamless loop
+                width: events.reduce((acc, event) => acc + event.name.length * 16 + 30, 0) * 2,
               }
             ]}
           >

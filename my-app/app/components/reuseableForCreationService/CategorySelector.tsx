@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 
 interface Category {
   id: number;
@@ -13,40 +12,71 @@ interface CategorySelectorProps {
   setSelectedCategory: (category: Category | null) => void;
 }
 
-const CategorySelector: React.FC<CategorySelectorProps> = ({ categories, selectedCategory, setSelectedCategory }) => {
+const CategorySelector: React.FC<CategorySelectorProps> = ({
+  categories,
+  selectedCategory,
+  setSelectedCategory,
+}) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Catégorie</Text>
-      <Picker
-        selectedValue={selectedCategory ? selectedCategory.id : undefined}
-        onValueChange={(itemValue) => {
-          const selected = categories.find(cat => cat.id === itemValue);
-          setSelectedCategory(selected || null);
-        }}
-        style={styles.picker}
+      <Text style={styles.label}>Select a category:</Text>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollViewContent}
       >
-        <Picker.Item label="Select a category" value={undefined} />
         {categories.map((category) => (
-          <Picker.Item key={category.id} label={category.name} value={category.id} />
+          <TouchableOpacity
+            key={category.id}
+            style={[
+              styles.categoryButton,
+              selectedCategory?.id === category.id && styles.selectedCategoryButton,
+            ]}
+            onPress={() => setSelectedCategory(category)}
+          >
+            <Text 
+              style={[
+                styles.categoryButtonText,
+                selectedCategory?.id === category.id && styles.selectedCategoryButtonText,
+              ]}
+            >
+              {category.name}
+            </Text>
+          </TouchableOpacity>
         ))}
-      </Picker>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 15,
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 10,
   },
-  picker: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+  scrollViewContent: {
+    paddingBottom: 10,
+  },
+  categoryButton: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  selectedCategoryButton: {
+    backgroundColor: '#4a90e2',
+  },
+  categoryButtonText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  selectedCategoryButtonText: {
+    color: 'white',
   },
 });
 
