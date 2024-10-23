@@ -6,6 +6,13 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+  SearchResultsScreen: { searchTerm: string };
+  // ... other screens
+};
+
 
 interface NavBarProps {
   selectedFilter: string | null;
@@ -13,8 +20,8 @@ interface NavBarProps {
   onSearch: (searchTerm: string) => void;
 }
 
+
 const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSearch }) => {
-  const navigation = useNavigation();
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleSearch = () => {
@@ -48,6 +55,7 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
         <TouchableOpacity style={tw`p-2`}>
           <Ionicons name="notifications" size={24} color="#1a2a4a" />
         </TouchableOpacity>
+
         <TouchableOpacity 
           style={tw`p-2`}
           onPress={() => navigation.navigate('ChatList' as never)}
@@ -56,7 +64,7 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
         </TouchableOpacity>
         <View style={tw`w-30`}>
           <RNPickerSelect
-            onValueChange={(value) => setSelectedFilter(value)}
+            onValueChange={setSelectedFilter}
             items={[
               { label: 'All', value: 'all' },
               { label: 'This Week', value: 'this_week' },

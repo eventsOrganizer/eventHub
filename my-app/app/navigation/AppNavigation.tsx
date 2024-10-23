@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
+
 // Import screens
 import Onboarding from '../screens/OnBoarding';
 import Interests from '../screens/Interests';
@@ -23,9 +24,9 @@ import SubcategorySelectionScreen from '../screens/subcategorySelectionScreen';
 
 
 import GuestManagementScreen from '../screens/GuestManagementScreen';
-
+import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
 import CreateServiceScreen from '../screens/CreateServiceScreen';
-
+import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen'
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ServiceSelection from '../screens/ServiceSelection';
 import VideoRoomsScreen from '../components/event/video/VideoRoomsScreen';
@@ -71,6 +72,12 @@ import SearchResultsScreen from '../screens/SearchResultsScreen';
 
 
 
+import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail'import PaymentActionScreen from '../payment/PaymentActionScreen';
+import SearchResultsScreen from '../screens/SearchResultsScreen';
+
+import NotificationsScreen from '../screens/NotificationsScreen';
+import TicketingScreen from '../screens/TicketingScreen';
+import EventSummaryScreen from '../screens/EventSummaryScreen';
 import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail'
 type RootStackParamList = {
   Onboarding: undefined;
@@ -150,7 +157,6 @@ const AppNavigation: React.FC = () => {
 
   return (
     <Stack.Navigator initialRouteName="Onboarding">
-      {/* Onboarding Screen */}
       <Stack.Screen
         name="Onboarding"
         component={Onboarding}
