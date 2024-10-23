@@ -72,13 +72,12 @@ import SearchResultsScreen from '../screens/SearchResultsScreen';
 
 
 
-import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail'import PaymentActionScreen from '../payment/PaymentActionScreen';
-import SearchResultsScreen from '../screens/SearchResultsScreen';
+import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail';
+import PaymentActionScreen from '../payment/PaymentActionScreen';
 
 import NotificationsScreen from '../screens/NotificationsScreen';
 import TicketingScreen from '../screens/TicketingScreen';
 import EventSummaryScreen from '../screens/EventSummaryScreen';
-import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail'
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -144,6 +143,7 @@ type EventSetupOptionsScreenProps = {
   YourRequests: undefined;
   VideoRooms: undefined;
   VideoCall: { roomUrl: string };
+
  
 
 };
@@ -393,6 +393,7 @@ const AppNavigation: React.FC = () => {
     name="UserServicesScreen" 
     component={UserServicesScreen} 
   />
+    
 
   <Stack.Screen 
     name="YourRequests" 

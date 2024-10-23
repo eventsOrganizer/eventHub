@@ -21,8 +21,10 @@ interface NavBarProps {
 }
 
 
+
 const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const navigation = useNavigation();
 
   const handleSearch = () => {
     onSearch(searchTerm);

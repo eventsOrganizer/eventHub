@@ -29,7 +29,6 @@ const HomeScreen: React.FC = () => {
   const [filteredEvents, setFilteredEvents] = useState<any[]>(events);
   const [filteredServices, setFilteredServices] = useState<any[]>(staffServices);
   const [refreshing, setRefreshing] = useState(false);
-  const scrollY = new Animated.Value(0);
 
   useEffect(() => {
     loadData();

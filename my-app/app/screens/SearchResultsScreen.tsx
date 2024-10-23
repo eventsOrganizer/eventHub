@@ -110,7 +110,7 @@ const SearchResultsScreen: React.FC<Props> = ({ navigation, route }) => {
     } else if (item.type === 'personal') {
       navigation.navigate('PersonalDetail', { personalId: item.id });
     } else if (item.type === 'material') {
-      navigation.navigate('MaterialDetails', { materialId: item.id });
+      navigation.navigate('MaterialDetail', { material: item });
     } else {
       console.warn('Unknown item type:', item.type); // Log the unknown type
     }
