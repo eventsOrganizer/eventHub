@@ -68,6 +68,8 @@ import MaterialDetailScreen from '../screens/MaterialServiceScreens/MaterialDeta
 import { Material } from './types';
 import BasketScreen from '../screens/BasketScreen';
 import MaterialsOnboardingScreen from '../screens/MaterialServiceScreens/MaterialsOnboardingScreen';
+import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
+
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -290,6 +292,11 @@ const AppNavigation: React.FC = () => {
         name="CreatePersonalServiceStep5" 
         component={CreatePersonalServiceStep5} 
         options={{ headerShown: true, title: 'Create Personal Service - Final Step' }} 
+      />
+      <Stack.Screen 
+        name="CreatePersonalServiceStep4" 
+        component={CreatePersonalServiceStep4} 
+        options={{ headerShown: true, title: 'Create Personal Service - Step 4' }} 
       />
         <Stack.Screen 
           name="UserProfile" 

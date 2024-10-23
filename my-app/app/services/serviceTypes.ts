@@ -8,6 +8,7 @@ export type Comment = {
   user_id: string;
   created_at: string;
   personal_id: number;
+  user: { username: string };
 };
 
 export type Service = {
@@ -32,7 +33,7 @@ export type Service = {
       statusday: 'available' | 'reserved' | 'exception';
     }>;
     comment: Comment[];
-    like: Array<{ user_id: string }>;
+    like?: { user_id: string }[];
     order: Array<{
       user_id: string;
       ticket_id: string;
@@ -45,6 +46,10 @@ export type Service = {
       user_id: string;
       rate: number;
     }>;
+    location?: {
+      latitude: number | null;
+      longitude: number | null;
+    } | null;
 };
 
 export type ServiceRequest = {

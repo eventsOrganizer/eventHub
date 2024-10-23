@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Button, Image, StyleSheet, Alert } from 'react-native';
+import { View, Button, Image, StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 interface CloudinaryUploadProps {
   onImageUploaded: (url: string) => void;
+  buttonStyle?: object;
+  buttonTextStyle?: object;
 }
 
-const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({ onImageUploaded }) => {
+const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({ onImageUploaded, buttonStyle, buttonTextStyle }) => {
   const [image, setImage] = useState<string | null>(null);
 
   // Function to pick an image
@@ -39,8 +41,8 @@ const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({ onImageUploaded }) 
   // Function to upload the image to Cloudinary
   const uploadImage = async (uri: string) => {
     const formData = new FormData();
-    formData.append('file', { uri, type: 'image/jpeg', name: 'upload.jpg' } as any); // Adjust file handling
-    formData.append('upload_preset', 'ml_default'); // Replace this with your actual upload preset
+    formData.append('file', { uri, type: 'image/jpeg', name: 'upload.jpg' } as any);
+    formData.append('upload_preset', 'ml_default'); // Replace with your actual upload preset
     formData.append('cloud_name', 'dr07atq6z'); // Cloud name from your Cloudinary account
 
     try {
@@ -49,7 +51,7 @@ const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({ onImageUploaded }) 
         body: formData,
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'multipart/form-data', // Ensuring correct content-type for image uploads
+          'Content-Type': 'multipart/form-data',
         },
       });
 
@@ -58,7 +60,7 @@ const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({ onImageUploaded }) 
         onImageUploaded(data.secure_url); // Pass the URL to the parent component
         Alert.alert('Success', 'Image uploaded successfully');
       } else {
-        Alert.alert('Error', `Upload failed: ${data.error.message || 'Unknown error'}`);
+        Alert.alert('Error', `Upload failed: ${data.error?.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -68,18 +70,27 @@ const CloudinaryUpload: React.FC<CloudinaryUploadProps> = ({ onImageUploaded }) 
 
   return (
     <View style={styles.container}>
-      <Button title={image ? 'Change image' : 'Pick an image from camera roll'} onPress={pickImage} />
+      <TouchableOpacity style={[styles.button, buttonStyle]} onPress={pickImage}>
+        <Text style={[styles.buttonText, buttonTextStyle]}>Pick an image</Text>
+      </TouchableOpacity>
       {image && <Image source={{ uri: image }} style={styles.image} />}
     </View>
   );
 };
 
-// Styles for the component
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+  },
+  button: {
+    backgroundColor: '#4A90E2',
+    padding: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   image: {
     width: 200,

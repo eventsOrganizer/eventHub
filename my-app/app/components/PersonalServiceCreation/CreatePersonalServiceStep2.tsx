@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import CloudinaryUpload from '../event/CloudinaryUpload';
+import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import ProgressBar from '../reuseableForCreationService/ProgressBar';
 
 type CreatePersonalServiceStep2RouteProp = RouteProp<RootStackParamList, 'CreatePersonalServiceStep2'>;
 type CreatePersonalServiceStep2NavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep2'>;
@@ -34,8 +36,9 @@ const CreatePersonalServiceStep2: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Create a Personal Service</Text>
+      <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.card}>
+        <ProgressBar step={2} totalSteps={4} />
+        <Text style={styles.title}>Create New Crew</Text>
         <Text style={styles.subtitle}>Step 2: Add Images</Text>
         <View style={styles.infoContainer}>
           <Text style={styles.infoText}>Person service Name: {serviceName}</Text>
@@ -55,7 +58,7 @@ const CreatePersonalServiceStep2: React.FC = () => {
         >
           <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     </ScrollView>
   );
 };
@@ -63,10 +66,10 @@ const CreatePersonalServiceStep2: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: '#4c669f',
   },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 15,
     padding: 20,
     margin: 20,
@@ -82,12 +85,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: 'white',
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 18,
-    color: '#666',
+    color: 'white',
     marginBottom: 20,
   },
   infoContainer: {
@@ -95,7 +98,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 16,
-    color: '#444',
+    color: 'white',
     marginBottom: 5,
   },
   imagePreviewContainer: {
@@ -103,18 +106,18 @@ const styles = StyleSheet.create({
   },
   imagePreviewText: {
     fontSize: 14,
-    color: '#4a90e2',
+    color: 'white',
     marginBottom: 5,
   },
   button: {
-    backgroundColor: '#4a90e2',
+    backgroundColor: '#4A90E2',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 20,
   },
   buttonDisabled: {
-    backgroundColor: '#a0a0a0',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   buttonText: {
     color: 'white',

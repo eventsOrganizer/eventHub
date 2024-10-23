@@ -6,6 +6,15 @@ import { RootStackParamList } from '../../navigation/types';
 import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
 import { format, parseISO } from 'date-fns';
+import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import ProgressBar from '../reuseableForCreationService/ProgressBar';
+import moment from 'moment';
+
+// Ajoutez cette interface en haut du fichier
+interface Location {
+  latitude: number;
+  longitude: number;
+}
 
 type CreatePersonalServiceStep5ScreenRouteProp = RouteProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
 type CreatePersonalServiceStep5ScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
@@ -23,7 +32,8 @@ const CreatePersonalServiceStep5: React.FC = () => {
     interval, 
     startDate, 
     endDate, 
-    exceptionDates = []
+    exceptionDates = [],
+    location, // Assurez-vous que cette ligne existe
   } = route.params;
   const { userId } = useUser();
 
@@ -96,6 +106,22 @@ const CreatePersonalServiceStep5: React.FC = () => {
         if (availabilityError) throw availabilityError;
       }
 
+      // Ajouter la localisation à la base de données
+      if (location) {
+        const { data: locationData, error: locationError } = await supabase
+          .from('location')
+          .insert({
+            longitude: location.longitude,
+            latitude: location.latitude,
+            personal_id: personalData.id,
+          });
+
+        if (locationError) {
+          console.error('Error inserting location:', locationError);
+          // Gérer l'erreur
+        }
+      }
+
       Alert.alert('Succès', 'Service créé avec succès !');
       navigation.navigate('Home');
     } catch (error) {
@@ -106,29 +132,72 @@ const CreatePersonalServiceStep5: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Create a Personal Service</Text>
-        <Text style={styles.subtitle}>Étape 5 : Confirmation</Text>
+      <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.card}>
+        <ProgressBar step={5} totalSteps={5} />
+        <Text style={styles.title}>Create New Crew</Text>
+        <Text style={styles.subtitle}>Step 5: Confirmation</Text>
+        
         <View style={styles.infoContainer}>
-          <Text style={styles.infoText}>Name : {serviceName}</Text>
-          <Text style={styles.infoText}>Description : {description}</Text>
-          <Text style={styles.infoText}>Price perhour: {pricePerHour}€</Text>
-          <Text style={styles.infoText}>Percentage of deposit : {depositPercentage}%</Text>
-          <Text style={styles.infoText}>Interval : {interval}</Text>
-          <Text style={styles.infoText}>Start date : {startDate}</Text>
-          <Text style={styles.infoText}>End date : {endDate}</Text>
-          <Text style={styles.infoText}>Exception date : {exceptionDates.join(', ')}</Text>
+          <Text style={styles.infoLabel}>Name:</Text>
+          <Text style={styles.infoText}>{serviceName}</Text>
+          
+          <Text style={styles.infoLabel}>Description:</Text>
+          <Text style={styles.infoText}>{description}</Text>
+          
+          <Text style={styles.infoLabel}>Price per hour:</Text>
+          <Text style={styles.infoText}>{pricePerHour}€</Text>
+          
+          <Text style={styles.infoLabel}>Deposit percentage:</Text>
+          <Text style={styles.infoText}>{depositPercentage}%</Text>
+          
+          <Text style={styles.infoLabel}>Interval:</Text>
+          <Text style={styles.infoText}>{interval}</Text>
+          
+          <Text style={styles.infoLabel}>Start date:</Text>
+          <Text style={styles.infoText}>{moment(startDate).format('MMMM Do YYYY')}</Text>
+          
+          <Text style={styles.infoLabel}>End date:</Text>
+          <Text style={styles.infoText}>{moment(endDate).format('MMMM Do YYYY')}</Text>
+          
+          <Text style={styles.infoLabel}>Exception dates:</Text>
+          {/* <Text style={styles.infoText}>{exceptionDates.map(date => moment(date).format('MMMM Do YYYY')).join(', ') || 'None'}</Text> */}
+{exceptionDates.length > 0 ? (
+  exceptionDates.map((date, index) => (
+    <Text key={index} style={styles.infoText}>
+      -{moment(date).format('MMMM Do YYYY')}
+    </Text>
+  ))
+) : (
+  <Text style={styles.infoText}>Aucune</Text>
+)}
         </View>
-        <Text style={styles.imagesTitle}>Images :</Text>
+        
+        {location && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoLabel}>Localisation :</Text>
+            <Text style={styles.infoText}>
+              Latitude : {location.latitude.toFixed(6)}
+            </Text>
+            <Text style={styles.infoText}>
+              Longitude : {location.longitude.toFixed(6)}
+            </Text>
+          </View>
+        )}
+        
+        <Text style={styles.imagesTitle}>Images</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageContainer}>
           {images.map((imageUri, index) => (
             <Image key={index} source={{ uri: imageUri }} style={styles.image} />
           ))}
         </ScrollView>
-        <TouchableOpacity style={styles.button} onPress={handleConfirm}>
+        
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={handleConfirm}
+        >
           <Text style={styles.buttonText}>Confirm and Submit</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     </ScrollView>
   );
 };
@@ -136,10 +205,10 @@ const CreatePersonalServiceStep5: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f2f5',
+    backgroundColor: '#4c669f',
   },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 15,
     padding: 20,
     margin: 20,
@@ -155,25 +224,32 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: 'white',
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 18,
-    color: '#666',
+    color: 'white',
     marginBottom: 20,
   },
   infoContainer: {
     marginBottom: 20,
   },
+  infoLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 5,
+  },
   infoText: {
     fontSize: 16,
-    color: '#444',
-    marginBottom: 5,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: 10,
   },
   imagesTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: 'white',
     marginBottom: 10,
   },
   imageContainer: {
@@ -187,7 +263,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   button: {
-    backgroundColor: '#4a90e2',
+    backgroundColor: '#4A90E2',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',

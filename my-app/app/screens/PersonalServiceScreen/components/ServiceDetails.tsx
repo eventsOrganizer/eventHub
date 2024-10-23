@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Service } from '../../../services/serviceTypes';
 import { Ionicons } from '@expo/vector-icons';
+import { Service } from '../../../services/serviceTypes';
+import moment from 'moment';
 
 interface ServiceDetailsProps {
   personalData: Service;
@@ -14,26 +15,42 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = ({
   personalData,
   onReviewPress,
   onCommentPress,
-  onBookPress
+  onBookPress,
 }) => {
+  // Ajout de cette vérification
+  if (!personalData) return null;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Service Details</Text>
       <View style={styles.detailsContainer}>
         <View style={styles.iconContainer}>
-          <Ionicons name="pricetag-outline" size={24} color="#4B5563" />
-          <Text style={styles.detailText}>Category: {personalData.subcategory?.name}</Text>
+          <Ionicons name="person-outline" size={24} color="#4A90E2" />
+          <Text>{personalData.name || 'N/A'}</Text>
         </View>
         <View style={styles.iconContainer}>
-          <Ionicons name="cash-outline" size={24} color="#4B5563" />
-          <Text style={styles.detailText}>Price: {personalData.priceperhour}€/hour</Text>
+          <Ionicons name="pricetag-outline" size={24} color="#4A90E2" />
+          <Text>{personalData.priceperhour || 0} per hour</Text>
         </View>
         <View style={styles.iconContainer}>
-          <Ionicons name="information-circle-outline" size={24} color="#4B5563" />
-          <Text style={styles.detailText}>Description: {personalData.details}</Text>
+          <Ionicons name="calendar-outline" size={24} color="#4A90E2" />
+          {/* <Text>from {moment().format(personalData.startdate) || 'N/A'} to {moment().format(personalData.enddate) || 'N/A'}</Text> */}
+          <Text>{personalData.startdate ? moment(personalData.startdate).format('MMMM Do') : 'N/A'} to {personalData.enddate ? moment(personalData.enddate).format('MMMM Do YYYY') : 'N/A'}</Text>
         </View>
+        <View style={styles.iconContainer}>
+          <Ionicons name="information-circle-outline" size={24} color="#4A90E2" />
+          <Text>{personalData.details || 'No details available'}</Text>
+        </View>
+        {personalData.subcategory && (
+          <View style={styles.iconContainer}>
+            <Ionicons name="list-outline" size={24} color="#4A90E2" />
+            <Text>
+              {personalData.subcategory.name || 'N/A'} 
+              {personalData.subcategory.category?.name ? ` - ${personalData.subcategory.category.name}` : ''}
+            </Text>
+          </View>
+        )}
       </View>
-      
       <View style={styles.actionContainer}>
         <TouchableOpacity style={styles.actionButton} onPress={onReviewPress}>
           <View style={styles.iconBackground}>
@@ -84,10 +101,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  detailText: {
-    color: '#4B5563',
-    fontSize: 16,
-  },
   actionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -97,17 +110,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconBackground: {
-    backgroundColor: '#E6F0FF', // Light blue background
-    borderRadius: 50, // To create a circle
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#E6F2FF',
+    borderRadius: 20,
+    padding: 8,
   },
   actionText: {
+    marginTop: 4,
     color: '#4A90E2',
-    marginTop: 8,
-    fontSize: 14,
   },
 });
 
