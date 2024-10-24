@@ -10,7 +10,8 @@ import CommentsSection from '../components/event/CommentsSection';
 import styles from '../components/event/styles/eventDetailsStyles';
 import JoinEventButton from '../components/event/JoinEventButton';
 import UserAvatar from '../components/event/UserAvatar';
-
+import EventLike from '../components/event/EventLike';
+import EventReview from '../components/event/EventReview';
 
 interface EventDetails {
   id: number;
@@ -221,7 +222,10 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
             <CommentsSection eventId={eventId} />
           </View>
         </View>
-      </ScrollView>
+        
+        <EventLike eventId={eventId} />
+        <EventReview eventId={eventId} />
+    </ScrollView>
     </LinearGradient>
   );
 };
