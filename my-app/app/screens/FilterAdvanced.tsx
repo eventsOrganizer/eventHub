@@ -9,9 +9,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 interface FilterAdvancedProps {
   onEventsLoaded: (events: any[]) => void;
   currentLocation?: { latitude: number; longitude: number };
+  lastMarkedLocation?: { latitude: number; longitude: number } | null;
 }
 
-const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, currentLocation }) => {
+const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, currentLocation, lastMarkedLocation }) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -26,6 +27,7 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isFilterVisible, setIsFilterVisible] = useState<boolean>(false);
+  const [useMarkedLocation, setUseMarkedLocation] = useState<boolean>(false);
 
   useEffect(() => {
     fetchCategories();
@@ -35,10 +37,12 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
   }, []);
 
   useEffect(() => {
-    if (currentLocation) {
+    if (useMarkedLocation && lastMarkedLocation) {
+      setUserLocation(lastMarkedLocation);
+    } else if (currentLocation) {
       setUserLocation(currentLocation);
     }
-  }, [currentLocation]);
+  }, [currentLocation, lastMarkedLocation, useMarkedLocation]);
 
   useEffect(() => {
     if (selectedCategory) {
@@ -98,7 +102,7 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
 
   const fetchFilteredEvents = async () => {
     if (!userLocation) {
-      Alert.alert('Error', 'Location not available. Please wait for your location to be determined.');
+      Alert.alert('Error', 'Location not available. Please wait for your location to be determined or mark a location on the map.');
       return;
     }
   
@@ -160,8 +164,6 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
     }
   };
 
-
-
   return (
     <ScrollView style={tw`p-4 bg-white`}>
       <Button
@@ -173,6 +175,18 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
         <>
           <Text style={tw`text-base font-bold mb-2`}>Filter Events</Text>
           
+          <View style={tw`mb-4`}>
+            <Text style={tw`mb-1 text-sm`}>Use Location</Text>
+            <Picker
+              selectedValue={useMarkedLocation}
+              onValueChange={(value) => setUseMarkedLocation(value)}
+              style={tw`border border-gray-300 rounded`}
+            >
+              <Picker.Item label="Current Location" value={false} />
+              <Picker.Item label="Marked Location" value={true} />
+            </Picker>
+          </View>
+
           <View style={tw`mb-4`}>
             <Text style={tw`mb-1 text-sm`}>Event Name</Text>
             <TextInput

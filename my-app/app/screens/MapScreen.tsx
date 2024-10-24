@@ -6,10 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import FilterAdvanced from './FilterAdvanced';
 
-
-
-
-
 const MapScreen: React.FC = () => {
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -17,6 +13,8 @@ const MapScreen: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [showFilter, setShowFilter] = useState(false);
   const webViewRef = useRef<WebView>(null);
+  const [showCoordinates, setShowCoordinates] = useState(false);
+  const [lastMarkedLocation, setLastMarkedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -33,6 +31,8 @@ const MapScreen: React.FC = () => {
       });
     })();
   }, []);
+
+  const toggleCoordinates = () => setShowCoordinates(!showCoordinates);
 
   const handleEventsLoaded = (loadedEvents: any[]) => {
     console.log('Received events in MapScreen:', loadedEvents.length);
@@ -79,7 +79,6 @@ const MapScreen: React.FC = () => {
       ${markersScript}
     `);
   };
-
 
   const handleEventSelection = async (eventId: number) => {
     const event = events.find(e => e.id === eventId);
@@ -171,14 +170,23 @@ const MapScreen: React.FC = () => {
             });
 
             var currentMarker;
+            var lastMarkedMarker;
             var eventMarkers = [];
 
-            function updateMap(lat, lon) {
-              if (currentMarker) {
-                map.removeLayer(currentMarker);
+            function updateMap(lat, lon, isCurrentLocation) {
+              if (isCurrentLocation) {
+                if (currentMarker) {
+                  map.removeLayer(currentMarker);
+                }
+                currentMarker = L.marker([lat, lon], {icon: blueIcon}).addTo(map);
+                map.setView([lat, lon], 14);
+              } else {
+                if (lastMarkedMarker) {
+                  map.removeLayer(lastMarkedMarker);
+                }
+                lastMarkedMarker = L.marker([lat, lon]).addTo(map);
+                map.setView([lat, lon], 14);
               }
-              currentMarker = L.marker([lat, lon], {icon: blueIcon}).addTo(map);
-              map.setView([lat, lon], 14);
             }
 
             map.on('click', function(e) {
@@ -196,13 +204,17 @@ const MapScreen: React.FC = () => {
       handleEventSelection(data.eventId);
     } else if (data.type === 'mapClick') {
       console.log('Map clicked at:', data.latlng);
+      setLastMarkedLocation({ latitude: data.latlng.lat, longitude: data.latlng.lng });
+      webViewRef.current?.injectJavaScript(`
+        updateMap(${data.latlng.lat}, ${data.latlng.lng}, false);
+      `);
     }
   };
 
   useEffect(() => {
     if (currentLocation) {
       webViewRef.current?.injectJavaScript(`
-        updateMap(${currentLocation.latitude}, ${currentLocation.longitude});
+        updateMap(${currentLocation.latitude}, ${currentLocation.longitude}, true);
       `);
     }
   }, [currentLocation]);
@@ -210,11 +222,31 @@ const MapScreen: React.FC = () => {
   return (
     <View style={tw`flex-1 bg-gray-100`}>
       <TouchableOpacity
+        style={tw`absolute top-12 left-4 z-10 bg-white p-2 rounded-full shadow-md`}
+        onPress={toggleCoordinates}
+      >
+        <Ionicons name="location" size={24} color="#4838cc" />
+      </TouchableOpacity>
+      <TouchableOpacity
         style={tw`absolute top-12 right-4 z-10 bg-white p-2 rounded-full shadow-md`}
         onPress={() => setShowFilter(true)}
       >
         <Ionicons name="filter" size={24} color="#4838cc" />
       </TouchableOpacity>
+      {showCoordinates && (
+        <View style={tw`absolute top-24 left-4 right-4 z-10 bg-white p-4 rounded-lg shadow-md`}>
+          <Text style={tw`text-sm font-bold mb-2`}>Current Location:</Text>
+          <Text style={tw`text-sm mb-2`}>
+            {currentLocation ? `${currentLocation.latitude.toFixed(6)}, ${currentLocation.longitude.toFixed(6)}` : 'Not available'}
+          </Text>
+          <Text style={tw`text-sm font-bold mb-2`}>Last Marked Location:</Text>
+          <Text style={tw`text-sm`}>
+            {lastMarkedLocation
+              ? `${lastMarkedLocation.latitude.toFixed(6)}, ${lastMarkedLocation.longitude.toFixed(6)}`
+              : 'Not available'}
+          </Text>
+        </View>
+      )}
       <WebView
         ref={webViewRef}
         style={tw`flex-1`}
@@ -267,25 +299,26 @@ const MapScreen: React.FC = () => {
           </View>
         </Modal>
       )}
-     <Modal
-  animationType="slide"
-  transparent={true}
-  visible={showFilter}
-  onRequestClose={() => setShowFilter(false)}
->
-  <View style={tw`flex-1 justify-start mt-20 bg-white rounded-t-3xl`}>
-    <FilterAdvanced 
-      onEventsLoaded={handleEventsLoaded} 
-      currentLocation={currentLocation}
-    />
-    <TouchableOpacity
-      style={tw`bg-blue-500 p-4 m-4 rounded-full`}
-      onPress={() => setShowFilter(false)}
-    >
-      <Text style={tw`text-white text-center font-bold`}>Close Filter</Text>
-    </TouchableOpacity>
-  </View>
-</Modal>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showFilter}
+        onRequestClose={() => setShowFilter(false)}
+      >
+        <View style={tw`flex-1 justify-start mt-20 bg-white rounded-t-3xl`}>
+          <FilterAdvanced 
+            onEventsLoaded={handleEventsLoaded} 
+            currentLocation={currentLocation}
+            lastMarkedLocation={lastMarkedLocation}
+          />
+          <TouchableOpacity
+            style={tw`bg-blue-500 p-4 m-4 rounded-full`}
+            onPress={() => setShowFilter(false)}
+          >
+            <Text style={tw`text-white text-center font-bold`}>Close Filter</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
