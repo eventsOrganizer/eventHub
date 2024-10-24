@@ -15,7 +15,7 @@
     "@faker-js/faker": "^9.0.3",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/checkbox": "^0.5.17",
-    "@react-native-community/datetimepicker": "^6.7.3",
+    "@react-native-community/datetimepicker": "^6.7.5",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-native-community/slider": "^4.5.4",
     "@react-native-picker/picker": "^2.8.1",

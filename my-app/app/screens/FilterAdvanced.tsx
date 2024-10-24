@@ -4,6 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../services/supabaseClient';
 import tw from 'twrnc';
 import * as Location from 'expo-location';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface FilterAdvancedProps {
   onEventsLoaded: (events: any[]) => void;
@@ -17,23 +18,27 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
   const [selectedSubcategory, setSelectedSubcategory] = useState<number | null>(null);
   const [eventName, setEventName] = useState<string>('');
   const [perimeter, setPerimeter] = useState<string>('');
+  const [eventType, setEventType] = useState<string>('');
+  const [privacy, setPrivacy] = useState<boolean | null>(null);
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isFilterVisible, setIsFilterVisible] = useState<boolean>(false);
 
-
   useEffect(() => {
+    fetchCategories();
     if (!currentLocation) {
       getUserLocation();
     }
   }, []);
-
 
   useEffect(() => {
     if (currentLocation) {
       setUserLocation(currentLocation);
     }
   }, [currentLocation]);
-
 
   useEffect(() => {
     if (selectedCategory) {
@@ -96,70 +101,66 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
       Alert.alert('Error', 'Location not available. Please wait for your location to be determined.');
       return;
     }
-
-    let query = supabase
-      .from('event')
-      .select(`
-        *,
-        subcategory!inner (id, name, category_id, category:category_id(id, name)),
-        location!inner (id, longitude, latitude),
-        availability (id, start, end, daysofweek, date),
-        media (url),
-        user:user_id (email),
-        event_has_user (user_id)
-      `)
-      .not('location.id', 'is', null);
-
-    if (eventName) {
-      query = query.ilike('name', `%${eventName}%`);
-    }
-
-    if (selectedCategory) {
-      query = query.eq('subcategory.category_id', selectedCategory);
-    }
-
-    if (selectedSubcategory) {
-      query = query.eq('subcategory_id', selectedSubcategory);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching filtered events:', error);
-      return;
-    }
-
-    let filteredEvents = data;
-    if (perimeter) {
-      const perimeterValue = parseFloat(perimeter);
-      filteredEvents = data.filter(event => {
-        const eventLocation = event.location[0];
-        if (eventLocation) {
-          const distance = calculateDistance(
-            userLocation.latitude,
-            userLocation.longitude,
-            eventLocation.latitude,
-            eventLocation.longitude
-          );
-          return distance <= perimeterValue;
-        }
-        return false;
+  
+    try {
+      const { data, error } = await supabase.rpc('filter_events', {
+        user_lat: userLocation.latitude,
+        user_lon: userLocation.longitude,
+        max_distance: perimeter ? parseFloat(perimeter) : null,
+        search_name: eventName || null,
+        input_category_id: selectedCategory,
+        input_subcategory_id: selectedSubcategory,
+        event_type: eventType || null,
+        is_private: privacy,
+        min_price: minPrice ? parseFloat(minPrice) : null,
+        max_price: maxPrice ? parseFloat(maxPrice) : null,
+        start_date: startDate?.toISOString() || null,
+        end_date: endDate?.toISOString() || null
       });
+  
+      if (error) {
+        console.error('Error fetching filtered events:', error);
+        Alert.alert('Error', 'Failed to fetch events. Please try again.');
+        return;
+      }
+  
+      console.log('Raw data from filter_events:', data);
+  
+      let parsedData;
+      try {
+        parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+      } catch (parseError) {
+        console.error('Error parsing JSON:', parseError);
+        console.log('Data causing parse error:', data);
+        Alert.alert('Error', 'Failed to process event data. Please try again.');
+        return;
+      }
+  
+      if (!Array.isArray(parsedData)) {
+        console.error('Parsed data is not an array:', parsedData);
+        Alert.alert('Error', 'Unexpected data format. Please try again.');
+        return;
+      }
+  
+      const formattedData = parsedData.map((event: any) => ({
+        ...event,
+        distance: event.event_distance,
+        price: event.event_price,
+        category: { name: event.category_name },
+        subcategory: { name: event.subcategory_name },
+        location: Array.isArray(event.location_data) ? event.location_data : [event.location_data],
+        media: Array.isArray(event.media_urls) ? event.media_urls.map((url: string) => ({ url })) : [],
+        availability: [{ date: event.event_date }]
+      }));
+      console.log('Raw data from filter_events:', JSON.stringify(data, null, 2));
+      onEventsLoaded(formattedData || []);
+    } catch (error) {
+      console.error('Error:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     }
-
-    onEventsLoaded(filteredEvents);
   };
 
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Radius of the Earth in km
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
+
 
   return (
     <ScrollView style={tw`p-4 bg-white`}>
@@ -171,6 +172,7 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
       {isFilterVisible && (
         <>
           <Text style={tw`text-base font-bold mb-2`}>Filter Events</Text>
+          
           <View style={tw`mb-4`}>
             <Text style={tw`mb-1 text-sm`}>Event Name</Text>
             <TextInput
@@ -180,6 +182,7 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
               placeholder="Enter event name"
             />
           </View>
+
           <View style={tw`mb-4`}>
             <Text style={tw`mb-1 text-sm`}>Distance (km)</Text>
             <TextInput
@@ -190,6 +193,7 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
               keyboardType="numeric"
             />
           </View>
+
           <View style={tw`mb-4`}>
             <Text style={tw`mb-1 text-sm`}>Category</Text>
             <Picker
@@ -205,6 +209,7 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
               ))}
             </Picker>
           </View>
+
           {selectedCategory !== null && (
             <View style={tw`mb-4`}>
               <Text style={tw`mb-1 text-sm`}>Subcategory</Text>
@@ -219,6 +224,82 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
               </Picker>
             </View>
           )}
+
+          <View style={tw`mb-4`}>
+            <Text style={tw`mb-1 text-sm`}>Event Type</Text>
+            <Picker
+              selectedValue={eventType}
+              onValueChange={setEventType}
+              style={tw`border border-gray-300 rounded`}
+            >
+              <Picker.Item label="All" value="" />
+              <Picker.Item label="Indoor" value="indoor" />
+              <Picker.Item label="Outdoor" value="outdoor" />
+              <Picker.Item label="Online" value="online" />
+            </Picker>
+          </View>
+
+          <View style={tw`mb-4`}>
+            <Text style={tw`mb-1 text-sm`}>Privacy</Text>
+            <Picker
+              selectedValue={privacy}
+              onValueChange={(value) => setPrivacy(value === '' ? null : value === 'true')}
+              style={tw`border border-gray-300 rounded`}
+            >
+              <Picker.Item label="All" value="" />
+              <Picker.Item label="Public" value="false" />
+              <Picker.Item label="Private" value="true" />
+            </Picker>
+          </View>
+
+          <View style={tw`mb-4`}>
+            <Text style={tw`mb-1 text-sm`}>Min Price</Text>
+            <TextInput
+              style={tw`border border-gray-300 rounded p-1 text-sm`}
+              value={minPrice}
+              onChangeText={setMinPrice}
+              placeholder="Enter min price"
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={tw`mb-4`}>
+            <Text style={tw`mb-1 text-sm`}>Max Price</Text>
+            <TextInput
+              style={tw`border border-gray-300 rounded p-1 text-sm`}
+              value={maxPrice}
+              onChangeText={setMaxPrice}
+              placeholder="Enter max price"
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={tw`mb-4`}>
+            <Text style={tw`mb-1 text-sm`}>Start Date</Text>
+            <DateTimePicker
+              value={startDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                const currentDate = selectedDate || startDate;
+                setStartDate(currentDate);
+              }}
+            />
+          </View>
+
+          <View style={tw`mb-4`}>
+            <Text style={tw`mb-1 text-sm`}>End Date</Text>
+            <DateTimePicker
+              value={endDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                const currentDate = selectedDate || endDate;
+                setEndDate(currentDate);
+              }}
+            />
+          </View>
+
           <Button title="Apply Filters" onPress={fetchFilteredEvents} />
         </>
       )}
