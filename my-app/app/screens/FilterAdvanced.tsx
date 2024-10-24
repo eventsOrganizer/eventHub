@@ -42,13 +42,14 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
     } else if (currentLocation) {
       setUserLocation(currentLocation);
     }
-  }, [currentLocation, lastMarkedLocation, useMarkedLocation]);
+  }, [currentLocation, lastMarkedLocation, useMarkedLocation, perimeter]);
 
   useEffect(() => {
-    if (selectedCategory) {
-      fetchSubcategories(selectedCategory);
+    if (selectedCategory === null) {
+      setSubcategories([{ id: null, name: 'All' }]);
+      setSelectedSubcategory(null);
     } else {
-      setSubcategories([]);
+      fetchSubcategories(selectedCategory);
     }
   }, [selectedCategory]);
 
@@ -86,6 +87,11 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
   };
 
   const fetchSubcategories = async (categoryId: number) => {
+    if (categoryId === null) {
+      setSubcategories([{ id: null, name: 'All' }]);
+      return;
+    }
+    
     const { data, error } = await supabase
       .from('subcategory')
       .select('id, name')
@@ -156,12 +162,17 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
         media: Array.isArray(event.media_urls) ? event.media_urls.map((url: string) => ({ url })) : [],
         availability: [{ date: event.event_date }]
       }));
-      console.log('Raw data from filter_events:', JSON.stringify(data, null, 2));
+      
       onEventsLoaded(formattedData || []);
     } catch (error) {
       console.error('Error:', error);
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     }
+  };
+
+  const handleLocationTypeChange = (value: boolean) => {
+    setUseMarkedLocation(value);
+    setUserLocation(value && lastMarkedLocation ? lastMarkedLocation : currentLocation || null);
   };
 
   return (
@@ -179,7 +190,7 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
             <Text style={tw`mb-1 text-sm`}>Use Location</Text>
             <Picker
               selectedValue={useMarkedLocation}
-              onValueChange={(value) => setUseMarkedLocation(value)}
+              onValueChange={handleLocationTypeChange}
               style={tw`border border-gray-300 rounded`}
             >
               <Picker.Item label="Current Location" value={false} />
@@ -224,20 +235,18 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
             </Picker>
           </View>
 
-          {selectedCategory !== null && (
-            <View style={tw`mb-4`}>
-              <Text style={tw`mb-1 text-sm`}>Subcategory</Text>
-              <Picker
-                selectedValue={selectedSubcategory}
-                onValueChange={(itemValue) => setSelectedSubcategory(itemValue)}
-                style={tw`border border-gray-300 rounded`}
-              >
-                {subcategories.map((subcategory) => (
-                  <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
-                ))}
-              </Picker>
-            </View>
-          )}
+          <View style={tw`mb-4`}>
+            <Text style={tw`mb-1 text-sm`}>Subcategory</Text>
+            <Picker
+              selectedValue={selectedSubcategory}
+              onValueChange={(itemValue) => setSelectedSubcategory(itemValue)}
+              style={tw`border border-gray-300 rounded`}
+            >
+              {subcategories.map((subcategory) => (
+                <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
+              ))}
+            </Picker>
+          </View>
 
           <View style={tw`mb-4`}>
             <Text style={tw`mb-1 text-sm`}>Event Type</Text>
