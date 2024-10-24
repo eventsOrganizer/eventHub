@@ -74,6 +74,19 @@ export type RootStackParamList = {
     subcategoryName: string;
     subcategoryId: number;
   };
+  CreatePersonalServiceStep4: {
+    serviceName: string;
+    description: string;
+    subcategoryName: string;
+    subcategoryId: number;
+    images: string[];
+    interval: 'Yearly' | 'Monthly' | 'Weekly';
+    startDate: string;
+    endDate: string;
+    exceptionDates: string[];
+    pricePerHour: number;
+    depositPercentage: number;
+  };
   CreatePersonalServiceStep5: {
     serviceName: string;
     description: string;
@@ -86,6 +99,10 @@ export type RootStackParamList = {
     exceptionDates: string[];
     pricePerHour: number;
     depositPercentage: number;
+    location: {
+      latitude: number;
+      longitude: number;
+    };
   };
   BookingScreen: {
     personalId: number;
@@ -138,3 +155,4 @@ export type CreatePersonalServiceStep1NavigationProp = NativeStackNavigationProp
 export type CreatePersonalServiceStep2NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep2'>;
 export type CreatePersonalServiceStep3NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep3'>;
 export type CreatePersonalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
+export type CreatePersonalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep4'>;

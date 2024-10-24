@@ -10,7 +10,7 @@ interface IntervalSelectorProps {
 const IntervalSelector: React.FC<IntervalSelectorProps> = ({ interval, setInterval }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Availability Interval</Text>
+      <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 5, color: 'white' }}>Select an interval</Text>
       <RNPickerSelect
         onValueChange={setInterval}
         items={[

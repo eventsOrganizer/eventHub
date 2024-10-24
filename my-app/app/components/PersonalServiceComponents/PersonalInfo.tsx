@@ -1,113 +1,138 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Service } from '../../services/serviceTypes';
-import { useUser } from '../../UserContext';
 
 interface PersonalInfoProps {
-  personalData: Service;
+  data: Service | null;
   onLike: () => void;
-  averageRating: number | null;
-  reviewCount: number;
+  onToggleMap: () => void;
+  distance?: number | null;
+  address?: string;
 }
 
-const PersonalInfo: React.FC<PersonalInfoProps> = ({ personalData, onLike, averageRating, reviewCount }) => {
-  const { userId } = useUser();
-  const isLiked = personalData.like?.some(like => like.user_id === userId) || false;
-  const likes = personalData.like?.length || 0;
+const PersonalInfo: React.FC<PersonalInfoProps> = ({ 
+  data, 
+  onLike, 
+  onToggleMap,
+  distance,
+  address 
+}) => {
+  if (!data) return null;
+
+  const isLiked = data.like?.some(like => like.user_id) || false;
+  const reviewCount = data.review?.length || 0;
+  const averageRating = data.review && data.review.length > 0
+    ? data.review.reduce((sum, review) => sum + review.rate, 0) / reviewCount
+    : null;
 
   return (
-    <View style={styles.container}>
-      <Image 
-        source={{ uri: personalData.imageUrl || 'https://via.placeholder.com/150' }} 
-        style={styles.image}
-      />
-      <Text style={styles.name}>{personalData.name}</Text>
-      <Text style={styles.price}>{personalData.priceperhour}€/hour</Text>
-      <Text style={styles.details}>{personalData.details}</Text>
+    <View style={styles.infoContainer}>
+      <Text style={styles.name}>{data.name}</Text>
+      <Text style={styles.price}>${data.priceperhour}/hr</Text>
+      <Text style={styles.details}>{data.details}</Text>
       
-      <View style={styles.footer}>
+      {(distance !== null || address) && (
+        <View style={styles.locationInfo}>
+          {distance !== null && (
+            <View style={styles.locationItem}>
+              <Ionicons name="location" size={24} color="#fff" />
+              <Text style={styles.locationText}>Distance: {distance?.toFixed(1)} km</Text>
+            </View>
+          )}
+          {address && (
+            <View style={styles.locationItem}>
+              <Ionicons name="map" size={24} color="#fff" />
+              <Text style={styles.locationText}>{address}</Text>
+            </View>
+          )}
+        </View>
+      )}
+      
+      <View style={styles.statsContainer}>
         <TouchableOpacity onPress={onLike} style={styles.likeButton}>
           <Ionicons 
             name={isLiked ? "heart" : "heart-outline"} 
             size={24} 
-            color={isLiked ? "red" : "black"} 
+            color={isLiked ? "red" : "white"} 
           />
-          <Text style={styles.likeText}>{likes} Likes</Text>
+          <Text style={styles.statText}>{data.like?.length || 0} Likes</Text>
         </TouchableOpacity>
-        <View style={styles.reviewContainer}>
+
+        <View style={styles.statItem}>
           <Ionicons name="star" size={24} color="gold" />
-          <Text style={styles.reviewText}>
+          <Text style={styles.statText}>
             {reviewCount} Reviews
+            {averageRating !== null && ` (${averageRating.toFixed(1)})`}
           </Text>
-          {averageRating !== null && (
-            <Text style={styles.ratingText}>
-              ({averageRating.toFixed(1)})
-            </Text>
-          )}
         </View>
+
+        <TouchableOpacity onPress={onToggleMap} style={styles.mapButton}>
+          <Ionicons name="location" size={24} color="white" />
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: 'white',
-    borderRadius: 8,
+  infoContainer: {
     padding: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    elevation: 4,
-  },
-  image: {
-    width: '100%',
-    height: 192,
-    borderRadius: 8,
-    marginBottom: 16,
   },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
+    color: '#fff',
   },
   price: {
-    fontSize: 18,
-    color: 'green',
+    fontSize: 20,
+    color: '#E0E0E0',
     marginBottom: 8,
   },
   details: {
-    color: '#4B5563',
+    fontSize: 16,
     marginBottom: 16,
+    color: '#fff',
   },
-  footer: {
+  statsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  statItem: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   likeButton: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  likeText: {
-    marginLeft: 8,
+  mapButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#3498db',
   },
-  reviewContainer: {
+  statText: {
+    marginLeft: 8,
+    color: '#fff',
+  },
+  locationInfo: {
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  locationItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  reviewText: {
+  locationText: {
+    color: '#fff',
     marginLeft: 8,
-  },
-  ratingText: {
-    marginLeft: 4,
-    fontWeight: 'bold',
+    flex: 1,
+    fontSize: 14,
   },
 });
 

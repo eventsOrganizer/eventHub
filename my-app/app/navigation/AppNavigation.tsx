@@ -33,6 +33,7 @@ import VideoRoomsScreen from '../components/event/video/VideoRoomsScreen';
 import VideoCall from '../components/event/video/VideoCall';
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
+import CreatePersonalServiceStack from '../components/PersonalServiceCreation/createPersonalServiceStack';
 import ChatListScreen from '../components/event/ChatListScreen';
 import RequestsScreen from '../components/event/profile/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
@@ -78,6 +79,8 @@ import PaymentActionScreen from '../payment/PaymentActionScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import TicketingScreen from '../screens/TicketingScreen';
 import EventSummaryScreen from '../screens/EventSummaryScreen';
+import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
+
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -105,6 +108,9 @@ type RootStackParamList = {
   Ticketing: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
   EventSummary: { eventId: string };
   EventCreation: { eventType: string };
+  PersonalServiceCreationStack: undefined;
+  
+  // Add the CreateService screen and pass serviceType as a param
   CreateService: { serviceType: string };
   EventSetupOptions: { 
     eventName: string; 
@@ -324,6 +330,11 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true, title: 'Create Personal Service - Final Step' }} 
   />
 
+      <Stack.Screen 
+        name="CreatePersonalServiceStep4" 
+        component={CreatePersonalServiceStep4} 
+        options={{ headerShown: true, title: 'Create Personal Service - Step 4' }} 
+      />
   <Stack.Screen 
     name="UserProfile" 
     component={UserProfileScreen} 
@@ -437,7 +448,11 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="MaterialsOnboarding" 
       component={MaterialsOnboardingScreen} />
-
+      <Stack.Screen
+        name="CreatePersonalServiceStack"
+        component={CreatePersonalServiceStack}
+        options={{ headerShown: false }}
+      />
     <Stack.Screen name="MapScreen" component={MapScreen} />
 </Stack.Navigator> 
 

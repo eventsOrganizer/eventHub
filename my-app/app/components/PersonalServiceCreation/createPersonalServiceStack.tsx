@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import CreatePersonalServiceStep1 from './CreatePersonalServiceStep1';
 import CreatePersonalServiceStep2 from './CreatePersonalServiceStep2';
 import CreatePersonalServiceStep3 from './CreatePersonalServiceStep3';
+import CreatePersonalServiceStep4 from './CreatePersonalServiceStep4';
 import CreatePersonalServiceStep5 from './CreatePersonalServiceStep5';
 
 const Stack = createStackNavigator();
@@ -24,6 +25,11 @@ const CreatePersonalServiceStack: React.FC = () => {
         name="CreatePersonalServiceStep3" 
         component={CreatePersonalServiceStep3} 
         options={{ title: 'Étape 3: Disponibilité et tarifs' }}
+      />
+      <Stack.Screen 
+        name="CreatePersonalServiceStep4" 
+        component={CreatePersonalServiceStep4} 
+        options={{ title: 'Étape 4: Localisation' }}
       />
       <Stack.Screen 
         name="CreatePersonalServiceStep5" 

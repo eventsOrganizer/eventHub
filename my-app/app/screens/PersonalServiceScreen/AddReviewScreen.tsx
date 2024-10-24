@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, StatusBar } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { addReview } from '../../services/personalService';
 import { useUser } from '../../UserContext';
 import { useToast } from '../../hooks/useToast';
@@ -55,38 +56,57 @@ const AddReviewScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Submit a Review</Text>
-      <View style={styles.starsContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <TouchableOpacity key={star} onPress={() => handleStarPress(star)}>
-            <Icon
-              name={star <= rating ? 'star' : 'star-o'}
-              size={40}
-              color={star <= rating ? 'gold' : 'gray'}
-              style={styles.star}
-            />
+    <LinearGradient
+      colors={['#F0F4F8', '#E1E8ED', '#D2DCE5', '#C3D0D9']}
+      style={styles.container}
+    >
+      <StatusBar barStyle="light-content" />
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>Submit a Review</Text>
+          <View style={styles.starsContainer}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity key={star} onPress={() => handleStarPress(star)}>
+                <Icon
+                  name={star <= rating ? 'star' : 'star-o'}
+                  size={40}
+                  color={star <= rating ? '#FFD700' : '#C0C0C0'}
+                  style={styles.star}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmitReview}>
+            <Text style={styles.submitButtonText}>Submit Review</Text>
           </TouchableOpacity>
-        ))}
-      </View>
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmitReview}>
-        <Text style={styles.submitButtonText}>Submit Review</Text>
-      </TouchableOpacity>
-    </View>
+        </View>
+      </ScrollView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginTop: 20,
+    paddingTop: 20,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    flex: 1,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: '#4A90E2',
   },
   starsContainer: {
     flexDirection: 'row',
@@ -97,14 +117,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   submitButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4A90E2',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
     width: '100%',
   },
   submitButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
 });
