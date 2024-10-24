@@ -7,18 +7,16 @@ interface PriceInputProps {
   label?: string;
 }
 
-const PriceInput: React.FC<PriceInputProps> = ({ price, setPrice, label = "Prix par heure" }) => {
+const PriceInput: React.FC<PriceInputProps> = ({ price, setPrice }) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={styles.input}
-        value={price}
-        onChangeText={setPrice}
-        keyboardType="numeric"
-        placeholder="Enter the price"
-      />
-    </View>
+    <TextInput
+      style={styles.input}
+      value={price}
+      onChangeText={setPrice}
+      keyboardType="numeric"
+      placeholder="Enter price"
+      placeholderTextColor="rgba(255, 255, 255, 0.5)"
+    />
   );
 };
 

@@ -26,28 +26,15 @@ const HomeScreen: React.FC = () => {
   const [locals, setLocals] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
   const [isFabOpen, setIsFabOpen] = useState(false);
+  const [filteredEvents, setFilteredEvents] = useState<any[]>(events);
+  const [filteredServices, setFilteredServices] = useState<any[]>(staffServices);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const fetchMaterials = async (): Promise<Material[]> => {
-    const { data, error } = await supabase
-      .from('material')
-      .select('*, subcategory:subcategory_id(*)');
-  
-    if (error) {
-      console.error('Error fetching materials:', error);
-      return [];
-    } else {
-      console.log('Materials fetched:', data);
-      return data?.map((item: any) => ({
-        ...item,
-        subcategory: item.subcategory // Assuming the join query returns subcategory data
-      })) || [];
-    }
-  };
+ 
 
   const loadData = async () => {
     try {
@@ -119,13 +106,63 @@ const HomeScreen: React.FC = () => {
     if (error) throw new Error(error.message);
     return data || [];
   };
+  const fetchMaterials = async () => {
+    const { data, error } = await supabase
+      .from('material')
+      .select('*, subcategory (id, name, category (id, name)), media (url)')
+      .limit(5);
 
+    if (error) throw new Error(error.message);
+    return data || [];
+
+ 
+  };
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     loadData().then(() => setRefreshing(false));
   }, []);
 
   const toggleFab = () => setIsFabOpen(!isFabOpen);
+
+
+  const handleSearch = (searchTerm: string) => {
+    if (!searchTerm) {
+      setFilteredEvents(events);
+      setFilteredServices(staffServices);
+      return;
+    }
+  
+    const normalizedSearchTerm = searchTerm.toLowerCase();
+  
+    // Filter events
+    const newFilteredEvents = events.filter(event => {
+      const title = event.title?.toLowerCase() || '';
+      const description = event.description?.toLowerCase() || '';
+      return title.includes(normalizedSearchTerm) || description.includes(normalizedSearchTerm);
+    });
+  
+    // Filter services
+    const newFilteredServices = staffServices.filter(service => {
+      const name = service.name?.toLowerCase() || '';
+      const details = service.details?.toLowerCase() || '';
+      return name.includes(normalizedSearchTerm) || details.includes(normalizedSearchTerm);
+    });
+  
+    // Additional filtering based on selected filter
+    if (selectedFilter === 'this_week') {
+      // Implement your logic to filter for this week
+    } else if (selectedFilter === 'this_month') {
+      // Implement your logic to filter for this month
+    }
+  
+    setFilteredEvents(newFilteredEvents);
+    setFilteredServices(newFilteredServices);
+  };
+  
+
+
+
+
 
   return (
     <SafeAreaView style={tw`flex-1 bg-[#001F3F]`}>
@@ -191,10 +228,13 @@ const HomeScreen: React.FC = () => {
             />
             
             <SectionComponent 
-              title="MATERIALS & FOOD" 
+              title="MATERIALS" 
               data={materialsAndFoodServices} 
               onSeeAll={() => navigation.navigate('MaterialScreen')}
-              onItemPress={(item) => navigation.navigate('MaterialDetailScreen', { materialId: item.id })}
+              onItemPress={(item) => {
+                console.log('Navigating to MaterialDetailScreen with item:', item);
+                navigation.navigate('MaterialDetail', { material: item });
+              }}
               type="material"
             />
           </View>

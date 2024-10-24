@@ -15,11 +15,11 @@ const ServiceCalendar: React.FC<ServiceCalendarProps> = ({
   endDate,
   exceptionDates,
   onSelectDate,
-  interval,
+  interval
 }) => {
   return (
-    <View>
-      <Text style={styles.label}>Select exception dates</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Sélectionnez vos jours d'exception</Text>
       <UnifiedCalendar
         startDate={startDate}
         endDate={endDate}
@@ -32,11 +32,15 @@ const ServiceCalendar: React.FC<ServiceCalendarProps> = ({
 };
 
 const styles = StyleSheet.create({
-  label: { 
-    fontSize: 16, 
-    fontWeight: 'bold', 
-    marginBottom: 15, 
-    marginTop: 15 
+  container: {
+    flex: 1,
+    padding: 10,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });
 
