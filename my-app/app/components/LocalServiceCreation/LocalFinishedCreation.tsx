@@ -12,6 +12,8 @@ interface LocalFinishedCreationProps {
     availableDates: { [date: string]: boolean };
     requiresAvailability: boolean;
     location: { latitude: number; longitude: number } | null;
+    startDate: string; // Add startDate to formData
+    exceptionDates: string[]; // Add exceptionDates to formData
   };
   onConfirm: () => void; // Function to handle confirmation
 }
@@ -42,13 +44,14 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
         <Text style={styles.info}>Not specified</Text>
       )}
 
-      <Text style={styles.label}>Available Dates:</Text>
-      {Object.keys(formData.availableDates).length > 0 ? (
-        <Text style={styles.info}>
-          {Object.keys(formData.availableDates).filter(date => formData.availableDates[date]).join(', ')}
-        </Text>
+      <Text style={styles.label}>Start Date:</Text>
+      <Text style={styles.info}>{formData.startDate || 'Not specified'}</Text>
+
+      <Text style={styles.label}>Exception Dates:</Text>
+      {formData.exceptionDates.length > 0 ? (
+        <Text style={styles.info}>{formData.exceptionDates.join(', ')}</Text>
       ) : (
-        <Text style={styles.info}>No available dates selected</Text>
+        <Text style={styles.info}>No exception dates selected</Text>
       )}
 
       {/* Display the uploaded image if it exists */}

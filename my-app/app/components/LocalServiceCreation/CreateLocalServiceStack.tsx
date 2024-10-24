@@ -89,6 +89,7 @@ const LocalOnboardingScreen: React.FC = () => {
         return <LocalDetailsStep formData={formData} setFormData={setFormData} />;
       case 3:
         return <LocalPriceStep formData={formData} setFormData={setFormData} />;
+      
       case 4:
         return <LocalChooseLocation onLocationSelected={(location) => setFormData(prev => ({ ...prev, location }))} onContinue={handleNext} />;
       case 5:

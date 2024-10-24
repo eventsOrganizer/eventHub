@@ -8,9 +8,10 @@ import { addYears, addMonths, addWeeks, format, parse, isValid, isBefore, isAfte
 interface LocalServiceDateManagerProps {
   formData: any;
   setFormData: (data: any) => void;
+  onContinue: () => void;
 }
 
-const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formData, setFormData }) => {
+const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formData, setFormData, onContinue }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStartDateCalendar, setShowStartDateCalendar] = useState(false);
   const [showExceptionCalendar, setShowExceptionCalendar] = useState(false);
@@ -63,6 +64,12 @@ const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formD
     acc[date] = { selected: true, selectedColor: '#ff0000' }; // Red color for exception dates
     return acc;
   }, {});
+
+  const onDayPress = (day: DateData) => {
+    const updatedDates = { ...formData.availableDates };
+    updatedDates[day.dateString] = !updatedDates[day.dateString]; // Toggle the selected date
+    setFormData({ ...formData, availableDates: updatedDates }); // Update available dates in formData
+  };
 
   return (
     <View style={styles.container}>
@@ -130,6 +137,10 @@ const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formD
           )}
         </View>
       )}
+
+      <TouchableOpacity onPress={onContinue} style={styles.continueButton}>
+        <Text style={styles.continueButtonText}>Continue</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -206,6 +217,17 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     color: '#333',
+  },
+  continueButton: {
+    backgroundColor: '#4A90E2',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  continueButtonText: {
+    fontSize: 16,
+    color: '#fff',
   },
 });
 
