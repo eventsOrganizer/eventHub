@@ -1,25 +1,52 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { ArrowLeft, ThumbsUp } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
 
 interface ReviewHeaderProps {
   onBack: () => void;
   onLike: () => void;
   isLiked: boolean;
+  theme: {
+    primary: string;
+    secondary: string;
+  };
 }
 
-export const ReviewHeader = ({ onBack, onLike, isLiked }: ReviewHeaderProps) => {
+export const ReviewHeader = ({ onBack, onLike, isLiked, theme }: ReviewHeaderProps) => {
   return (
-    <View style={styles.header}>
-      <TouchableOpacity onPress={onBack}>
-        <ArrowLeft size={24} color="white" />
+    <BlurView intensity={80} tint="dark" style={styles.header}>
+      <TouchableOpacity 
+        onPress={onBack}
+        style={styles.backButton}
+      >
+        <BlurView intensity={20} tint="light" style={styles.iconButton}>
+          <ArrowLeft size={24} color={theme.primary} />
+        </BlurView>
       </TouchableOpacity>
-      <Text style={styles.headerTitle}>Reviews</Text>
-      <TouchableOpacity onPress={onLike}>
-        <ThumbsUp size={24} color={isLiked ? '#FFD700' : 'white'} />
+      
+      <Text style={[styles.headerTitle, { color: theme.primary }]}>Reviews</Text>
+      
+      <TouchableOpacity 
+        onPress={onLike}
+        style={styles.likeButton}
+      >
+        <BlurView 
+          intensity={20} 
+          tint="light" 
+          style={[
+            styles.iconButton,
+            isLiked && { backgroundColor: theme.primary }
+          ]}
+        >
+          <ThumbsUp 
+            size={20} 
+            color={isLiked ? 'white' : theme.primary} 
+          />
+        </BlurView>
       </TouchableOpacity>
-    </View>
+    </BlurView>
   );
 };
 
@@ -31,10 +58,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+    height: 80,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: 'white',
+  },
+  backButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  likeButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  iconButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
 });

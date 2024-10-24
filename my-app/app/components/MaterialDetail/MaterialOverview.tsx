@@ -1,121 +1,156 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Card, Title, Paragraph, Chip } from 'react-native-paper';
-import { Star, Tag, Heart } from 'lucide-react-native';
+import { Star, Tag, Heart, Headphones } from 'lucide-react-native';
 import { Material } from '../../navigation/types';
 import { getSubcategoryIcon } from '../../utils/subcategoryIcons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 interface MaterialOverviewProps {
   material: Material;
+  theme: any;
 }
 
-const MaterialOverview: React.FC<MaterialOverviewProps> = ({ material }) => {
-  const SubcategoryIcon = getSubcategoryIcon(material.subcategory_id);
+const MaterialOverview: React.FC<MaterialOverviewProps> = ({ material, theme }) => {
+  const SubcategoryIcon = getSubcategoryIcon(material.subcategory_id) || Headphones;
 
   return (
-    <Card style={styles.card}>
-      <LinearGradient
-        colors={['rgba(126, 87, 194, 0.1)', 'rgba(74, 144, 226, 0.1)']}
-        style={styles.gradient}
-      >
-        <Card.Content>
-          <View style={styles.titleContainer}>
-            <Title style={styles.title}>{material.name}</Title>
-            {SubcategoryIcon && <SubcategoryIcon size={24} color="#7E57C2" />}
-          </View>
-          <View style={styles.priceRatingContainer}>
-            <Paragraph style={styles.price}>
-              ${material.price} {material.sell_or_rent === 'rent' ? '/ hour' : ''}
-            </Paragraph>
-            <View style={styles.ratingContainer}>
-              <Star size={20} color="#FFD700" />
-              <Paragraph style={styles.ratingText}>
-                {material.average_rating?.toFixed(1) || 'N/A'}
-              </Paragraph>
+    <View style={styles.container}>
+      <View style={[styles.blurContainer, { backgroundColor: theme.primary }]}>
+        <View style={styles.headerContainer}>
+          <View style={styles.titlePriceContainer}>
+            <Title style={[styles.title, styles.whiteText]}>
+              {material.name}
+            </Title>
+            <View style={styles.priceContainer}>
+              <Title style={[styles.price, styles.whiteText]}>
+                ${material.price}
+              </Title>
+              {material.sell_or_rent === 'rent' && (
+                <Paragraph style={[styles.priceUnit, styles.whiteText]}>
+                  / hour
+                </Paragraph>
+              )}
             </View>
           </View>
-          <View style={styles.chipContainer}>
-            <Chip 
-              icon={({ size }) => <Tag size={size} color="#7E57C2" />} 
-              style={styles.chip} 
-              textStyle={styles.chipText}
-            >
-              {material.sell_or_rent === 'rent' ? 'For Rent' : 'For Sale'}
-            </Chip>
-            <Chip 
-              icon={({ size }) => <Heart size={size} color="#7E57C2" />} 
-              style={styles.chip} 
-              textStyle={styles.chipText}
-            >
-              {material.likes || 0} Likes
-            </Chip>
+          <View style={[styles.iconContainer]}>
+            <SubcategoryIcon size={32} color="white" />
           </View>
-          <Paragraph style={styles.description}>{material.details}</Paragraph>
-        </Card.Content>
-      </LinearGradient>
-    </Card>
+        </View>
+
+        <View style={styles.ratingContainer}>
+          <Star size={24} color="white" />
+          <Paragraph style={[styles.ratingText, styles.whiteText]}>
+            {material.average_rating?.toFixed(1) || 'N/A'}
+          </Paragraph>
+        </View>
+
+        <View style={styles.chipContainer}>
+          <Chip 
+            icon={({ size }) => <Tag size={size} color="white" />} 
+            style={[styles.chip, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]} 
+            textStyle={[styles.chipText, styles.whiteText]}
+          >
+            {material.sell_or_rent === 'rent' ? 'For Rent' : 'For Sale'}
+          </Chip>
+          <Chip 
+            icon={({ size }) => <Heart size={size} color="white" />} 
+            style={[styles.chip, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]} 
+            textStyle={[styles.chipText, styles.whiteText]}
+          >
+            {material.likes || 0} Likes
+          </Chip>
+        </View>
+
+        <View style={[styles.descriptionContainer, { backgroundColor: 'rgba(255, 255, 255, 0.1)' }]}>
+          <Paragraph style={[styles.description, styles.whiteText]}>
+            {material.details}
+          </Paragraph>
+        </View>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    marginBottom: 16,
-    elevation: 4,
-    borderRadius: 20,
+  container: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 24,
     overflow: 'hidden',
   },
-  gradient: {
-    padding: 16,
+  blurContainer: {
+    padding: 20,
+    borderRadius: 24,
   },
-  titleContainer: {
+  headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  titlePriceContainer: {
+    flex: 1,
+    marginRight: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
-    flex: 1,
+    marginBottom: 8,
   },
-  priceRatingContainer: {
+  priceContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'baseline',
   },
   price: {
-    fontSize: 20,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#7E57C2',
+  },
+  priceUnit: {
+    fontSize: 16,
+    marginLeft: 4,
+    opacity: 0.8,
+  },
+  iconContainer: {
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 16,
   },
   ratingText: {
-    marginLeft: 4,
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    marginLeft: 8,
   },
   chipContainer: {
     flexDirection: 'row',
-    marginBottom: 12,
-    gap: 8,
+    marginBottom: 16,
+    gap: 12,
   },
   chip: {
-    backgroundColor: 'rgba(126, 87, 194, 0.1)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   chipText: {
-    color: '#7E57C2',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  descriptionContainer: {
+    borderRadius: 16,
+    padding: 16,
   },
   description: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#666',
+    opacity: 0.9,
+  },
+  whiteText: {
+    color: 'white',
   },
 });
 

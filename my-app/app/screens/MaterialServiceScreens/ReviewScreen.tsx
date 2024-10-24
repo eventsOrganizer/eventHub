@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, StatusBar } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '../../navigation/types';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '../../../lib/supabase';
 import { useUser } from '../../UserContext';
 import { ReviewHeader } from '../../components/Review/ReviewHeader';
 import { RatingHeader } from '../../components/Review/RatingHeader';
@@ -11,12 +11,15 @@ import { ReviewForm } from '../../components/Review/ReviewForm';
 import { ReviewList } from '../../components/Review/ReviewList';
 import { AuthenticationModal } from '../../components/Review/AuthenticationModal';
 import { Review, Like } from '../../types/review';
+import { themeColors } from '../../utils/themeColors';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
 
 type ReviewScreenProps = StackScreenProps<RootStackParamList, 'ReviewScreen'>;
 
 const ReviewScreen: React.FC<ReviewScreenProps> = ({ route, navigation }) => {
-  const { materialId } = route.params as { materialId: string };
+  const { materialId, sellOrRent } = route.params as { materialId: string; sellOrRent: 'sell' | 'rent' };
+  const theme = sellOrRent === 'rent' ? themeColors.rent : themeColors.sale;
   const { userId } = useUser();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [likes, setLikes] = useState<Like[]>([]);
@@ -132,47 +135,77 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route, navigation }) => {
   };
 
   return (
-    <LinearGradient
-      colors={['#7E57C2', '#4A90E2']}
-      style={styles.container}
-    >
+    <View style={styles.container}>
+      <LinearGradient 
+        colors={theme.background} 
+        style={StyleSheet.absoluteFill} 
+      />
       <StatusBar barStyle="light-content" />
+      
       <ReviewHeader 
         onBack={() => navigation.goBack()}
         onLike={handleLike}
         isLiked={likes.some(like => like.user_id === userId)}
+        theme={theme}
       />
-      <ScrollView style={styles.scrollView}>
+      
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.View 
           entering={FadeInDown}
           style={styles.contentContainer}
         >
-          <RatingHeader 
-            averageRating={averageRating} 
-            totalReviews={reviews.length}
-          />
-          <ReviewForm
-            rating={newReview.rate}
-            onRatingChange={(rate) => setNewReview({ rate })}
-            onSubmit={handleSubmitReview}
-            hasUserReviewed={hasUserReviewed}
-          />
-          <ReviewList reviews={reviews} />
+          <BlurView 
+            intensity={20} 
+            tint="light" 
+            style={[
+              styles.blurContainer,
+              { backgroundColor: 'rgba(255, 255, 255, 0.95)' }
+            ]}
+          >
+            <View style={[styles.content, { backgroundColor: theme.light }]}>
+              <RatingHeader 
+                averageRating={averageRating} 
+                totalReviews={reviews.length}
+              />
+              
+              <View style={styles.divider} />
+              
+              <ReviewForm
+                rating={newReview.rate}
+                onRatingChange={(rate) => setNewReview({ rate })}
+                onSubmit={handleSubmitReview}
+                hasUserReviewed={hasUserReviewed}
+                primaryColor={theme.primary}
+              />
+              
+              <View style={styles.divider} />
+              
+              <ReviewList 
+                reviews={reviews} 
+                primaryColor={theme.primary}
+              />
+            </View>
+          </BlurView>
         </Animated.View>
       </ScrollView>
+
       <AuthenticationModal
         visible={isAuthModalVisible}
         onClose={() => setIsAuthModalVisible(false)}
         onLogin={() => {
           setIsAuthModalVisible(false);
-          navigation.navigate('Signin' as never);
+          navigation.navigate('Signin');
         }}
         onSignup={() => {
           setIsAuthModalVisible(false);
-          navigation.navigate('Signup' as never);
+          navigation.navigate('Signup');
         }}
+        primaryColor={theme.primary}
       />
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -184,14 +217,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     marginTop: 20,
-    paddingTop: 24,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+    overflow: 'hidden',
     minHeight: '100%',
+  },
+  blurContainer: {
+    flex: 1,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+  },
+  content: {
+    padding: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    marginTop: -20,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    marginVertical: 20,
   },
 });
 

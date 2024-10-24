@@ -31,6 +31,9 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
     ? material.media[0].url
     : 'https://via.placeholder.com/150';
 
+  const isRental = material.sell_or_rent === 'rent';
+  const actionButtonColor = isRental ? '#4A90E2' : '#7E57C2';
+
   return (
     <Animated.View
       entering={FadeInDown.delay(index * 100).springify()}
@@ -52,9 +55,16 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
         />
 
         <BlurView intensity={Platform.OS === 'ios' ? 60 : 100} style={styles.topBar}>
-          <Text style={styles.topBarText}>
-            {material.sell_or_rent === 'rent' ? 'RENT' : 'SALE'}
-          </Text>
+          <View style={[styles.badge, { backgroundColor: actionButtonColor }]}>
+            {isRental ? (
+              <Calendar size={14} color="white" />
+            ) : (
+              <ShoppingCart size={14} color={actionButtonColor} />
+            )}
+            <Text style={styles.topBarText}>
+              {isRental ? 'RENT' : 'SALE'}
+            </Text>
+          </View>
         </BlurView>
 
         <View style={styles.cardContent}>
@@ -64,11 +74,9 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
 
           <View style={styles.cardInfoRow}>
             <View style={styles.priceContainer}>
-              <DollarSign size={14} color="#4A90E2" />
-              <Text style={styles.priceText}>
-                {material.sell_or_rent === 'rent' 
-                  ? `${material.price_per_hour}/hr` 
-                  : material.price}
+              <DollarSign size={14} color={actionButtonColor} />
+              <Text style={[styles.priceText, { color: actionButtonColor }]}>
+                {isRental ? `${material.price_per_hour}/hr` : material.price}
               </Text>
             </View>
 
@@ -82,11 +90,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
         </View>
 
         <TouchableOpacity
-          style={[
-            styles.actionButton,
-            styles.wishlistButton,
-            isWishlisted && styles.wishlistedButton
-          ]}
+          style={[styles.actionButton, styles.wishlistButton]}
           onPress={() => onToggleWishlist(material.id)}
         >
           <Heart
@@ -97,13 +101,13 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, styles.basketButton]}
+          style={[styles.actionButton, styles.basketButton, { backgroundColor: actionButtonColor }]}
           onPress={() => onAddToBasket(material)}
         >
-          {material.sell_or_rent === 'sell' ? (
-            <ShoppingCart size={18} color="#ffffff" />
-          ) : (
+          {isRental ? (
             <Calendar size={18} color="#ffffff" />
+          ) : (
+            <ShoppingCart size={18} color="#ffffff" />
           )}
         </TouchableOpacity>
       </TouchableOpacity>
@@ -145,22 +149,29 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: '50%',
+    height: '60%',
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
   },
   topBar: {
     position: 'absolute',
     top: 12,
     left: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
     borderRadius: 20,
     overflow: 'hidden',
   },
   topBarText: {
     color: '#FFFFFF',
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1,
+    marginLeft: 4,
   },
   cardContent: {
     position: 'absolute',
@@ -194,7 +205,6 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#4A90E2',
     marginLeft: 4,
   },
   ratingContainer: {
@@ -213,24 +223,19 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     position: 'absolute',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    right: 12,
   },
   wishlistButton: {
     top: 12,
-    right: 12,
-  },
-  wishlistedButton: {
-    backgroundColor: 'rgba(255, 107, 107, 0.2)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   basketButton: {
-    top: 56,
-    right: 12,
-    backgroundColor: '#4A90E2',
+    top: 60,
   },
 });
 

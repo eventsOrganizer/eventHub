@@ -109,12 +109,9 @@ type RootStackParamList = {
   Ticketing: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
   EventSummary: { eventId: string };
   EventCreation: { eventType: string };
-<<<<<<< HEAD
   CommentScreen: { materialId: string };
-=======
   PersonalServiceCreationStack: undefined;
   
->>>>>>> origin
   // Add the CreateService screen and pass serviceType as a param
   CreateService: { serviceType: string };
   EventSetupOptions: { 
@@ -454,20 +451,18 @@ const AppNavigation: React.FC = () => {
        name ="MaterialsOnboarding" 
       component={MaterialsOnboardingScreen} />
       <Stack.Screen
-<<<<<<< HEAD
        name ="ReviewScreen" 
       component={ReviewScreen} />
       <Stack.Screen
        name ="CommentScreen" 
       component={CommentScreen} />
-=======
+      <Stack.Screen
         name="CreatePersonalServiceStack"
         component={CreatePersonalServiceStack}
         options={{ headerShown: false }}
       />
     <Stack.Screen name="MapScreen" component={MapScreen} />
 </Stack.Navigator> 
->>>>>>> origin
 
   )
 }

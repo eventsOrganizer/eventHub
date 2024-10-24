@@ -74,11 +74,12 @@ const CommentScreen: React.FC<CommentScreenProps> = ({ route, navigation }) => {
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
       {[1, 2, 3].map((_, index) => (
-        <ShimmerPlaceholder
-          key={index}
-          style={styles.shimmer}
-          LinearGradient={LinearGradient}
-        />
+        <View key={index} style={styles.shimmer}>
+          <ShimmerPlaceholder
+            LinearGradient={LinearGradient}
+            style={{ flex: 1 }}
+          />
+        </View>
       ))}
     </View>
   );

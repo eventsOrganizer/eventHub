@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, TextInput, Text } from 'react-native';
-import { Provider, FAB, Snackbar, Button } from 'react-native-paper';
+import { View, StyleSheet, FlatList, RefreshControl, Animated } from 'react-native';
+import { Provider } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
 import { Material, RootStackParamList } from '../../navigation/types';
-import Header from '../../components/MaterialService/Header';
 import MaterialCard from '../../components/MaterialService/MaterialCard';
-import SubcategoryList from '../../components/MaterialService/SubcategoryList';
+import { AnimatedHeader } from '../../components/MaterialService/AnimatedHeader';
+import { BottomActions } from '../../components/MaterialService/BottomActions';
 import { useToast } from "../../hooks/use-toast";
+import { themeColors } from '../../utils/themeColors';
 
 type MaterialsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MaterialScreen'>;
+
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 const MaterialsScreen = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -27,6 +29,13 @@ const MaterialsScreen = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const navigation = useNavigation<MaterialsScreenNavigationProp>();
   const { toast } = useToast();
+
+  const scrollY = new Animated.Value(0);
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [1, 0.9],
+    extrapolate: 'clamp',
+  });
 
   useEffect(() => {
     fetchMaterials();
@@ -109,76 +118,56 @@ const MaterialsScreen = () => {
     />
   );
 
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    { useNativeDriver: true }
+  );
+
   return (
     <Provider>
-      <LinearGradient
-        colors={['#F0F4F8', '#E1E8ED', '#D2DCE5', '#C3D0D9']}
-        style={styles.container}
-      >
-        <Header 
-          searchQuery={searchQuery} 
-          setSearchQuery={setSearchQuery} 
+      <View style={styles.container}>
+        <LinearGradient
+          colors={themeColors.rent.background}
+          style={StyleSheet.absoluteFill}
+        />
+        <AnimatedHeader 
+          headerOpacity={headerOpacity}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
           basketCount={basket.length}
           onBasketPress={navigateToBasket}
-        />
-        <SubcategoryList
           selectedSubcategory={selectedSubcategory}
           onSelectSubcategory={setSelectedSubcategory}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          setMinPrice={setMinPrice}
+          setMaxPrice={setMaxPrice}
         />
-        <View style={styles.priceFilterContainer}>
-          <Text style={styles.filterLabel}>Price Range:</Text>
-          <View style={styles.priceInputContainer}>
-            <TextInput
-              style={styles.priceInput}
-              placeholder="Min"
-              value={minPrice}
-              onChangeText={setMinPrice}
-              keyboardType="numeric"
-            />
-            <Text style={styles.priceSeparator}>-</Text>
-            <TextInput
-              style={styles.priceInput}
-              placeholder="Max"
-              value={maxPrice}
-              onChangeText={setMaxPrice}
-              keyboardType="numeric"
-            />
-          </View>
-          <Button 
-            mode="contained" 
-            onPress={() => {/* Apply filter logic */}} 
-            style={styles.filterButton}
-          >
-            Apply
-          </Button>
-        </View>
-        <FlatList
+        <AnimatedFlatList
           data={filteredMaterials}
           renderItem={renderMaterialCard}
           keyExtractor={(item) => item.id.toString()}
           numColumns={2}
           contentContainerStyle={styles.listContainer}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={fetchMaterials} />
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={fetchMaterials}
+              tintColor={themeColors.rent.primary}
+              colors={[themeColors.rent.primary]}
+            />
           }
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
         />
-        <FAB
-          style={styles.fab}
-          icon={({ size, color }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
-          )}
-          onPress={navigateToOnboarding}
-          label="Add New"
+        <BottomActions 
+          onAddNew={navigateToOnboarding}
+          snackbarVisible={snackbarVisible}
+          snackbarMessage={snackbarMessage}
+          onDismissSnackbar={() => setSnackbarVisible(false)}
         />
-        <Snackbar
-          visible={snackbarVisible}
-          onDismiss={() => setSnackbarVisible(false)}
-          duration={3000}
-          style={styles.snackbar}
-        >
-          {snackbarMessage}
-        </Snackbar>
-      </LinearGradient>
+      </View>
     </Provider>
   );
 };
@@ -187,55 +176,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  priceFilterContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    marginBottom: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 10,
-    padding: 10,
-  },
-  filterLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  priceInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  priceInput: {
-    width: 80,
-    height: 40,
-    borderColor: '#D1D5DB',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: '#FFFFFF',
-    color: '#333',
-  },
-  priceSeparator: {
-    marginHorizontal: 10,
-    fontSize: 18,
-    color: '#333',
-  },
-  filterButton: {
-    backgroundColor: '#4A90E2',
-  },
   listContainer: {
     padding: 8,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#4A90E2',
-  },
-  snackbar: {
-    backgroundColor: '#333',
+    paddingBottom: 80,
   },
 });
 

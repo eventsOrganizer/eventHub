@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
-import { Calendar, Heart } from 'lucide-react-native';
+import { Calendar, Heart, ShoppingCart } from 'lucide-react-native';
 import { Material } from '../../navigation/types';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -10,6 +10,7 @@ interface ActionButtonsProps {
   onAddToBasket: (material: Material) => void;
   onToggleWishlist: (materialId: string) => void;
   isWishlisted: boolean;
+  theme: any;
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
@@ -17,6 +18,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   onAddToBasket,
   onToggleWishlist,
   isWishlisted,
+  theme,
 }) => {
   return (
     <LinearGradient
@@ -26,24 +28,32 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
       <Button
         mode="contained"
         onPress={() => onAddToBasket(material)}
-        icon={({ size }) => <Calendar size={size} color="white" />}
-        style={styles.requestRentalButton}
+        icon={({ size }) => 
+          material.sell_or_rent === 'rent' 
+            ? <Calendar size={size} color="white" />
+            : <ShoppingCart size={size} color="white" />
+        }
+        style={[styles.mainButton, { backgroundColor: theme.primary }]}
         contentStyle={styles.buttonContent}
         labelStyle={styles.buttonLabel}
       >
-        Request Rental
+        {material.sell_or_rent === 'rent' ? 'Request Rental' : 'Add to Cart'}
       </Button>
       <Button
         mode="outlined"
         onPress={() => onToggleWishlist(material.id)}
         icon={({ size, color }) => (
-          <Heart size={size} color={color} fill={isWishlisted ? color : 'none'} />
+          <Heart
+            size={size}
+            color={color}
+            fill={isWishlisted ? color : 'none'}
+          />
         )}
-        style={styles.wishlistButton}
+        style={[styles.wishlistButton, { borderColor: theme.primary }]}
         contentStyle={styles.buttonContent}
-        labelStyle={styles.wishlistButtonLabel}
+        labelStyle={[styles.wishlistButtonLabel, { color: theme.primary }]}
       >
-        {isWishlisted ? 'Added to Wishlist' : 'Add to Wishlist'}
+        {isWishlisted ? 'Wishlisted' : 'Add to Wishlist'}
       </Button>
     </LinearGradient>
   );
@@ -55,14 +65,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.2)',
   },
-  requestRentalButton: {
+  mainButton: {
     marginBottom: 8,
     borderRadius: 12,
-    backgroundColor: '#7E57C2',
   },
   wishlistButton: {
     borderRadius: 12,
-    borderColor: '#7E57C2',
+    borderWidth: 2,
   },
   buttonContent: {
     height: 48,
@@ -75,7 +84,6 @@ const styles = StyleSheet.create({
   wishlistButtonLabel: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#7E57C2',
   },
 });
 
