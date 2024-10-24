@@ -3,15 +3,15 @@ import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { showAlert } from '../../utils/util';
-import { addYears, addMonths, addWeeks, format, parse, isValid, isBefore, isAfter } from 'date-fns';
+import { addYears, addMonths, addWeeks, format, parse, isValid } from 'date-fns';
 
 interface LocalServiceDateManagerProps {
   formData: any;
   setFormData: (data: any) => void;
-  onContinue: () => void;
+  setIsButtonDisabled: (disabled: boolean) => void; // Add this prop to control the button state
 }
 
-const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formData, setFormData, onContinue }) => {
+const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formData, setFormData, setIsButtonDisabled }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStartDateCalendar, setShowStartDateCalendar] = useState(false);
   const [showExceptionCalendar, setShowExceptionCalendar] = useState(false);
@@ -46,6 +46,11 @@ const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formD
     }
   }, [formData.startDate, formData.interval]);
 
+  useEffect(() => {
+    // Enable the continue button only if both interval and start date are selected
+    setIsButtonDisabled(!(formData.interval && formData.startDate));
+  }, [formData.interval, formData.startDate, setIsButtonDisabled]);
+
   const handleIntervalSelect = (interval: 'Yearly' | 'Monthly' | 'Weekly') => {
     setFormData({ ...formData, interval });
   };
@@ -65,7 +70,7 @@ const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formD
     return acc;
   }, {});
 
-  const onDayPress = (day: DateData) => {
+  const onDayPress = (day: { dateString: string }) => {
     const updatedDates = { ...formData.availableDates };
     updatedDates[day.dateString] = !updatedDates[day.dateString]; // Toggle the selected date
     setFormData({ ...formData, availableDates: updatedDates }); // Update available dates in formData
@@ -138,9 +143,7 @@ const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formD
         </View>
       )}
 
-      <TouchableOpacity onPress={onContinue} style={styles.continueButton}>
-        <Text style={styles.continueButtonText}>Continue</Text>
-      </TouchableOpacity>
+      {/* The Continue button has been removed */}
     </View>
   );
 };
@@ -217,17 +220,6 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     color: '#333',
-  },
-  continueButton: {
-    backgroundColor: '#4A90E2',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  continueButtonText: {
-    fontSize: 16,
-    color: '#fff',
   },
 });
 

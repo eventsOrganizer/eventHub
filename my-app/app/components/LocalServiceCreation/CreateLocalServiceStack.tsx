@@ -9,7 +9,7 @@ import LocalPriceStep from './LocalPriceStep';
 import LocalNextButton from './LocalNextButton';
 import LocalServiceDateManager from './LocalServiceDateManager';
 import LocalChooseLocation from './LocalChooseLocation';
-import LocalFinishedCreation from './LocalFinishedCreation'; // Import the new component
+import LocalFinishedCreation from './LocalFinishedCreation';
 
 type FormData = {
   subcategory: string;
@@ -17,9 +17,14 @@ type FormData = {
   details: string;
   price: string;
   image: string | null;
+  images: string[]; // Initialize images as an empty array
   availableDates: { [date: string]: boolean };
   requiresAvailability: boolean;
   location: { latitude: number; longitude: number } | null;
+  interval: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  exceptionDates: string[];
 };
 
 const LocalOnboardingScreen: React.FC = () => {
@@ -30,10 +35,16 @@ const LocalOnboardingScreen: React.FC = () => {
     details: '',
     price: '',
     image: null,
+    images: [], // Initialize images as an empty array
     availableDates: {} as { [date: string]: boolean },
     requiresAvailability: false,
     location: null,
+    interval: null,
+    startDate: null,
+    endDate: null,
+    exceptionDates: [],
   });
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
 
   const getSteps = () => {
     return ['Subcategory', 'Local Details', 'Price', 'Choose Location', 'Service Date Management', 'Review & Confirm'];
@@ -43,7 +54,6 @@ const LocalOnboardingScreen: React.FC = () => {
 
   const handleNext = () => {
     if (step === 5) {
-      // If currently on step 5, go directly to step 6
       setStep(6);
     } else if (step < steps.length) {
       setStep(step + 1);
@@ -53,10 +63,7 @@ const LocalOnboardingScreen: React.FC = () => {
   };
 
   const handleFinish = () => {
-    // Handle form submission
     console.log('Form submitted:', formData);
-    
-    // Show success toast
     Toast.show({
       type: 'success',
       text1: 'Success',
@@ -66,35 +73,72 @@ const LocalOnboardingScreen: React.FC = () => {
       topOffset: 30,
       bottomOffset: 40,
     });
-
-    // Reset form and step
     setFormData({
       subcategory: '',
       title: '',
       details: '',
       price: '',
       image: null,
+      images: [], // Initialize images as an empty array
       availableDates: {},
       requiresAvailability: false,
       location: null,
+      interval: null,
+      startDate: null,
+      endDate: null,
+      exceptionDates: [],
     });
     setStep(1);
+  };
+
+  const handleLocationSelected = (location: { latitude: number; longitude: number }) => {
+    setFormData((prev) => ({ ...prev, location }));
+    setIsButtonDisabled(false);
   };
 
   const renderStepContent = () => {
     switch (step) {
       case 1:
-        return <LocalSubcategoryStep formData={formData} setFormData={setFormData} />;
+        return (
+          <LocalSubcategoryStep 
+            formData={formData} 
+            setFormData={setFormData} 
+            onNext={handleNext}
+            setIsButtonDisabled={setIsButtonDisabled}
+          />
+        );
       case 2:
-        return <LocalDetailsStep formData={formData} setFormData={setFormData} />;
+        return (
+          <LocalDetailsStep 
+            formData={formData} 
+            setFormData={setFormData} 
+            setIsButtonDisabled={setIsButtonDisabled}
+          />
+        );
       case 3:
-        return <LocalPriceStep formData={formData} setFormData={setFormData} />;
-      
+        return (
+          <LocalPriceStep 
+            formData={formData} 
+            setFormData={setFormData} 
+            setIsButtonDisabled={setIsButtonDisabled}
+          />
+        );
       case 4:
-        return <LocalChooseLocation onLocationSelected={(location) => setFormData(prev => ({ ...prev, location }))} onContinue={handleNext} />;
+        return (
+          <LocalChooseLocation 
+            onLocationSelected={handleLocationSelected}
+            setIsButtonDisabled={setIsButtonDisabled}
+          />
+        );
       case 5:
-        return <LocalServiceDateManager formData={formData} setFormData={setFormData} onContinue={handleNext} />;
-      case 6: // New step for finished creation
+        return (
+          <LocalServiceDateManager 
+            formData={formData} 
+            setFormData={setFormData} 
+            setIsButtonDisabled={setIsButtonDisabled}
+          />
+        );
+      case 6:
         return <LocalFinishedCreation formData={formData} onConfirm={handleFinish} />;
       default:
         return null;
@@ -102,14 +146,14 @@ const LocalOnboardingScreen: React.FC = () => {
   };
 
   return (
-    <LinearGradient
-      colors={['#4c669f', '#3b5998', '#192f6a']}
-      style={styles.container}
-    >
+    <LinearGradient colors={['#4c669f', '#3b5998', '#192f6a']} style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <LocalStepIndicator currentStep={step} steps={steps} />
         {renderStepContent()}
-        <LocalNextButton onPress={handleNext} disabled={false} isLastStep={step === steps.length} />
+        {/* Render LocalNextButton only if the step is greater than 1 */}
+        {step > 1 && (
+          <LocalNextButton onPress={handleNext} disabled={isButtonDisabled} isLastStep={step === steps.length} />
+        )}
       </ScrollView>
       <Toast ref={(ref) => Toast.setRef(ref)} />
     </LinearGradient>
@@ -117,12 +161,8 @@ const LocalOnboardingScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    padding: 20,
-  },
+  container: { flex: 1 },
+  scrollView: { padding: 20 },
 });
 
 export default LocalOnboardingScreen;

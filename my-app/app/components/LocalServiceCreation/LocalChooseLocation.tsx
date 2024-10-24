@@ -5,19 +5,21 @@ import tw from 'twrnc';
 
 const LocalChooseLocation: React.FC<{
   onLocationSelected: (location: { latitude: number; longitude: number }) => void;
-  onContinue: () => void; // Add onContinue prop to handle moving to the next step
-}> = ({ onLocationSelected, onContinue }) => {
+  setIsButtonDisabled: (disabled: boolean) => void; // Add this prop to control the button state
+}> = ({ onLocationSelected, setIsButtonDisabled }) => {
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const handleLocationSelected = (selectedLocation: { latitude: number; longitude: number }) => {
     setLocation(selectedLocation);
     onLocationSelected(selectedLocation);
+    setIsButtonDisabled(false); // Enable the button when a location is selected
   };
 
   // Effect to load the map directly when the component mounts
   useEffect(() => {
-    // You can add any initialization logic here if needed
-  }, []);
+    // Initially disable the button until a location is selected
+    setIsButtonDisabled(true);
+  }, [setIsButtonDisabled]);
 
   return (
     <View style={tw`mb-4`}>
@@ -32,12 +34,14 @@ const LocalChooseLocation: React.FC<{
         <MapScreen onLocationSelected={handleLocationSelected} />
       </View>
 
-      {/* Continue Button to move to the next step */}
+      {/* Button to set location to current location */}
       <TouchableOpacity
         style={tw`bg-blue-500 p-3 rounded-lg items-center`}
-        onPress={onContinue} // Call the onContinue function passed as a prop
+        onPress={() => {
+          // You can implement functionality to set the current location here
+        }}
       >
-        <Text style={tw`text-white font-semibold`}>Continue</Text>
+        <Text style={tw`text-white font-semibold`}>Set Location to Current Location</Text>
       </TouchableOpacity>
     </View>
   );

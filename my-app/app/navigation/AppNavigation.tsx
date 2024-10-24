@@ -21,6 +21,7 @@ import EventCreationScreen from '../screens/EventCreationScreen';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
 import CategorySelectionScreen from '../screens/CategorySelectionScreen';
 import SubcategorySelectionScreen from '../screens/subcategorySelectionScreen';
+import CreatePersonalServiceStack from '../components/PersonalServiceCreation/createPersonalServiceStack';
 
 
 import GuestManagementScreen from '../screens/GuestManagementScreen';
