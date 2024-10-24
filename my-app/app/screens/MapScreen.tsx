@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, Image, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, Image, ScrollView, TextInput, FlatList } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import tw from 'twrnc';
 import FilterAdvanced from './FilterAdvanced';
+import { supabase } from '../services/supabaseClient';
 
 const MapScreen: React.FC = () => {
+  const navigation = useNavigation();
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [events, setEvents] = useState<Array<any>>([]);
@@ -15,6 +18,8 @@ const MapScreen: React.FC = () => {
   const webViewRef = useRef<WebView>(null);
   const [showCoordinates, setShowCoordinates] = useState(false);
   const [lastMarkedLocation, setLastMarkedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<Array<{ name: string; lat: number; lon: number }>>([]);
 
   useEffect(() => {
     (async () => {
@@ -52,15 +57,15 @@ const MapScreen: React.FC = () => {
 
   const addEventMarkersToMap = (events: Array<any>) => {
     const markersScript = events.map((event) => {
-      if (!event.location || !event.location[0] || !event.location[0].latitude || !event.location[0].longitude) {
+      if (!event.location_data || !event.location_data.latitude || !event.location_data.longitude) {
         console.log('Event missing location data:', event.id);
         return '';
       }
       return `
-        var marker = L.marker([${event.location[0].latitude}, ${event.location[0].longitude}], {
+        var marker = L.marker([${event.location_data.latitude}, ${event.location_data.longitude}], {
           icon: L.divIcon({
             className: 'custom-div-icon',
-            html: "<div style='background-color:#4838cc;' class='marker-pin'></div><img src='${event.media[0]?.url || 'https://via.placeholder.com/150'}' class='marker-image'/>",
+            html: "<div style='background-color:#4838cc;' class='marker-pin'></div><img src='${event.media_urls[0] || 'https://via.placeholder.com/150'}' class='marker-image'/>",
             iconSize: [30, 42],
             iconAnchor: [15, 42]
           })
@@ -82,10 +87,11 @@ const MapScreen: React.FC = () => {
 
   const handleEventSelection = async (eventId: number) => {
     const event = events.find(e => e.id === eventId);
-    if (event && event.location && event.location[0]) {
-      setSelectedEvent(event);
-      const address = await fetchAddress(event.location[0].latitude, event.location[0].longitude);
-      setSelectedEvent((prev: any) => ({ ...prev, address }));
+    if (event && event.location_data) {
+      console.log('Selected event details:', JSON.stringify(event, null, 2));
+      const address = await fetchAddress(event.location_data.latitude, event.location_data.longitude);
+      const organizer = await fetchOrganizerName(event.user_id);
+      setSelectedEvent({ ...event, address, organizer });
     } else {
       console.log('Selected event has missing location data:', eventId);
     }
@@ -102,6 +108,22 @@ const MapScreen: React.FC = () => {
     }
   };
 
+  const fetchOrganizerName = async (userId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('user')
+        .select('name')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      return data.name;
+    } catch (error) {
+      console.error('Error fetching organizer name:', error);
+      return 'Unknown Organizer';
+    }
+  };
+
   const startNavigation = () => {
     if (currentLocation && selectedEvent) {
       webViewRef.current?.injectJavaScript(`
@@ -111,7 +133,7 @@ const MapScreen: React.FC = () => {
         routingControl = L.Routing.control({
           waypoints: [
             L.latLng(${currentLocation.latitude}, ${currentLocation.longitude}),
-            L.latLng(${selectedEvent.location[0].latitude}, ${selectedEvent.location[0].longitude})
+            L.latLng(${selectedEvent.location_data.latitude}, ${selectedEvent.location_data.longitude})
           ],
           routeWhileDragging: true,
           lineOptions: {
@@ -205,6 +227,7 @@ const MapScreen: React.FC = () => {
     } else if (data.type === 'mapClick') {
       console.log('Map clicked at:', data.latlng);
       setLastMarkedLocation({ latitude: data.latlng.lat, longitude: data.latlng.lng });
+      setSearchQuery('');
       webViewRef.current?.injectJavaScript(`
         updateMap(${data.latlng.lat}, ${data.latlng.lng}, false);
       `);
@@ -219,22 +242,79 @@ const MapScreen: React.FC = () => {
     }
   }, [currentLocation]);
 
+  const fetchSuggestions = async (query: string) => {
+    if (query.length > 2) {
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+        const data = await response.json();
+        setSuggestions(data.map((item: any) => ({
+          name: item.display_name,
+          lat: parseFloat(item.lat),
+          lon: parseFloat(item.lon),
+        })));
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+      }
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleSearch = (item: { name: string; lat: number; lon: number }) => {
+    const newLocation = { latitude: item.lat, longitude: item.lon };
+    setLastMarkedLocation(newLocation);
+    setSearchQuery(item.name);
+    setSuggestions([]);
+    webViewRef.current?.injectJavaScript(`
+      updateMap(${item.lat}, ${item.lon}, false);
+    `);
+  };
+
+  const navigateToEventDetails = () => {
+    if (selectedEvent) {
+      navigation.navigate('EventDetails', { eventId: selectedEvent.id });
+    }
+  };
+
   return (
     <View style={tw`flex-1 bg-gray-100`}>
+      <View style={tw`absolute top-12 left-4 right-4 z-10 bg-white rounded-lg shadow-md`}>
+        <TextInput
+          style={tw`p-2 text-sm`}
+          value={searchQuery}
+          onChangeText={(text) => {
+            setSearchQuery(text);
+            fetchSuggestions(text);
+          }}
+          placeholder="Search for a location"
+        />
+      </View>
+      {suggestions.length > 0 && (
+        <FlatList
+          style={tw`absolute top-24 left-4 right-4 z-20 bg-white rounded-lg shadow-md max-h-40`}
+          data={suggestions}
+          keyExtractor={(item) => item.name}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handleSearch(item)} style={tw`p-2 border-b border-gray-200`}>
+              <Text style={tw`text-sm`}>{item.name}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      )}
       <TouchableOpacity
-        style={tw`absolute top-12 left-4 z-10 bg-white p-2 rounded-full shadow-md`}
+        style={tw`absolute top-24 left-4 z-10 bg-white p-2 rounded-full shadow-md`}
         onPress={toggleCoordinates}
       >
         <Ionicons name="location" size={24} color="#4838cc" />
       </TouchableOpacity>
       <TouchableOpacity
-        style={tw`absolute top-12 right-4 z-10 bg-white p-2 rounded-full shadow-md`}
+        style={tw`absolute top-24 right-4 z-10 bg-white p-2 rounded-full shadow-md`}
         onPress={() => setShowFilter(true)}
       >
         <Ionicons name="filter" size={24} color="#4838cc" />
       </TouchableOpacity>
       {showCoordinates && (
-        <View style={tw`absolute top-24 left-4 right-4 z-10 bg-white p-4 rounded-lg shadow-md`}>
+        <View style={tw`absolute top-36 left-4 right-4 z-10 bg-white p-4 rounded-lg shadow-md`}>
           <Text style={tw`text-sm font-bold mb-2`}>Current Location:</Text>
           <Text style={tw`text-sm mb-2`}>
             {currentLocation ? `${currentLocation.latitude.toFixed(6)}, ${currentLocation.longitude.toFixed(6)}` : 'Not available'}
@@ -271,24 +351,34 @@ const MapScreen: React.FC = () => {
           onRequestClose={() => setSelectedEvent(null)}
         >
           <View style={tw`flex-1 justify-end`}>
-            <View style={tw`bg-white rounded-t-3xl p-6 h-3/4`}>
-              <Image
-                source={{ uri: selectedEvent.media[0]?.url || 'https://via.placeholder.com/150' }}
-                style={tw`w-full h-40 rounded-lg mb-4`}
-              />
-              <Text style={tw`text-2xl font-bold mb-2`}>{selectedEvent.name}</Text>
-              <Text style={tw`text-gray-600 mb-2`}>{selectedEvent.subcategory.category.name} - {selectedEvent.subcategory.name}</Text>
-              <Text style={tw`text-gray-600 mb-2`}>Organizer: {selectedEvent.user.email}</Text>
-              <Text style={tw`text-gray-600 mb-2`}>Date: {selectedEvent.availability[0]?.date || 'N/A'}</Text>
-              <Text style={tw`text-gray-600 mb-2`}>Time: {selectedEvent.availability[0]?.start || 'N/A'} - {selectedEvent.availability[0]?.end || 'N/A'}</Text>
-              <Text style={tw`text-gray-600 mb-2`}>Address: {selectedEvent.address}</Text>
-              <Text style={tw`text-gray-600 mb-4`}>{selectedEvent.details}</Text>
-              <TouchableOpacity
-                style={tw`bg-blue-500 p-4 rounded-full`}
-                onPress={startNavigation}
-              >
-                <Text style={tw`text-white text-center font-bold`}>Navigate to Event</Text>
-              </TouchableOpacity>
+            <View style={tw`bg-white rounded-t-3xl p-6 h-[70%]`}>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Image
+                  source={{ uri: selectedEvent.media_urls[0] || 'https://via.placeholder.com/150' }}
+                  style={tw`w-full h-40 rounded-lg mb-4`}
+                />
+                <Text style={tw`text-2xl font-bold mb-2`}>{selectedEvent.name}</Text>
+                <Text style={tw`text-gray-600 mb-2`}>{selectedEvent.category_name} - {selectedEvent.subcategory_name}</Text>
+                <Text style={tw`text-gray-600 mb-2`}>Organizer: {selectedEvent.organizer}</Text>
+                <Text style={tw`text-gray-600 mb-2`}>Date: {selectedEvent.event_date}</Text>
+                <Text style={tw`text-gray-600 mb-2`}>Price: {selectedEvent.event_price}</Text>
+                <Text style={tw`text-gray-600 mb-2`}>Type: {selectedEvent.type}</Text>
+                <Text style={tw`text-gray-600 mb-2`}>Privacy: {selectedEvent.privacy ? 'Private' : 'Public'}</Text>
+                <Text style={tw`text-gray-600 mb-2`}>Address: {selectedEvent.address}</Text>
+                <Text style={tw`text-gray-600 mb-4`}>{selectedEvent.details}</Text>
+                <TouchableOpacity
+                  style={tw`bg-blue-500 p-4 rounded-full mb-4`}
+                  onPress={startNavigation}
+                >
+                  <Text style={tw`text-white text-center font-bold`}>Navigate to Event</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={tw`bg-green-500 p-4 rounded-full mb-4`}
+                  onPress={navigateToEventDetails}
+                >
+                  <Text style={tw`text-white text-center font-bold`}>Check Event Details</Text>
+                </TouchableOpacity>
+              </ScrollView>
               <TouchableOpacity
                 style={tw`mt-4 p-4 rounded-full border border-gray-300`}
                 onPress={() => setSelectedEvent(null)}
@@ -305,18 +395,20 @@ const MapScreen: React.FC = () => {
         visible={showFilter}
         onRequestClose={() => setShowFilter(false)}
       >
-        <View style={tw`flex-1 justify-start mt-20 bg-white rounded-t-3xl`}>
-          <FilterAdvanced 
-            onEventsLoaded={handleEventsLoaded} 
-            currentLocation={currentLocation}
-            lastMarkedLocation={lastMarkedLocation}
-          />
-          <TouchableOpacity
-            style={tw`bg-blue-500 p-4 m-4 rounded-full`}
-            onPress={() => setShowFilter(false)}
-          >
-            <Text style={tw`text-white text-center font-bold`}>Close Filter</Text>
-          </TouchableOpacity>
+        <View style={tw`flex-1 justify-end`}>
+          <View style={tw`bg-white rounded-t-3xl p-6 h-[70%]`}>
+            <FilterAdvanced 
+              onEventsLoaded={handleEventsLoaded} 
+              currentLocation={currentLocation}
+              lastMarkedLocation={lastMarkedLocation}
+            />
+            <TouchableOpacity
+              style={tw`bg-blue-500 p-4 rounded-full mt-4`}
+              onPress={() => setShowFilter(false)}
+            >
+              <Text style={tw`text-white text-center font-bold`}>Close Filter</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
