@@ -1,22 +1,39 @@
 import React from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Calendar, ShoppingCart } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
+import { 
+  Headphones, 
+  BedDouble, 
+  UtensilsCrossed, 
+  Wine, 
+  Beer, 
+  Sparkles, 
+  Calendar, 
+  ShoppingCart,
+  Grid,
+  Soup,
+  Brush,
+  Table
+} from 'lucide-react-native';
+import Animated, { 
+  useAnimatedStyle, 
+  withSpring,
+  withTiming
+} from 'react-native-reanimated';
 
 const subcategories = [
-  { id: null, name: 'All', icon: 'apps-outline' },
-  { id: 159, name: 'Audio Visual', icon: 'headset-outline' },
-  { id: 160, name: 'Furniture', icon: 'bed-outline' },
-  { id: 161, name: 'Plates', icon: 'restaurant-outline' },
-  { id: 162, name: 'Cutlery', icon: 'restaurant' },
-  { id: 163, name: 'Glassware', icon: 'wine' },
-  { id: 164, name: 'Bar Equipment', icon: 'beer' },
-  { id: 165, name: 'Cleaning', icon: 'cleaning-services' },
-  { id: 166, name: 'Decoration', icon: 'star' },
-  { id: 167, name: 'Tableware', icon: 'table-bar' },
-  { id: 'rent', name: 'Rent', icon: 'calendar' },
-  { id: 'sell', name: 'Sell', icon: 'shopping-cart' },
+  { id: null, name: 'All', Icon: Grid },
+  { id: 159, name: 'Audio', Icon: Headphones },
+  { id: 160, name: 'Furniture', Icon: BedDouble },
+  { id: 161, name: 'Plates', Icon: Soup },
+  { id: 162, name: 'Cutlery', Icon: UtensilsCrossed },
+  { id: 163, name: 'Glassware', Icon: Wine },
+  { id: 164, name: 'Bar', Icon: Beer },
+  { id: 165, name: 'Cleaning', Icon: Brush },
+  { id: 166, name: 'Decor', Icon: Sparkles },
+  { id: 167, name: 'Tableware', Icon: Table },
+  { id: 'rent', name: 'Rent', Icon: Calendar },
+  { id: 'sell', name: 'Sell', Icon: ShoppingCart },
 ];
 
 type SubcategoryListProps = {
@@ -24,53 +41,70 @@ type SubcategoryListProps = {
   onSelectSubcategory: (subcategoryId: number | string | null) => void;
 };
 
-const SubcategoryList: React.FC<SubcategoryListProps> = ({ selectedSubcategory, onSelectSubcategory }) => {
-  const renderIcon = (subcategory: typeof subcategories[0]) => {
-    const iconColor = selectedSubcategory === subcategory.id ? "white" : "#4A90E2";
-    
-    if (subcategory.icon === 'calendar') {
-      return <Calendar size={24} color={iconColor} />;
-    } else if (subcategory.icon === 'shopping-cart') {
-      return <ShoppingCart size={24} color={iconColor} />;
-    } else if (subcategory.icon.includes('cleaning') || subcategory.icon.includes('table')) {
-      return (
-        <MaterialIcons
-          name={subcategory.icon as keyof typeof MaterialIcons.glyphMap}
-          size={24}
-          color={iconColor}
-        />
-      );
-    } else {
-      return (
-        <Ionicons
-          name={subcategory.icon as keyof typeof Ionicons.glyphMap}
-          size={24}
-          color={iconColor}
-        />
-      );
-    }
-  };
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+
+const SubcategoryItem = ({ 
+  subcategory, 
+  isSelected, 
+  onPress 
+}: { 
+  subcategory: typeof subcategories[0];
+  isSelected: boolean;
+  onPress: () => void;
+}) => {
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: withSpring(isSelected ? 1.05 : 1) },
+      ],
+      backgroundColor: withTiming(
+        isSelected ? '#4A90E2' : 'rgba(255, 255, 255, 0.15)',
+        { duration: 200 }
+      ),
+    };
+  });
 
   return (
+    <AnimatedTouchableOpacity
+      onPress={onPress}
+      style={[styles.subcategoryItem, animatedStyle]}
+    >
+      <BlurView intensity={20} tint="light" style={styles.blurContainer}>
+        <subcategory.Icon 
+          size={28} 
+          color={isSelected ? "white" : "#4A90E2"} 
+          strokeWidth={2}
+        />
+        <Text style={[
+          styles.subcategoryName,
+          isSelected && styles.selectedSubcategoryText
+        ]}>
+          {subcategory.name}
+        </Text>
+      </BlurView>
+    </AnimatedTouchableOpacity>
+  );
+};
+
+const SubcategoryList: React.FC<SubcategoryListProps> = ({ 
+  selectedSubcategory, 
+  onSelectSubcategory 
+}) => {
+  return (
     <View style={styles.container}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.subcategoriesScroll}>
-        {subcategories.map((subcategory, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.subcategoryItem,
-              selectedSubcategory === subcategory.id && styles.selectedSubcategory
-            ]}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        style={styles.subcategoriesScroll}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {subcategories.map((subcategory) => (
+          <SubcategoryItem
+            key={subcategory.id?.toString() || 'all'}
+            subcategory={subcategory}
+            isSelected={selectedSubcategory === subcategory.id}
             onPress={() => onSelectSubcategory(subcategory.id)}
-          >
-            {renderIcon(subcategory)}
-            <Text style={[
-              styles.subcategoryName,
-              selectedSubcategory === subcategory.id && styles.selectedSubcategoryText
-            ]}>
-              {subcategory.name}
-            </Text>
-          </TouchableOpacity>
+          />
         ))}
       </ScrollView>
     </View>
@@ -80,28 +114,37 @@ const SubcategoryList: React.FC<SubcategoryListProps> = ({ selectedSubcategory, 
 const styles = StyleSheet.create({
   container: {
     marginBottom: 10,
+    marginTop: 5,
   },
   subcategoriesScroll: {
-    paddingLeft: 10,
+    flexGrow: 0,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    gap: 12,
   },
   subcategoryItem: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  blurContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 15,
-    padding: 10,
-    borderRadius: 10,
-    width: 80,
-    height: 80,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  selectedSubcategory: {
-    backgroundColor: '#4A90E2',
+    padding: 12,
+    width: 85,
+    height: 85,
   },
   subcategoryName: {
-    marginTop: 4,
+    marginTop: 8,
     fontSize: 12,
     textAlign: 'center',
     color: '#4A90E2',
+    fontWeight: '600',
   },
   selectedSubcategoryText: {
     color: 'white',

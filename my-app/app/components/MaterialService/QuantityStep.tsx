@@ -2,13 +2,16 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import NextButton from './NextButton';
 
 interface QuantityStepProps {
   formData: any;
   setFormData: (data: any) => void;
+  onNext: () => void;
+  isLastStep: boolean;
 }
 
-const QuantityStep: React.FC<QuantityStepProps> = ({ formData, setFormData }) => {
+const QuantityStep: React.FC<QuantityStepProps> = ({ formData, setFormData, onNext, isLastStep }) => {
   const incrementQuantity = () => {
     setFormData({ ...formData, quantity: String(Number(formData.quantity) + 1) });
   };
@@ -31,6 +34,7 @@ const QuantityStep: React.FC<QuantityStepProps> = ({ formData, setFormData }) =>
           +
         </Button>
       </View>
+      <NextButton onPress={onNext} disabled={false} isLastStep={isLastStep} />
     </Animated.View>
   );
 };
@@ -52,6 +56,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 20,
   },
   button: {
     width: 50,

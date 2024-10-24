@@ -168,3 +168,143 @@ export default NavBar;
 
 
 
+
+//////////////
+
+
+import React, { useEffect, useState } from 'react';
+import { View, Text } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { supabase } from '../services/supabaseClient';
+import tw from 'twrnc';
+
+interface FilterAdvancedProps {
+  onEventsLoaded: (events: any[]) => void;
+}
+
+const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded }) => {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      fetchSubcategories(selectedCategory);
+    } else {
+      setSubcategories([]);
+    }
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    fetchFilteredEvents();
+  }, [selectedCategory, selectedSubcategory]);
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('category')
+      .select('id, name')
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching categories:', error);
+      return;
+    }
+
+    setCategories([{ id: null, name: 'All' }, ...data]);
+  };
+
+  const fetchSubcategories = async (categoryId: number) => {
+    const { data, error } = await supabase
+      .from('subcategory')
+      .select('id, name')
+      .eq('category_id', categoryId)
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching subcategories:', error);
+      return;
+    }
+
+    setSubcategories([{ id: null, name: 'All' }, ...data]);
+  };
+
+  const fetchFilteredEvents = async () => {
+    let query = supabase
+      .from('event')
+      .select(`
+        *,
+        subcategory!inner (id, name, category_id),
+        location!inner (id, longitude, latitude),
+        availability!inner (id, start, end, daysofweek, date),
+        media (url),
+        user:user_id (email),
+        event_has_user!inner (user_id)
+      `);
+
+    if (selectedCategory) {
+      query = query.eq('subcategory.category_id', selectedCategory);
+    }
+
+    if (selectedSubcategory) {
+      query = query.eq('subcategory_id', selectedSubcategory);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching filtered events:', error);
+      return;
+    }
+
+    onEventsLoaded(data || []);
+  };
+
+  return (
+    <View style={tw`p-4 bg-white`}>
+      <Text style={tw`text-lg font-bold mb-2`}>Filter Events</Text>
+      <View style={tw`mb-4`}>
+        <Text style={tw`mb-1`}>Category</Text>
+        <Picker
+          selectedValue={selectedCategory}
+          onValueChange={(itemValue) => {
+            setSelectedCategory(itemValue);
+            setSelectedSubcategory(null);
+          }}
+          style={tw`border border-gray-300 rounded`}
+        >
+          {categories.map((category) => (
+            <Picker.Item key={category.id} label={category.name} value={category.id} />
+          ))}
+        </Picker>
+      </View>
+      {selectedCategory !== null && (
+        <View style={tw`mb-4`}>
+          <Text style={tw`mb-1`}>Subcategory</Text>
+          <Picker
+            selectedValue={selectedSubcategory}
+            onValueChange={(itemValue) => setSelectedSubcategory(itemValue)}
+            style={tw`border border-gray-300 rounded`}
+          >
+            {subcategories.map((subcategory) => (
+              <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
+            ))}
+          </Picker>
+        </View>
+      )}
+    </View>
+  );
+};
+
+export default FilterAdvanced;
+
+
+
+
+
+
+
