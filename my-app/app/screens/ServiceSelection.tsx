@@ -1,19 +1,41 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 
 type RootStackParamList = {
   CreateLocalServiceStep1: undefined;
   CreatePersonalServiceStep1: undefined;
-  MaterialServiceCreation: undefined; // Placeholder for future implementation
+  MaterialServiceCreation: undefined;
 };
 
 type ServiceSelectionNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+const { width } = Dimensions.get('window'); // Get the screen width
+const cardWidth = width * 0.8; // Set card width to 80% of screen width
+
 const ServiceSelection: React.FC = () => {
   const navigation = useNavigation<ServiceSelectionNavigationProp>();
+  const scrollViewRef = useRef<ScrollView>(null); // Ref for ScrollView
+
+  const localScaleAnimation = new Animated.Value(1);
+  const personnelScaleAnimation = new Animated.Value(1);
+  const materialScaleAnimation = new Animated.Value(1);
+
+  const handlePressIn = (scaleAnimation: Animated.Value) => {
+    Animated.spring(scaleAnimation, {
+      toValue: 1.1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = (scaleAnimation: Animated.Value) => {
+    Animated.spring(scaleAnimation, {
+      toValue: 1,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+  };
 
   const handleCardPress = (cardType: string) => {
     if (cardType === 'Local') {
@@ -21,43 +43,81 @@ const ServiceSelection: React.FC = () => {
     } else if (cardType === 'Personnel') {
       navigation.navigate('CreatePersonalServiceStep1');
     }
-    // No navigation for Material yet
+    scrollToCard(cardType);
   };
+
+  const scrollToCard = (cardType: string) => {
+    const cardIndex = cardType === 'Local' ? 0 : cardType === 'Personnel' ? 1 : 2;
+    scrollViewRef.current?.scrollTo({
+      x: cardIndex * cardWidth, // Adjust based on card width
+      animated: true,
+    });
+  };
+
+  // Scroll to Local card on component mount
+  useEffect(() => {
+    scrollViewRef.current?.scrollTo({
+      x: 0, // Start at the Local card position
+      animated: false, // No animation for initial load
+    });
+  }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Select Service Type</Text>
-      <View style={styles.cardContainer}>
-        {/* Local Service Card */}
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={styles.scrollContainer}
+        horizontal
+        showsHorizontalScrollIndicator={false} // Optional: Hide the scroll indicator
+        snapToInterval={cardWidth} // Adjust based on card width
+        decelerationRate="fast" // Makes snapping smoother
+      >
         <TouchableOpacity
           style={styles.card}
           onPress={() => handleCardPress('Local')}
+          onPressIn={() => handlePressIn(localScaleAnimation)}
+          onPressOut={() => handlePressOut(localScaleAnimation)}
         >
-          <Icon name="location-on" size={40} color="black" />
-          <Text style={styles.cardText}>Local</Text>
+          <Animated.Image
+            source={require('../assets/images/locals.png')}
+            style={[styles.cardImage, { transform: [{ scale: localScaleAnimation }] }]}
+          />
+          <View style={styles.cardTextContainer}>
+            <Text style={styles.cardText}>Venues</Text>
+          </View>
         </TouchableOpacity>
 
-        {/* Personnel Service Card */}
         <TouchableOpacity
           style={styles.card}
           onPress={() => handleCardPress('Personnel')}
+          onPressIn={() => handlePressIn(personnelScaleAnimation)}
+          onPressOut={() => handlePressOut(personnelScaleAnimation)}
         >
-          <Icon name="people" size={40} color="black" />
-          <Text style={styles.cardText}>Personnel</Text>
+          <Animated.Image
+            source={require('../assets/images/staff.png')}
+            style={[styles.cardImage, { transform: [{ scale: personnelScaleAnimation }] }]}
+          />
+          <View style={styles.cardTextContainer}>
+            <Text style={styles.cardText}>Crew</Text>
+          </View>
         </TouchableOpacity>
 
-        {/* Material Service Card */}
         <TouchableOpacity
           style={styles.card}
-          onPress={() => {
-            // Uncomment when implemented
-            // navigation.navigate('MaterialServiceCreation');
-          }}
+          onPressIn={() => handlePressIn(materialScaleAnimation)}
+          onPressOut={() => handlePressOut(materialScaleAnimation)}
+          onPress={() => handleCardPress('Material')}
         >
-          <Icon name="build" size={40} color="black" />
-          <Text style={styles.cardText}>Material</Text>
+          <Animated.Image
+            source={require('../assets/images/materials.png')}
+            style={[styles.cardImage, { transform: [{ scale: materialScaleAnimation }] }]}
+          />
+          <View style={styles.cardTextContainer}>
+            <Text style={styles.cardText}>Material</Text>
+          </View>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -65,33 +125,51 @@ const ServiceSelection: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f0f4f8',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: '#333',
+    textAlign: 'center',
+    marginTop: 30,
   },
-  cardContainer: {
-    width: '80%',
+  scrollContainer: {
+    flexDirection: 'row', // Change direction to row for horizontal scrolling
+    alignItems: 'center',
+    paddingVertical: 20, // Added vertical padding for aesthetics
+    justifyContent: 'center', // Center the cards in the ScrollView
   },
   card: {
-    width: '100%',
-    height: 100,
+    width: cardWidth, // Set card width to a calculated value based on screen size
+    height: '100%', // Set height to fill the entire card
+    borderRadius: 20,
+    backgroundColor: '#ffffff', // Set the card background color to white
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 10,
+    marginHorizontal: 10, // Space between cards
+    overflow: 'hidden',
+  },
+  cardImage: {
+    width: '100%', // Image width to fill the card
+    height: '100%', // Set height to fill the card completely
+    resizeMode: 'cover', // Cover mode for the image
+  },
+  cardTextContainer: {
+    position: 'absolute', // Position text container absolutely
+    bottom: 0, // Stick to the bottom of the card
+    left: 0,
+    right: 0,
+    height: 40, // Fixed height for the text container
+    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent background for better readability
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: '#fff',
-    elevation: 2,
-    marginBottom: 20,
   },
   cardText: {
-    marginTop: 10,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },

@@ -26,6 +26,8 @@ const HomeScreen: React.FC = () => {
   const [locals, setLocals] = useState<any[]>([]);
   const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
   const [isFabOpen, setIsFabOpen] = useState(false);
+  const [filteredEvents, setFilteredEvents] = useState<any[]>(events);
+  const [filteredServices, setFilteredServices] = useState<any[]>(staffServices);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -126,6 +128,46 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   const toggleFab = () => setIsFabOpen(!isFabOpen);
+
+
+  const handleSearch = (searchTerm: string) => {
+    if (!searchTerm) {
+      setFilteredEvents(events);
+      setFilteredServices(staffServices);
+      return;
+    }
+  
+    const normalizedSearchTerm = searchTerm.toLowerCase();
+  
+    // Filter events
+    const newFilteredEvents = events.filter(event => {
+      const title = event.title?.toLowerCase() || '';
+      const description = event.description?.toLowerCase() || '';
+      return title.includes(normalizedSearchTerm) || description.includes(normalizedSearchTerm);
+    });
+  
+    // Filter services
+    const newFilteredServices = staffServices.filter(service => {
+      const name = service.name?.toLowerCase() || '';
+      const details = service.details?.toLowerCase() || '';
+      return name.includes(normalizedSearchTerm) || details.includes(normalizedSearchTerm);
+    });
+  
+    // Additional filtering based on selected filter
+    if (selectedFilter === 'this_week') {
+      // Implement your logic to filter for this week
+    } else if (selectedFilter === 'this_month') {
+      // Implement your logic to filter for this month
+    }
+  
+    setFilteredEvents(newFilteredEvents);
+    setFilteredServices(newFilteredServices);
+  };
+  
+
+
+
+
 
   return (
     <SafeAreaView style={tw`flex-1 bg-[#001F3F]`}>
