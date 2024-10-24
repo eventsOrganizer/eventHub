@@ -39,11 +39,12 @@ const CreatePersonalServiceStep5: React.FC = () => {
 
   const handleConfirm = async () => {
     if (!userId) {
-      Alert.alert('Erreur', 'Vous devez être connecté pour créer un service.');
+      Alert.alert('Error', 'You must be logged in to create a service.');
       return;
     }
 
     try {
+      // Create personal service
       const { data: personalData, error: personalError } = await supabase
         .from('personal')
         .insert({
@@ -60,11 +61,9 @@ const CreatePersonalServiceStep5: React.FC = () => {
         .single();
 
       if (personalError) throw personalError;
+      if (!personalData) throw new Error('Failed to create personal service');
 
-      if (!personalData) {
-        throw new Error('Failed to create personal service');
-      }
-
+      // Create album
       const { data: albumData, error: albumError } = await supabase
         .from('album')
         .insert({
@@ -77,18 +76,21 @@ const CreatePersonalServiceStep5: React.FC = () => {
 
       if (albumError) throw albumError;
 
-      const mediaPromises = images.map(imageUrl => 
-        supabase
+      // Insert images into media table
+      for (const imageUrl of images) {
+        const { error: mediaError } = await supabase
           .from('media')
           .insert({
             personal_id: personalData.id,
             url: imageUrl,
             album_id: albumData.id,
-          })
-      );
+            type: 'image'
+          });
 
-      await Promise.all(mediaPromises);
+        if (mediaError) throw mediaError;
+      }
 
+      // Insert availability data
       const availabilityData = exceptionDates.map(dateString => ({
         personal_id: personalData.id,
         date: dateString,
@@ -106,9 +108,9 @@ const CreatePersonalServiceStep5: React.FC = () => {
         if (availabilityError) throw availabilityError;
       }
 
-      // Ajouter la localisation à la base de données
+      // Insert location data
       if (location) {
-        const { data: locationData, error: locationError } = await supabase
+        const { error: locationError } = await supabase
           .from('location')
           .insert({
             longitude: location.longitude,
@@ -116,17 +118,14 @@ const CreatePersonalServiceStep5: React.FC = () => {
             personal_id: personalData.id,
           });
 
-        if (locationError) {
-          console.error('Error inserting location:', locationError);
-          // Gérer l'erreur
-        }
+        if (locationError) throw locationError;
       }
 
-      Alert.alert('Succès', 'Service créé avec succès !');
+      Alert.alert('Success', 'Service created successfully!');
       navigation.navigate('Home');
     } catch (error) {
-      console.error('Erreur lors de la soumission du service:', error);
-      Alert.alert('Erreur', 'Erreur lors de la création du service. Veuillez réessayer.');
+      console.error('Error submitting service:', error);
+      Alert.alert('Error', 'An error occurred while creating the service. Please try again.');
     }
   };
 

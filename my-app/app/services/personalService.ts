@@ -65,7 +65,7 @@ export const fetchPersonalDetail = async (id: number): Promise<ImportedService |
             name
           )
         ),
-        media (url),
+        media!personal_id (id, url, type),
         availability (start, end, daysofweek, date),
         comment (
           details,
@@ -81,28 +81,31 @@ export const fetchPersonalDetail = async (id: number): Promise<ImportedService |
       .eq('id', id)
       .single();
 
-      if (error) throw error;
-      if (!data) return null;
-  
-      const processedData = {
-        ...data,
-        imageUrl: data.media && data.media.length > 0
-          ? data.media[0].url
-          : 'https://via.placeholder.com/150',
-        comments: data.comment || [],
-        likes: data.like || [],
-        location: data.location && data.location.length > 0 ? {
-          latitude: parseFloat(data.location[0].latitude) || null,
-          longitude: parseFloat(data.location[0].longitude) || null
-        } : null
-      };
-  
-      return processedData;
-    } catch (error) {
-      console.error('Error fetching personal detail:', error);
-      return null;
-    }
-  };
+    if (error) throw error;
+    if (!data) return null;
+
+    console.log('Raw data from Supabase:', JSON.stringify(data, null, 2));
+
+    const processedData = {
+      ...data,
+      images: data.media ? data.media.filter((item: { type: string }) => item.type === 'image').map((item: { url: string }) => item.url) : [],
+      comments: data.comment || [],
+      likes: data.like || [],
+      location: data.location && data.location.length > 0 ? {
+        latitude: parseFloat(data.location[0].latitude) || null,
+        longitude: parseFloat(data.location[0].longitude) || null
+      } : null
+    };
+
+    console.log('Processed images:', processedData.images);
+
+    return processedData;
+  } catch (error) {
+    console.error('Error fetching personal detail:', error);
+    return null;
+  }
+};
+
 interface Comment {
   details: string;
   user_id: string;

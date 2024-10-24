@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text, ScrollView } from 'react-native';
-import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text, ScrollView, Image, Dimensions } from 'react-native';
+import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,6 +19,13 @@ interface ServiceWithLocation extends Service {
     longitude: number;
   };
 }
+interface ServiceWithImages extends Service {
+  images?: string[];
+}
+interface MediaItem {
+  url: string;
+  type?: string;
+}
 
 type RootStackParamList = {
   AddReviewScreen: { personalId: number; userId: string | null };
@@ -31,6 +38,9 @@ type RootStackParamList = {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type PersonalDetailRouteProp = RouteProp<RootStackParamList, 'PersonalDetail'>;
 
+const { width } = Dimensions.get('window');
+const IMAGE_HEIGHT = width * 0.75;
+
 const PersonalDetail: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<PersonalDetailRouteProp>();
@@ -38,13 +48,14 @@ const PersonalDetail: React.FC = () => {
   const { userId } = useUser();
   const { toast } = useToast();
 
-  const [personalData, setPersonalData] = useState<ServiceWithLocation | null>(null);
+  const [personalData, setPersonalData] = useState<ServiceWithImages | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [availabilityData, setAvailabilityData] = useState<AvailabilityData | null>(null);
   const [showMap, setShowMap] = useState<boolean>(false);
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [address, setAddress] = useState<string>('Chargement de l\'adresse...');
+  const [images, setImages] = useState<string[]>([]);
 
   const getAddressFromCoordinates = async (latitude: number, longitude: number): Promise<string> => {
     try {
@@ -67,27 +78,53 @@ const PersonalDetail: React.FC = () => {
       return 'Erreur lors de la récupération de l\'adresse';
     }
   };
+
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await fetchPersonalDetail(personalId);
       
-      if (data?.location?.latitude && data?.location?.longitude) {
-        const addr = await getAddressFromCoordinates(
-          data.location.latitude,
-          data.location.longitude
-        );
-        setAddress(addr);
+      if (data) {
+        setPersonalData(data as ServiceWithImages);
+        
+        // Correction de l'accès aux images
+        if (data.media && Array.isArray(data.media)) {
+          const imageUrls = data.media
+            .filter((item: MediaItem) => item.type === 'image' || !item.type)
+            .map((item: MediaItem) => item.url);
+          setImages(imageUrls);
+        }
+        else {
+          setImages([]);
+          console.log('Aucune image trouvée dans les données');
+        }
+
+        if (data.location && data.location.latitude != null && data.location.longitude != null) {
+          setAddress(await getAddressFromCoordinates(data.location.latitude, data.location.longitude));
+        } else {
+          setAddress('Adresse non disponible');
+        }
+
+        if (userLocation && data.location && data.location.latitude != null && data.location.longitude != null) {
+          const calculatedDistance = calculateDistance(
+            userLocation.coords.latitude,
+            userLocation.coords.longitude,
+            data.location.latitude,
+            data.location.longitude
+          );
+          setDistance(calculatedDistance);
+        }
+
+        const availabilityData = await fetchAvailabilityData(personalId);
+        setAvailabilityData(availabilityData);
+      } else {
+        console.log('No data received from fetchPersonalDetail');
       }
-      
-      setPersonalData(data as ServiceWithLocation | null);
-      const availability = await fetchAvailabilityData(personalId);
-      setAvailabilityData(availability);
     } catch (error) {
-      console.error('Error fetching personal detail:', error);
+      console.error('Erreur dans fetchData:', error);
       toast({
-        title: "Error",
-        description: "Unable to load service details. Please try again.",
+        title: "Erreur",
+        description: "Une erreur est survenue lors du chargement des données.",
         variant: "destructive",
       });
     } finally {
@@ -199,7 +236,6 @@ const PersonalDetail: React.FC = () => {
       return '<p>Localisation non disponible</p>';
     }
     
-    // Escape special characters in address for the popup
     const escapedAddress = address.replace(/'/g, "\\'").replace(/"/g, '\\"');
     
     return `
@@ -237,6 +273,30 @@ const PersonalDetail: React.FC = () => {
   const renderItem = () => (
     <ScrollView style={styles.content}>
       <View style={styles.card}>
+        <View style={styles.imageContainer}>
+          <ScrollView 
+            horizontal 
+            pagingEnabled 
+            showsHorizontalScrollIndicator={false}
+            decelerationRate="fast"
+            snapToInterval={width}
+          >
+            {images.length > 0 ? (
+              images.map((imageUrl, index) => (
+                <Image 
+                  key={index} 
+                  source={{ uri: imageUrl }} 
+                  style={styles.image} 
+                  resizeMode="cover"
+                />
+              ))
+            ) : (
+              <View style={styles.noImageContainer}>
+                <Text style={styles.noImageText}>Aucune image disponible</Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
         <PersonalInfo 
           data={personalData as Service} 
           onLike={handleLike}
@@ -269,6 +329,11 @@ const PersonalDetail: React.FC = () => {
     </ScrollView>
   );
 
+  console.log('Rendering images, count:', images.length);
+  images.forEach((image, index) => {
+    console.log(`Image ${index + 1} URL:`, image);
+  });
+
   return (
     <LinearGradient
       colors={['#E6F2FF', '#C2E0FF', '#99CCFF', '#66B2FF']}
@@ -279,11 +344,17 @@ const PersonalDetail: React.FC = () => {
         style={styles.container}
         keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
       >
-        <FlatList
-          data={[{ key: 'content' }]}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.key}
-        />
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <Text>Chargement...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={[{ key: 'content' }]}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.key}
+          />
+        )}
       </KeyboardAvoidingView>
     </LinearGradient>
   );
@@ -296,20 +367,39 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
-  centeredContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#4A90E2',
-  },
   card: {
     backgroundColor: '#4A90E2',
     borderRadius: 10,
     padding: 16,
     marginBottom: 16,
+    overflow: 'hidden',
+  },
+  imageScrollView: {
+    height: IMAGE_HEIGHT,
+    marginBottom: 16,
+  },
+  imageContainer: {
+    height: IMAGE_HEIGHT,
+    marginBottom: 16,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  image: {
+    width: width,
+    height: IMAGE_HEIGHT,
+    borderRadius: 10,
+  },
+  noImageContainer: {
+    width: width,
+    height: IMAGE_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+  },
+  noImageText: {
+    fontSize: 16,
+    color: '#666',
   },
   mapContainer: {
     height: 300,
@@ -319,6 +409,11 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

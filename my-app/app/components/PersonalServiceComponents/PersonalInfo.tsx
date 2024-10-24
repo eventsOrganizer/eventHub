@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Service } from '../../services/serviceTypes';
 
@@ -28,10 +28,6 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
 
   return (
     <View style={styles.infoContainer}>
-      <Image 
-        source={{ uri: data.imageUrl || 'https://via.placeholder.com/150' }} 
-        style={styles.image}
-      />
       <Text style={styles.name}>{data.name}</Text>
       <Text style={styles.price}>${data.priceperhour}/hr</Text>
       <Text style={styles.details}>{data.details}</Text>
@@ -82,13 +78,6 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({
 const styles = StyleSheet.create({
   infoContainer: {
     padding: 16,
-  },
-  image: {
-    width: '100%',
-    height: 200,
-    resizeMode: 'cover',
-    borderRadius: 8,
-    marginBottom: 16,
   },
   name: {
     fontSize: 24,

@@ -14,10 +14,10 @@ const CreatePersonalServiceStep2: React.FC = () => {
   const navigation = useNavigation<CreatePersonalServiceStep2NavigationProp>();
   const route = useRoute<CreatePersonalServiceStep2RouteProp>();
   const { serviceName, description, subcategoryName, subcategoryId } = route.params;
-  const [images, setImages] = React.useState<string[]>([]);
+  const [images, setImages] = useState<string[]>([]);
 
-  const handleImageUploaded = (url: string) => {
-    setImages([...images, url]);
+  const handleImagesUploaded = (urls: string[]) => {
+    setImages(prevImages => [...prevImages, ...urls]);
   };
 
   const handleNext = () => {
@@ -41,15 +41,13 @@ const CreatePersonalServiceStep2: React.FC = () => {
         <Text style={styles.title}>Create New Crew</Text>
         <Text style={styles.subtitle}>Step 2: Add Images</Text>
         <View style={styles.infoContainer}>
-          <Text style={styles.infoText}>Person service Name: {serviceName}</Text>
+          <Text style={styles.infoText}>Service Name: {serviceName}</Text>
           <Text style={styles.infoText}>Description: {description}</Text>
           <Text style={styles.infoText}>Category: {subcategoryName}</Text>
         </View>
-        <CloudinaryUpload onImageUploaded={handleImageUploaded} />
+        <CloudinaryUpload onImagesUploaded={handleImagesUploaded} />
         <View style={styles.imagePreviewContainer}>
-          {images.map((url, index) => (
-            <Text key={index} style={styles.imagePreviewText}>Image {index + 1} uploaded</Text>
-          ))}
+          <Text style={styles.imagePreviewText}>{images.length} image(s) uploaded</Text>
         </View>
         <TouchableOpacity 
           style={[styles.button, images.length === 0 && styles.buttonDisabled]}

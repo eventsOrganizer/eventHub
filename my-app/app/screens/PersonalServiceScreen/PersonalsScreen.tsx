@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { PersonalScreenNavigationProp } from '../../navigation/types';
@@ -19,6 +19,9 @@ const PersonalsScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [displayedServices, setDisplayedServices] = useState<Service[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const navigation = useNavigation<PersonalScreenNavigationProp>();
   const route = useRoute();
@@ -57,6 +60,18 @@ const PersonalsScreen: React.FC = () => {
     );
     setFilteredServices(filtered);
   }, [staffServices, selectedCategory, searchQuery, minPrice, maxPrice]);
+
+  useEffect(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setDisplayedServices(filteredServices.slice(0, endIndex));
+  }, [filteredServices, currentPage]);
+
+  const loadMoreServices = () => {
+    if (displayedServices.length < filteredServices.length) {
+      setCurrentPage(prevPage => prevPage + 1);
+    }
+  };
 
   const renderServiceItem = useCallback(({ item }: { item: Service }) => (
     <ServiceItem item={item} onPress={(id) => navigation.navigate('PersonalDetail', { personalId: id })} />
@@ -120,14 +135,16 @@ const PersonalsScreen: React.FC = () => {
       <CategoryList selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
       {filteredServices.length > 0 ? (
         <FlatList
-          data={filteredServices}
+          data={displayedServices}
           renderItem={renderServiceItem}
           keyExtractor={(item) => item.id.toString()}
           style={styles.serviceList}
           contentContainerStyle={styles.serviceListContent}
+          onEndReached={loadMoreServices}
+          onEndReachedThreshold={0.1}
         />
       ) : (
-        <Text style={{...styles.noServicesText, textAlign: 'center'}}>No services available</Text>
+        <Text style={{...styles.noServicesText, textAlign: 'center'}}>Aucun service disponible</Text>
       )}
       <FAB
         style={{...styles.fab, position: 'absolute', margin: 10, right: 10, bottom: 10, backgroundColor: '#4A90E2'}}

@@ -7,7 +7,7 @@ import ServiceNameInput from '../reuseableForCreationService/ServiceNameInput';
 import ServiceDescriptionInput from '../reuseableForCreationService/ServiceDescriptionInput';
 import CategorySelector from '../reuseableForCreationService/CategorySelector';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
-import { Icon } from 'react-native-elements'; // Assurez-vous d'avoir installé cette bibliothèque
+import { Icon } from 'react-native-elements';
 import ProgressBar from '../reuseableForCreationService/ProgressBar';
 
 type CreatePersonalServiceStep1NavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep1'>;
@@ -30,9 +30,9 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({ name, onPress, isSelected }
   <TouchableOpacity onPress={onPress} style={[styles.iconContainer, isSelected && styles.selectedIcon]}>
     <Icon
       name={name}
-      type="material-community" // ou un autre type selon la bibliothèque d'icônes que vous utilisez
+      type="material-community"
       size={40}
-      color={isSelected ? '#ffffff' : '#000000'}
+      color={isSelected ? '#ffffff' : '#ffffff'}
     />
   </TouchableOpacity>
 );
