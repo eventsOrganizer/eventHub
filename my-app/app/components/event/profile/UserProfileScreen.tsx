@@ -16,6 +16,7 @@ import InvitationButton from './InvitationButton';
 import NotificationComponent from './notification/NotificationComponent';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
+import { useRequestNotifications } from '../../../hooks/useRequestNotifications';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -38,7 +39,7 @@ const UserProfileScreen: React.FC = () => {
   const [slideAnim] = useState(new Animated.Value(0));
   const [activeEventList, setActiveEventList] = useState<'your' | 'attended'>('your');
   const [showNotifications, setShowNotifications] = useState(false);
-
+  const { unreadReceivedRequestsCount, unreadSentActionsCount } = useRequestNotifications(userId);
   const fetchData = useCallback(async () => {
     if (userId) {
       await fetchUserProfile();
@@ -128,7 +129,7 @@ const UserProfileScreen: React.FC = () => {
       case 'subscriptions':
         return <Subscriptions />;
       case 'services':
-        return <UserServicesList userId={userId as string} />;
+        return <UserEventsList userId={userId as string} />; // Correction: Utilisation de UserEventsList au lieu de UserServicesList
       default:
         return null;
     }
@@ -215,31 +216,38 @@ const UserProfileScreen: React.FC = () => {
           </View>
         </BlurView>
 
-        <View style={tw`flex-row justify-center mt-6 mb-4 px-4`}>
-          <TouchableOpacity
-            style={tw`flex-1 bg-white/20 py-3 px-6 rounded-lg shadow-md mx-2 max-w-[160]`}
-            onPress={() => navigation.navigate('UserServicesScreen', { userId })}
-          >
-            <Text style={tw`text-white font-semibold text-center`}>Services</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={tw`flex-1 bg-white/20 py-3 px-6 rounded-lg shadow-md mx-2 max-w-[160]`}
-            onPress={() => navigation.navigate('YourRequests', { userId })}
-          >
-            <Text style={tw`text-white font-semibold text-center`}>Service Requests</Text>
-          </TouchableOpacity>
+        <View style={tw`flex-row justify-center mt-6 mb-4`}>
+    <TouchableOpacity
+      style={tw`bg-white/20 py-2 px-3 rounded-lg shadow-md mx-1 max-w-[110]`}
+      onPress={() => navigation.navigate('UserServicesScreen', { userId })}
+    >
+      <Text style={tw`text-white font-semibold text-center text-sm`}>Services</Text>
+    </TouchableOpacity>
+    
+    <TouchableOpacity
+      style={tw`bg-white/20 py-2 px-3 rounded-lg shadow-md mx-1 max-w-[110] flex-row items-center`}
+      onPress={() => navigation.navigate('YourRequests', { userId, mode: 'sent' })}
+    >
+      <Text style={tw`text-white font-semibold text-center text-sm`}>Sent Requests</Text>
+      {unreadSentActionsCount > 0 && (
+        <View style={tw`ml-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+          <Text style={tw`text-white text-xs`}>{unreadSentActionsCount}</Text>
         </View>
-
-        <View style={tw`flex-row justify-around mt-6 mb-2`}>
-          {['events', 'friends', 'subscriptions', 'albums'].map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-            >
-              <Text style={tw`text-${activeTab === tab ? 'white' : 'blue-200'} font-semibold capitalize text-lg`}>{tab}</Text>
-            </TouchableOpacity>
-          ))}
+      )}
+    </TouchableOpacity>
+    
+    <TouchableOpacity
+      style={tw`bg-white/20 py-2 px-3 rounded-lg shadow-md mx-1 max-w-[110] flex-row items-center`}
+      onPress={() => navigation.navigate('YourRequests', { userId, mode: 'received' })}
+    >
+      <Text style={tw`text-white font-semibold text-center text-sm`}>Received Requests</Text>
+      {unreadReceivedRequestsCount > 0 && (
+        <View style={tw`ml-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+          <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
         </View>
+      )}
+    </TouchableOpacity>
+  </View>
 
         <Animated.View
           style={[
