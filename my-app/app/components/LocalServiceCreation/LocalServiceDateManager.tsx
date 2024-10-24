@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
-import ServiceCalendar from '../reuseableForCreationService/ServiceCalendar';
 import { showAlert } from '../../utils/util';
-import { addYears, addMonths, addWeeks, format, parse, isValid } from 'date-fns';
+import { addYears, addMonths, addWeeks, format, parse, isValid, isBefore, isAfter } from 'date-fns';
 
 interface LocalServiceDateManagerProps {
   formData: any;
@@ -14,6 +13,8 @@ interface LocalServiceDateManagerProps {
 const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formData, setFormData }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showStartDateCalendar, setShowStartDateCalendar] = useState(false);
+  const [showExceptionCalendar, setShowExceptionCalendar] = useState(false);
+  const today = format(new Date(), 'yyyy-MM-dd'); // Get today's date
 
   useEffect(() => {
     if (formData.startDate && formData.startDate.length === 10 && formData.interval) {
@@ -48,13 +49,28 @@ const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formD
     setFormData({ ...formData, interval });
   };
 
+  const toggleExceptionDate = (date: string) => {
+    const newExceptionDates = formData.exceptionDates || [];
+    setFormData({
+      ...formData,
+      exceptionDates: newExceptionDates.includes(date)
+        ? newExceptionDates.filter((d: string) => d !== date)
+        : [...newExceptionDates, date],
+    });
+  };
+
+  const markedExceptionDates = formData.exceptionDates?.reduce((acc: any, date: string) => {
+    acc[date] = { selected: true, selectedColor: '#ff0000' }; // Red color for exception dates
+    return acc;
+  }, {});
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Select Availability Interval</Text>
       <View style={styles.intervalContainer}>
         {['Weekly', 'Monthly', 'Yearly'].map((interval) => (
           <TouchableOpacity
-            key={interval as "Yearly" | "Monthly" | "Weekly"} // Type assertion added
+            key={interval as "Yearly" | "Monthly" | "Weekly"}
             onPress={() => handleIntervalSelect(interval)}
             style={[styles.iconButton, formData.interval === interval && styles.selectedButton]}>
             <View style={styles.iconWithBubble}>
@@ -89,6 +105,8 @@ const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formD
           markedDates={{
             [formData.startDate]: { selected: true, selectedColor: '#4A90E2' },
           }}
+          // Disable dates before today
+          minDate={today}
         />
       )}
 
@@ -96,21 +114,21 @@ const LocalServiceDateManager: React.FC<LocalServiceDateManagerProps> = ({ formD
       <Text style={styles.dateText}>{formData.endDate ? formData.endDate : 'End Date will be calculated'}</Text>
 
       {showCalendar && formData.interval && (
-        <ServiceCalendar
-          startDate={new Date(formData.startDate)}
-          endDate={new Date(formData.endDate)}
-          exceptionDates={formData.exceptionDates || []}
-          onSelectDate={(date) => {
-            const newExceptionDates = formData.exceptionDates || [];
-            setFormData({
-              ...formData,
-              exceptionDates: newExceptionDates.some((d: Date) => d.toDateString() === date.toDateString())
-                ? newExceptionDates.filter((d: Date) => d.toDateString() !== date.toDateString())
-                : [...newExceptionDates, date],
-            });
-          }}
-          interval={formData.interval}
-        />
+        <View>
+          <Text style={styles.label}>Select Exception Dates</Text>
+          <TouchableOpacity onPress={() => setShowExceptionCalendar(!showExceptionCalendar)} style={styles.dateInput}>
+            <Text style={styles.dateText}>Toggle Exception Calendar</Text>
+          </TouchableOpacity>
+          {showExceptionCalendar && (
+            <Calendar
+              onDayPress={(day: { dateString: string }) => toggleExceptionDate(day.dateString)}
+              markedDates={markedExceptionDates}
+              // Disable dates before today and after end date
+              minDate={today}
+              maxDate={formData.endDate} // Ensure this date is calculated before using
+            />
+          )}
+        </View>
       )}
     </View>
   );
