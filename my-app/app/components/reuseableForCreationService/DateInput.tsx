@@ -11,7 +11,7 @@ interface DateInputProps {
 const DateInput: React.FC<DateInputProps> = ({ label, date, setDate, editable = true }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 5, color: 'white' }}>{label}</Text>
       <TextInput
         style={[styles.input, !editable && styles.disabledInput]}
         value={date}

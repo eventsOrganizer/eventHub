@@ -28,6 +28,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
+    color: 'white',
   },
   input: {
     borderWidth: 1,

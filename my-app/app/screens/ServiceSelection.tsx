@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -10,6 +10,9 @@ type RootStackParamList = {
 };
 
 type ServiceSelectionNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const { width } = Dimensions.get('window'); // Get the screen width
+const cardWidth = width * 0.8; // Set card width to 80% of screen width
 
 const ServiceSelection: React.FC = () => {
   const navigation = useNavigation<ServiceSelectionNavigationProp>();
@@ -46,7 +49,7 @@ const ServiceSelection: React.FC = () => {
   const scrollToCard = (cardType: string) => {
     const cardIndex = cardType === 'Local' ? 0 : cardType === 'Personnel' ? 1 : 2;
     scrollViewRef.current?.scrollTo({
-      x: cardIndex * 220, // Adjust based on card width and margin
+      x: cardIndex * cardWidth, // Adjust based on card width
       animated: true,
     });
   };
@@ -67,7 +70,7 @@ const ServiceSelection: React.FC = () => {
         contentContainerStyle={styles.scrollContainer}
         horizontal
         showsHorizontalScrollIndicator={false} // Optional: Hide the scroll indicator
-        snapToInterval={220} // Adjust based on card width and margin
+        snapToInterval={cardWidth} // Adjust based on card width
         decelerationRate="fast" // Makes snapping smoother
       >
         <TouchableOpacity
@@ -81,7 +84,7 @@ const ServiceSelection: React.FC = () => {
             style={[styles.cardImage, { transform: [{ scale: localScaleAnimation }] }]}
           />
           <View style={styles.cardTextContainer}>
-            <Text style={styles.cardText}>Local</Text>
+            <Text style={styles.cardText}>Venues</Text>
           </View>
         </TouchableOpacity>
 
@@ -96,7 +99,7 @@ const ServiceSelection: React.FC = () => {
             style={[styles.cardImage, { transform: [{ scale: personnelScaleAnimation }] }]}
           />
           <View style={styles.cardTextContainer}>
-            <Text style={styles.cardText}>Personnel</Text>
+            <Text style={styles.cardText}>Crew</Text>
           </View>
         </TouchableOpacity>
 
@@ -138,10 +141,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // Center the cards in the ScrollView
   },
   card: {
-    width: 200, // Set a fixed width for each card
-    height: 300, // Increased height of the card
+    width: cardWidth, // Set card width to a calculated value based on screen size
+    height: '100%', // Set height to fill the entire card
     borderRadius: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#ffffff', // Set the card background color to white
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
@@ -149,16 +152,19 @@ const styles = StyleSheet.create({
     elevation: 10,
     marginHorizontal: 10, // Space between cards
     overflow: 'hidden',
-    justifyContent: 'center', // Center content vertically
   },
   cardImage: {
-    width: '100%',
-    height: '80%', // 80% of the card height for the image
-    resizeMode: 'cover',
+    width: '100%', // Image width to fill the card
+    height: '100%', // Set height to fill the card completely
+    resizeMode: 'cover', // Cover mode for the image
   },
   cardTextContainer: {
-    height: '20%', // 20% for the white bar at the bottom
-    backgroundColor: '#ffffff',
+    position: 'absolute', // Position text container absolutely
+    bottom: 0, // Stick to the bottom of the card
+    left: 0,
+    right: 0,
+    height: 40, // Fixed height for the text container
+    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent background for better readability
     justifyContent: 'center',
     alignItems: 'center',
   },

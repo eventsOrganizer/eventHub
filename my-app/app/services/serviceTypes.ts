@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { Linking } from 'react-native';
 
 export type Comment = {
   id: number;
@@ -6,6 +7,7 @@ export type Comment = {
   user_id: string;
   created_at: string;
   personal_id: number;
+  user: { username: string };
 };
 
 export type Service = {
@@ -20,16 +22,21 @@ export type Service = {
       name: string;
     };
   };
-  media?: { url: string }[];
-  imageUrl?: string;
+  media?: { url: string }[];   // Preserved from both
+  imageUrl?: string;           // Included from both, but optional
+  image?: string;              // Included from the current version where image was mandatory
   startdate: string;
   enddate: string;
   availability: Array<{
+    id?: number;              // Made `id` optional to accommodate both structures
+    start?: string;           // Preserved from the current version for time ranges
+    end?: string;
+    daysofweek?: string;      // Kept as optional to reflect differences
     date: string;
-    statusday: 'available' | 'reserved' | 'exception';
+    statusday?: 'available' | 'reserved' | 'exception'; // Added new statusday from the incoming
   }>;
-  comment: Comment[];
-  like: Array<{ user_id: string }>;
+  comment: Comment[];          // Preserved as array from both versions
+  like?: { user_id: string }[];  // Made optional based on both versions
   order: Array<{
     user_id: string;
     ticket_id: string;
@@ -42,6 +49,10 @@ export type Service = {
     user_id: string;
     rate: number;
   }>;
+  location?: {
+    latitude: number | null;
+    longitude: number | null;
+  } | null;
 };
 
 export type LocalComment = {
@@ -197,24 +208,37 @@ export const initiatePayment = async (requestId: number, amount: number) => {
   const FLOUCI_APP_SECRET = "ee9d6f08-30c8-4dbb-8578-d51293ff2535";
 
   try {
-    const response = await fetch('https://api.flouci.com/payment', {
+    const response = await fetch('https://developers.flouci.com/api/generate_payment', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${FLOUCI_APP_TOKEN}`
+        'Authorization': `Bearer ${FLOUCI_APP_TOKEN}`,
       },
       body: JSON.stringify({
         app_token: FLOUCI_APP_TOKEN,
         app_secret: FLOUCI_APP_SECRET,
         amount: amount,
-        accept_url: `https://yourapp.com/payment-success?requestId=${requestId}`,
-        cancel_url: `https://yourapp.com/payment-cancel?requestId=${requestId}`,
-        decline_url: `https://yourapp.com/payment-decline?requestId=${requestId}`,
-      })
+        accept_url: `exp://192.168.100.2:8081/payment-success?serviceId=${serviceId}`,
+        cancel_url: `exp://192.168.100.2:8081/payment-cancel?serviceId=${serviceId}`,
+        decline_url: `exp://192.168.100.2:8081/payment-decline?serviceId=${serviceId}`,
+        webhook_url: `exp://192.168.100.2:8081/api/payment-webhook`,
+      }),
     });
-
+  
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Flouci API error:', response.status, errorText);
+      throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+    }
+  
     const paymentData = await response.json();
-    return paymentData;
+    console.log('Payment Response:', paymentData); // Log the full response for debugging
+  
+    if (paymentData?.result?.link) {
+      return paymentData.result.link;
+    } else {
+      throw new Error('Payment URL not found in the response');
+    }
   } catch (error) {
     console.error('Error initiating Flouci payment:', error);
     return null;
