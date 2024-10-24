@@ -7,6 +7,7 @@ import AvailabilityCalendar from '../../components/PersonalServiceComponents/Ava
 import { handleConfirm } from './components/BookingLogic';
 import { RootStackParamList } from '../../navigation/types';
 import TimePicker from './components/TimePicker';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type BookingScreenRouteProp = RouteProp<RootStackParamList, 'BookingScreen'>;
 type BookingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'BookingScreen'>;
@@ -54,36 +55,41 @@ const BookingScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Book a Service</Text>
-      <AvailabilityCalendar
-        personalId={personalId}
-        onSelectDate={(date: string) => setSelectedDate(date)}
-        startDate={availabilityData.startDate}
-        endDate={availabilityData.endDate}
-        availability={availabilityData.availability}
-        interval="Monthly"
-        selectedDate={selectedDate}
-        userId={userId}
-      />
-      <TimePicker
-        label="Start Time"
-        value={startHour}
-        onChange={(time: string) => setStartHour(time)}
-      />
-      <TimePicker
-        label="End Time"
-        value={endHour}
-        onChange={(time: string) => setEndHour(time)}
-      />
-      <TouchableOpacity 
-        style={[styles.bookButton, !selectedDate && styles.disabledButton]} 
-        onPress={handleBooking}
-        disabled={!selectedDate}
-      >
-        <Text style={styles.bookButtonText}>Send Booking Request</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    <LinearGradient
+      colors={['#F0F4F8', '#E1E8ED', '#D2DCE5', '#C3D0D9']}
+      style={styles.container}
+    >
+      <ScrollView>
+        <Text style={styles.title}>Book a Service</Text>
+        <AvailabilityCalendar
+          personalId={personalId}
+          onSelectDate={(date: string) => setSelectedDate(date)}
+          startDate={availabilityData.startDate}
+          endDate={availabilityData.endDate}
+          availability={availabilityData.availability}
+          interval="Monthly"
+          selectedDate={selectedDate}
+          userId={userId}
+        />
+        <TimePicker
+          label="Start Time"
+          value={startHour}
+          onChange={(time: string) => setStartHour(time)}
+        />
+        <TimePicker
+          label="End Time"
+          value={endHour}
+          onChange={(time: string) => setEndHour(time)}
+        />
+        <TouchableOpacity 
+          style={[styles.bookButton, !selectedDate && styles.disabledButton]} 
+          onPress={handleBooking}
+          disabled={!selectedDate}
+        >
+          <Text style={styles.bookButtonText}>Send Booking Request</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </LinearGradient>
   );
 };
 
@@ -91,22 +97,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: '#4A90E2',
   },
   bookButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4A90E2',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 20,
   },
   disabledButton: {
-    backgroundColor: '#cccccc',
+    backgroundColor: '#B0C4DE',
   },
   bookButtonText: {
     color: 'white',

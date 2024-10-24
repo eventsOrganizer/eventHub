@@ -4,6 +4,7 @@ import { useRoute } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
 import { useToast } from '../../hooks/useToast';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Comment {
   id: number;
@@ -128,10 +129,10 @@ const CommentsScreen = () => {
   const renderComment = ({ item }: { item: Comment }) => (
     <View style={styles.commentItem}>
       <View style={styles.commentHeader}>
-      <Image 
-  source={{ uri: item.user.media && item.user.media[0] ? item.user.media[0].url : 'https://via.placeholder.com/40' }} 
-  style={styles.avatar} 
-/>
+        <Image 
+          source={{ uri: item.user.media && item.user.media[0] ? item.user.media[0].url : 'https://via.placeholder.com/40' }} 
+          style={styles.avatar} 
+        />
         <View style={styles.commentInfo}>
           <Text style={styles.commentUser}>{item.user.username}</Text>
           <Text style={styles.commentDate}>{formatRelativeTime(item.created_at)}</Text>
@@ -142,7 +143,10 @@ const CommentsScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#F0F4F8', '#E1E8ED', '#D2DCE5', '#C3D0D9']}
+      style={styles.container}
+    >
       <Text style={styles.title}>Comments</Text>
       <FlatList
         data={comments}
@@ -162,7 +166,7 @@ const CommentsScreen = () => {
           <Text style={styles.submitButtonText}>Submit</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -170,17 +174,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+    color: '#4A90E2',
   },
   commentItem: {
     marginBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: '#E1E8ED',
     paddingBottom: 8,
   },
   commentHeader: {
@@ -199,37 +203,40 @@ const styles = StyleSheet.create({
   },
   commentUser: {
     fontWeight: 'bold',
+    color: '#4A90E2',
   },
   commentDate: {
     fontSize: 12,
-    color: '#666',
+    color: '#8E8E93',
   },
   commentText: {
-    marginLeft: 48,  // To align with the username
+    marginLeft: 48,
+    color: '#333',
   },
   emptyText: {
     textAlign: 'center',
     marginTop: 20,
-    color: '#666',
+    color: '#8E8E93',
   },
   inputContainer: {
     marginTop: 16,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#E1E8ED',
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
+    backgroundColor: '#FFFFFF',
   },
   submitButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#4A90E2',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
   },
   submitButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
 });

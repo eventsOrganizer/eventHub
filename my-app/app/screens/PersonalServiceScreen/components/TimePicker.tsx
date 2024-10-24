@@ -98,9 +98,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 8,
     color: '#333',
-  },
-  button: {
-    backgroundColor: '#4CAF50',
+ },
+ button: {
+    backgroundColor: '#4A90E2',
     padding: 12,
     borderRadius: 8,
   },
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   selectedItem: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#4A90E2',
     borderRadius: 8,
   },
   pickerItemText: {
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   modalButton: {
     padding: 10,
     borderRadius: 8,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#4A90E2',
   },
   modalButtonText: {
     color: 'white',
