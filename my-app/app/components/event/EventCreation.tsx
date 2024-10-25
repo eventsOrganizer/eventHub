@@ -24,6 +24,7 @@ const EventCreation: React.FC = () => {
     endTime: new Date(),
     imageUrl: '',
     location: null as { latitude: number; longitude: number } | null,
+    
   });
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);

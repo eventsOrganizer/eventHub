@@ -445,6 +445,7 @@ create table
     type character varying null,
     payment boolean null,
     payment_id text null,
+    token text null,
     constraint order_pkey primary key (id),
     constraint order_local_id_fkey foreign key (local_id) references local (id),
     constraint order_material_id_fkey foreign key (material_id) references material (id),

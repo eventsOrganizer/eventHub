@@ -29,6 +29,9 @@ const EventCreationScreen: React.FC = () => {
     endTime: new Date(),
     imageUrl: '',
     location: null as { latitude: number; longitude: number } | null,
+    accessType: 'free' | 'paid',
+  ticketPrice: '',
+ticketQuantity: '',
   });
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
@@ -150,16 +153,27 @@ const EventCreationScreen: React.FC = () => {
         createUpdate(userId, 'event', eventId)
       ]);
 
-      console.log('Event creation completed');
-      setIsLoading(false);
-      Alert.alert('Success', 'Event created successfully');
-      navigation.goBack();
-    } catch (error) {
-      console.error('Error creating event:', error);
-      setIsLoading(false);
-      Alert.alert('Error', 'Failed to create event. Please try again.');
+      if (eventData.accessType === 'paid') {
+      console.log('Creating tickets for paid event');
+      const { error: ticketError } = await supabase.from('ticket').insert({
+        event_id: eventId,
+        price: eventData.ticketPrice,
+        quantity: eventData.ticketQuantity,
+      });
+
+      if (ticketError) throw ticketError;
     }
-  };
+
+    console.log('Event creation completed');
+    setIsLoading(false);
+    Alert.alert('Success', 'Event created successfully');
+    navigation.goBack();
+  } catch (error) {
+    console.error('Error creating event:', error);
+    setIsLoading(false);
+    Alert.alert('Error', 'Failed to create event. Please try again.');
+  }
+};
 
   const renderStepContent = () => {
     console.log('Rendering step:', currentStep);
@@ -192,42 +206,69 @@ const EventCreationScreen: React.FC = () => {
             </View>
           </>
         );
-      case 2:
-        return (
-          <>
-            <Text style={tw`text-2xl font-bold mb-4 text-white`}>Event Type & Category</Text>
-            <Picker
-              selectedValue={eventData.eventType}
-              onValueChange={(value) => handleInputChange('eventType', value)}
-              style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
-            >
-              <Picker.Item label="Select Event Type" value="" />
-              <Picker.Item label="Indoor" value="indoor" />
-              <Picker.Item label="Outdoor" value="outdoor" />
-              <Picker.Item label="Online" value="online" />
-            </Picker>
-            <Picker
-              selectedValue={eventData.selectedCategory}
-              onValueChange={(value) => handleInputChange('selectedCategory', value)}
-              style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
-            >
-              <Picker.Item label="Select Category" value="" />
-              {categories.map(category => (
-                <Picker.Item key={category.id} label={category.name} value={category.id} />
-              ))}
-            </Picker>
-            <Picker
-              selectedValue={eventData.selectedSubcategory}
-              onValueChange={(value) => handleInputChange('selectedSubcategory', value)}
-              style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
-            >
-              <Picker.Item label="Select Subcategory" value="" />
-              {subcategories.map(subcategory => (
-                <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
-              ))}
-            </Picker>
-          </>
-        );
+        case 2:
+          return (
+            <>
+              <Text style={tw`text-2xl font-bold mb-4 text-white`}>Event Type & Category</Text>
+              <Picker
+                selectedValue={eventData.eventType}
+                onValueChange={(value) => handleInputChange('eventType', value)}
+                style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
+              >
+                <Picker.Item label="Select Event Type" value="" />
+                <Picker.Item label="Indoor" value="indoor" />
+                <Picker.Item label="Outdoor" value="outdoor" />
+                <Picker.Item label="Online" value="online" />
+              </Picker>
+              <Picker
+                selectedValue={eventData.selectedCategory}
+                onValueChange={(value) => handleInputChange('selectedCategory', value)}
+                style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
+              >
+                <Picker.Item label="Select Category" value="" />
+                {categories.map(category => (
+                  <Picker.Item key={category.id} label={category.name} value={category.id} />
+                ))}
+              </Picker>
+              <Picker
+                selectedValue={eventData.selectedSubcategory}
+                onValueChange={(value) => handleInputChange('selectedSubcategory', value)}
+                style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
+              >
+                <Picker.Item label="Select Subcategory" value="" />
+                {subcategories.map(subcategory => (
+                  <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
+                ))}
+              </Picker>
+              <Picker
+                selectedValue={eventData.accessType}
+                onValueChange={(value) => handleInputChange('accessType', value)}
+                style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
+              >
+                <Picker.Item label="Select Access Type" value="" />
+                <Picker.Item label="Free Access" value="free" />
+                <Picker.Item label="Paid Access" value="paid" />
+              </Picker>
+              {eventData.accessType === 'paid' && (
+                <>
+                  <TextInput
+                    style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
+                    value={eventData.ticketPrice}
+                    onChangeText={(text) => handleInputChange('ticketPrice', text)}
+                    placeholder="Ticket Price"
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
+                    value={eventData.ticketQuantity}
+                    onChangeText={(text) => handleInputChange('ticketQuantity', text)}
+                    placeholder="Ticket Quantity"
+                    keyboardType="numeric"
+                  />
+                </>
+              )}
+            </>
+          );
       case 3:
         return (
           <>
