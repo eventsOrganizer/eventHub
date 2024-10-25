@@ -7,12 +7,16 @@ import { UserProvider } from './app/UserContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'react-native';
 // import Background from './app/components/Background' DONT DELETE THIS  !!!!!!!!!!! ;
+import { StripeProvider } from '@stripe/stripe-react-native';
 
 export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle="light-content" />
       {/* <Background /> DONT DELETE THIS  !!!!!!!!!!! */}
+      <StripeProvider
+      publishableKey="pk_test_51QClepFlPYG1ImxpWSMG9xSRk1nx5GSs0ICY7GLfHDYRVpP8ALGVhJmkcehDZH4A67JOhek41fcQdFmXcjsJhEdo00y4GqAitW" // Replace with your actual Stripe publishable key
+    >
       <UserProvider>
         <Provider store={store}>
           <NavigationContainer>
@@ -20,6 +24,7 @@ export default function App() {
           </NavigationContainer>
         </Provider>
       </UserProvider>
+      </StripeProvider>
     </SafeAreaProvider>
   );
 }

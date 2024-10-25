@@ -4,11 +4,9 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
 import AvailabilityList from '../PersonalServiceComponents/AvailabilityList';
 import CommentSection from '../PersonalServiceComponents/CommentSection';
-import useStripePayment from '../../payment/useStripePayment'
-
 type RootStackParamList = {
   LocalServiceDetails: { localServiceId: number };
-  PaymentAction: { price: number; personalId: string };
+  PaymentAction: { price: number; personalId: string }
 };
 
 type LocalServiceDetailScreenRouteProp = RouteProp<RootStackParamList, 'LocalServiceDetails'>;
@@ -50,8 +48,12 @@ const LocalServiceDetailScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { createPaymentIntent, loading: paymentLoading, error: paymentError } = useStripePayment();
+const [visible,setVisible]=useState(false)
 
+
+const onClose=()=>{
+  setVisible(false)
+}
   useEffect(() => {
     const fetchServiceDetails = async () => {
       const localServiceId = route.params?.localServiceId;
@@ -87,33 +89,15 @@ const LocalServiceDetailScreen: React.FC = () => {
   }, [route.params?.localServiceId]);
 
   const handleBooking = async () => {
-    if (!service) return;
+  
 
-    const amount = service.priceperhour * 100; // Assuming price is in dollars and you need cents
+    setVisible(true)
 
-    const clientSecret = await createPaymentIntent(amount);
 
-    if (clientSecret) {
-      navigation.navigate('PaymentScreen', { clientSecret });
-    }
+    
   };
 
-  if (isLoading || paymentLoading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
 
-  if (paymentError) {
-    return <Text>Error: {paymentError}</Text>;
-  }
-
-  if (error) {
-    Alert.alert('Error', error); // Display error alert
-    return (
-      <View style={styles.container}>
-        <Text>No service details available.</Text>
-      </View>
-    );
-  }
 
   if (!service) {
     return <Text>No service details available.</Text>;
@@ -136,6 +120,7 @@ const LocalServiceDetailScreen: React.FC = () => {
       <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
         <Text style={styles.bookButtonText}>Book Now</Text>
       </TouchableOpacity>
+      <PaymentModal visible={visible} onClose={ onClose} amount={3000} local_id={80}/>
     </ScrollView>
   );
 };
@@ -144,6 +129,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f8f8', // Softer background color for a modern feel
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   image: {
     width: '100%',

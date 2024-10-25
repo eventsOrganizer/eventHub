@@ -42,6 +42,8 @@ const ServiceSelection: React.FC = () => {
       navigation.navigate('CreateLocalServiceStep1');
     } else if (cardType === 'Personnel') {
       navigation.navigate('CreatePersonalServiceStep1');
+    } else if (cardType === 'Material') {
+      navigation.navigate('MaterialServiceCreation');
     }
     scrollToCard(cardType);
   };
@@ -125,53 +127,53 @@ const ServiceSelection: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f4f8',
+    backgroundColor: '#001F3F', // Dark background color similar to HomeScreen
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffff', // White text for contrast
     textAlign: 'center',
     marginTop: 30,
   },
   scrollContainer: {
-    flexDirection: 'row', // Change direction to row for horizontal scrolling
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20, // Added vertical padding for aesthetics
-    justifyContent: 'center', // Center the cards in the ScrollView
+    paddingVertical: 20,
+    justifyContent: 'center',
   },
   card: {
-    width: cardWidth, // Set card width to a calculated value based on screen size
-    height: '100%', // Set height to fill the entire card
+    width: cardWidth,
+    height: '100%', // Full-screen height
     borderRadius: 20,
-    backgroundColor: '#ffffff', // Set the card background color to white
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Semi-transparent card background
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 10,
-    marginHorizontal: 10, // Space between cards
+    marginHorizontal: 10,
     overflow: 'hidden',
   },
   cardImage: {
-    width: '100%', // Image width to fill the card
-    height: '100%', // Set height to fill the card completely
-    resizeMode: 'cover', // Cover mode for the image
+    width: '100%',
+    height: '100%', // Cover the full card
+    resizeMode: 'cover', // Ensures the image covers the whole card
   },
   cardTextContainer: {
-    position: 'absolute', // Position text container absolutely
-    bottom: 0, // Stick to the bottom of the card
+    position: 'absolute',
+    bottom: 20,
     left: 0,
     right: 0,
-    height: 40, // Fixed height for the text container
-    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent background for better readability
+    height: 40,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark semi-transparent background for text
     justifyContent: 'center',
     alignItems: 'center',
   },
   cardText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#ffffff', // White text for better visibility
   },
 });
 

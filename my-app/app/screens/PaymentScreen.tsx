@@ -1,68 +1,49 @@
-import React, { useEffect } from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
-import { CardField, useStripe } from '@stripe/stripe-react-native';
+import React, { useState } from 'react';
+import { View, Button, Text } from 'react-native';
+import { CardField } from '@stripe/stripe-react-native';
+import useStripePayment from '../hooks/userStripePayment'; // The hook we just created
 
-const PaymentScreen = ({ route, navigation }) => {
-  const { clientSecret } = route.params; // Get the client secret from route params
-  const { confirmPayment } = useStripe();
+export default function PaymentScreen() {
+  const [cardDetails, setCardDetails] = useState();
+  const [billingDetails, setBillingDetails] = useState({
+    email: 'test@example.com', // Replace with real billing details
+  });
 
-  const handlePayment = async () => {
-    const { error, paymentIntent } = await confirmPayment(clientSecret, {
-      type: 'Card', // You can set this based on your payment method
-    });
+  const { initiatePayment, loading, paymentSuccess, errorMessage } = useStripePayment();
 
-    if (error) {
-      console.log('Payment Confirmation Error:', error);
-      Alert.alert('Payment Error', error.message); // Show error alert
-    } else if (paymentIntent) {
-      console.log('Payment successful!', paymentIntent);
-      Alert.alert('Payment Success', 'Your payment was successful!'); // Show success alert
-      // Optionally navigate to a success screen
-      navigation.navigate('PaymentSuccess'); // Ensure you have a screen to navigate to
-    }
+  const handlePayPress = () => {
+
+    //@ts-ignore
+    initiatePayment(cardDetails, billingDetails);
   };
 
-  useEffect(() => {
-    if (clientSecret) {
-      handlePayment();
-    }
-  }, [clientSecret]);
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Complete Your Payment</Text>
+    <View>
       <CardField
         postalCodeEnabled={false}
-        placeholder={{ number: '4242 4242 4242 4242' }}
+        placeholders={{
+          number: '4242 4242 4242 4242',
+        }}
         cardStyle={{
-          borderColor: '#000000',
-          borderWidth: 1,
-          borderRadius: 8,
+          backgroundColor: '#FFFFFF',
+          textColor: '#000000',
         }}
         style={{
           width: '100%',
           height: 50,
           marginVertical: 30,
         }}
+        onCardChange={(details) => {
+            // console.log("details",details);
+            
+            //@ts-ignore
+          setCardDetails(details);
+        }}
       />
-      <Button title="Pay" onPress={handlePayment} />
+      <Button onPress={handlePayPress} title="Pay" disabled={loading} />
+
+      {errorMessage && <Text style={{ color: 'red' }}>{errorMessage}</Text>}
+      {paymentSuccess && <Text style={{ color: 'green' }}>Payment Successful!</Text>}
     </View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-});
-
-export default PaymentScreen;
+}

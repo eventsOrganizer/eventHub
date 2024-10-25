@@ -24,9 +24,9 @@ import SubcategorySelectionScreen from '../screens/subcategorySelectionScreen';
 
 
 import GuestManagementScreen from '../screens/GuestManagementScreen';
-import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
+
 import CreateServiceScreen from '../screens/CreateServiceScreen';
-import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen'
+
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ServiceSelection from '../screens/ServiceSelection';
 import VideoRoomsScreen from '../components/event/video/VideoRoomsScreen';
@@ -73,11 +73,10 @@ import SearchResultsScreen from '../screens/SearchResultsScreen';
 
 
 import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail';
-import PaymentActionScreen from '../payment/PaymentActionScreen';
 
-import NotificationsScreen from '../screens/NotificationsScreen';
-import TicketingScreen from '../screens/TicketingScreen';
-import EventSummaryScreen from '../screens/EventSummaryScreen';
+import PaymentTestScreen from '../components/payment/PaymentTestScreen';
+
+
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -115,6 +114,7 @@ type RootStackParamList = {
   };
   UserProfile: { userId: string };  UserServicesScreen: undefined;
   MapScreen: undefined;
+  PaymentTest: undefined; // Add this line
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -342,12 +342,7 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true }} 
   />
 
-  {/* <Stack.Screen
-    name="PaymentAction"
-    component={PaymentActionScreen}
-    options={{ headerShown: true, title: 'Payment' }}
-    initialParams={{ price: 200, personalId: '1' }}
-  /> */}
+
 
   <Stack.Screen 
     name="EventCreation" 
@@ -439,9 +434,11 @@ const AppNavigation: React.FC = () => {
       component={MaterialsOnboardingScreen} />
 
     <Stack.Screen name="MapScreen" component={MapScreen} />
+    <Stack.Screen name="PaymentTest" component={PaymentTestScreen} />
 </Stack.Navigator> 
 
   )
 }
+
 
 export default AppNavigation;

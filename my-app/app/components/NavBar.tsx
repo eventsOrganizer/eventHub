@@ -1,26 +1,16 @@
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import RNPickerSelect from 'react-native-picker-select';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
-import { StackNavigationProp } from '@react-navigation/stack';
 
-type RootStackParamList = {
-  SearchResultsScreen: { searchTerm: string };
-  // ... other screens
-};
-
-
-interface NavBarProps {
+type NavBarProps = {
   selectedFilter: string | null;
   setSelectedFilter: (value: string | null) => void;
   onSearch: (searchTerm: string) => void;
-}
-
-
+};
 
 const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSearch }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -46,22 +36,20 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
             value={searchTerm}
             onChangeText={setSearchTerm}
           />
-          {/* Add a search button */}
+          <TouchableOpacity onPress={() => navigation.navigate('PaymentTest',{amount:3000,local_id:80})} style={styles.button}>
+            <Text style={styles.buttonText}>Test Payment</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={handleSearch} style={tw`ml-2`}>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('UserProfile' as never)} style={tw`p-2`}>
+        <TouchableOpacity onPress={() => navigation.navigate('UserProfile')} style={tw`p-2`}>
           <Ionicons name="person-outline" size={24} color="#1a2a4a" />
         </TouchableOpacity>
         <TouchableOpacity style={tw`p-2`}>
           <Ionicons name="notifications" size={24} color="#1a2a4a" />
         </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={tw`p-2`}
-          onPress={() => navigation.navigate('ChatList' as never)}
-        >
+        <TouchableOpacity style={tw`p-2`} onPress={() => navigation.navigate('PaymentAction')}>
           <Ionicons name="chatbubbles-outline" size={24} color="#1a2a4a" />
         </TouchableOpacity>
         <View style={tw`w-30`}>
@@ -84,5 +72,17 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
     </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: '#1a2a4a',
+    padding: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+});
 
 export default NavBar;
