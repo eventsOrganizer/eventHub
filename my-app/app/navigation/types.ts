@@ -117,7 +117,7 @@ export type RootStackParamList = {
     personalId: number;
     userId: string | null;
   };
-  ReviewScreen: { materialId: string };
+  ReviewScreen: { materialId: string; sellOrRent: 'sell' | 'rent' };
   CommentScreen: { materialId: string };
 
 

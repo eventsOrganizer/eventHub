@@ -2,28 +2,35 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { AirbnbRating } from 'react-native-ratings';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
 interface ReviewFormProps {
   rating: number;
   onRatingChange: (rating: number) => void;
   onSubmit: () => void;
   hasUserReviewed: boolean;
+  theme: {
+    primary: string;
+    secondary: string;
+  };
 }
 
-export const ReviewForm = ({ rating, onRatingChange, onSubmit, hasUserReviewed }: ReviewFormProps) => {
+export const ReviewForm = ({ 
+  rating, 
+  onRatingChange, 
+  onSubmit, 
+  hasUserReviewed,
+  theme 
+}: ReviewFormProps) => {
   return (
-    <Animated.View 
-      entering={FadeInDown.delay(200)}
-      style={styles.container}
-    >
-      <Text style={styles.title}>Rate this item</Text>
+    <View style={styles.container}>
+      <Text style={[styles.title, { color: theme.primary }]}>Rate this item</Text>
       <AirbnbRating
         count={5}
         defaultRating={rating}
         size={30}
         showRating={false}
         onFinishRating={onRatingChange}
+        selectedColor={theme.primary}
         starContainerStyle={styles.ratingStars}
       />
       <Button 
@@ -31,14 +38,14 @@ export const ReviewForm = ({ rating, onRatingChange, onSubmit, hasUserReviewed }
         onPress={onSubmit} 
         style={[
           styles.submitButton,
-          hasUserReviewed && styles.disabledButton
+          { backgroundColor: hasUserReviewed ? '#cccccc' : theme.primary }
         ]}
         labelStyle={styles.submitButtonLabel}
         disabled={hasUserReviewed}
       >
         {hasUserReviewed ? 'Already Reviewed' : 'Submit Review'}
       </Button>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -71,8 +78,6 @@ const styles = StyleSheet.create({
   submitButtonLabel: {
     fontSize: 16,
     paddingVertical: 4,
-  },
-  disabledButton: {
-    backgroundColor: '#cccccc',
+    color: 'white',
   },
 });

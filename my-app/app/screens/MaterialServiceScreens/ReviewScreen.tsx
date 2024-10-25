@@ -14,13 +14,16 @@ import { Review, Like } from '../../types/review';
 import { themeColors } from '../../utils/themeColors';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
+import { useToast } from '../../hooks/use-toast';
 
 type ReviewScreenProps = StackScreenProps<RootStackParamList, 'ReviewScreen'>;
 
 const ReviewScreen: React.FC<ReviewScreenProps> = ({ route, navigation }) => {
-  const { materialId, sellOrRent } = route.params as { materialId: string; sellOrRent: 'sell' | 'rent' };
+  const { materialId, sellOrRent } = route.params;
   const theme = sellOrRent === 'rent' ? themeColors.rent : themeColors.sale;
   const { userId } = useUser();
+  const { toast } = useToast();
+  
   const [reviews, setReviews] = useState<Review[]>([]);
   const [likes, setLikes] = useState<Like[]>([]);
   const [newReview, setNewReview] = useState({ rate: 0 });
@@ -31,30 +34,46 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route, navigation }) => {
   useEffect(() => {
     fetchReviews();
     fetchLikes();
-  }, []);
+  }, [materialId]);
 
   const fetchReviews = async () => {
-    const { data, error } = await supabase
-      .from('review')
-      .select(`
-        id,
-        user_id,
-        rate,
-        user:user_id (firstname, lastname)
-      `)
-      .eq('material_id', materialId)
-      .order('id', { ascending: false });  // Assuming 'id' is auto-incrementing
+    try {
+      const { data, error } = await supabase
+        .from('review')
+        .select(`
+          id,
+          user_id,
+          rate,
+          user:user_id (
+            firstname,
+            lastname
+          )
+        `)
+        .eq('material_id', materialId)
+        .order('id', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching reviews:', error);
-    } else {
-      const formattedData = data.map(review => ({
-        ...review,
-        user: review.user || { firstname: 'Unknown', lastname: 'User' }
+      if (error) throw error;
+
+      const formattedReviews = data.map(review => ({
+        id: review.id,
+        user_id: review.user_id,
+        rate: review.rate,
+        user: {
+          firstname: review.user?.firstname || 'Unknown',
+          lastname: review.user?.lastname || 'User'
+        }
       }));
-      setReviews(formattedData);
-      calculateAverageRating(formattedData);
-      setHasUserReviewed(formattedData.some(review => review.user_id === userId));
+
+      setReviews(formattedReviews);
+      calculateAverageRating(formattedReviews);
+      setHasUserReviewed(formattedReviews.some(review => review.user_id === userId));
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch reviews. Please try again later.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -83,22 +102,41 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route, navigation }) => {
       return;
     }
 
-    if (hasUserReviewed) return;
-
-    const { error } = await supabase
-      .from('review')
-      .insert({
-        material_id: materialId,
-        user_id: userId,
-        rate: newReview.rate,
+    if (hasUserReviewed) {
+      toast({
+        title: "Error",
+        description: "You have already reviewed this item",
+        variant: "destructive"
       });
+      return;
+    }
 
-    if (error) {
-      console.error('Error submitting review:', error);
-    } else {
+    try {
+      const { error } = await supabase
+        .from('review')
+        .insert({
+          material_id: materialId,
+          user_id: userId,
+          rate: newReview.rate,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Review submitted successfully",
+      });
+      
       fetchReviews();
       setNewReview({ rate: 0 });
       setHasUserReviewed(true);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit review",
+        variant: "destructive"
+      });
     }
   };
 
@@ -149,61 +187,53 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route, navigation }) => {
         theme={theme}
       />
       
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
+      <Animated.View 
+        entering={FadeInDown}
+        style={styles.contentContainer}
       >
-        <Animated.View 
-          entering={FadeInDown}
-          style={styles.contentContainer}
+        <BlurView 
+          intensity={20} 
+          tint="light" 
+          style={[
+            styles.blurContainer,
+            { backgroundColor: 'rgba(255, 255, 255, 0.95)' }
+          ]}
         >
-          <BlurView 
-            intensity={20} 
-            tint="light" 
-            style={[
-              styles.blurContainer,
-              { backgroundColor: 'rgba(255, 255, 255, 0.95)' }
-            ]}
-          >
-            <View style={[styles.content, { backgroundColor: theme.light }]}>
-              <RatingHeader 
-                averageRating={averageRating} 
-                totalReviews={reviews.length}
-              />
-              
-              <View style={styles.divider} />
-              
-              <ReviewForm
-                rating={newReview.rate}
-                onRatingChange={(rate) => setNewReview({ rate })}
-                onSubmit={handleSubmitReview}
-                hasUserReviewed={hasUserReviewed}
-                primaryColor={theme.primary}
-              />
-              
-              <View style={styles.divider} />
-              
-              <ReviewList 
-                reviews={reviews} 
-                primaryColor={theme.primary}
-              />
-            </View>
-          </BlurView>
-        </Animated.View>
-      </ScrollView>
+          <View style={[styles.content, { backgroundColor: theme.light }]}>
+            <RatingHeader 
+              averageRating={averageRating} 
+              totalReviews={reviews.length}
+            />
+            
+            <View style={styles.divider} />
+            
+            <ReviewForm
+              rating={newReview.rate}
+              onRatingChange={(rate) => setNewReview({ rate })}
+              onSubmit={handleSubmitReview}
+              hasUserReviewed={hasUserReviewed}
+              theme={theme}
+            />
+            
+            <View style={styles.divider} />
+            
+            <ReviewList reviews={reviews} theme={theme} />
+          </View>
+        </BlurView>
+      </Animated.View>
 
       <AuthenticationModal
         visible={isAuthModalVisible}
         onClose={() => setIsAuthModalVisible(false)}
         onLogin={() => {
           setIsAuthModalVisible(false);
-          navigation.navigate('Signin');
+          navigation.navigate('MaterialScreen');
         }}
         onSignup={() => {
           setIsAuthModalVisible(false);
-          navigation.navigate('Signup');
+          navigation.navigate('MaterialScreen');
         }}
-        primaryColor={theme.primary}
+        theme={theme}
       />
     </View>
   );
@@ -213,15 +243,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
   contentContainer: {
+    flex: 1,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     marginTop: 20,
     overflow: 'hidden',
-    minHeight: '100%',
   },
   blurContainer: {
     flex: 1,
@@ -229,10 +256,10 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
   },
   content: {
+    flex: 1,
     padding: 20,
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    marginTop: -20,
   },
   divider: {
     height: 1,

@@ -8,7 +8,7 @@ import MaterialOverview from '../../components/MaterialDetail/MaterialOverview';
 import AvailabilityCalendar from '../../components/MaterialDetail/AvailabilityCalendar';
 import { MessageCircle, Star, MessageSquare, Share2 } from 'lucide-react-native';
 import ActionButtons from '../../components/MaterialDetail/ActionButtons';
-import { useBasket } from '../../hooks/useBasket';
+import { useBasket } from '../../components/basket/BasketContext';
 import { useWishlist } from '../../hooks/useWishlist';
 import { Text, Card } from 'react-native-paper';
 import { themeColors } from '../../utils/themeColors';
@@ -20,13 +20,16 @@ const { width } = Dimensions.get('window');
 
 const MaterialDetailScreen: React.FC<MaterialDetailScreenProps> = ({ route, navigation }) => {
   const { material } = route.params as { material: Material };
-  const { addToBasket, basketCount } = useBasket();
+  const { addToBasket, basketItems } = useBasket();
   const { toggleWishlist, isWishlisted } = useWishlist();
   
   const theme = material.sell_or_rent === 'rent' ? themeColors.rent : themeColors.sale;
 
   const handleReviewPress = () => {
-    navigation.navigate('ReviewScreen', { materialId: material.id });
+    navigation.navigate('ReviewScreen', { 
+      materialId: material.id,
+      sellOrRent: material.sell_or_rent // Pass the sell_or_rent parameter
+    });
   };
 
   const handleCommentPress = () => {
@@ -44,7 +47,7 @@ const MaterialDetailScreen: React.FC<MaterialDetailScreenProps> = ({ route, navi
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <Header 
           navigation={navigation} 
-          basketCount={basketCount} 
+          basketCount={basketItems.length} 
           material={material}
         />
         
