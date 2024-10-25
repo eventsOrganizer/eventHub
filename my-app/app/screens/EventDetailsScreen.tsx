@@ -12,6 +12,7 @@ import JoinEventButton from '../components/event/JoinEventButton';
 import UserAvatar from '../components/event/UserAvatar';
 import EventLike from '../components/event/EventLike';
 import EventReview from '../components/event/EventReview';
+import BuyTicket from '../components/event/Ticketing/BuyTicket';
 
 interface EventDetails {
   id: number;
@@ -50,6 +51,7 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
   const [distance, setDistance] = useState<number | null>(null);
   const [address, setAddress] = useState<string>('Loading address...');
   const [attendeesRefreshTrigger, setAttendeesRefreshTrigger] = useState(0);
+  const [hasTickets, setHasTickets] = useState(false);
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -70,23 +72,19 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
           `)
           .eq('id', eventId)
           .single();
-    
-        console.log('Event Data:', eventData);
-    
+
         if (eventError) {
           console.error('Error fetching event details:', eventError);
           return;
         }
-    
+
         if (eventData) {
           const { data: userData, error: userError } = await supabase
             .from('user')
             .select('email')
             .eq('id', eventData.user_id)
             .single();
-    
-          console.log('User Data:', userData);
-    
+
           if (userError) {
             console.error('Error fetching user details:', userError);
           } else {
@@ -95,15 +93,13 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
               email: userData.email
             };
           }
-    
+
           const { data: mediaData, error: mediaError } = await supabase
             .from('media')
             .select('url')
             .eq('user_id', eventData.user_id)
             .single();
-    
-          console.log('Media Data:', mediaData);
-    
+
           if (mediaError) {
             console.error('Error fetching user media:', mediaError);
           } else {
@@ -112,10 +108,22 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
               avatar_url: mediaData?.url || 'https://via.placeholder.com/150'
             };
           }
+
+          setEventDetails(eventData);
+
+          // Check if the event has tickets
+          const { data: ticketData, error: ticketError } = await supabase
+            .from('ticket')
+            .select('id')
+            .eq('event_id', eventId)
+            .single();
+
+          if (ticketError) {
+            console.error('Error checking tickets:', ticketError);
+          } else {
+            setHasTickets(!!ticketData);
+          }
         }
-    
-        console.log('Final Event Data:', eventData);
-        setEventDetails(eventData);
       } catch (error) {
         console.error('Error:', error);
       }
@@ -161,12 +169,12 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
             onLeaveSuccess={handleLeaveSuccess}
           />
           <View style={styles.organizerContainer}>
-  <UserAvatar userId={eventDetails.user_id} size={60} />
-  <View>
-    <Text style={styles.organizerLabel}>Organizer:</Text>
-    <Text style={styles.organizerEmail}>{eventDetails.user?.email || 'Unknown'}</Text>
-  </View>
-</View>
+            <UserAvatar userId={eventDetails.user_id} size={60} />
+            <View>
+              <Text style={styles.organizerLabel}>Organizer:</Text>
+              <Text style={styles.organizerEmail}>{eventDetails.user?.email || 'Unknown'}</Text>
+            </View>
+          </View>
         </LinearGradient>
 
         <Image source={{ uri: eventDetails.media[0]?.url }} style={styles.eventImage} />
@@ -190,6 +198,13 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
               <Text style={styles.infoText}>{eventDetails.type}</Text>
             </View>
           </View>
+
+          {hasTickets && (
+            <BuyTicket
+              eventId={eventDetails.id}
+              eventType={eventDetails.type as 'online' | 'indoor' | 'outdoor'}
+            />
+          )}
 
           <View style={styles.mapSection}>
             <View style={styles.mapInfo}>
@@ -225,7 +240,7 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
         
         <EventLike eventId={eventId} />
         <EventReview eventId={eventId} />
-    </ScrollView>
+      </ScrollView>
     </LinearGradient>
   );
 };

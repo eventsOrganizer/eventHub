@@ -77,7 +77,7 @@ import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetai
 import PaymentActionScreen from '../payment/PaymentActionScreen';
 
 import NotificationsScreen from '../screens/NotificationsScreen';
-import TicketingScreen from '../screens/TicketingScreen';
+import TicketScanningScreen from '../components/event/Ticketing/TicketScanningScreen';
 import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
 
@@ -151,7 +151,7 @@ type EventSetupOptionsScreenProps = {
   YourRequests: undefined;
   VideoRooms: undefined;
   VideoCall: { roomUrl: string };
-
+  TicketScanning: undefined;
  
 
 };
@@ -462,6 +462,7 @@ const AppNavigation: React.FC = () => {
         options={{ headerShown: false }}
       />
     <Stack.Screen name="MapScreen" component={MapScreen} />
+    <Stack.Screen name="TicketScanning" component={TicketScanningScreen} />
 </Stack.Navigator> 
 
   )

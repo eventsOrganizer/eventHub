@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, Image, TouchableOpacity, ActivityIndicator, ScrollView, Animated, RefreshControl, Dimensions } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ActivityIndicator, ScrollView, Animated, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../services/supabaseClient';
@@ -34,7 +34,6 @@ const UserProfileScreen: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState('events');
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
   const [activeEventList, setActiveEventList] = useState<'your' | 'attended'>('your');
   const [showNotifications, setShowNotifications] = useState(false);
@@ -88,12 +87,6 @@ const UserProfileScreen: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
-  }, [fetchData]);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -208,9 +201,13 @@ const UserProfileScreen: React.FC = () => {
               <ActionButton onPress={() => navigation.navigate('ServiceSelection' as never)} iconName="briefcase-outline" text="New Service" />
             </View>
             
-            <View style={tw`flex-row justify-between`}>
+            <View style={tw`flex-row justify-between mb-4`}>
               <ActionButton onPress={() => navigation.navigate('EditProfile' as never)} iconName="pencil" text="Edit Profile" />
               <ActionButton onPress={() => navigation.navigate('ChatList' as never)} iconName="chatbubbles" text="Open Chat" />
+            </View>
+
+            <View style={tw`flex-row justify-between`}>
+              <ActionButton onPress={() => navigation.navigate('TicketScanning' as never)} iconName="qr-code-outline" text="Scan Tickets" />
             </View>
           </View>
         </BlurView>
