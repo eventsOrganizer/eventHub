@@ -246,7 +246,8 @@ CREATE TABLE request (
     event_id INTEGER 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(8) CHECK (status IN ('pending', 'accepted', 'refused')),
-    
+    is_read BOOLEAN DEFAULT FALSE,
+    is_action_read BOOLEAN DEFAULT FALSE,
     -- Foreign key references
     FOREIGN KEY (user_id) REFERENCES "user"(id),
     FOREIGN KEY (friend_id) REFERENCES "user"(id),
