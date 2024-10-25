@@ -9,6 +9,7 @@ export type Comment = {
   user_id: string;
   created_at: string;
   personal_id: number;
+  user: { username: string };
 };
 
 export type Service = {
@@ -25,6 +26,9 @@ export type Service = {
     };
     media?: { url: string }[];
     imageUrl?: string;
+    image: string;
+    startdate: string;
+    enddate: string;
     availability: Array<{
       id: number;
       start: string;
@@ -32,11 +36,12 @@ export type Service = {
       daysofweek: string;
       date: string;
     }>;
-    comment: Array<{
-      details: string;
-      user_id: string;
-    }>;
-    like: Array<{ user_id: string }>;
+    // comment: Array<{
+    //   details: string;
+    //   user_id: string;
+    // }>;
+    comment: Comment[];
+    like?: { user_id: string }[];
     order: Array<{
       user_id: string;
       ticket_id: string;
@@ -49,6 +54,10 @@ export type Service = {
       user_id: string;
       rate: number;
     }>;
+    location?: {
+      latitude: number | null;
+      longitude: number | null;
+    } | null;
 };
 
 export type ServiceRequest = {
@@ -143,4 +152,4 @@ export const initiatePayment = async (serviceId: number, amount: number): Promis
     console.error('Error initiating Flouci payment:', error);
     return null;
   }
-}
+};

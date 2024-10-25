@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Heart, ShoppingCart, Calendar, Star, DollarSign } from 'lucide-react-native';
 import { Material } from '../../navigation/types';
 
 const { width, height } = Dimensions.get('window');
@@ -12,6 +14,7 @@ interface MaterialCardProps {
   onToggleWishlist: (materialId: string) => void;
   isWishlisted: boolean;
   onPress: () => void;
+  index?: number;
 }
 
 const MaterialCard: React.FC<MaterialCardProps> = ({
@@ -20,60 +23,95 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
   onToggleWishlist,
   isWishlisted,
   onPress,
+  index = 0,
 }) => {
-  if (!material) {
-    return null;
-  }
+  if (!material) return null;
 
   const imageUrl = material.media && material.media.length > 0
     ? material.media[0].url
     : 'https://via.placeholder.com/150';
 
+  const isRental = material.sell_or_rent === 'rent';
+  const actionButtonColor = isRental ? '#4A90E2' : '#7E57C2';
+
   return (
-    <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
-      <View style={styles.cardFrame}>
-        <View style={styles.topBar}>
-          <Text style={styles.topBarText}>{material.sell_or_rent === 'rent' ? 'Rent' : 'Sale'}</Text>
-        </View>
+    <Animated.View
+      entering={FadeInDown.delay(index * 100).springify()}
+      style={styles.cardContainer}
+    >
+      <TouchableOpacity 
+        style={styles.cardFrame}
+        onPress={onPress}
+        activeOpacity={0.9}
+      >
         <Image 
           source={{ uri: imageUrl }} 
-          style={styles.cardImage} 
+          style={styles.cardImage}
         />
-        <View style={styles.cardContent}>
-          <Text style={styles.cardName} numberOfLines={2}>{material.name}</Text>
-          <View style={styles.cardInfoRow}>
-            <Ionicons name="cash-outline" size={14} color="#4A90E2" />
-            <Text style={styles.cardInfoText}>
-              ${material.sell_or_rent === 'rent' ? `${material.price_per_hour}/hr` : material.price}
+        
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.8)']}
+          style={styles.imageOverlay}
+        />
+
+        <BlurView intensity={Platform.OS === 'ios' ? 60 : 100} style={styles.topBar}>
+          <View style={[styles.badge, { backgroundColor: actionButtonColor }]}>
+            {isRental ? (
+              <Calendar size={14} color="white" />
+            ) : (
+              <ShoppingCart size={14} color={actionButtonColor} />
+            )}
+            <Text style={styles.topBarText}>
+              {isRental ? 'RENT' : 'SALE'}
             </Text>
           </View>
-          <View style={styles.reviewLikeRow}>
-            <View style={styles.reviewContainer}>
-              <Ionicons name="star" size={12} color="#FFD700" />
-              <Text style={styles.reviewText}>{material.average_rating?.toFixed(1) || 'N/A'}</Text>
+        </BlurView>
+
+        <View style={styles.cardContent}>
+          <Text style={styles.cardName} numberOfLines={2}>
+            {material.name}
+          </Text>
+
+          <View style={styles.cardInfoRow}>
+            <View style={styles.priceContainer}>
+              <DollarSign size={14} color={actionButtonColor} />
+              <Text style={[styles.priceText, { color: actionButtonColor }]}>
+                {isRental ? `${material.price_per_hour}/hr` : material.price}
+              </Text>
             </View>
-            <TouchableOpacity onPress={() => onToggleWishlist(material.id)} style={styles.likeContainer}>
-              <Ionicons
-                name={isWishlisted ? 'heart' : 'heart-outline'}
-                size={12}
-                color={isWishlisted ? '#FF6B6B' : '#4A90E2'}
-              />
-              <Text style={styles.likeText}>Wishlist</Text>
-            </TouchableOpacity>
+
+            <View style={styles.ratingContainer}>
+              <Star size={12} color="#FFD700" fill="#FFD700" />
+              <Text style={styles.ratingText}>
+                {material.average_rating?.toFixed(1) || 'N/A'}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
-      <TouchableOpacity
-        style={styles.basketButton}
-        onPress={() => onAddToBasket(material)}
-      >
-        <Ionicons
-          name={material.sell_or_rent === 'sell' ? 'cart' : 'calendar'}
-          size={20}
-          color="white"
-        />
+
+        <TouchableOpacity
+          style={[styles.actionButton, styles.wishlistButton]}
+          onPress={() => onToggleWishlist(material.id)}
+        >
+          <Heart
+            size={18}
+            color={isWishlisted ? '#FF6B6B' : '#ffffff'}
+            fill={isWishlisted ? '#FF6B6B' : 'none'}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, styles.basketButton, { backgroundColor: actionButtonColor }]}
+          onPress={() => onAddToBasket(material)}
+        >
+          {isRental ? (
+            <Calendar size={18} color="#ffffff" />
+          ) : (
+            <ShoppingCart size={18} color="#ffffff" />
+          )}
+        </TouchableOpacity>
       </TouchableOpacity>
-    </TouchableOpacity>
+    </Animated.View>
   );
 };
 
@@ -81,91 +119,123 @@ const styles = StyleSheet.create({
   cardContainer: {
     width: width * 0.45,
     height: height * 0.32,
-    marginRight: 10,
-    marginBottom: 15,
-    borderRadius: 12,
-    overflow: 'hidden',
+    margin: 8,
+    borderRadius: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   cardFrame: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  topBar: {
-    height: '8%',
-    backgroundColor: '#4A90E2',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  topBarText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
   },
   cardImage: {
     width: '100%',
-    height: '62%',
+    height: '100%',
     resizeMode: 'cover',
   },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '60%',
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
+  },
+  topBar: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  topBarText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+    marginLeft: 4,
+  },
   cardContent: {
-    height: '30%',
-    padding: 8,
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 12,
   },
   cardName: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 2,
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   cardInfoRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 2,
   },
-  cardInfoText: {
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  priceText: {
     fontSize: 12,
-    color: '#4A90E2',
     fontWeight: 'bold',
     marginLeft: 4,
   },
-  reviewLikeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  reviewContainer: {
+  ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  reviewText: {
-    fontSize: 10,
-    color: '#333333',
-    marginLeft: 2,
+  ratingText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginLeft: 4,
   },
-  likeContainer: {
-    flexDirection: 'row',
+  actionButton: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
     alignItems: 'center',
+    right: 12,
   },
-  likeText: {
-    fontSize: 10,
-    color: '#4A90E2',
-    marginLeft: 2,
+  wishlistButton: {
+    top: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   basketButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1,
-    backgroundColor: '#4A90E2',
-    borderRadius: 20,
-    padding: 8,
+    top: 60,
   },
 });
 

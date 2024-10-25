@@ -33,6 +33,7 @@ import VideoRoomsScreen from '../components/event/video/VideoRoomsScreen';
 import VideoCall from '../components/event/video/VideoCall';
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
+import CreatePersonalServiceStack from '../components/PersonalServiceCreation/createPersonalServiceStack';
 import ChatListScreen from '../components/event/ChatListScreen';
 import RequestsScreen from '../components/event/profile/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
@@ -49,9 +50,9 @@ import EventCreation from '../components/event/EventCreation';
 import BookingScreen from '../screens/PersonalServiceScreen/BookingScreen';
 import CommentsScreen from '../screens/PersonalServiceScreen/CommentsScreen';
 import AddReviewScreen from '../screens/PersonalServiceScreen/AddReviewScreen';
-
+import ReviewScreen from '../screens/MaterialServiceScreens/ReviewScreen';
 // Inside your Stack.Navigator component, add this new Screen
-
+import CommentScreen from '../screens/MaterialServiceScreens/CommentScreen';
 
 
 import CreateLocalServiceStep1 from '../components/LocalServiceCreation/CreateLocalServiceStep1';
@@ -77,6 +78,8 @@ import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetai
 import PaymentTestScreen from '../components/payment/PaymentTestScreen';
 
 
+import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
+
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
@@ -91,6 +94,7 @@ type RootStackParamList = {
   HomeScreen: undefined;
   MaterialScreen: undefined;
   MaterialDetail: { material: Material };
+  ReviewScreen: { materialId: string };
   EventDetails: { eventName: string; eventDescription: string; eventType: string };
   CategorySelection: { eventName: string; eventDescription: string; eventType: string };
   SubcategorySelection: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string };
@@ -104,6 +108,10 @@ type RootStackParamList = {
   Ticketing: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
   EventSummary: { eventId: string };
   EventCreation: { eventType: string };
+  CommentScreen: { materialId: string };
+  PersonalServiceCreationStack: undefined;
+  
+  // Add the CreateService screen and pass serviceType as a param
   CreateService: { serviceType: string };
   EventSetupOptions: { 
     eventName: string; 
@@ -324,6 +332,11 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true, title: 'Create Personal Service - Final Step' }} 
   />
 
+      <Stack.Screen 
+        name="CreatePersonalServiceStep4" 
+        component={CreatePersonalServiceStep4} 
+        options={{ headerShown: true, title: 'Create Personal Service - Step 4' }} 
+      />
   <Stack.Screen 
     name="UserProfile" 
     component={UserProfileScreen} 
@@ -432,7 +445,17 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
        name ="MaterialsOnboarding" 
       component={MaterialsOnboardingScreen} />
-
+      <Stack.Screen
+       name ="ReviewScreen" 
+      component={ReviewScreen} />
+      <Stack.Screen
+       name ="CommentScreen" 
+      component={CommentScreen} />
+      <Stack.Screen
+        name="CreatePersonalServiceStack"
+        component={CreatePersonalServiceStack}
+        options={{ headerShown: false }}
+      />
     <Stack.Screen name="MapScreen" component={MapScreen} />
     <Stack.Screen name="PaymentTest" component={PaymentTestScreen} />
 </Stack.Navigator> 

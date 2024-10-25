@@ -9,7 +9,7 @@ interface ServiceDescriptionInputProps {
 const ServiceDescriptionInput: React.FC<ServiceDescriptionInputProps> = ({ description, setDescription }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Description</Text>
+      <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 5, color: 'white' }}>Description</Text>
       <TextInput
         style={styles.input}
         value={description}

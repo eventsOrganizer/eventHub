@@ -168,10 +168,12 @@ CREATE TABLE location (
     latitude FLOAT,
     user_id UUID,
     local_id INTEGER,
+    personal_id INTEGER,
     event_id INTEGER,
     FOREIGN KEY (user_id) REFERENCES "user"(id),
     FOREIGN KEY (local_id) REFERENCES local(id),
-    FOREIGN KEY (event_id) REFERENCES event(id)
+    FOREIGN KEY (event_id) REFERENCES event(id),
+    FOREIGN KEY (personal_id) REFERENCES personal(id)
 );
 ////-////
 CREATE TABLE media (

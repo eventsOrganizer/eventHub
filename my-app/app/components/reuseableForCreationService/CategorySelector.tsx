@@ -19,7 +19,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Select a category:</Text>
+      <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 5, color: 'white' }}>Select a category</Text>
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}

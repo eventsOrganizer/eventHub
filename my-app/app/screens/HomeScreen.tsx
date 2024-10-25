@@ -34,22 +34,7 @@ const HomeScreen: React.FC = () => {
     loadData();
   }, []);
 
-  const fetchMaterials = async (): Promise<Material[]> => {
-    const { data, error } = await supabase
-      .from('material')
-      .select('*, subcategory:subcategory_id(*)');
-  
-    if (error) {
-      console.error('Error fetching materials:', error);
-      return [];
-    } else {
-      console.log('Materials fetched:', data);
-      return data?.map((item: any) => ({
-        ...item,
-        subcategory: item.subcategory // Assuming the join query returns subcategory data
-      })) || [];
-    }
-  };
+ 
 
   const loadData = async () => {
     try {
@@ -121,7 +106,17 @@ const HomeScreen: React.FC = () => {
     if (error) throw new Error(error.message);
     return data || [];
   };
+  const fetchMaterials = async () => {
+    const { data, error } = await supabase
+      .from('material')
+      .select('*, subcategory (id, name, category (id, name)), media (url)')
+      .limit(5);
 
+    if (error) throw new Error(error.message);
+    return data || [];
+
+ 
+  };
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     loadData().then(() => setRefreshing(false));
@@ -233,10 +228,13 @@ const HomeScreen: React.FC = () => {
             />
             
             <SectionComponent 
-              title="MATERIALS & FOOD" 
+              title="MATERIALS" 
               data={materialsAndFoodServices} 
               onSeeAll={() => navigation.navigate('MaterialScreen')}
-              onItemPress={(item) => navigation.navigate('MaterialDetailScreen', { materialId: item.id })}
+              onItemPress={(item) => {
+                console.log('Navigating to MaterialDetailScreen with item:', item);
+                navigation.navigate('MaterialDetail', { material: item });
+              }}
               type="material"
             />
           </View>
