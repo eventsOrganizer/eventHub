@@ -179,3 +179,24 @@ export const handleRequestRejection = async (
     throw error;
   }
 };
+
+export const deleteRequest = async (requestId: number) => {
+  try {
+    const { error } = await supabase
+      .from('request')
+      .delete()
+      .eq('id', requestId);
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      title: "Success",
+      message: "Request deleted successfully",
+      variant: "default"
+    };
+  } catch (error) {
+    console.error('Error deleting request:', error);
+    throw error;
+  }
+};

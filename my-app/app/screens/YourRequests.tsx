@@ -1,34 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, Image } from 'react-native';
-import { supabase } from '../services/supabaseClient';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { useUser } from '../UserContext';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { handleRequestConfirmation, handleRequestRejection } from '../services/requestService';
 import { useToast } from '../hooks/useToast';
 import { useNotifications } from '../hooks/useNotifications';
-
-interface Request {
-  id: number;
-  name: string;
-  type: string;
-  status: string;
-  subcategory: string;
-  imageUrl: string | null;
-  serviceImageUrl?: string | null;
-  requesterName?: string;
-  requesterEmail?: string;
-  createdAt?: string;
-  date?: string;
-  start?: string;
-  end?: string;
-  details?: string;
-}
-
-type RouteParams = {
-  userId: string;
-  mode: 'sent' | 'received';
-};
+import { Request, RouteParams } from '../services/requestTypes';
+import { fetchSentRequests, fetchReceivedRequests } from '../services/requestQuerries';
+import   ReceivedRequestCard  from './ReceivedRequestCard';
+import  SentRequestCard  from './SentRequestCard';
+import  FilterButtons  from './FilterButtons';
 
 const YourRequests: React.FC = () => {
   const { userId } = useUser();
@@ -48,193 +29,28 @@ const YourRequests: React.FC = () => {
   }, [userId, mode]);
 
   const fetchRequests = async () => {
+    if (!userId) return;
+    
     setLoading(true);
     try {
-      let data;
-      if (mode === 'sent') {
-        data = await fetchSentRequests();
-      } else {
-        data = await fetchReceivedRequests();
-      }
+      const data = mode === 'sent' 
+        ? await fetchSentRequests(userId)
+        : await fetchReceivedRequests(userId);
+        
       setRequests(data);
       setFilteredRequests(data);
     } catch (error) {
       console.error('Error fetching requests:', error);
-      Alert.alert('Error', 'Failed to fetch requests. Please try again.');
+      toast({
+        title: "Error",
+        description: "Failed to fetch requests. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchSentRequests = async () => {
-    try {
-      const { data: requests, error } = await supabase
-        .from('request')
-        .select(`
-          id, status, availability_id,
-          personal:personal_id (
-            id, name, 
-            subcategory:subcategory_id (name), 
-            media:media (url)
-          ),
-          local:local_id (
-            id, name, 
-            subcategory:subcategory_id (name), 
-            media:media (url)
-          ),
-          material:material_id (
-            id, name, 
-            subcategory:subcategory_id (name), 
-            media:media (url)
-          )
-        `)
-        .eq('user_id', userId);
-  
-      if (error) throw error;
-  
-      const formattedRequests = requests.map((req) => {
-        const service = req.personal || req.local || req.material;
-        const serviceType = req.personal ? 'Personal' : req.local ? 'Local' : 'Material';
-  
-        if (!service) return null;
-  
-        return {
-          id: req.id,
-          name: service.name || 'Service sans nom',
-          status: req.status || 'Statut inconnu',
-          type: serviceType,
-          subcategory: service.subcategory?.name || 'Sous-catégorie inconnue',
-          imageUrl: service.media?.[0]?.url || null
-        };
-      });
-  
-      return formattedRequests.filter(req => req !== null);
-    } catch (error) {
-      console.error('Error in fetchSentRequests:', error);
-      throw error;
-    }
-  };
-  
-  const fetchReceivedRequests = async () => {
-    try {
-      // Faire trois requêtes séparées pour chaque type de service
-      const [personalRequests, localRequests, materialRequests] = await Promise.all([
-        supabase
-          .from('request')
-          .select(`
-            id, status, created_at, availability_id,
-            personal:personal_id (
-              id, name, 
-              subcategory:subcategory_id (name),
-              details,
-              user_id
-            ),
-            user:user_id (id, firstname, lastname, email)
-          `)
-          .eq('status', 'pending')
-          .not('personal_id', 'is', null)
-          .eq('personal.user_id', userId),
-  
-        supabase
-          .from('request')
-          .select(`
-            id, status, created_at, availability_id,
-            local:local_id (
-              id, name, 
-              subcategory:subcategory_id (name),
-              details,
-              user_id
-            ),
-            user:user_id (id, firstname, lastname, email)
-          `)
-          .eq('status', 'pending')
-          .not('local_id', 'is', null)
-          .eq('local.user_id', userId),
-  
-        supabase
-          .from('request')
-          .select(`
-            id, status, created_at, availability_id,
-            material:material_id (
-              id, name, 
-              subcategory:subcategory_id (name),
-              details,
-              user_id
-            ),
-            user:user_id (id, firstname, lastname, email)
-          `)
-          .eq('status', 'pending')
-          .not('material_id', 'is', null)
-          .eq('material.user_id', userId)
-      ]);
-  
-      if (personalRequests.error) throw personalRequests.error;
-      if (localRequests.error) throw localRequests.error;
-      if (materialRequests.error) throw materialRequests.error;
-  
-      // Combiner et formater les résultats
-      const allRequests = [
-        ...(personalRequests.data || []).map(req => ({
-          id: req.id,
-          name: req.personal?.name || 'Service sans nom',
-          status: req.status || 'Statut inconnu',
-          type: 'Personal',
-          subcategory: req.personal?.subcategory?.name || 'Sous-catégorie inconnue',
-          details: req.personal?.details || '',
-          requesterName: `${req.user?.firstname || ''} ${req.user?.lastname || ''}`.trim() || 'Nom inconnu',
-          requesterEmail: req.user?.email || 'Email inconnu',
-          createdAt: req.created_at
-        })),
-        ...(localRequests.data || []).map(req => ({
-          id: req.id,
-          name: req.local?.name || 'Service sans nom',
-          status: req.status || 'Statut inconnu',
-          type: 'Local',
-          subcategory: req.local?.subcategory?.name || 'Sous-catégorie inconnue',
-          details: req.local?.details || '',
-          requesterName: `${req.user?.firstname || ''} ${req.user?.lastname || ''}`.trim() || 'Nom inconnu',
-          requesterEmail: req.user?.email || 'Email inconnu',
-          createdAt: req.created_at
-        })),
-        ...(materialRequests.data || []).map(req => ({
-          id: req.id,
-          name: req.material?.name || 'Service sans nom',
-          status: req.status || 'Statut inconnu',
-          type: 'Material',
-          subcategory: req.material?.subcategory?.name || 'Sous-catégorie inconnue',
-          
-          details: req.material?.details || '',
-          requesterName: `${req.user?.firstname || ''} ${req.user?.lastname || ''}`.trim() || 'Nom inconnu',
-          requesterEmail: req.user?.email || 'Email inconnu',
-          createdAt: req.created_at
-        }))
-      ];
-  
-      // Récupérer les informations d'availability pour chaque requête
-      const requestsWithAvailability = await Promise.all(
-        allRequests.map(async (request) => {
-          const { data: availabilityData } = await supabase
-            .from('availability')
-            .select('date, start, end')
-            .eq('id', request.id)
-            .single();
-  
-          return {
-            ...request,
-            date: availabilityData?.date,
-            start: availabilityData?.start,
-            end: availabilityData?.end
-          };
-        })
-      );
-  
-      return requestsWithAvailability;
-    } catch (error) {
-      console.error('Error in fetchReceivedRequests:', error);
-      throw error;
-    }
-  };
-  
   const handleConfirm = async (requestId: number) => {
     try {
       const request = requests.find(r => r.id === requestId);
@@ -247,9 +63,14 @@ const YourRequests: React.FC = () => {
           description: result.message,
           variant: result.variant,
         });
+        
+        // Update local state immediately
+        const updatedRequests = requests.map(req => 
+          req.id === requestId ? { ...req, status: 'accepted' as const } : req
+        );
+        setRequests(updatedRequests);
+        setFilteredRequests(updatedRequests);
       }
-      
-      fetchRequests();
     } catch (error) {
       console.error('Error confirming request:', error);
       toast({
@@ -272,9 +93,14 @@ const YourRequests: React.FC = () => {
           description: result.message,
           variant: result.variant,
         });
+        
+        // Update local state immediately
+        const updatedRequests = requests.map(req => 
+          req.id === requestId ? { ...req, status: 'refused' as const } : req
+        );
+        setRequests(updatedRequests);
+        setFilteredRequests(updatedRequests);
       }
-      
-      fetchRequests();
     } catch (error) {
       console.error('Error rejecting request:', error);
       toast({
@@ -285,145 +111,58 @@ const YourRequests: React.FC = () => {
     }
   };
 
-  const getBackgroundColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-        return '#A5D6A7';
-      case 'pending':
-        return '#FFF9C4';
-      case 'rejected':
-        return '#EF9A9A';
-      default:
-        return '#fff';
-    }
-  };
-
   const filterRequests = (category: string) => {
     setSelectedCategory(category);
-    if (category === 'All') {
-      setFilteredRequests(requests);
-    } else {
-      setFilteredRequests(requests.filter(request => request.type === category));
-    }
-  };
-
-  const ReceivedRequestCard = ({ item }: { item: Request }) => {
-    const [showServiceDetails, setShowServiceDetails] = useState(false);
-  
-    return (
-      <View style={[styles.requestItem, { backgroundColor: getBackgroundColor(item.status) }]}>
-        <Image 
-          source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} 
-          style={styles.requestImage} 
-        />
-        <View style={styles.requestDetailsContainer}>
-          <Text style={styles.serviceName}>{item.requesterName}</Text>
-          <Text style={styles.requesterInfo}>{item.requesterEmail}</Text>
-          <TouchableOpacity onPress={() => setShowServiceDetails(!showServiceDetails)}>
-            <Text style={styles.serviceNameLink}>{item.name}</Text>
-          </TouchableOpacity>
-          
-          {showServiceDetails && (
-            <View style={styles.serviceDetailsCard}>
-              <Image 
-                source={{ uri: item.serviceImageUrl || 'https://via.placeholder.com/150' }} 
-                style={styles.serviceDetailImage} 
-              />
-              <Text style={styles.serviceDetailText}>Type: {item.type}</Text>
-              <Text style={styles.serviceDetailText}>Subcategory: {item.subcategory}</Text>
-              <Text style={styles.serviceDetailText}>Details: {item.details || 'No details available'}</Text>
-            </View>
-          )}
-          
-          <Text style={styles.dateInfo}>Date: {item.date}</Text>
-          <Text style={styles.dateInfo}>From {item.start} to {item.end}</Text>
-          
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.confirmButton} onPress={() => handleConfirm(item.id)}>
-              <Text style={styles.buttonText}>Confirm</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(item.id)}>
-              <Text style={styles.buttonText}>Reject</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+    setFilteredRequests(
+      category === 'All' 
+        ? requests 
+        : requests.filter(request => request.type === category)
     );
   };
 
-  const SentRequestCard = ({ item }: { item: Request }) => (
-    <View style={[styles.requestItem, { backgroundColor: getBackgroundColor(item.status) }]}>
-      <Image 
-        source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} 
-        style={styles.requestImage} 
-      />
-      <View style={styles.requestDetailsContainer}>
-        <Text style={styles.serviceName}>{item.name}</Text>
-        <Text style={styles.subcategoryName}>{item.subcategory}</Text>
-        <View style={styles.iconsContainer}>
-          <Icon 
-            name={item.type === 'Personal' ? 'person' : item.type === 'Local' ? 'location-on' : 'shopping-cart'} 
-            size={20} 
-            color="#000" 
-          />
-          <Icon 
-            name={item.status === 'confirmed' ? 'check-circle' : item.status === 'pending' ? 'hourglass-top' : 'cancel'} 
-            size={20} 
-            color="#000" 
-          />
-        </View>
-      </View>
-    </View>
-  );
+  const handleDelete = async (requestId: number) => {
+    const updatedRequests = requests.filter(req => req.id !== requestId);
+    setRequests(updatedRequests);
+    setFilteredRequests(updatedRequests);
+  };
 
   const renderRequestItem = ({ item }: { item: Request }) => {
     return mode === 'sent' ? (
       <SentRequestCard item={item} />
     ) : (
-      <ReceivedRequestCard item={item} />
+      <ReceivedRequestCard 
+        item={item} 
+        onConfirm={handleConfirm}
+        onReject={handleReject}
+        onDelete={handleDelete}
+      />
     );
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
-        </View>
-      ) : (
-        <>
-          <Text style={styles.title}>{mode === 'sent' ? 'Your Requests' : 'Received Requests'}</Text>
-          
-          <View style={styles.filterContainer}>
-            <TouchableOpacity onPress={() => filterRequests('All')} style={styles.filterButton}>
-              <Icon name="filter-list" size={24} color={selectedCategory === 'All' ? '#4CAF50' : '#000'} />
-              <Text style={[styles.filterText, selectedCategory === 'All' && styles.activeFilterText]}>All</Text>
-            </TouchableOpacity>
-            {['Local', 'Personal', 'Material'].map((category) => (
-              <TouchableOpacity 
-                key={category}
-                onPress={() => filterRequests(category)} 
-                style={styles.filterButton}
-              >
-                <Icon 
-                  name={category === 'Personal' ? 'person' : category === 'Local' ? 'location-on' : 'shopping-cart'} 
-                  size={24} 
-                  color={selectedCategory === category ? '#4CAF50' : '#000'} 
-                />
-                <Text style={[styles.filterText, selectedCategory === category && styles.activeFilterText]}>
-                  {category}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+      <Text style={styles.title}>
+        {mode === 'sent' ? 'Your Requests' : 'Received Requests'}
+      </Text>
+      
+      <FilterButtons 
+        selectedCategory={selectedCategory}
+        onSelectCategory={filterRequests}
+      />
 
-          <FlatList
-            data={filteredRequests}
-            renderItem={renderRequestItem}
-            keyExtractor={item => `${item.type}-${item.id}`}
-          />
-        </>
-      )}
+      <FlatList
+        data={filteredRequests}
+        renderItem={renderRequestItem}
+        keyExtractor={item => `${item.type}-${item.id}`}
+      />
     </View>
   );
 };
@@ -552,6 +291,12 @@ const styles = StyleSheet.create({
   serviceDetailText: {
     fontSize: 12,
     marginBottom: 3,
+  },
+  statusText: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#666',
+    marginTop: 5,
   },
 });
 
