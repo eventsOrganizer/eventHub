@@ -84,6 +84,45 @@ const VideoRoomsScreen = () => {
     }
   };
 
+  const deleteRoom = async (room: Room) => {
+    if (room.creator_id !== userId) {
+      Alert.alert('Error', 'You can only delete rooms you created.');
+      return;
+    }
+
+    try {
+      // Delete from Daily.co API
+      const response = await fetch(`${DAILY_API_URL}/${room.url.split('/').pop()}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${DAILY_API_KEY}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Daily.co API error: ${response.status} ${response.statusText}\n${errorText}`);
+      }
+
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('videoroom')
+        .delete()
+        .eq('id', room.id);
+
+      if (error) {
+        throw new Error(`Supabase error: ${error.message}`);
+      }
+
+      // Update local state
+      setRooms((prevRooms) => prevRooms.filter((r) => r.id !== room.id));
+      Alert.alert('Success', 'Room deleted successfully.');
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      Alert.alert('Error', `Failed to delete room: ${error.message}`);
+    }
+  };
+
   const joinRoom = (room: Room) => {
     const isCreator = room.creator_id === userId;
     navigation.navigate('VideoCall', { roomUrl: room.url, isCreator, roomId: room.id });
@@ -96,10 +135,17 @@ const VideoRoomsScreen = () => {
         data={rooms}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => joinRoom(item)}>
-            <Text style={styles.roomName}>Room {item.id}</Text>
-            <Text>Created at: {new Date(item.created_at).toLocaleString()}</Text>
-          </TouchableOpacity>
+          <View style={styles.roomItem}>
+            <TouchableOpacity onPress={() => joinRoom(item)} style={styles.roomInfo}>
+              <Text style={styles.roomName}>Room {item.id}</Text>
+              <Text>Created at: {new Date(item.created_at).toLocaleString()}</Text>
+            </TouchableOpacity>
+            {item.creator_id === userId && (
+              <TouchableOpacity onPress={() => deleteRoom(item)} style={styles.deleteButton}>
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         )}
       />
     </View>
@@ -111,9 +157,29 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  roomItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    paddingBottom: 8,
+  },
+  roomInfo: {
+    flex: 1,
+  },
   roomName: {
     fontSize: 18,
-    marginVertical: 8,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+    padding: 8,
+    borderRadius: 5,
+  },
+  deleteButtonText: {
+    color: 'white',
   },
 });
 
