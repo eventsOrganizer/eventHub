@@ -3,15 +3,25 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert, TouchableOp
 import { supabase } from '../services/supabaseClient';
 import { useUser } from '../UserContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types'; // Import the Request interface from types.ts
 
+type RouteParams = {
+  userId: string;
+  mode: 'sent' | 'received';
+};
+
+// Add this interface at the top of your file
 interface Request {
   id: number;
   name: string;
-  type: string;
   status: string;
+  type: string | undefined;
   subcategory: string;
-  imageUrl: string | null;
+  serviceImageUrl: string | null;
+  details?: string;
+  imageUrl?: string | null;
   requesterName?: string;
   requesterEmail?: string;
   createdAt?: string;
@@ -20,19 +30,16 @@ interface Request {
   end?: string;
 }
 
-type RouteParams = {
-  userId: string;
-  mode: 'sent' | 'received';
-};
-
 const YourRequests: React.FC = () => {
   const { userId } = useUser();
   const route = useRoute<RouteProp<Record<string, RouteParams>, string>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { mode } = route.params;
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [filteredRequests, setFilteredRequests] = useState<Request[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [expandedRequest, setExpandedRequest] = useState<number | null>(null);
 
   useEffect(() => {
     if (userId) {
@@ -82,14 +89,14 @@ const YourRequests: React.FC = () => {
       console.log('Données brutes reçues:', JSON.stringify(requests, null, 2));
   
       const formattedRequests = requests.map(req => {
-        const service = req.personal || req.local || req.material;
+        const service = req.personal?.[0] || req.local?.[0] || req.material?.[0];
         return {
           id: req.id,
           name: service?.name || 'Service sans nom',
           status: req.status || 'Statut inconnu',
           type: req.personal ? 'Personal' : req.local ? 'Local' : 'Material',
           subcategory: service?.subcategory?.name || 'Sous-catégorie inconnue',
-          imageUrl: service?.media?.[0]?.url || null,
+          serviceImageUrl: service?.media?.[0]?.url || null,
         };
       });
   
@@ -129,10 +136,18 @@ const YourRequests: React.FC = () => {
       const allRequests = [...personalRequests, ...localRequests, ...materialRequests];
   
       console.log('Données brutes reçues:', JSON.stringify(allRequests, null, 2));
-  
       const formattedRequests = await Promise.all(allRequests.map(async req => {
-        const service = req.personal || req.local || req.material;
-        const serviceType = req.personal ? 'Personal' : req.local ? 'Local' : 'Material';
+        let service, serviceType;
+        if ('personal' in req && req.personal) {
+          service = req.personal;
+          serviceType = 'Personal';
+        } else if ('local' in req && req.local) {
+          service = req.local;
+          serviceType = 'Local';
+        } else if ('material' in req && req.material) {
+          service = req.material;
+          serviceType = 'Material';
+        }
         
         if (!service) {
           console.log(`Requête sans service associé: ${JSON.stringify(req)}`);
@@ -218,28 +233,6 @@ const YourRequests: React.FC = () => {
     console.log('Rejecting request:', requestId);
   };
 
-  const getBackgroundColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-        return '#A5D6A7'; // Lighter green for confirmed
-      case 'pending':
-        return '#FFF9C4'; // Original yellow for pending
-      case 'rejected':
-        return '#EF9A9A'; // Light red for rejected
-      default:
-        return '#fff';
-    }
-  };
-
-  const filterRequests = (category: string) => {
-    setSelectedCategory(category);
-    if (category === 'All') {
-      setFilteredRequests(requests);
-    } else {
-      setFilteredRequests(requests.filter(request => request.type === category));
-    }
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
@@ -266,125 +259,141 @@ const YourRequests: React.FC = () => {
     }
   };
 
-  const ReceivedRequestCard = ({ item }: { item: Request }) => {
-    const [showServiceDetails, setShowServiceDetails] = useState(false);
-  
-    const toggleServiceDetails = () => {
-      setShowServiceDetails(!showServiceDetails);
-    };
-  
-    return (
-      <View style={[styles.requestItem, { backgroundColor: getBackgroundColor(item.status) }]}>
-        <Image 
-          source={{ uri: item.imageUrl || 'https://i.pinimg.com/736x/96/bc/7d/96bc7d374e2814211408bd00fa10939b.jpg' }} 
-          style={styles.requestImage} 
-        />
-        <View style={styles.requestDetailsContainer}>
-          <Text style={styles.serviceName}>{item.requesterName}</Text>
-          <Text style={styles.requesterInfo}>{item.requesterEmail}</Text>
-          <TouchableOpacity onPress={toggleServiceDetails}>
-            <Text style={styles.serviceNameLink}>{item.name}</Text>
-          </TouchableOpacity>
-          {showServiceDetails && (
-            <View style={styles.serviceDetailsCard}>
-              <Image 
-                source={{ uri: item.serviceImageUrl || 'https://via.placeholder.com/150' }} 
-                style={styles.serviceDetailImage} 
-              />
-              <Text style={styles.serviceDetailText}>Type: {item.type}</Text>
-              <Text style={styles.serviceDetailText}>Subcategory: {item.subcategory}</Text>
-              <Text style={styles.serviceDetailText}>Details: {item.details || 'No details available'}</Text>
-              <View style={styles.iconsContainer}>
-                {getCategoryIcon(item.type)}
-                {getStatusIcon(item.status)}
-              </View>
-            </View>
-          )}
-          <Text style={styles.dateInfo}>Reservation date: {item.date}</Text>
-          <Text style={styles.dateInfo}>From {item.start} to {item.end}</Text>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.confirmButton} onPress={() => handleConfirm(item.id)}>
-              <Text style={styles.buttonText}>Confirm</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(item.id)}>
-              <Text style={styles.buttonText}>Reject</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  const renderRequestItem = ({ item }: { item: Request }) => {
-    if (mode === 'sent') {
-      // Carte pour les "sent requests" (inchangée)
-      return (
-        <View style={[styles.requestItem, { backgroundColor: getBackgroundColor(item.status) }]}>
-          <Image 
-            source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} 
-            style={styles.requestImage} 
-          />
-          <View style={styles.requestDetailsContainer}>
-            <Text style={styles.serviceName}>{item.name}</Text>
-            <Text style={styles.subcategoryName}>{item.subcategory}</Text>
-            <View style={styles.iconsContainer}>
-              {getCategoryIcon(item.type)}
-              {getStatusIcon(item.status)}
-            </View>
-          </View>
-        </View>
-      );
+  const filterRequests = (category: string) => {
+    setSelectedCategory(category);
+    if (category === 'All') {
+      setFilteredRequests(requests);
     } else {
-      // Carte pour les "received requests" (modifiée)
-      return <ReceivedRequestCard item={item} />;
+      setFilteredRequests(requests.filter(request => request.type === category));
     }
   };
 
-  return (
-    <View style={styles.container}>
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
+  const renderRequestItem = ({ item, index }: { item: Request; index: number }) => (
+    <MotiView
+      from={{ opacity: 0, translateY: 50 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ delay: index * 100 }}
+      style={styles.requestCard}
+    >
+      <TouchableOpacity onPress={() => setExpandedRequest(expandedRequest === item.id ? null : item.id)}>
+        <View style={styles.requestHeader}>
+          <Text style={styles.requestName}>{item.name}</Text>
+          {getStatusIcon(item.status)}
+          {getCategoryIcon(item.type)}
         </View>
+      </TouchableOpacity>
+
+      {item.serviceImageUrl && (
+        <Image source={{ uri: item.serviceImageUrl }} style={styles.requestImage} />
+      )}
+
+      <Text style={styles.requestStatus}>Status: {item.status}</Text>
+      <Text style={styles.requestType}>Type: {item.type}</Text>
+      <Text style={styles.requestSubcategory}>Subcategory: {item.subcategory}</Text>
+
+      {expandedRequest === item.id && (
+        <View style={styles.expandedContent}>
+          <Text style={styles.expandedText}>Requester: {item.requesterName}</Text>
+          <Text style={styles.expandedText}>Email: {item.requesterEmail}</Text>
+          <Text style={styles.expandedText}>Created: {item.createdAt}</Text>
+          {item.date && <Text style={styles.expandedText}>Date: {item.date}</Text>}
+          {item.start && item.end && (
+            <Text style={styles.expandedText}>Time: {item.start} - {item.end}</Text>
+          )}
+          <TouchableOpacity 
+            style={styles.detailButton}
+            onPress={() => navigation.navigate('PersonalDetail', { personalId: item.id })}
+          >
+            <Text style={styles.detailButtonText}>View Details</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {mode === 'received' && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.confirmButton} onPress={() => handleConfirm(item.id)}>
+            <Text style={styles.buttonText}>Confirm</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(item.id)}>
+            <Text style={styles.buttonText}>Reject</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </MotiView>
+  );
+
+  return (
+    <LinearGradient
+      colors={['#f8f9fa', '#e9ecef']}
+      style={styles.container}
+    >
+      {loading ? (
+        <MotiView 
+          from={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 1000 }}
+          style={styles.loadingContainer}
+        >
+          <ActivityIndicator size="large" color="#4CAF50" />
+        </MotiView>
       ) : (
-        <>
-          <Text style={styles.title}>{mode === 'sent' ? 'Your Requests' : 'Received Requests'}</Text>
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 500 }}
+          style={styles.content}
+        >
+          <Text style={styles.title}>
+            {mode === 'sent' ? 'Your Requests' : 'Received Requests'}
+          </Text>
 
           <View style={styles.filterContainer}>
-            <TouchableOpacity onPress={() => filterRequests('All')} style={styles.filterButton}>
-              <Icon name="filter-list" size={24} color={selectedCategory === 'All' ? '#4CAF50' : '#000'} />
-              <Text style={[styles.filterText, selectedCategory === 'All' && styles.activeFilterText]}>All</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => filterRequests('Local')} style={styles.filterButton}>
-              {getCategoryIcon('local')}
-              <Text style={[styles.filterText, selectedCategory === 'Local' && styles.activeFilterText]}>Local</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => filterRequests('Personal')} style={styles.filterButton}>
-              {getCategoryIcon('personal')}
-              <Text style={[styles.filterText, selectedCategory === 'Personal' && styles.activeFilterText]}>Personal</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => filterRequests('Material')} style={styles.filterButton}>
-              {getCategoryIcon('material')}
-              <Text style={[styles.filterText, selectedCategory === 'Material' && styles.activeFilterText]}>Material</Text>
-            </TouchableOpacity>
+            <FilterButton
+              onPress={() => filterRequests('All')}
+              isSelected={selectedCategory === 'All'}
+              icon="filter-list"
+              label="All"
+            />
+            <FilterButton
+              onPress={() => filterRequests('Local')}
+              isSelected={selectedCategory === 'Local'}
+              icon="location-on"
+              label="Local"
+            />
+            <FilterButton
+              onPress={() => filterRequests('Personal')}
+              isSelected={selectedCategory === 'Personal'}
+              icon="person"
+              label="Personal"
+            />
+            <FilterButton
+              onPress={() => filterRequests('Material')}
+              isSelected={selectedCategory === 'Material'}
+              icon="shopping-cart"
+              label="Material"
+            />
           </View>
 
           <FlatList
             data={filteredRequests}
             renderItem={renderRequestItem}
             keyExtractor={item => `${item.type}-${item.id}`}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
           />
-        </>
+        </MotiView>
       )}
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
+  },
+  content: {
+    flex: 1,
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -392,118 +401,101 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: '#333',
+    marginBottom: 24,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 20,
+    marginBottom: 24,
+    paddingHorizontal: 8,
   },
-  filterButton: {
-    flexDirection: 'column',
-    alignItems: 'center',
+  listContainer: {
+    paddingBottom: 24,
   },
-  filterText: {
-    fontSize: 12,
-    color: '#000',
-  },
-  activeFilterText: {
-    fontWeight: 'bold',
-    color: '#4CAF50',
-  },
-  requestItem: {
-    flexDirection: 'row',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
+  requestCard: {
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
   },
-  requestImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    marginRight: 15,
-  },
-  requestDetailsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  serviceName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  subcategoryName: {
-    fontSize: 14,
-    color: '#757575',
-  },
-  requesterInfo: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 2,
-  },
-  dateInfo: {
-    fontSize: 12,
-    color: '#555',
-    marginBottom: 5,
-  },
-  iconsContainer: {
+  requestHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  requestName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  requestStatus: {
+    fontSize: 14,
+    color: '#666',
+  },
+  requestType: {
+    fontSize: 14,
+    color: '#666',
+  },
+  requestSubcategory: {
+    fontSize: 14,
+    color: '#666',
+  },
+  requestImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  expandedContent: {
+    marginBottom: 16,
+  },
+  expandedText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  detailButton: {
+    backgroundColor: '#4CAF50',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  detailButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 5,
+    marginTop: 16,
   },
   confirmButton: {
-    backgroundColor: '#4CAF50',
-    padding: 5,
-    borderRadius: 5,
     flex: 1,
-    marginRight: 5,
+    backgroundColor: '#4CAF50',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   rejectButton: {
-    backgroundColor: '#F44336',
-    padding: 5,
-    borderRadius: 5,
     flex: 1,
-    marginLeft: 5,
+    backgroundColor: '#f44336',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   buttonText: {
-    color: '#FFF',
-    textAlign: 'center',
-    fontSize: 12,
-  },
-  serviceNameLink: {
-    color: 'blue',
-    textDecorationLine: 'underline',
-    marginBottom: 5,
-  },
-  serviceDetailsCard: {
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  serviceDetailImage: {
-    width: '100%',
-    height: 100, // Ajustez la hauteur pour qu'elle s'adapte à la carte
-    borderRadius: 5,
-    marginBottom: 10,
-    resizeMode: 'cover', // Assurez-vous que l'image est bien ajustée
-  },
-  serviceDetailText: {
-    fontSize: 12,
-    marginBottom: 3,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });
 

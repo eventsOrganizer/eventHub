@@ -145,6 +145,22 @@ export interface Material {
   average_rating?: number;
 }
 
+export interface Request {
+  id: number;
+  name: string;
+  type: string;
+  status: string;
+  subcategory: string;
+  imageUrl: string | null;
+  serviceImageUrl: string | null;  // Add this line
+  requesterName?: string;
+  requesterEmail?: string;
+  createdAt?: string;
+  date?: string;
+  start?: string;
+  end?: string;
+}
+
 export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;
 export type BookingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'BookingScreen'>;
 export type CommentsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CommentsScreen'>;
@@ -156,7 +172,4 @@ export type CreatePersonalServiceStep1NavigationProp = NativeStackNavigationProp
 export type CreatePersonalServiceStep2NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep2'>;
 export type CreatePersonalServiceStep3NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep3'>;
 export type CreatePersonalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
-<<<<<<< HEAD
-=======
 export type CreatePersonalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep4'>;
->>>>>>> origin

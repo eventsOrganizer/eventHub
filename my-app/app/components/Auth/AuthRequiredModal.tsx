@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, Modal, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, Modal, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { Text } from 'react-native-paper';
 import { BlurView } from 'expo-blur';
 import { Lock, LogIn, UserPlus, X } from 'lucide-react-native';
 import { themeColors } from '../../utils/themeColors';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -30,14 +31,27 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <BlurView intensity={20} tint="dark" style={styles.blur}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <X size={24} color={themeColors.common.gray} />
+        <BlurView intensity={30} tint="dark" style={styles.blur}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.95)', 'rgba(240,244,248,0.95)']}
+            style={styles.modalContent}
+          >
+            <TouchableOpacity 
+              style={styles.closeButton} 
+              onPress={onClose}
+            >
+              <BlurView intensity={80} tint="light" style={styles.closeButtonBg}>
+                <X size={24} color={themeColors.common.gray} />
+              </BlurView>
             </TouchableOpacity>
 
             <View style={styles.iconContainer}>
-              <Lock size={32} color={themeColors.rent.primary} />
+              <LinearGradient
+                colors={themeColors.rent.gradient}
+                style={styles.iconGradient}
+              >
+                <Lock size={32} color="white" />
+              </LinearGradient>
             </View>
 
             <Text style={styles.title}>Authentication Required</Text>
@@ -48,19 +62,29 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
                 style={[styles.button, styles.signInButton]}
                 onPress={onSignIn}
               >
-                <LogIn size={20} color="white" />
-                <Text style={styles.buttonText}>Sign In</Text>
+                <LinearGradient
+                  colors={themeColors.rent.gradient}
+                  style={styles.buttonGradient}
+                >
+                  <LogIn size={20} color="white" />
+                  <Text style={styles.buttonText}>Sign In</Text>
+                </LinearGradient>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.button, styles.signUpButton]}
                 onPress={onSignUp}
               >
-                <UserPlus size={20} color="white" />
-                <Text style={styles.buttonText}>Sign Up</Text>
+                <LinearGradient
+                  colors={themeColors.sale.gradient}
+                  style={styles.buttonGradient}
+                >
+                  <UserPlus size={20} color="white" />
+                  <Text style={styles.buttonText}>Sign Up</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
-          </View>
+          </LinearGradient>
         </BlurView>
       </View>
     </Modal>
@@ -72,55 +96,83 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   blur: {
     width: width * 0.9,
     borderRadius: 24,
     overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
   },
   modalContent: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     padding: 24,
     alignItems: 'center',
+    borderRadius: 24,
   },
   closeButton: {
     position: 'absolute',
     right: 16,
     top: 16,
+    zIndex: 1,
+  },
+  closeButtonBg: {
     padding: 8,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   iconContainer: {
-    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 16,
+    marginTop: 20,
+    marginBottom: 24,
+  },
+  iconGradient: {
+    padding: 20,
+    borderRadius: 25,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: themeColors.common.black,
-    marginBottom: 8,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   message: {
     fontSize: 16,
     color: themeColors.common.gray,
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
     paddingHorizontal: 16,
+    lineHeight: 22,
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
     width: '100%',
+    paddingHorizontal: 8,
   },
   button: {
     flex: 1,
+    overflow: 'hidden',
+    borderRadius: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  buttonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    borderRadius: 12,
     gap: 8,
   },
   signInButton: {
