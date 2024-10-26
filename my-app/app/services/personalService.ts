@@ -3,7 +3,6 @@ import { Service as ImportedService } from './serviceTypes';
 
 export const fetchStaffServices = async (): Promise<ImportedService[]> => {
   try {
-    console.log('Fetching staff services...');
     const { data, error } = await supabase
       .from('personal')
       .select(`
@@ -14,7 +13,7 @@ export const fetchStaffServices = async (): Promise<ImportedService[]> => {
             name
           )
         ),
-        media (url),
+        media (url, type),
         like (user_id),
         review (user_id, rate)
       `)
@@ -53,7 +52,7 @@ interface PersonalData {
   };
 }
 
-export const fetchPersonalDetail = async (id: number): Promise<ImportedService | null> => {
+export const fetchPersonalDetail = async (id: number): Promise<Service | null> => {
   try {
     const { data, error } = await supabase
       .from('personal')
@@ -65,18 +64,14 @@ export const fetchPersonalDetail = async (id: number): Promise<ImportedService |
             name
           )
         ),
-        media!personal_id (id, url, type),
+        media (url),
         availability (start, end, daysofweek, date),
-        comment (
-          details,
-          user_id,
-          user (username)
-        ),
+        comment (details, user_id),
         like (user_id),
         order (user_id, ticket_id),
-        personal_user (user_id, status),
+        request (user_id, status, availability_id),
         review (user_id, rate),
-        location!personal_id (latitude, longitude)
+        location (latitude, longitude)
       `)
       .eq('id', id)
       .single();

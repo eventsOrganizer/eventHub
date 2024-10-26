@@ -107,7 +107,7 @@ export const handleRequestRejection = async (
 
     // Get the personal_user entry
     const { data: personalUserData, error: fetchError } = await supabase
-      .from('personal_user')
+      .from('request')
       .select('availability_id')
       .eq('personal_id', serviceId)
       .eq('user_id', requestData.user_id);
@@ -132,7 +132,7 @@ export const handleRequestRejection = async (
 
         // Remove the personal_user entry
         const { error: personalUserError } = await supabase
-          .from('personal_user')
+          .from('request')
           .delete()
           .eq('personal_id', serviceId)
           .eq('user_id', requestData.user_id);

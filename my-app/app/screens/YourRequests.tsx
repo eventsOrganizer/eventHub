@@ -71,109 +71,170 @@ const YourRequests: React.FC = () => {
       const { data: requests, error } = await supabase
         .from('request')
         .select(`
-          id, status,
-          personal:personal_id (id, name, subcategory:subcategory_id (name), media (url)),
-          local:local_id (id, name, subcategory:subcategory_id (name), media (url)),
-          material:material_id (id, name, subcategory:subcategory_id (name), media (url))
+          id, status, availability_id,
+          personal:personal_id (
+            id, name, 
+            subcategory:subcategory_id (name), 
+            media:media (url)
+          ),
+          local:local_id (
+            id, name, 
+            subcategory:subcategory_id (name), 
+            media:media (url)
+          ),
+          material:material_id (
+            id, name, 
+            subcategory:subcategory_id (name), 
+            media:media (url)
+          )
         `)
         .eq('user_id', userId);
-
+  
       if (error) throw error;
-
-      const formattedRequests = requests.map(req => {
+  
+      const formattedRequests = requests.map((req) => {
         const service = req.personal || req.local || req.material;
+        const serviceType = req.personal ? 'Personal' : req.local ? 'Local' : 'Material';
+  
+        if (!service) return null;
+  
         return {
           id: req.id,
-          name: service?.name || 'Service sans nom',
+          name: service.name || 'Service sans nom',
           status: req.status || 'Statut inconnu',
-          type: req.personal ? 'Personal' : req.local ? 'Local' : 'Material',
-          subcategory: service?.subcategory?.name || 'Sous-catégorie inconnue',
-          imageUrl: service?.media?.[0]?.url || null,
+          type: serviceType,
+          subcategory: service.subcategory?.name || 'Sous-catégorie inconnue',
+          imageUrl: service.media?.[0]?.url || null
         };
       });
-
-      return formattedRequests;
+  
+      return formattedRequests.filter(req => req !== null);
     } catch (error) {
       console.error('Error in fetchSentRequests:', error);
       throw error;
     }
   };
-
+  
   const fetchReceivedRequests = async () => {
     try {
-      const fetchServiceRequests = async (serviceType: 'personal' | 'local' | 'material') => {
-        const { data, error } = await supabase
+      // Faire trois requêtes séparées pour chaque type de service
+      const [personalRequests, localRequests, materialRequests] = await Promise.all([
+        supabase
           .from('request')
           .select(`
-            id, status, created_at,
-            ${serviceType}:${serviceType}_id (id, name, subcategory:subcategory_id (name), user_id, details),
+            id, status, created_at, availability_id,
+            personal:personal_id (
+              id, name, 
+              subcategory:subcategory_id (name),
+              details,
+              user_id
+            ),
             user:user_id (id, firstname, lastname, email)
           `)
-          .eq(`${serviceType}.user_id`, userId)
-          .eq('status', 'pending');
-
-        if (error) throw error;
-        return data;
-      };
-
-      const personalRequests = await fetchServiceRequests('personal');
-      const localRequests = await fetchServiceRequests('local');
-      const materialRequests = await fetchServiceRequests('material');
-
-      const allRequests = [...personalRequests, ...localRequests, ...materialRequests];
-
-      const formattedRequests = await Promise.all(allRequests.map(async req => {
-        const service = req.personal || req.local || req.material;
-        const serviceType = req.personal ? 'Personal' : req.local ? 'Local' : 'Material';
-        
-        if (!service) return null;
-
-        const { data: userMediaData } = await supabase
-          .from('media')
-          .select('url')
-          .eq('user_id', req.user.id)
-          .eq('type', 'profile')
-          .limit(1);
-
-        const { data: serviceMediaData } = await supabase
-          .from('media')
-          .select('url')
-          .eq(`${serviceType.toLowerCase()}_id`, service.id)
-          .limit(1);
-
-        const { data: availabilityData } = await supabase
-          .from('availability')
-          .select('date, start, end')
-          .eq(`${serviceType.toLowerCase()}_id`, service.id)
-          .limit(1);
-
-        const availability = availabilityData && availabilityData[0];
-        
-        return {
+          .eq('status', 'pending')
+          .not('personal_id', 'is', null)
+          .eq('personal.user_id', userId),
+  
+        supabase
+          .from('request')
+          .select(`
+            id, status, created_at, availability_id,
+            local:local_id (
+              id, name, 
+              subcategory:subcategory_id (name),
+              details,
+              user_id
+            ),
+            user:user_id (id, firstname, lastname, email)
+          `)
+          .eq('status', 'pending')
+          .not('local_id', 'is', null)
+          .eq('local.user_id', userId),
+  
+        supabase
+          .from('request')
+          .select(`
+            id, status, created_at, availability_id,
+            material:material_id (
+              id, name, 
+              subcategory:subcategory_id (name),
+              details,
+              user_id
+            ),
+            user:user_id (id, firstname, lastname, email)
+          `)
+          .eq('status', 'pending')
+          .not('material_id', 'is', null)
+          .eq('material.user_id', userId)
+      ]);
+  
+      if (personalRequests.error) throw personalRequests.error;
+      if (localRequests.error) throw localRequests.error;
+      if (materialRequests.error) throw materialRequests.error;
+  
+      // Combiner et formater les résultats
+      const allRequests = [
+        ...(personalRequests.data || []).map(req => ({
           id: req.id,
-          name: service?.name || 'Service sans nom',
+          name: req.personal?.name || 'Service sans nom',
           status: req.status || 'Statut inconnu',
-          type: serviceType,
-          subcategory: service?.subcategory?.name || 'Sous-catégorie inconnue',
-          details: service?.details || '',
-          imageUrl: userMediaData?.[0]?.url || null,
-          serviceImageUrl: serviceMediaData?.[0]?.url || null,
+          type: 'Personal',
+          subcategory: req.personal?.subcategory?.name || 'Sous-catégorie inconnue',
+          details: req.personal?.details || '',
           requesterName: `${req.user?.firstname || ''} ${req.user?.lastname || ''}`.trim() || 'Nom inconnu',
           requesterEmail: req.user?.email || 'Email inconnu',
-          createdAt: req.created_at,
-          date: availability?.date,
-          start: availability?.start,
-          end: availability?.end,
-        };
-      }));
-
-      return formattedRequests.filter(req => req !== null);
+          createdAt: req.created_at
+        })),
+        ...(localRequests.data || []).map(req => ({
+          id: req.id,
+          name: req.local?.name || 'Service sans nom',
+          status: req.status || 'Statut inconnu',
+          type: 'Local',
+          subcategory: req.local?.subcategory?.name || 'Sous-catégorie inconnue',
+          details: req.local?.details || '',
+          requesterName: `${req.user?.firstname || ''} ${req.user?.lastname || ''}`.trim() || 'Nom inconnu',
+          requesterEmail: req.user?.email || 'Email inconnu',
+          createdAt: req.created_at
+        })),
+        ...(materialRequests.data || []).map(req => ({
+          id: req.id,
+          name: req.material?.name || 'Service sans nom',
+          status: req.status || 'Statut inconnu',
+          type: 'Material',
+          subcategory: req.material?.subcategory?.name || 'Sous-catégorie inconnue',
+          
+          details: req.material?.details || '',
+          requesterName: `${req.user?.firstname || ''} ${req.user?.lastname || ''}`.trim() || 'Nom inconnu',
+          requesterEmail: req.user?.email || 'Email inconnu',
+          createdAt: req.created_at
+        }))
+      ];
+  
+      // Récupérer les informations d'availability pour chaque requête
+      const requestsWithAvailability = await Promise.all(
+        allRequests.map(async (request) => {
+          const { data: availabilityData } = await supabase
+            .from('availability')
+            .select('date, start, end')
+            .eq('id', request.id)
+            .single();
+  
+          return {
+            ...request,
+            date: availabilityData?.date,
+            start: availabilityData?.start,
+            end: availabilityData?.end
+          };
+        })
+      );
+  
+      return requestsWithAvailability;
     } catch (error) {
       console.error('Error in fetchReceivedRequests:', error);
       throw error;
     }
   };
-
+  
   const handleConfirm = async (requestId: number) => {
     try {
       const request = requests.find(r => r.id === requestId);
