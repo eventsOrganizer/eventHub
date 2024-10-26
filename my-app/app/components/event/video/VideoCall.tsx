@@ -1,51 +1,161 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, AppState } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { supabase } from '../../../services/supabaseClient';
 import { Camera } from 'expo-camera';
 import { Audio } from 'expo-av';
+import { useUser } from '../../../UserContext';
 
-const VideoCall = ({ route }: { route: any }) => {
+const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
   const { roomUrl, isCreator, roomId } = route.params;
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const webViewRef = useRef<WebView>(null);
+  const { userId } = useUser();
+  const appState = useRef(AppState.currentState);
 
   useEffect(() => {
+    console.log('VideoCall component mounted');
     checkAndRequestPermissions();
+    joinRoom();
 
-    if (isCreator) {
-      const updateRoomStatus = async (isConnected: boolean) => {
-        try {
-          await supabase
-            .from('videoroom')
-            .update({ is_connected: isConnected })
-            .eq('id', roomId);
-        } catch (error) {
-          console.error('Error updating room status:', error);
-        }
-      };
+    const heartbeatInterval = setInterval(sendHeartbeat, 3000);
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
 
-      updateRoomStatus(true);
-      return () => {
-        updateRoomStatus(false);
-      };
+    navigation.addListener('beforeRemove', (e: any) => {
+      e.preventDefault();
+      leaveRoom().then(() => navigation.dispatch(e.data.action));
+    });
+
+    return () => {
+      console.log('VideoCall component will unmount');
+      clearInterval(heartbeatInterval);
+      appStateSubscription.remove();
+      leaveRoom();
+    };
+  }, [isCreator, roomId, userId, navigation]);
+
+  const sendHeartbeat = async () => {
+    try {
+      const { error } = await supabase
+        .from('room_participants')
+        .update({ last_heartbeat: new Date().toISOString() })
+        .match({ room_id: roomId, user_id: userId });
+
+      if (error) {
+        console.error('Error sending heartbeat:', error);
+      } else {
+        console.log('Heartbeat sent successfully');
+      }
+    } catch (error) {
+      console.error('Exception when sending heartbeat:', error);
     }
-  }, [isCreator, roomId]);
+  };
+
+  const handleAppStateChange = async (nextAppState: string) => {
+    if (appState.current.match(/active|foreground/) && nextAppState === 'background') {
+      console.log('App has gone to background');
+      await leaveRoom();
+    } else if (appState.current === 'background' && nextAppState === 'active') {
+      console.log('App has come to the foreground');
+      await joinRoom();
+    }
+    appState.current = nextAppState;
+  };
 
   const checkAndRequestPermissions = async () => {
+    console.log('Checking and requesting permissions');
     const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
     const { status: audioStatus } = await Audio.requestPermissionsAsync();
   
     if (cameraStatus === 'granted' && audioStatus === 'granted') {
+      console.log('Permissions granted');
       setPermissionsGranted(true);
     } else {
+      console.log('Permissions denied');
       setError('Camera and microphone permissions are required for video calls.');
     }
   };
 
+  const cleanupInactiveParticipants = async () => {
+    const nineSecondsAgo = new Date(Date.now() - 9 * 1000).toISOString();
+    try {
+      await supabase
+        .from('room_participants')
+        .update({ is_active: false, left_at: new Date().toISOString() })
+        .match({ room_id: roomId })
+        .lt('last_heartbeat', nineSecondsAgo);
+    } catch (error) {
+      console.error('Error cleaning up inactive participants:', error);
+    }
+  };
+
+  const joinRoom = async () => {
+    console.log(`Joining room ${roomId} as user ${userId}`);
+    try {
+      await cleanupInactiveParticipants();
+      const { data, error } = await supabase
+        .from('room_participants')
+        .upsert({ room_id: roomId, user_id: userId, is_active: true, last_heartbeat: new Date().toISOString() },
+                 { onConflict: ['room_id', 'user_id'] });
+      
+      if (error) {
+        console.error('Error joining room:', error);
+      } else {
+        console.log('Successfully joined room:', data);
+      }
+      
+      if (isCreator) {
+        const { data: roomData, error: roomError } = await supabase
+          .from('videoroom')
+          .update({ is_connected: true })
+          .eq('id', roomId);
+        
+        if (roomError) {
+          console.error('Error updating room connection status:', roomError);
+        } else {
+          console.log('Updated room connection status:', roomData);
+        }
+      }
+    } catch (error) {
+      console.error('Exception when joining room:', error);
+    }
+  };
+
+  const leaveRoom = async () => {
+    console.log(`Leaving room ${roomId} as user ${userId}`);
+    try {
+      const { data, error } = await supabase
+        .from('room_participants')
+        .update({ is_active: false, left_at: new Date().toISOString() })
+        .match({ room_id: roomId, user_id: userId });
+
+      if (error) {
+        console.error('Error leaving room:', error);
+      } else {
+        console.log('Successfully left room:', data);
+      }
+
+      if (isCreator) {
+        const { data: roomData, error: roomError } = await supabase
+          .from('videoroom')
+          .update({ is_connected: false })
+          .eq('id', roomId);
+        
+        if (roomError) {
+          console.error('Error updating room connection status:', roomError);
+        } else {
+          console.log('Updated room connection status:', roomData);
+        }
+      }
+    } catch (error) {
+      console.error('Exception when leaving room:', error);
+    }
+  };
+
   const handleLoadEnd = () => {
+    console.log('WebView loaded');
     setIsLoading(false);
   };
 
@@ -57,13 +167,76 @@ const VideoCall = ({ route }: { route: any }) => {
   };
 
   const reloadWebView = () => {
+    console.log('Reloading WebView');
     setIsLoading(true);
     setError(null);
     webViewRef.current?.reload();
   };
 
+  const handleMessage = async (event: any) => {
+    console.log('Received message from WebView:', event.nativeEvent.data);
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.action === 'participant-joined' || data.action === 'participant-left') {
+        console.log(`${data.action}: ${data.participants.join(', ')}`);
+        await updateParticipants(data.participants);
+      }
+    } catch (error) {
+      console.error('Error handling WebView message:', error);
+    }
+  };
+  
+  const updateParticipants = async (participants: string[]) => {
+    console.log(`Updating participants for room ${roomId}:`, participants);
+    try {
+      const { data, error } = await supabase
+        .from('room_participants')
+        .upsert(
+          participants.map(participantId => ({
+            room_id: roomId,
+            user_id: participantId,
+            is_active: true,
+            last_heartbeat: new Date().toISOString()
+          })),
+          { onConflict: ['room_id', 'user_id'] }
+        );
+      
+      if (error) {
+        console.error('Error updating participants:', error);
+      } else {
+        console.log('Successfully updated participants:', data);
+      }
+    } catch (error) {
+      console.error('Exception when updating participants:', error);
+    }
+  };
+
   const injectedJavaScript = `
-    navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    (function() {
+      console.log('Injected JavaScript running');
+      
+      window.addEventListener('message', function(e) {
+        console.log('Message received in injected JS:', e.data);
+        const participants = Object.values(call.participants()).map(p => p.user_id);
+        console.log('Participants:', participants);
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          action: e.data.action,
+          participants: participants
+        }));
+      });
+
+      call.on('participant-joined', (event) => {
+        console.log('Participant joined:', event);
+        window.postMessage({ action: 'participant-joined' });
+      });
+
+      call.on('participant-left', (event) => {
+        console.log('Participant left:', event);
+        window.postMessage({ action: 'participant-left' });
+      });
+
+      navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    })();
     true;
   `;
 
@@ -90,9 +263,7 @@ const VideoCall = ({ route }: { route: any }) => {
           onLoadEnd={handleLoadEnd}
           onError={handleError}
           injectedJavaScript={injectedJavaScript}
-          onMessage={(event) => {
-            console.log('WebView message:', event.nativeEvent.data);
-          }}
+          onMessage={handleMessage}
         />
       )}
     </View>
