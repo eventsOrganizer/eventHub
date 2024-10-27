@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { supabase } from '../../../services/supabaseClient';
 import bcrypt from 'react-native-bcrypt';
-import QRCode from 'react-native-qrcode-svg';
+// import QRCode from 'react-native-qrcode-svg';
 import { useUser } from '../../../UserContext';
-
+import tw from 'twrnc';
+import { LinearGradient } from 'expo-linear-gradient';
 interface BuyTicketProps {
   eventId: number;
   eventType: 'online' | 'indoor' | 'outdoor';
@@ -79,19 +80,24 @@ const BuyTicket: React.FC<BuyTicketProps> = ({ eventId, eventType }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={tw`w-full`}>
       {ticketAvailable ? (
         <>
-          <TouchableOpacity style={styles.buyButton} onPress={handleBuyTicket}>
-            <Text style={styles.buyButtonText}>Buy Ticket</Text>
-          </TouchableOpacity>
-          <Text style={styles.availableText}>
-            {ticketQuantity} tickets still available
-          </Text>
-          {token && (
-            <View style={styles.tokenContainer}>
-              <Text style={styles.tokenText}>Your ticket token:</Text>
-              <Text selectable>{token}</Text>
+          <LinearGradient
+  colors={['#90EE90', '#228B22']}
+  style={tw`rounded-lg overflow-hidden w-48`}
+>
+            <TouchableOpacity 
+              style={tw`p-2 items-center w-full`} // Reduced padding
+              onPress={handleBuyTicket}
+            >
+              <Text style={tw`text-white font-bold text-base shadow-sm`}>Buy Ticket</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+          {/* {token && (
+            <View style={tw`mt-4 items-center`}>
+              <Text style={tw`text-white font-bold mb-2`}>Your ticket token:</Text>
+              <Text style={tw`text-white/90`} selectable>{token}</Text>
               {eventType !== 'online' && (
                 <QRCode
                   value={token}
@@ -99,11 +105,14 @@ const BuyTicket: React.FC<BuyTicketProps> = ({ eventId, eventType }) => {
                 />
               )}
             </View>
-          )}
+          )} */}
         </>
       ) : (
-        <TouchableOpacity style={styles.soldOutButton} disabled>
-          <Text style={styles.soldOutButtonText}>No more available tickets</Text>
+        <TouchableOpacity 
+          style={tw`bg-red-500/50 p-2 rounded-lg items-center w-32`} // Made consistent with buy button size
+          disabled
+        >
+          <Text style={tw`text-white font-bold text-base`}>Sold Out</Text>
         </TouchableOpacity>
       )}
     </View>

@@ -181,23 +181,88 @@ const { userId } = useUser();
     }
   };
 
-  const joinRoom = () => {
+  const joinRoom = async () => {
     if (!isReady) {
       Alert.alert('Not Ready', 'The video room is not ready yet.');
       return;
     }
-
-    if (!isAuthorized) {
-      if (!hasTicket) {
-        Alert.alert('Access Denied', 'You need to buy a ticket to join this video room.');
-      } else {
-        Alert.alert('Access Denied', 'You are not authorized to join this video room.');
+  
+    try {
+      // Check if the event requires a ticket
+      const { data: ticketData, error: ticketError } = await supabase
+        .from('ticket')
+        .select('id')
+        .eq('event_id', eventId)
+        .single();
+  
+      if (ticketError && ticketError.code !== 'PGRST116') {
+        throw ticketError;
       }
-      return;
+  
+      const isPaidEvent = !!ticketData;
+  
+      // Check if the user has a ticket (for paid events)
+      let hasTicket = false;
+      if (isPaidEvent) {
+        const { data: orderData, error: orderError } = await supabase
+          .from('order')
+          .select('id')
+          .eq('ticket_id', ticketData?.id)
+          .eq('user_id', userId)
+          .single();
+  
+        if (orderError && orderError.code !== 'PGRST116') {
+          throw orderError;
+        }
+  
+        hasTicket = !!orderData;
+      }
+  
+      // Check if the user is a member (for private events)
+      const { data: memberData, error: memberError } = await supabase
+        .from('event_has_user')
+        .select('user_id')
+        .eq('event_id', eventId)
+        .eq('user_id', userId)
+        .single();
+  
+      if (memberError && memberError.code !== 'PGRST116') {
+        throw memberError;
+      }
+  
+      const isMember = !!memberData;
+  
+      // Determine if the user can join based on all conditions
+      let canJoin = false;
+      let message = '';
+  
+      if (!isPaidEvent && !isPrivate) {
+        // Free and Public Event
+        canJoin = true;
+      } else if (!isPaidEvent && isPrivate) {
+        // Free and Private Event
+        canJoin = isMember;
+        message = 'You need to be a member of this event to join the video room.';
+      } else if (isPaidEvent && !isPrivate) {
+        // Paid and Public Event
+        canJoin = hasTicket;
+        message = 'You need to purchase a ticket to join this video room.';
+      } else if (isPaidEvent && isPrivate) {
+        // Paid and Private Event
+        canJoin = hasTicket && isMember;
+        message = 'You need to be a member and have a ticket to join this video room.';
+      }
+  
+      if (canJoin) {
+        // Navigate to VideoCall screen
+        navigation.navigate('VideoCall', { roomUrl: room.url, isCreator: userId === organizerId, roomId: room.id });
+      } else {
+        Alert.alert('Access Denied', message);
+      }
+    } catch (error) {
+      console.error('Error checking room access:', error);
+      Alert.alert('Error', 'An error occurred while checking room access. Please try again.');
     }
-
-    // Navigate to VideoCall screen
-    navigation.navigate('VideoCall', { roomUrl: room.url, isCreator: userId === organizerId, roomId: room.id });
   };
 
   if (userId === organizerId) {

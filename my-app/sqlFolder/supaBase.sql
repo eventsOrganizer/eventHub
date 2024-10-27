@@ -653,12 +653,21 @@ create table
   public.videoroom (
     id serial not null,
     url text not null,
-    creator_id uuid not null,
+    creator_id uuid null,
     is_connected boolean null default false,
     created_at timestamp with time zone null default current_timestamp,
+    event_id integer null,
+    is_ready boolean null default false,
+    name text null,
+    subcategory_id integer null,
+    details text null,
     constraint videoroom_pkey primary key (id),
-    constraint fk_creator foreign key (creator_id) references "user" (id) on delete cascade
+    constraint fk_creator foreign key (creator_id) references "user" (id) on delete cascade,
+    constraint fk_event foreign key (event_id) references event (id) on delete cascade,
+    constraint videoroom_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id)
   ) tablespace pg_default;
+
+create index if not exists idx_videoroom_event_id on public.videoroom using btree (event_id) tablespace pg_default;
 
 create table
   public.group_has_user (

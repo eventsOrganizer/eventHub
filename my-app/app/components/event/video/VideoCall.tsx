@@ -135,7 +135,7 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
     joinRoom();
     fetchParticipants();
 
-    const participantsFetchInterval = setInterval(fetchParticipants, 15000);
+    const participantsFetchInterval = setInterval(fetchParticipants, 1000);
     const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
 
     return () => {

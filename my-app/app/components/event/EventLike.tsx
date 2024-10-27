@@ -32,13 +32,9 @@ const EventLike: React.FC<EventLikeProps> = ({ eventId }) => {
   };
 
   const toggleLike = async () => {
-    if (!userId) {
-      // Handle user not logged in
-      return;
-    }
+    if (!userId) return;
 
     if (isLiked) {
-      // Unlike
       const { error } = await supabase
         .from('like')
         .delete()
@@ -50,7 +46,6 @@ const EventLike: React.FC<EventLikeProps> = ({ eventId }) => {
         setIsLiked(false);
       }
     } else {
-      // Like
       const { error } = await supabase
         .from('like')
         .insert({ event_id: eventId, user_id: userId });
@@ -74,6 +69,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
+    position: 'absolute',
+    top: 10,
+    right: 10,
   },
   likeCount: {
     marginLeft: 5,
