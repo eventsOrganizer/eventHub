@@ -9,8 +9,13 @@ export type Comment = {
   user_id: string;
   created_at: string;
   personal_id: number;
-  user: { username: string };
+  user: { username: string; id: string };
 };
+
+export interface MediaItem {
+  url: string;
+  type?: string;
+}
 
 export type Service = {
     id: number;
@@ -24,7 +29,7 @@ export type Service = {
         name: string;
       };
     };
-    media?: { url: string }[];
+    media?: MediaItem[];
     imageUrl?: string;
     image: string;
     startdate: string;
@@ -36,17 +41,13 @@ export type Service = {
       daysofweek: string;
       date: string;
     }>;
-    // comment: Array<{
-    //   details: string;
-    //   user_id: string;
-    // }>;
     comment: Comment[];
     like?: { user_id: string }[];
     order: Array<{
       user_id: string;
       ticket_id: string;
     }>;
-    personal_user: Array<{
+    request: Array<{
       user_id: string;
       status: string;
     }>;

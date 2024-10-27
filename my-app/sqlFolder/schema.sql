@@ -1,88 +1,153 @@
-CREATE TABLE category (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    type VARCHAR(7) CHECK (type IN ('service', 'event'))
-);
+create table
+  public.category (
+    id serial not null,
+    name text not null,
+    type character varying(7) null,
+    constraint category_pkey primary key (id),
+    constraint category_type_check check (
+      (
+        (
+          type
+        )::text = any (
+          (
+            array[
+              'service'::character varying,
+              'event'::character varying
+            ]
+          )::text[]
+        )
+      )
+    )
+  ) tablespace pg_default;
 
-CREATE TABLE subcategory (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    category_id INTEGER NOT NULL,
-    FOREIGN KEY (category_id) REFERENCES category(id)
-);
+create table
+  public.subcategory (
+    id serial not null,
+    name text not null,
+    category_id integer not null,
+    constraint subcategory_pkey primary key (id),
+    constraint subcategory_category_id_fkey foreign key (category_id) references category (id)
+  ) tablespace pg_default;
 
-CREATE TABLE "user" (
-    id UUID PRIMARY KEY REFERENCES auth.users,
-    firstname VARCHAR(45),
-    lastname VARCHAR(45),
-    age INTEGER,
-    username VARCHAR(45),
-    gender VARCHAR(45),
-    email VARCHAR(255) NOT NULL,
-    encrypted_password VARCHAR(255) NOT NULL,
-    details TEXT,
-    bio TEXT
-);
+create table
+  public.user (
+    id uuid not null,
+    firstname character varying(45) null,
+    lastname character varying(45) null,
+    age integer null,
+    username character varying(45) null,
+    gender character varying(45) null,
+    email character varying(255) not null,
+    encrypted_password character varying(255) not null,
+    details text null,
+    bio text null,
+    constraint user_pkey primary key (id),
+    constraint user_id_fkey foreign key (id) references auth.users (id)
+  ) tablespace pg_default;
 
+create table
+  public.personal (
+    id serial not null,
+    subcategory_id integer not null,
+    user_id uuid not null,
+    priceperhour integer null,
+    name text null,
+    details text null,
+    percentage double precision null,
+    startdate date null,
+    enddate date null,
+    disabled boolean not null default false,
+    constraint personal_pkey primary key (id),
+    constraint personal_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id),
+    constraint personal_user_id_fkey foreign key (user_id) references "user" (id)
+  ) tablespace pg_default;
 
-CREATE TABLE personal (
-    id SERIAL PRIMARY KEY,
-    subcategory_id INTEGER NOT NULL,
-    user_id UUID NOT NULL,
-    priceperhour INTEGER,
-    startdate DATE,
-    enddate DATE,
-    name TEXT,
-    details VARCHAR(45),
-    FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
-);
+create table
+  public.event (
+    id serial not null,
+    type character varying(7) not null,
+    privacy boolean null,
+    user_id uuid not null,
+    details text null,
+    subcategory_id integer not null,
+    name text null,
+    group_id integer null,
+    constraint event_pkey primary key (id),
+    constraint event_group_id_fkey foreign key (group_id) references "group" (id),
+    constraint event_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id),
+    constraint event_user_id_fkey foreign key (user_id) references "user" (id),
+    constraint event_type_check check (
+      (
+        (
+          type
+        )::text = any (
+          (
+            array[
+              'online'::character varying,
+              'outdoor'::character varying,
+              'indoor'::character varying
+            ]
+          )::text[]
+        )
+      )
+    )
+  ) tablespace pg_default;
 
-CREATE TABLE event (
-    id SERIAL PRIMARY KEY,
-    type VARCHAR(7) NOT NULL CHECK (type IN ('online', 'outdoor', 'indoor')),
-    privacy BOOLEAN,
-    user_id UUID NOT NULL,
-    details TEXT,
-    subcategory_id INTEGER NOT NULL,
-    group_id INTEGER,
-    name TEXT,
-    FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (subcategory_id) REFERENCES subcategory(id)
-    FOREIGN KEY (group_id) REFERENCES "group"(id);
-);
+create table
+  public.local (
+    id serial not null,
+    subcategory_id integer not null,
+    user_id uuid not null,
+    priceperhour integer null,
+    name text null,
+    details text null,
+    startdate date null,
+    enddate date null,
+    disabled boolean not null default false,
+    constraint local_pkey primary key (id),
+    constraint local_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id),
+    constraint local_user_id_fkey foreign key (user_id) references "user" (id)
+  ) tablespace pg_default;
 
-CREATE TABLE local (
-    id SERIAL PRIMARY KEY,
-    details TEXT,
-    subcategory_id INTEGER NOT NULL,
-    user_id UUID NOT NULL,
-    priceperhour INTEGER,
-    startdate DATE,
-    enddate DATE,
-    FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
-  
-);
-
-CREATE TABLE availability (
-    id SERIAL PRIMARY KEY,
-    start VARCHAR(45) ,
-    "end" VARCHAR(45) ,
-    daysofweek VARCHAR(9) CHECK (daysofweek IN ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')),
-    personal_id INTEGER,
-    event_id INTEGER,
-    local_id INTEGER,
-    material_id INTEGER, -- New foreign key for material
-    date DATE,
-    startdate DATE,
-    enddate DATE,
-    statusday VARCHAR(9) DEFAULT 'available' CHECK (statusday IN ('available', 'reserved', 'exception')),
-    FOREIGN KEY (personal_id) REFERENCES personal(id),
-    FOREIGN KEY (event_id) REFERENCES event(id),
-    FOREIGN KEY (local_id) REFERENCES local(id),
-    FOREIGN KEY (material_id) REFERENCES material(id) -- New foreign key constraint
-);
+create table
+  public.availability (
+    id serial not null,
+    start character varying(45) null,
+    "end" character varying(45) null,
+    daysofweek character varying(9) null,
+    personal_id integer null,
+    event_id integer null,
+    local_id integer null,
+    date date null,
+    material_id integer null,
+    startdate date null,
+    enddate date null,
+    statusday public.statusday null default 'available'::statusday,
+    request_id integer null,
+    constraint availability_pkey primary key (id),
+    constraint availability_event_id_fkey foreign key (event_id) references event (id) on delete cascade,
+    constraint availability_local_id_fkey foreign key (local_id) references local (id) on delete cascade,
+    constraint availability_personal_id_fkey foreign key (personal_id) references personal (id) on delete cascade,
+    constraint fk_material foreign key (material_id) references material (id),
+    constraint availability_request_id_fkey foreign key (request_id) references request (id) on delete cascade,
+    constraint availability_daysofweek_check check (
+      (
+        (daysofweek)::text = any (
+          (
+            array[
+              'monday'::character varying,
+              'tuesday'::character varying,
+              'wednesday'::character varying,
+              'thursday'::character varying,
+              'friday'::character varying,
+              'saturday'::character varying,
+              'sunday'::character varying
+            ]
+          )::text[]
+        )
+      )
+    )
+  ) tablespace pg_default;
 
 CREATE TABLE chatroom (
     id SERIAL PRIMARY KEY,
@@ -102,38 +167,56 @@ CREATE TABLE chatroom (
 );
 
 
-CREATE TABLE material (
-    id SERIAL PRIMARY KEY,
-    subcategory_id INTEGER NOT NULL,
-    user_id UUID NOT NULL,
-    quantity INTEGER,
-    price INTEGER,
-    startdate DATE,
-    enddate DATE,
-    price_per_hour INTEGER, -- New column for price per hour
-    sell_or_rent VARCHAR(4) CHECK (sell_or_rent IN ('sell', 'rent')), -- Using VARCHAR with a CHECK constraint
-    name VARCHAR(45),
-    details VARCHAR(255),
-    FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
-);
+create table
+  public.material (
+    id serial not null,
+    subcategory_id integer not null,
+    user_id uuid not null,
+    quantity integer null,
+    price integer null,
+    name character varying(45) null,
+    details character varying(255) null,
+    sell_or_rent character varying(4) null,
+    price_per_hour integer null,
+    startdate date null,
+    enddate date null,
+    disabled boolean null,
+    constraint material_pkey primary key (id),
+    constraint material_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id),
+    constraint material_user_id_fkey foreign key (user_id) references "user" (id),
+    constraint material_sell_or_rent_check check (
+      (
+        (sell_or_rent)::text = any (
+          (
+            array[
+              'sell'::character varying,
+              'rent'::character varying
+            ]
+          )::text[]
+        )
+      )
+    )
+  ) tablespace pg_default;
 
-
-CREATE TABLE comment (
-    id SERIAL PRIMARY KEY,
-    personal_id INTEGER,
-    material_id INTEGER,
-    event_id INTEGER,
-    local_id INTEGER,
-    user_id UUID NOT NULL,
-    details VARCHAR(255),
-    parent_id INTEGER REFERENCES comment(id),
-    FOREIGN KEY (personal_id) REFERENCES personal(id),
-    FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (event_id) REFERENCES event(id),
-    FOREIGN KEY (local_id) REFERENCES local(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
-);
+create table
+  public.comment (
+    id serial not null,
+    personal_id integer null,
+    material_id integer null,
+    event_id integer null,
+    user_id uuid not null,
+    details character varying(255) null,
+    local_id integer null,
+    created_at timestamp without time zone null default current_timestamp,
+    parent_id integer null,
+    constraint comment_pkey primary key (id),
+    constraint comment_material_id_fkey foreign key (material_id) references material (id),
+    constraint comment_personal_id_fkey foreign key (personal_id) references personal (id),
+    constraint comment_event_id_fkey foreign key (event_id) references event (id) on delete cascade,
+    constraint comment_user_id_fkey foreign key (user_id) references "user" (id),
+    constraint fk_local foreign key (local_id) references local (id),
+    constraint fk_parent_comment foreign key (parent_id) references comment (id) on delete cascade
+  ) tablespace pg_default;
 
 
 CREATE TABLE event_has_user (
@@ -162,46 +245,53 @@ CREATE TABLE interest (
     FOREIGN KEY (user_id) REFERENCES "user"(id)
 );
 
-CREATE TABLE location (
-    id SERIAL PRIMARY KEY,
-    longitude FLOAT,
-    latitude FLOAT,
-    user_id UUID,
-    local_id INTEGER,
-    personal_id INTEGER,
-    event_id INTEGER,
-    FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (local_id) REFERENCES local(id),
-    FOREIGN KEY (event_id) REFERENCES event(id),
-    FOREIGN KEY (personal_id) REFERENCES personal(id)
-);
+create table
+  public.location (
+    id serial not null,
+    longitude double precision null,
+    latitude double precision null,
+    user_id uuid null,
+    local_id integer null,
+    event_id integer null,
+    personal_id integer null,
+    material_id integer null,
+    constraint location_pkey primary key (id),
+    constraint location_event_id_fkey foreign key (event_id) references event (id) on delete cascade,
+    constraint location_local_id_fkey foreign key (local_id) references local (id) on delete cascade,
+    constraint location_material_id_fkey foreign key (material_id) references material (id) on delete cascade,
+    constraint location_personal_id_fkey foreign key (personal_id) references personal (id) on delete cascade,
+    constraint location_user_id_fkey foreign key (user_id) references "user" (id) on delete cascade
+  ) tablespace pg_default;
 ////-////
-CREATE TABLE media (
-    id SERIAL PRIMARY KEY,
-    event_id INTEGER,
-    user_id UUID ,
-    personal_id INTEGER,
-    material_id INTEGER,
-    local_id INTEGER,
-    album_id INTEGER,
-    url TEXT,
-    type VARCHAR(45),
-    FOREIGN KEY (event_id) REFERENCES event(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (personal_id) REFERENCES personal(id),
-    FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (local_id) REFERENCES local(id),
-    FOREIGN KEY (album_id) REFERENCES album(id)
+create table
+  public.media (
+    id serial not null,
+    event_id integer null,
+    user_id uuid null,
+    personal_id integer null,
+    material_id integer null,
+    local_id integer null,
+    url text null,
+    type text null,
+    album_id bigint null,
+    constraint media_pkey primary key (id),
+    constraint media_event_id_fkey foreign key (event_id) references event (id) on delete cascade,
+    constraint media_local_id_fkey foreign key (local_id) references local (id) on delete cascade,
+    constraint fk_album foreign key (album_id) references album (id) on delete cascade,
+    constraint media_personal_id_fkey foreign key (personal_id) references personal (id) on delete cascade,
+    constraint media_user_id_fkey foreign key (user_id) references "user" (id) on delete cascade,
+    constraint media_material_id_fkey foreign key (material_id) references material (id) on delete cascade
+  ) tablespace pg_default;
 
-);
-
-CREATE TABLE album (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(45),
-    details TEXT,
-    user_id UUID NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
-);
+create table
+  public.album (
+    id serial not null,
+    name character varying(255) null,
+    details text null,
+    user_id uuid not null,
+    constraint album_pkey primary key (id),
+    constraint album_user_id_fkey foreign key (user_id) references "user" (id)
+  ) tablespace pg_default;
 ////-////
 
 CREATE TABLE message (
@@ -222,39 +312,60 @@ CREATE TABLE ticket (
     FOREIGN KEY (event_id) REFERENCES event(id)
 );
 
-CREATE TABLE "order" (
-    id SERIAL PRIMARY KEY,
-    personal_id INTEGER,
-    local_id INTEGER,
-    material_id INTEGER,
-    user_id UUID NOT NULL,
-    ticket_id INTEGER,
-    FOREIGN KEY (personal_id) REFERENCES personal(id),
-    FOREIGN KEY (local_id) REFERENCES local(id),
-    FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (ticket_id) REFERENCES ticket(id)
-);
+create table
+  public.order (
+    id serial not null,
+    personal_id integer null,
+    local_id integer null,
+    material_id integer null,
+    user_id uuid not null,
+    ticket_id integer null,
+    type character varying null,
+    payment boolean null,
+    payment_id text null,
+    token text null,
+    constraint order_pkey primary key (id),
+    constraint order_local_id_fkey foreign key (local_id) references local (id),
+    constraint order_material_id_fkey foreign key (material_id) references material (id),
+    constraint order_personal_id_fkey foreign key (personal_id) references personal (id),
+    constraint order_ticket_id_fkey foreign key (ticket_id) references ticket (id),
+    constraint order_user_id_fkey foreign key (user_id) references "user" (id)
+  ) tablespace pg_default;
 
-CREATE TABLE request (
-    id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL, -- The user who receives the request
-    friend_id UUID 
-    personal_id INTEGER 
-    local_id INTEGER 
-    material_id INTEGER
-    event_id INTEGER 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(8) CHECK (status IN ('pending', 'accepted', 'refused')),
-    
-    -- Foreign key references
-    FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (friend_id) REFERENCES "user"(id),
-    FOREIGN KEY (personal_id) REFERENCES personal(id),
-    FOREIGN KEY (local_id) REFERENCES local(id),
-    FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (event_id) REFERENCES event(id)
-);
+create table
+  public.request (
+    id serial not null,
+    user_id uuid not null,
+    event_id integer null,
+    status character varying(10) null,
+    personal_id integer null,
+    created_at timestamp with time zone null,
+    local_id integer null,
+    material_id integer null,
+    friend_id uuid null,
+    is_read boolean null default false,
+    is_action_read boolean null default false,
+    availability_id integer null,
+    constraint request_pkey primary key (id),
+    constraint request_event_id_fkey foreign key (event_id) references event (id),
+    constraint request_friend_id_fkey foreign key (friend_id) references "user" (id),
+    constraint request_local_id_fkey foreign key (local_id) references local (id),
+    constraint request_material_id_fkey foreign key (material_id) references material (id),
+    constraint request_personal_id_fkey foreign key (personal_id) references personal (id),
+    constraint request_user_id_fkey foreign key (user_id) references "user" (id),
+    constraint request_availability_id_fkey foreign key (availability_id) references availability (id),
+    constraint request_status_check check (
+      (
+        (status)::text = any (
+          array[
+            ('pending'::character varying)::text,
+            ('accepted'::character varying)::text,
+            ('refused'::character varying)::text
+          ]
+        )
+      )
+    )
+  ) tablespace pg_default;
 
 CREATE TABLE "group" (
     id SERIAL PRIMARY KEY,
@@ -295,51 +406,23 @@ CREATE TABLE saved (
 
 
 
-CREATE TABLE review (
-    id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL,
-    event_id INTEGER,
-    personal_id INTEGER,
-    material_id INTEGER,
-    local_id INTEGER,
-    rate FLOAT,
-    total INTEGER,
-    FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (event_id) REFERENCES event(id),
-    FOREIGN KEY (personal_id) REFERENCES personal(id),
-    FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (local_id) REFERENCES local(id)
-);
+create table
+  public.review (
+    id serial not null,
+    user_id uuid not null,
+    event_id integer null,
+    personal_id integer null,
+    material_id integer null,
+    local_id integer null,
+    rate double precision null,
+    constraint review_pkey primary key (id),
+    constraint review_event_id_fkey foreign key (event_id) references event (id),
+    constraint review_local_id_fkey foreign key (local_id) references local (id),
+    constraint review_material_id_fkey foreign key (material_id) references material (id),
+    constraint review_personal_id_fkey foreign key (personal_id) references personal (id),
+    constraint review_user_id_fkey foreign key (user_id) references "user" (id)
+  ) tablespace pg_default;
 
--- Create material_user table with status using CHECK constraint
-CREATE TABLE material_user (
-    material_id INTEGER NOT NULL,
-    user_id UUID NOT NULL,
-    status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('confirmed', 'rejected', 'pending')), -- Enum-like status
-    PRIMARY KEY (material_id, user_id),
-    FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
-);
-
--- Create personal_user table with status using CHECK constraint
-CREATE TABLE personal_user (
-    personal_id INTEGER NOT NULL,
-    user_id UUID NOT NULL,
-    status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('confirmed', 'rejected', 'pending')), -- Enum-like status
-    PRIMARY KEY (personal_id, user_id),
-    FOREIGN KEY (personal_id) REFERENCES personal(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
-);
-
--- Create local_user table with status using CHECK constraint
-CREATE TABLE local_user (
-    local_id INTEGER NOT NULL,
-    user_id UUID NOT NULL,
-    status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('confirmed', 'rejected', 'pending')), -- Enum-like status
-    PRIMARY KEY (local_id, user_id),
-    FOREIGN KEY (local_id) REFERENCES local(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
-);
 
 
 create table
@@ -357,13 +440,15 @@ create table
     foreign key (user_id) references "user" (id)
   );
 
-CREATE TABLE comment_replies (
-    id SERIAL PRIMARY KEY,
-    comment_id INTEGER NOT NULL,  -- The original comment
-    reply_id INTEGER NOT NULL,    -- The comment that replies to the original comment
-    FOREIGN KEY (comment_id) REFERENCES comment(id) ON DELETE CASCADE,
-    FOREIGN KEY (reply_id) REFERENCES comment(id) ON DELETE CASCADE
-);
+create table
+  public.comment_replies (
+    id serial not null,
+    comment_id integer not null,
+    reply_id integer not null,
+    constraint comment_replies_pkey primary key (id),
+    constraint comment_replies_comment_id_fkey foreign key (comment_id) references comment (id) on delete cascade,
+    constraint comment_replies_reply_id_fkey foreign key (reply_id) references comment (id) on delete cascade
+  ) tablespace pg_default;
 
 
 -- Rest of the tables remain the same
