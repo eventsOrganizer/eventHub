@@ -36,7 +36,7 @@ interface ReceivedRequestCardProps {
           </View>
           <TouchableOpacity onPress={() => setShowDetails(!showDetails)}>
             <Text style={styles.detailsButton}>
-              {showDetails ? 'Masquer les détails' : 'Voir les détails'}
+              {showDetails ? 'Hide details' : 'View details'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -64,13 +64,13 @@ interface ReceivedRequestCardProps {
               onPress={() => onConfirm(item.id)}
               style={[styles.button, styles.confirmButton]}
             >
-              <Text style={styles.buttonText}>Confirmer</Text>
+              <Text style={styles.buttonText}>Confirm</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               onPress={() => onReject(item.id)}
               style={[styles.button, styles.rejectButton]}
             >
-              <Text style={styles.buttonText}>Refuser</Text>
+              <Text style={styles.buttonText}>Reject</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -79,14 +79,14 @@ interface ReceivedRequestCardProps {
               styles.statusText,
               item.status === 'accepted' ? styles.statusAccepted : styles.statusRejected
             ]}>
-              {item.status === 'accepted' ? 'Demande confirmée' : 'Demande refusée'}
+              {item.status === 'accepted' ? 'Request confirmed' : 'Request rejected'}
             </Text>
             {onDelete && (
               <TouchableOpacity 
                 onPress={() => onDelete(item.id)}
                 style={[styles.button, styles.deleteButton]}
               >
-                <Text style={styles.buttonText}>Supprimer</Text>
+                <Text style={styles.buttonText}>Delete</Text>
               </TouchableOpacity>
             )}
           </View>

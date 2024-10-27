@@ -37,6 +37,7 @@ const YourRequests: React.FC = () => {
         ? await fetchSentRequests(userId)
         : await fetchReceivedRequests(userId);
         
+      console.log('Fetched requests:', data); // Pour le débogage
       setRequests(data);
       setFilteredRequests(data);
     } catch (error) {
@@ -126,9 +127,17 @@ const YourRequests: React.FC = () => {
     setFilteredRequests(updatedRequests);
   };
 
+  const handleRequestDeleted = () => {
+    // Rafraîchir la liste des demandes après une suppression
+    fetchRequests();
+  };
+
   const renderRequestItem = ({ item }: { item: Request }) => {
     return mode === 'sent' ? (
-      <SentRequestCard item={item} />
+      <SentRequestCard 
+        item={item} 
+        onRequestDeleted={handleRequestDeleted}
+      />
     ) : (
       <ReceivedRequestCard 
         item={item} 

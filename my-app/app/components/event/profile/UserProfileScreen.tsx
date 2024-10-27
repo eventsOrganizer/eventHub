@@ -33,7 +33,7 @@ interface UserProfile {
 
 const UserProfileScreen: React.FC = () => {
   const { userId } = useUser();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState('events');
   const [loading, setLoading] = useState(true);
@@ -141,7 +141,7 @@ const UserProfileScreen: React.FC = () => {
 
   useEffect(() => {
     if (activeTab === 'services') {
-      navigation.navigate('UserServicesScreen', { userId });
+      navigation.navigate('UserServicesScreen' as never, { userId } as never);
     }
   }, [activeTab, navigation, userId]);
 
