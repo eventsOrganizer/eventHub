@@ -1,82 +1,67 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { supabase } from '../../services/supabaseClient';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text, ScrollView, Image, Dimensions } from 'react-native';
+import { WebView } from 'react-native-webview';
+import * as Location from 'expo-location';
 import { useRoute } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { fetchLocalDetail, toggleLikeLocal } from '../../services/localService';
 import { fetchLocalAvailabilityData, LocalAvailabilityData } from '../../services/availabilityService';
 import { useUser } from '../../UserContext';
 import { useToast } from '../../hooks/useToast';
 import LocalInfo from './LocalInfo';
-import LocalBookingForm from './LocalBookingForm';
-import { LocalService } from '../../services/serviceTypes';
 import LocalDetails from './LocalDetails';
+import LocalBookingForm from './LocalBookingForm';
 import LocalReviewForm from './LocalReviewForm';
 import LocalCommentSection from './LocalCommentSection';
+import { LocalService } from '../../services/serviceTypes';
+import { supabase } from '../../services/supabaseClient';
 
-const LocalServiceDetailScreen = () => {
+const { width } = Dimensions.get('window');
+const IMAGE_HEIGHT = width * 0.75;
+
+const LocalServiceDetailScreen: React.FC = () => {
   const route = useRoute();
   const { localServiceId } = route.params as { localServiceId: number };
   const { userId } = useUser();
-  const { toast, ToastComponent } = useToast();
+  const { toast } = useToast();
 
-  const [localServiceData, setLocalServiceData] = useState<LocalService | null>(null);
+  const [localServiceData, setLocalServiceData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [availabilityData, setAvailabilityData] = useState<LocalAvailabilityData | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
+  const [distance, setDistance] = useState<number | null>(null);
+  const [address, setAddress] = useState<string>('Chargement de l\'adresse...');
   const [likes, setLikes] = useState(0);
   const [userHasLiked, setUserHasLiked] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('local')
-        .select(`*, 
-          subcategory (name),
-          media (url),
-          availability (id, start, end, daysofweek, date),
-          comment (id, details, user_id, created_at),
-          like (user_id),
-          review (id) 
-        `)
-        .eq('id', localServiceId)
-        .single();
-  
-      if (error) throw error;
-      if (!data) {
-        throw new Error('No data returned from the query');
-      }
-  
-      // Ensure 'data' is of type 'LocalService | null' before calling setLocalServiceData
-      if (isValidLocalServiceData(data)) {
-        // Ensure 'review' is an array
-        data.review = Array.isArray(data.review) ? data.review : [];
+      const data = await fetchLocalDetail(localServiceId);
+      if (data) {
         setLocalServiceData(data);
+        setImages(data.media?.map((item: any) => item.url) || []);
+        if (data.location) {
+          setAddress(await getAddressFromCoordinates(data.location.latitude, data.location.longitude));
+        }
+        const availability = await fetchLocalAvailabilityData(localServiceId);
+        setAvailabilityData(availability);
+        const { count: likesCount } = await supabase
+          .from('like')
+          .select('id', { count: 'exact' })
+          .eq('local_id', localServiceId);
+        setLikes(likesCount || 0);
+        const { data: userLike } = await supabase
+          .from('like')
+          .select('*')
+          .eq('local_id', localServiceId)
+          .eq('user_id', userId)
+          .single();
+        setUserHasLiked(!!userLike);
       } else {
-        console.error("Invalid data received:", data);
-        setLocalServiceData(null); // or handle the error appropriately
+        console.log('No data received from fetchLocalDetail');
       }
-  
-      // Fetch availability data
-      const availability = await fetchLocalAvailabilityData(localServiceId);
-      setAvailabilityData(availability);
-  
-      // Fetch the number of likes
-      const { count: likesCount } = await supabase
-        .from('like')
-        .select('id', { count: 'exact' })
-        .eq('local_id', localServiceId);
-  
-      setLikes(likesCount || 0);
-  
-      // Check if the current user has liked
-      const { data: userLike } = await supabase
-        .from('like')
-        .select('*')
-        .eq('local_id', localServiceId)
-        .eq('user_id', userId)
-        .single();
-  
-      setUserHasLiked(!!userLike);
     } catch (error) {
       console.error('Error fetching local service details:', error);
       toast({
@@ -88,7 +73,28 @@ const LocalServiceDetailScreen = () => {
       setIsLoading(false);
     }
   }, [localServiceId, userId, toast]);
-  
+
+  const getAddressFromCoordinates = async (latitude: number, longitude: number): Promise<string> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'ChakerApp/1.0',
+            'Accept-Language': 'fr'
+          }
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.display_name || 'Adresse non trouvée';
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'adresse:', error);
+      return 'Erreur lors de la récupération de l\'adresse';
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -121,23 +127,40 @@ const LocalServiceDetailScreen = () => {
     fetchData();
   };
 
-  if (isLoading || !localServiceData || !availabilityData) {
-    return <View style={styles.centeredContainer}><Text style={styles.loadingText}>Chargement...</Text></View>;
-  }
-
   const renderItem = () => (
-     <View style={styles.content}>
-    {localServiceData && (
-      <LocalInfo
-        localData={localServiceData}
+    <View style={styles.card}>
+      <View style={styles.imageContainer}>
+        <ScrollView 
+          horizontal 
+          pagingEnabled 
+          showsHorizontalScrollIndicator={false}
+          decelerationRate="fast"
+          snapToInterval={width}
+        >
+          {images.length > 0 ? (
+            images.map((imageUrl, index) => (
+              <Image 
+                key={index} 
+                source={{ uri: imageUrl }} 
+                style={styles.image} 
+                resizeMode="cover"
+              />
+            ))
+          ) : (
+            <View style={styles.noImageContainer}>
+              <Text style={styles.noImageText}>Aucune image disponible</Text>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+      <LocalInfo 
+        localData={localServiceData} 
         likes={likes}
-        reviewsCount={Array.isArray(localServiceData.review) ? localServiceData.review.length : 0} // Ensure this is present
         userHasLiked={userHasLiked}
         onLike={handleLike}
+        distance={distance}
+        address={address}
       />
-
-    )}
-     
       <LocalDetails localData={localServiceData} />
       <LocalBookingForm
         localId={localServiceId}
@@ -145,56 +168,86 @@ const LocalServiceDetailScreen = () => {
         availabilityData={availabilityData}
         onBookingComplete={fetchData}
       />
-      <LocalReviewForm localId={localServiceData.id} onReviewSubmitted={handleReviewSubmitted} />
+      <LocalReviewForm localId={localServiceData?.id} onReviewSubmitted={handleReviewSubmitted} />
       <LocalCommentSection 
-        comments={localServiceData.comment.map(comment => ({
+        comments={localServiceData?.comment.map(comment => ({
           ...comment,
           user: (comment as any).user || { username: "anonymous" }
-        }))}
-        localId={localServiceData.id}
+        })) || []}
+        localId={localServiceData?.id}
         userId={userId}
       />
     </View>
   );
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <LinearGradient
+      colors={['#E6F2FF', '#C2E0FF', '#99CCFF', '#66B2FF']}
       style={styles.container}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
-      <FlatList
-        data={[{ key: 'content' }]}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.key}
-      />
-      {ToastComponent}
-    </KeyboardAvoidingView>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      >
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <Text>Chargement...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={[{ key: 'content' }]}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.key}
+          />
+        )}
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   content: {
     padding: 16,
   },
-  centeredContainer: {
+  card: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  imageContainer: {
+    height: IMAGE_HEIGHT,
+    marginBottom: 16,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  image: {
+    width: width,
+    height: IMAGE_HEIGHT,
+    borderRadius: 10,
+  },
+  noImageContainer: {
+    width: width,
+    height: IMAGE_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+  },
+  noImageText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
-    fontSize: 18,
-  },
 });
 
 export default LocalServiceDetailScreen;
-
-// Helper function to validate data type
-function isValidLocalServiceData(data: any): data is LocalService {
-    // Implement validation logic here
-    return true; // Replace with actual validation
-}

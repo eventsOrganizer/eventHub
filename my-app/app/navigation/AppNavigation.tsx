@@ -39,8 +39,8 @@ import ChatListScreen from '../components/event/ChatListScreen';
 import RequestsScreen from '../components/event/profile/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
 import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
-import LocalServiceDetailScreen from '../components/LocalService/LocalServiceDetailScreen';
-import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
+import LocalServiceDetailScreen from "../screens/LocalServiceScreens/LocalDetail"
+import LocalsScreen from '../screens/LocalServiceScreens/LocalsScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
 import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
 import SavedScreen from '../components/event/profile/SavedScreen';
@@ -51,6 +51,7 @@ import EventCreation from '../components/event/EventCreation';
 import BookingScreen from '../screens/PersonalServiceScreen/BookingScreen';
 import CommentsScreen from '../screens/PersonalServiceScreen/CommentsScreen';
 import AddReviewScreen from '../screens/PersonalServiceScreen/AddReviewScreen';
+import LocalCommentSection from '../components/LocalService/LocalCommentSection';
 
 // Inside your Stack.Navigator component, add this new Screen
 
@@ -71,7 +72,8 @@ import { Material } from './types';
 import BasketScreen from '../screens/BasketScreen';
 import MaterialsOnboardingScreen from '../screens/MaterialServiceScreens/MaterialsOnboardingScreen';// import PaymentActionScreen from '../payment/PaymentActionScreen';
 import SearchResultsScreen from '../screens/SearchResultsScreen';
-
+import LocalAddReviewScreen from '../screens/LocalServiceScreens/LocalAddReviewScreen';
+import LocalBookingScreen from '../screens/LocalServiceScreens/LocalBookingScreen';
 
 
 import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail';
@@ -81,6 +83,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import TicketingScreen from '../screens/TicketingScreen';
 import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
+import LocalCommentsScreen from '../screens/LocalServiceScreens/LocalCommentsScreen';
 
 type RootStackParamList = {
   Onboarding: undefined;
@@ -111,6 +114,8 @@ type RootStackParamList = {
   EventCreation: { eventType: string };
   CreateLocalServiceStack: undefined;
   PersonalServiceCreationStack: undefined;
+  LocalAddReviewScreen:undefined;
+  LocalCommentsScreen:undefined;
   
   // Add the CreateService screen and pass serviceType as a param
   CreateService: { serviceType: string };
@@ -123,6 +128,7 @@ type RootStackParamList = {
   };
   UserProfile: { userId: string };  UserServicesScreen: undefined;
   MapScreen: undefined;
+  LocalBookingScreen: undefined;
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -139,7 +145,7 @@ type EventSetupOptionsScreenProps = {
   CreateLocalServiceStep3: undefined;
   CreateLocalServiceStep4: { formData: any };
   CreateLocalServiceStep5: { formData: any };
-  LocalServiceScreen: undefined;
+  LocalsScreen: undefined;
   LocalServiceDetails: { localServiceId: number };
   UserProfile: undefined;
   PaymentAction: { price: number; personalId: string };
@@ -302,8 +308,8 @@ const AppNavigation: React.FC = () => {
         options={{ headerShown: true, title: 'Create Local Service' }}
         />
   <Stack.Screen
-    name="LocalServiceScreen"
-    component={LocalServiceScreen}
+    name="LocalsScreen"
+    component={LocalsScreen}
     options={{ title: 'Local Services' }}
   />
 
@@ -461,6 +467,10 @@ const AppNavigation: React.FC = () => {
         options={{ headerShown: false }}
       />
     <Stack.Screen name="MapScreen" component={MapScreen} />
+<Stack.Screen name="LocalAddReviewScreen" component={LocalAddReviewScreen}/>
+<Stack.Screen name="LocalCommentsScreen" component={LocalCommentSection}/>
+<Stack.Screen name="LocalBookingScreen" component={LocalBookingScreen}/>
+
 </Stack.Navigator> 
 
   )

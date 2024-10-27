@@ -35,7 +35,7 @@ export type LocalService = {
     user_id: string;
     ticket_id: string;
   }>;
-  local_user: Array<{
+  request: Array<{
     user_id: string;
     status: string;
   }>;
@@ -43,6 +43,10 @@ export type LocalService = {
     user_id: string;
     rate: number;
   }>;
+  location?: {
+    latitude: number | null;
+    longitude: number | null;
+  };
 };
 
 export type LocalServiceRequest = {
@@ -141,7 +145,8 @@ export const fetchLocalServices = async (): Promise<ImportedLocalService[]> => {
         ),
         media (url),
         like (user_id),
-        review (user_id, rate)
+        review (user_id, rate),
+        location!local_id (latitude, longitude)
       `)
       .order('id', { ascending: false });
 
@@ -161,12 +166,22 @@ export const fetchLocalServices = async (): Promise<ImportedLocalService[]> => {
       imageUrl: service.media && service.media.length > 0
         ? service.media[0].url
         : 'https://via.placeholder.com/150',
+      location: service.location && service.location.length > 0 ? {
+        latitude: parseFloat(service.location[0].latitude),
+        longitude: parseFloat(service.location[0].longitude)
+      } : null
     }));
   } catch (error) {
     console.error('Unexpected error fetching local services:', error);
     return [];
   }
 };
+
+interface Comment {
+  details: string;
+  user_id: string;
+  user: { username: string };
+}
 
 export const fetchLocalDetail = async (id: number): Promise<ImportedLocalService | null> => {
   try {
@@ -189,22 +204,33 @@ export const fetchLocalDetail = async (id: number): Promise<ImportedLocalService
         ),
         like (user_id),
         order (user_id, ticket_id),
-        local_user (user_id, status),
-        review (user_id, rate)
+        request (user_id, status),
+        review (user_id, rate),
+        location (latitude, longitude)
       `)
       .eq('id', id)
       .single();
 
     if (error) throw error;
+
     console.log('Fetched local detail:', data);
-    return {
+
+    const transformedData = {
       ...data,
       imageUrl: data.media && data.media.length > 0
         ? data.media[0].url
         : 'https://via.placeholder.com/150',
-      comments: data.comment || [],
-      likes: data.like || []
+      comments: data.comment || [], // Include comments
+      likes: data.like || [],
+      availability: data.availability || [],
+      location: data.location ? {
+        latitude: parseFloat(data.location.latitude),
+        longitude: parseFloat(data.location.longitude)
+      } : null,
+      reviewCount: data.review ? data.review.length : 0 // Calculate review count from the review array
     };
+
+    return transformedData;
   } catch (error) {
     console.error('Error fetching local detail:', error);
     return null;
@@ -253,3 +279,77 @@ export const toggleLikeLocal = async (localId: number, userId: string) => {
       return null;
     }
   };
+
+// New function to fetch personal local services
+export const fetchPersonalLocalServices = async (userId: string): Promise<ImportedLocalService[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('local')
+      .select(`
+        *,
+        subcategory (
+          name,
+          category (
+            name
+          )
+        ),
+        media (url),
+        location (latitude, longitude)
+      `)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
+    return data as ImportedLocalService[];
+  } catch (error) {
+    console.error('Error fetching personal local services:', error);
+    return [];
+  }
+};
+
+export const addLocalReview = async (localId: number, userId: string, rating: number): Promise<boolean> => {
+  try {
+    // Insert the review into the review table
+    const { error: insertError } = await supabase
+      .from('review')
+      .insert({
+        local_id: localId,
+        user_id: userId,
+        rate: rating,
+      });
+
+    if (insertError) throw insertError;
+
+    // No need to update review_count since it doesn't exist
+    // Simply return true after inserting the review
+    return true;
+  } catch (error) {
+    console.error('Error adding local review:', error);
+    return false;
+  }
+};
+
+// New function to fetch comments for local services
+export const fetchLocalComments = async (localId: number): Promise<Comment[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('comment')
+      .select(`
+        details,
+        user_id,
+        user (username)
+      `)
+      .eq('local_id', localId);
+
+    if (error) throw error;
+
+    return data.map(item => ({
+      details: item.details,
+      user_id: item.user_id,
+      user: { username: item.user[0]?.username } // Ensure user is an object with a username
+    })) as Comment[];
+  } catch (error) {
+    console.error('Error fetching local comments:', error);
+    return [];
+  }
+};

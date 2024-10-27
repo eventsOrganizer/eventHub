@@ -1,6 +1,11 @@
 import { supabase } from './supabaseClient';
 import { Linking } from 'react-native';
 
+export type Location = {
+  latitude: number | null; // Store latitude, can be null
+  longitude: number | null; // Store longitude, can be null
+};
+
 export type Comment = {
   id: number;
   details: string;
@@ -65,25 +70,21 @@ export type LocalComment = {
 
 export type LocalService = {
   id: number;
-  name: string;
-  priceperhour: number;
-  details: string;
+  subcategory_id: number; // Include subcategory_id to match the schema
   user_id: string;
-  subcategory?: { 
-    name: string;
-    category?: {
-      name: string;
-    };
-  };
-  media?: { url: string }[];
-  imageUrl?: string;
-  startdate: string;
-  enddate: string;
-  availability: Array<{
-    date: string;
-    statusday: 'available' | 'reserved' | 'exception';
-  }>;
-  comment: LocalComment[];
+  priceperhour: number;
+  name: string;
+  details: string;
+  startdate: string; // Assuming this is a string type for date representation
+  enddate: string; // Same as above
+  disabled: boolean;
+  percentage?: number; // Assuming this is optional
+  location: {          // You can define this as per your needs
+    latitude: number | null; // Ensure null is allowed
+    longitude: number | null; // Ensure null is allowed
+  } | null; // Allow null if no location is provided
+  // Other existing properties...
+  comment: LocalComment[]; 
   like: Array<{ user_id: string }>;
   order: Array<{
     user_id: string;
@@ -98,6 +99,8 @@ export type LocalService = {
     rate: number;
   }>;
 };
+
+
 
 export type ServiceRequest = {
   requestData: {

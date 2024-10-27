@@ -42,9 +42,12 @@ export interface PersonalData {
 }
 
 export type RootStackParamList = {
+  LocalBookingScreen: { localId: number; availabilityData: any };
   Home: undefined;
   PersonalsScreen: { category?: string };
   PersonalDetail: { personalId: number };
+  LocalsScreen:{category?: string}
+  LocalServiceDetails: {localId: number}
   CreateLocalServiceStep2: undefined;
   CreateLocalServiceStep3: { 
       serviceName: string; 
@@ -150,6 +153,7 @@ export type CommentsScreenNavigationProp = NativeStackNavigationProp<RootStackPa
 export type AddReviewScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AddReviewScreen'>;
 export type CreateLocalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep5'>;
 export type PersonalScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'PersonalsScreen'>;
+export type LocalScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'LocalsScreen'>;
 export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 export type CreatePersonalServiceStep1NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep1'>;
 export type CreatePersonalServiceStep2NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep2'>;

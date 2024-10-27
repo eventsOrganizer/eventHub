@@ -224,7 +224,7 @@ const HomeScreen: React.FC = () => {
             <SectionComponent 
               title="VENUE SERVICES" 
               data={locals} 
-              onSeeAll={() => navigation.navigate('LocalServiceScreen')}
+              onSeeAll={() => navigation.navigate('LocalsScreen')}
               onItemPress={(item) => {
                 console.log('Local service item:', item);
                 navigation.navigate('LocalServiceDetails', { localServiceId: item.id });

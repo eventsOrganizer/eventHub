@@ -1,10 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
-import { format, parseISO } from 'date-fns';
-import moment from 'moment';
 
 interface LocalFinishedCreationProps {
   formData: {
@@ -12,13 +9,13 @@ interface LocalFinishedCreationProps {
     title: string;
     details: string;
     price: string;
-    image: string | null;
+    percentage: string;
     images: string[]; // Ensure images is included in the formData type
     availableDates: { [date: string]: boolean };
     requiresAvailability: boolean;
     location: { latitude: number; longitude: number } | null;
     startDate: string;
-    endDate: string; // Add this line
+    endDate: string;
     exceptionDates: string[];
   };
   onConfirm: () => void;
@@ -32,7 +29,19 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
       Alert.alert('Error', 'You must be logged in to create a service.');
       return;
     }
-  
+
+    // Check if required fields are filled
+    if (!formData.title || !formData.details || !formData.price || !formData.subcategory || !formData.location) {
+      Alert.alert('Error', 'Please fill all the required fields.');
+      return;
+    }
+
+    // If availability is required, check if at least one date is selected
+    if (formData.requiresAvailability && Object.keys(formData.availableDates).length === 0) {
+      Alert.alert('Error', 'Please select at least one available date.');
+      return;
+    }
+
     try {
       // Fetch the subcategory ID from the database
       const { data: subcategoryData, error: subcategoryError } = await supabase
@@ -40,14 +49,14 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
         .select('id')
         .eq('name', formData.subcategory)
         .single();
-  
+
       if (subcategoryError || !subcategoryData) {
         Alert.alert('Error', 'Subcategory not found.');
         return;
       }
-  
+
       const subcategoryId = subcategoryData.id;
-  
+
       // Create local service
       const { data: localData, error: localError } = await supabase
         .from('local')
@@ -55,6 +64,7 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
           name: formData.title,
           details: formData.details,
           priceperhour: parseInt(formData.price), // Ensure price is an integer
+          percentage: parseInt(formData.percentage),
           subcategory_id: subcategoryId, // Use fetched ID
           user_id: userId,
           startdate: formData.startDate,
@@ -62,10 +72,10 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
         })
         .select()
         .single();
-  
+
       if (localError) throw localError;
       if (!localData) throw new Error('Failed to create local service');
-  
+
       // Create album
       const { data: albumData, error: albumError } = await supabase
         .from('album')
@@ -76,9 +86,9 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
         })
         .select()
         .single();
-  
+
       if (albumError) throw albumError;
-  
+
       // Insert images into media table
       for (const imageUrl of formData.images) {
         const { error: mediaError } = await supabase
@@ -89,24 +99,24 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
             album_id: albumData.id,
             type: 'image',
           });
-  
+
         if (mediaError) throw mediaError;
       }
-  
-      // Insert availability data
-      const availabilityData = Array.isArray(formData.availableDates) ? formData.availableDates.map((dateString: string) => ({
-        local_id: localData.id,
-        date: dateString,
-      })) : [];
-  
-      if (availabilityData.length > 0) {
+
+      // Insert availability data only if availability is required
+      if (formData.requiresAvailability && Object.keys(formData.availableDates).length > 0) {
+        const availabilityData = Object.keys(formData.availableDates).map((dateString: string) => ({
+          local_id: localData.id,
+          date: dateString,
+        }));
+
         const { error: availabilityError } = await supabase
           .from('availability')
           .insert(availabilityData);
-  
+
         if (availabilityError) throw availabilityError;
       }
-  
+
       Alert.alert('Success', 'Local service created successfully!');
       onConfirm(); // Call the onConfirm function to proceed
     } catch (error) {
@@ -114,14 +124,13 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
       Alert.alert('Error', 'An error occurred while creating the service. Please try again.');
     }
   };
-  
 
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Review Your Local Service</Text>
 
       <Text style={styles.label}>Subcategory:</Text>
-      <Text style={styles.info}>{(formData.subcategory) || 'Not specified'}</Text>
+      <Text style={styles.info}>{formData.subcategory || 'Not specified'}</Text>
 
       <Text style={styles.label}>Title:</Text>
       <Text style={styles.info}>{formData.title}</Text>
@@ -131,6 +140,9 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
 
       <Text style={styles.label}>Price Per Hour:</Text>
       <Text style={styles.info}>${formData.price}</Text>
+
+      <Text style={styles.label}>Percentage:</Text>
+      <Text style={styles.info}>{formData.percentage || 'Not specified'}%</Text>
 
       <Text style={styles.label}>Location:</Text>
       {formData.location ? (
@@ -144,11 +156,14 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
       <Text style={styles.label}>Start Date:</Text>
       <Text style={styles.info}>{formData.startDate || 'Not specified'}</Text>
 
+      <Text style={styles.label}>End Date:</Text>
+      <Text style={styles.info}>{formData.endDate || 'Not specified'}</Text>
+
       <Text style={styles.label}>Exception Dates:</Text>
       {formData.exceptionDates.length > 0 ? (
         <Text style={styles.info}>{formData.exceptionDates.join(', ')}</Text>
       ) : (
-        <Text style={styles.info}>No available dates selected</Text>
+        <Text style={styles.info}>No exception dates specified</Text>
       )}
 
       {/* Display the uploaded images if they exist */}

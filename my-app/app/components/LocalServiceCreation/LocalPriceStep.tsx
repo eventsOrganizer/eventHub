@@ -28,6 +28,7 @@ const PriceStep: React.FC<PriceStepProps> = ({ formData, setFormData, setIsButto
 
   const handlePercentageChange = (value: number) => {
     setPercentage(value);
+    setFormData({ ...formData, percentage: value.toString() }); // Add percentage to formData
   };
 
   return (
