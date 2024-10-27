@@ -16,6 +16,7 @@ import InvitationButton from './InvitationButton';
 import NotificationComponent from './notification/NotificationComponent';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
+import TicketManagement from '../Ticketing/TicketManagement';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -122,6 +123,8 @@ const UserProfileScreen: React.FC = () => {
         return <Subscriptions />;
       case 'services':
         return <UserServicesList userId={userId as string} />;
+        case 'tickets':
+          return <TicketManagement />;
       default:
         return null;
     }
@@ -228,15 +231,15 @@ const UserProfileScreen: React.FC = () => {
         </View>
 
         <View style={tw`flex-row justify-around mt-6 mb-2`}>
-          {['events', 'friends', 'subscriptions', 'albums'].map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-            >
-              <Text style={tw`text-${activeTab === tab ? 'white' : 'blue-200'} font-semibold capitalize text-lg`}>{tab}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+  {['events', 'friends', 'subscriptions', 'albums', 'tickets'].map((tab) => (
+    <TouchableOpacity
+      key={tab}
+      onPress={() => setActiveTab(tab)}
+    >
+      <Text style={tw`text-${activeTab === tab ? 'white' : 'blue-200'} font-semibold capitalize text-lg`}>{tab}</Text>
+    </TouchableOpacity>
+  ))}
+</View>
 
         <Animated.View
           style={[

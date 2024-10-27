@@ -13,6 +13,7 @@ import UserAvatar from '../components/event/UserAvatar';
 import EventLike from '../components/event/EventLike';
 import EventReview from '../components/event/EventReview';
 import BuyTicket from '../components/event/Ticketing/BuyTicket';
+import VideoRoomControl from '../components/event/video/VideoRoomControl';
 
 interface EventDetails {
   id: number;
@@ -161,13 +162,22 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
           style={styles.gradientHeader}
         >
           <Text style={styles.eventName}>{eventDetails.name}</Text>
-          <JoinEventButton
-            eventId={eventDetails.id}
-            privacy={eventDetails.privacy}
-            organizerId={eventDetails.user_id}
-            onJoinSuccess={handleJoinSuccess}
-            onLeaveSuccess={handleLeaveSuccess}
-          />
+          
+          {eventDetails.type === 'online' && (
+  <VideoRoomControl
+    eventId={eventDetails.id}
+    eventType={eventDetails.type}
+    organizerId={eventDetails.user_id}
+    isPrivate={eventDetails.privacy}
+  />
+)}
+<JoinEventButton
+  eventId={eventDetails.id}
+  privacy={eventDetails.privacy}
+  organizerId={eventDetails.user_id}
+  onJoinSuccess={handleJoinSuccess}
+  onLeaveSuccess={handleLeaveSuccess}
+/>
           <View style={styles.organizerContainer}>
             <UserAvatar userId={eventDetails.user_id} size={60} />
             <View>
