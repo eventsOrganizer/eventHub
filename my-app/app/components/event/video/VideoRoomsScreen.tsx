@@ -76,7 +76,7 @@ const VideoRoomsScreen = () => {
         Alert.alert('Error', 'Failed to save the new room.');
       } else if (data) {
         setRooms((prevRooms) => [...data, ...prevRooms]);
-        navigation.navigate('VideoCall', { roomUrl: newRoom.url, isCreator: true, roomId: data[0].id });
+        Alert.alert('Success', 'Room created successfully. Click on it to join.');
       }
     } catch (error) {
       console.error('Error creating room:', error);
