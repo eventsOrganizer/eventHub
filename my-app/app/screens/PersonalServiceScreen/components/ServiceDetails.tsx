@@ -16,6 +16,7 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = ({
   onReviewPress,
   onCommentPress,
   onBookPress,
+
 }) => {
   // Ajout de cette vérification
   if (!personalData) return null;

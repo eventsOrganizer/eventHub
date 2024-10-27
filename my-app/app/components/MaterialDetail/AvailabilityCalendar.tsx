@@ -7,9 +7,10 @@ import { supabase } from '../../../lib/supabase';
 
 interface AvailabilityCalendarProps {
   materialId: string;
+  theme: any;
 }
 
-const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ materialId }) => {
+const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ materialId, theme }) => {
   const [availableDates, setAvailableDates] = useState<{ [date: string]: { selected: boolean, marked: boolean, selectedColor: string } }>({});
 
   useEffect(() => {
@@ -25,7 +26,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ materialId 
       console.error('Error fetching availability:', error);
     } else {
       const dates = data.reduce<{ [date: string]: { selected: boolean, marked: boolean, selectedColor: string } }>((acc, { date }) => {
-        acc[date] = { selected: true, marked: true, selectedColor: '#4CAF50' };
+        acc[date] = { selected: true, marked: true, selectedColor: theme.primary };
         return acc;
       }, {});
       setAvailableDates(dates);
@@ -38,48 +39,45 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ materialId 
   };
 
   return (
-    <Card style={styles.card}>
-      <Card.Content>
-        <View style={styles.titleContainer}>
-          <Ionicons name="calendar-outline" size={24} color="#4A90E2" />
-          <Title style={styles.title}>Availability</Title>
-        </View>
-        <Calendar
-          markedDates={availableDates}
-          onDayPress={onDayPress}
-          theme={{
-            backgroundColor: '#ffffff',
-            calendarBackground: '#ffffff',
-            textSectionTitleColor: '#b6c1cd',
-            selectedDayBackgroundColor: '#4CAF50',
-            selectedDayTextColor: '#ffffff',
-            todayTextColor: '#4A90E2',
-            dayTextColor: '#2d4150',
-            textDisabledColor: '#d9e1e8',
-            dotColor: '#4CAF50',
-            selectedDotColor: '#ffffff',
-            arrowColor: '#4A90E2',
-            monthTextColor: '#4A90E2',
-            indicatorColor: '#4A90E2',
-            textDayFontWeight: '300',
-            textMonthFontWeight: 'bold',
-            textDayHeaderFontWeight: '300',
-            textDayFontSize: 16,
-            textMonthFontSize: 16,
-            textDayHeaderFontSize: 16
-          }}
-        />
-      </Card.Content>
-    </Card>
+    <View style={[styles.container, { backgroundColor: theme.light }]}>
+      <View style={styles.titleContainer}>
+        <Ionicons name="calendar-outline" size={24} color={theme.primary} />
+        <Title style={[styles.title, { color: theme.primary }]}>Availability</Title>
+      </View>
+      <Calendar
+        markedDates={availableDates}
+        onDayPress={onDayPress}
+        theme={{
+          backgroundColor: theme.light,
+          calendarBackground: theme.light,
+          textSectionTitleColor: '#b6c1cd',
+          selectedDayBackgroundColor: theme.primary,
+          selectedDayTextColor: '#ffffff',
+          todayTextColor: theme.primary,
+          dayTextColor: '#2d4150',
+          textDisabledColor: '#d9e1e8',
+          dotColor: theme.primary,
+          selectedDotColor: '#ffffff',
+          arrowColor: theme.primary,
+          monthTextColor: theme.primary,
+          indicatorColor: theme.primary,
+          textDayFontWeight: '300',
+          textMonthFontWeight: 'bold',
+          textDayHeaderFontWeight: '300',
+          textDayFontSize: 16,
+          textMonthFontSize: 16,
+          textDayHeaderFontSize: 16
+        }}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    margin: 16,
-    elevation: 4,
-    borderRadius: 12,
-    backgroundColor: 'white',
+  container: {
+    borderRadius: 15,
+    padding: 16,
+    elevation: 2,
   },
   titleContainer: {
     flexDirection: 'row',

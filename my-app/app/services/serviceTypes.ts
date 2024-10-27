@@ -12,52 +12,56 @@ export type Comment = {
   user_id: string;
   created_at: string;
   personal_id: number;
-  user: { username: string };
+  user: { username: string; id: string };
 };
 
+export interface MediaItem {
+  url: string;
+  type?: string;
+}
+
 export type Service = {
-  id: number;
-  name: string;
-  priceperhour: number;
-  details: string;
-  user_id: string;
-  subcategory?: { 
+    id: number;
     name: string;
-    category?: {
+    priceperhour: number;
+    details: string;
+    user_id: string;
+    subcategory?: { 
       name: string;
+      category?: {
+        name: string;
+      };
     };
-  };
-  media?: { url: string }[];   // Preserved from both
-  imageUrl?: string;           // Included from both, but optional
-  image?: string;              // Included from the current version where image was mandatory
-  startdate: string;
-  enddate: string;
-  availability: Array<{
-    id?: number;              // Made `id` optional to accommodate both structures
-    start?: string;           // Preserved from the current version for time ranges
-    end?: string;
-    daysofweek?: string;      // Kept as optional to reflect differences
-    date: string;
-    statusday?: 'available' | 'reserved' | 'exception'; // Added new statusday from the incoming
-  }>;
-  comment: Comment[];          // Preserved as array from both versions
-  like?: { user_id: string }[];  // Made optional based on both versions
-  order: Array<{
-    user_id: string;
-    ticket_id: string;
-  }>;
-  personal_user: Array<{
-    user_id: string;
-    status: string;
-  }>;
-  review: Array<{
-    user_id: string;
-    rate: number;
-  }>;
-  location?: {
-    latitude: number | null;
-    longitude: number | null;
-  } | null;
+    media?: MediaItem[];
+    imageUrl?: string;
+    image: string;
+    startdate: string;
+    enddate: string;
+    availability: Array<{
+      id: number;
+      start: string;
+      end: string;
+      daysofweek: string;
+      date: string;
+    }>;
+    comment: Comment[];
+    like?: { user_id: string }[];
+    order: Array<{
+      user_id: string;
+      ticket_id: string;
+    }>;
+    request: Array<{
+      user_id: string;
+      status: string;
+    }>;
+    review: Array<{
+      user_id: string;
+      rate: number;
+    }>;
+    location?: {
+      latitude: number | null;
+      longitude: number | null;
+    } | null;
 };
 
 export type LocalComment = {

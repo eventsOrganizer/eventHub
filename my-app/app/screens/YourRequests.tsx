@@ -1,187 +1,177 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, Image } from 'react-native';
-import { supabase } from '../services/supabaseClient';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { useUser } from '../UserContext';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-
-interface Request {
-  id: number;
-  name: string;
-  type: string;
-  status: string;
-  subcategory: string;
-  imageUrl: string | null;
-}
+import { useRoute, RouteProp } from '@react-navigation/native';
+import { handleRequestConfirmation, handleRequestRejection } from '../services/requestService';
+import { useToast } from '../hooks/useToast';
+import { useNotifications } from '../hooks/useNotifications';
+import { Request, RouteParams } from '../services/requestTypes';
+import { fetchSentRequests, fetchReceivedRequests } from '../services/requestQuerries';
+import   ReceivedRequestCard  from './ReceivedRequestCard';
+import  SentRequestCard  from './SentRequestCard';
+import  FilterButtons  from './FilterButtons';
 
 const YourRequests: React.FC = () => {
   const { userId } = useUser();
+  const route = useRoute<RouteProp<Record<string, RouteParams>, string>>();
+  const { mode } = route.params;
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [filteredRequests, setFilteredRequests] = useState<Request[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const { toast } = useToast();
+  const { unreadCount } = useNotifications(userId);
 
   useEffect(() => {
     if (userId) {
       fetchRequests();
     }
-  }, [userId]);
+  }, [userId, mode]);
 
   const fetchRequests = async () => {
+    if (!userId) return;
+    
     setLoading(true);
     try {
-      const { data: personalRequests, error: personalError } = await supabase
-        .from('personal_user')
-        .select(`personal_id, status, personal:personal_id (name, subcategory:subcategory_id (name), media (url))`)
-        .eq('user_id', userId);
-
-      const { data: localRequests, error: localError } = await supabase
-        .from('local_user')
-        .select(`local_id, status, local:local_id (name, subcategory:subcategory_id (name), media (url))`)
-        .eq('user_id', userId);
-
-      const { data: materialRequests, error: materialError } = await supabase
-        .from('material_user')
-        .select(`material_id, status, material:material_id (name, subcategory:subcategory_id (name), media (url))`)
-        .eq('user_id', userId);
-
-      if (personalError || localError || materialError) {
-        throw new Error('Error fetching requests');
-      }
-
-      const allRequests = [
-        ...(personalRequests || []).map(req => ({
-          id: req.personal_id,
-          name: req.personal.name || 'Unnamed Service',
-          status: req.status || 'Unknown Status',
-          type: 'Personal',
-          subcategory: req.personal.subcategory.name || 'Unknown Subcategory',
-          imageUrl: req.personal.media.length > 0 ? req.personal.media[0].url : null,
-        })),
-        ...(localRequests || []).map(req => ({
-          id: req.local_id,
-          name: req.local.name || 'Unnamed Service',
-          status: req.status || 'Unknown Status',
-          type: 'Local',
-          subcategory: req.local.subcategory.name || 'Unknown Subcategory',
-          imageUrl: req.local.media.length > 0 ? req.local.media[0].url : null,
-        })),
-        ...(materialRequests || []).map(req => ({
-          id: req.material_id,
-          name: req.material.name || 'Unnamed Service',
-          status: req.status || 'Unknown Status',
-          type: 'Material',
-          subcategory: req.material.subcategory.name || 'Unknown Subcategory',
-          imageUrl: req.material.media.length > 0 ? req.material.media[0].url : null,
-        })),
-      ];
-
-      setRequests(allRequests);
-      setFilteredRequests(allRequests);
+      const data = mode === 'sent' 
+        ? await fetchSentRequests(userId)
+        : await fetchReceivedRequests(userId);
+        
+      console.log('Fetched requests:', data); // Pour le débogage
+      setRequests(data);
+      setFilteredRequests(data);
     } catch (error) {
-      console.error('Error fetching event requests:', error);
-      Alert.alert('Error', 'Failed to fetch event requests. Please try again.');
+      console.error('Error fetching requests:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch requests. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const getBackgroundColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-        return '#A5D6A7'; // Lighter green for confirmed
-      case 'pending':
-        return '#FFF9C4'; // Original yellow for pending
-      case 'rejected':
-        return '#EF9A9A'; // Light red for rejected
-      default:
-        return '#fff';
+  const handleConfirm = async (requestId: number) => {
+    try {
+      const request = requests.find(r => r.id === requestId);
+      if (!request) return;
+
+      const result = await handleRequestConfirmation(requestId, request.type, request.id);
+      if (result.success) {
+        toast({
+          title: result.title,
+          description: result.message,
+          variant: result.variant,
+        });
+        
+        // Update local state immediately
+        const updatedRequests = requests.map(req => 
+          req.id === requestId ? { ...req, status: 'accepted' as const } : req
+        );
+        setRequests(updatedRequests);
+        setFilteredRequests(updatedRequests);
+      }
+    } catch (error) {
+      console.error('Error confirming request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to confirm request. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReject = async (requestId: number) => {
+    try {
+      const request = requests.find(r => r.id === requestId);
+      if (!request) return;
+
+      const result = await handleRequestRejection(requestId, request.type, request.id);
+      if (result.success) {
+        toast({
+          title: result.title,
+          description: result.message,
+          variant: result.variant,
+        });
+        
+        // Update local state immediately
+        const updatedRequests = requests.map(req => 
+          req.id === requestId ? { ...req, status: 'refused' as const } : req
+        );
+        setRequests(updatedRequests);
+        setFilteredRequests(updatedRequests);
+      }
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject request. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const filterRequests = (category: string) => {
     setSelectedCategory(category);
-    if (category === 'All') {
-      setFilteredRequests(requests);
-    } else {
-      setFilteredRequests(requests.filter(request => request.type === category));
-    }
+    setFilteredRequests(
+      category === 'All' 
+        ? requests 
+        : requests.filter(request => request.type === category)
+    );
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-        return <Icon name="check-circle" size={20} color="#000" />;
-      case 'pending':
-        return <Icon name="hourglass-top" size={20} color="#000" />;
-      case 'rejected':
-        return <Icon name="cancel" size={20} color="#000" />;
-      default:
-        return <Icon name="help-outline" size={20} color="#000" />;
-    }
+  const handleDelete = async (requestId: number) => {
+    const updatedRequests = requests.filter(req => req.id !== requestId);
+    setRequests(updatedRequests);
+    setFilteredRequests(updatedRequests);
   };
 
-  const getCategoryIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'personal':
-        return <Icon name="person" size={20} color="#000" />;
-      case 'local':
-        return <Icon name="location-on" size={20} color="#000" />;
-      case 'material':
-        return <Icon name="shopping-cart" size={20} color="#000" />;
-      default:
-        return <Icon name="help-outline" size={20} color="#000" />;
-    }
+  const handleRequestDeleted = () => {
+    // Rafraîchir la liste des demandes après une suppression
+    fetchRequests();
   };
+
+  const renderRequestItem = ({ item }: { item: Request }) => {
+    return mode === 'sent' ? (
+      <SentRequestCard 
+        item={item} 
+        onRequestDeleted={handleRequestDeleted}
+      />
+    ) : (
+      <ReceivedRequestCard 
+        item={item} 
+        onConfirm={handleConfirm}
+        onReject={handleReject}
+        onDelete={handleDelete}
+      />
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
-        </View>
-      ) : (
-        <>
-          <Text style={styles.title}>Your Requests</Text>
+      <Text style={styles.title}>
+        {mode === 'sent' ? 'Your Requests' : 'Received Requests'}
+      </Text>
+      
+      <FilterButtons 
+        selectedCategory={selectedCategory}
+        onSelectCategory={filterRequests}
+      />
 
-          {/* Category Filter */}
-          <View style={styles.filterContainer}>
-            <TouchableOpacity onPress={() => filterRequests('All')} style={styles.filterButton}>
-              <Icon name="filter-list" size={24} color={selectedCategory === 'All' ? '#4CAF50' : '#000'} />
-              <Text style={[styles.filterText, selectedCategory === 'All' && styles.activeFilterText]}>All</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => filterRequests('Local')} style={styles.filterButton}>
-              {getCategoryIcon('local')}
-              <Text style={[styles.filterText, selectedCategory === 'Local' && styles.activeFilterText]}>Venue</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => filterRequests('Personal')} style={styles.filterButton}>
-              {getCategoryIcon('personal')}
-              <Text style={[styles.filterText, selectedCategory === 'Personal' && styles.activeFilterText]}>Crew</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => filterRequests('Material')} style={styles.filterButton}>
-              {getCategoryIcon('material')}
-              <Text style={[styles.filterText, selectedCategory === 'Material' && styles.activeFilterText]}>Product</Text>
-            </TouchableOpacity>
-          </View>
-
-          <FlatList
-            data={filteredRequests}
-            renderItem={({ item }) => (
-              <View style={[styles.requestItem, { backgroundColor: getBackgroundColor(item.status) }]}>
-                <Image source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} style={styles.requestImage} />
-                <View style={styles.requestDetailsContainer}>
-                  <Text style={styles.serviceName}>{item.name}</Text>
-                  <Text style={styles.subcategoryName}>{item.subcategory}</Text>
-                  <View style={styles.iconsContainer}>
-                    {getCategoryIcon(item.type)}
-                    {getStatusIcon(item.status)}
-                  </View>
-                </View>
-              </View>
-            )}
-            keyExtractor={item => `${item.type}-${item.id}`}
-          />
-        </>
-      )}
+      <FlatList
+        data={filteredRequests}
+        renderItem={renderRequestItem}
+        keyExtractor={item => `${item.type}-${item.id}`}
+      />
     </View>
   );
 };
@@ -232,14 +222,14 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   requestImage: {
-    width: '30%',
+    width: 70,
     height: 70,
-    borderRadius: 10,
+    borderRadius: 35,
     marginRight: 15,
   },
   requestDetailsContainer: {
     flex: 1,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
   serviceName: {
     fontSize: 16,
@@ -250,10 +240,72 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#757575',
   },
+  requesterInfo: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 2,
+  },
+  dateInfo: {
+    fontSize: 12,
+    color: '#555',
+    marginBottom: 5,
+  },
   iconsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 5,
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+    padding: 5,
+    borderRadius: 5,
+    flex: 1,
+    marginRight: 5,
+  },
+  rejectButton: {
+    backgroundColor: '#F44336',
+    padding: 5,
+    borderRadius: 5,
+    flex: 1,
+    marginLeft: 5,
+  },
+  buttonText: {
+    color: '#FFF',
+    textAlign: 'center',
+    fontSize: 12,
+  },
+  serviceNameLink: {
+    color: 'blue',
+    textDecorationLine: 'underline',
+    marginBottom: 5,
+  },
+  serviceDetailsCard: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  serviceDetailImage: {
+    width: '100%',
+    height: 100,
+    borderRadius: 5,
+    marginBottom: 10,
+    resizeMode: 'cover',
+  },
+  serviceDetailText: {
+    fontSize: 12,
+    marginBottom: 3,
+  },
+  statusText: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#666',
+    marginTop: 5,
   },
 });
 
