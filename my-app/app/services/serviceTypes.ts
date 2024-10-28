@@ -3,76 +3,61 @@ import { Linking } from 'react-native';
 
 
 
-export type Comment = {
+export type Service = {
   id: number;
+  name: string;
   details: string;
   user_id: string;
-  created_at: string;
-  personal_id: number;
-  user: { username: string; id: string };
-};
-
-export interface MediaItem {
-  url: string;
-  type?: string;
-}
-
-export type Service = {
+  type?: 'Personal' | 'Local' | 'Material';
+  priceperhour?: number;
+  price?: number;
+  price_per_hour?: number;
+  imageUrl?: string;
+  category?: string;
+  depositPercentage?: number;
+  subcategory?: { 
     id: number;
     name: string;
-    priceperhour: number;
+    category?: {
+      name: string;
+    };
+  };
+  media?: { url: string }[];
+  availability?: Array<{
+    id: number;
+    start: string;
+    end: string;
+    daysofweek: string;
+    date: string;
+    statusday?: 'available' | 'reserved' | 'exception';
+  }>;
+  comment?: Array<{
+    id: number;
     details: string;
     user_id: string;
-    subcategory?: { 
-      name: string;
-      category?: {
-        name: string;
-      };
-    };
-    media?: MediaItem[];
-    imageUrl?: string;
-    image: string;
-    startdate: string;
-    enddate: string;
-    availability: Array<{
-      id: number;
-      start: string;
-      end: string;
-      daysofweek: string;
-      date: string;
-    }>;
-    comment: Comment[];
-    like?: { user_id: string }[];
-    order: Array<{
-      user_id: string;
-      ticket_id: string;
-    }>;
-    request: Array<{
-      user_id: string;
-      status: string;
-    }>;
-    review: Array<{
-      user_id: string;
-      rate: number;
-    }>;
-    location?: {
-      latitude: number | null;
-      longitude: number | null;
-    } | null;
-};
-
-export type ServiceRequest = {
-  requestData: {
-    id: number;
-    user_id: string;
-    personal_id: number;
-    status: string;
     created_at: string;
-    hours: number;
-    total_price: number;
-    deposit_amount: number;
-  };
-  depositAmount: number;
+  }>;
+  like?: Array<{ user_id: string }>;
+  order?: Array<{
+    user_id: string;
+    ticket_id: string;
+  }>;
+  personal_user?: Array<{
+    user_id: string;
+    status: string;
+  }>;
+  review?: Array<{
+    user_id: string;
+    rate: number;
+    total: number;
+  }>;
+  location?: {
+    latitude: number;
+    longitude: number;
+  } | null;
+  startdate?: string;
+  enddate?: string;
+  percentage?: number;
 };
 
 export const makeServiceRequest = async (personalId: number, availabilityId: number, hours: number): Promise<{ requestData: any; depositAmount: number } | null> => {
