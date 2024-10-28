@@ -43,64 +43,59 @@ const BuyTicket: React.FC<BuyTicketProps> = ({ eventId, eventType }) => {
       setTicketId(data.id);
     }
   };
-
   const handleImageUploaded = async (urls: string[]) => {
     if (urls.length > 0) {
-      setImageUrl(urls[0]);
-      await completePurchase();
+      try {
+        const imageUrl = urls[0];
+        if (!userId || !ticketId || !imageUrl) {
+          console.log('Debug Info:', { userId, ticketId, imageUrl });
+          Alert.alert('Error', 'Unable to complete purchase. Please try again.');
+          return;
+        }
+      
+        const generatedToken = bcrypt.hashSync(`${ticketId}-${userId}`, 10);
+      
+        const { data: orderData, error: orderError } = await supabase
+          .from('order')
+          .insert({
+            user_id: userId,
+            ticket_id: ticketId,
+            type: eventType === 'online' ? 'online' : 'physical',
+            token: generatedToken,
+          })
+          .select()
+          .single();
+      
+        if (orderError) throw orderError;
+      
+        const { error: mediaError } = await supabase
+          .from('media')
+          .insert({
+            url: imageUrl,
+            order_id: orderData.id,
+            type: 'ticket_photo'
+          });
+      
+        if (mediaError) throw mediaError;
+      
+        const { error: updateError } = await supabase
+          .from('ticket')
+          .update({ quantity: ticketQuantity - 1 })
+          .eq('id', ticketId);
+      
+        if (updateError) throw updateError;
+      
+        setToken(generatedToken);
+        setTicketQuantity(prevQuantity => prevQuantity - 1);
+        setShowImageUpload(false);
+        Alert.alert('Success', 'Ticket purchased successfully!');
+      } catch (error) {
+        console.error('Error purchasing ticket:', error);
+        Alert.alert('Error', 'Failed to purchase ticket. Please try again.');
+      }
     }
   };
-
-  const completePurchase = async () => {
-    if (!userId || !ticketId || !imageUrl) {
-      console.log('Debug Info:', { userId, ticketId, imageUrl });
-      Alert.alert('Error', 'Unable to complete purchase. Please try again.');
-      return;
-    }
-  
-    const generatedToken = bcrypt.hashSync(`${ticketId}-${userId}`, 10);
-  
-    try {
-      const { data: orderData, error: orderError } = await supabase
-        .from('order')
-        .insert({
-          user_id: userId,
-          ticket_id: ticketId,
-          type: eventType === 'online' ? 'online' : 'physical',
-          token: generatedToken,
-        })
-        .select()
-        .single();
-  
-      if (orderError) throw orderError;
-  
-      const { error: mediaError } = await supabase
-        .from('media')
-        .insert({
-          url: imageUrl,
-          order_id: orderData.id,
-          type: 'ticket_photo'
-        });
-  
-      if (mediaError) throw mediaError;
-  
-      const { error: updateError } = await supabase
-        .from('ticket')
-        .update({ quantity: ticketQuantity - 1 })
-        .eq('id', ticketId);
-  
-      if (updateError) throw updateError;
-  
-      setToken(generatedToken);
-      setTicketQuantity(prevQuantity => prevQuantity - 1);
-      setShowImageUpload(false);
-      Alert.alert('Success', 'Ticket purchased successfully!');
-    } catch (error) {
-      console.error('Error purchasing ticket:', error);
-      Alert.alert('Error', 'Failed to purchase ticket. Please try again.');
-    }
-  };
-
+ 
   const handleBuyTicket = () => {
     setShowImageUpload(true);
   };

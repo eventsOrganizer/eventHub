@@ -49,6 +49,11 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({ eventId, privacy, org
   const handleJoin = async () => {
     if (!userId) return;
 
+    if (userId === organizerId) {
+      setIsJoined(true);
+      return;
+    }
+    
     if (!privacy) {
       const { data, error } = await supabase
         .from('event_has_user')

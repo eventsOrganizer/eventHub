@@ -204,18 +204,26 @@ const { userId } = useUser();
       // Check if the user has a ticket (for paid events)
       let hasTicket = false;
       if (isPaidEvent) {
+        console.log('Checking for user ticket purchase...');
+        console.log('Looking for order with:', {
+          ticket_id: ticketData?.id,
+          user_id: userId
+        });
+      
         const { data: orderData, error: orderError } = await supabase
           .from('order')
           .select('id')
           .eq('ticket_id', ticketData?.id)
-          .eq('user_id', userId)
-          .single();
-  
-        if (orderError && orderError.code !== 'PGRST116') {
+          .eq('user_id', userId);  // Removed .single()
+      
+        console.log('Order check result:', { orderData, orderError });
+      
+        if (orderError) {
           throw orderError;
         }
-  
-        hasTicket = !!orderData;
+      
+        hasTicket = orderData && orderData.length > 0;  // Check if any orders exist
+        console.log('Has ticket:', hasTicket);
       }
   
       // Check if the user is a member (for private events)
