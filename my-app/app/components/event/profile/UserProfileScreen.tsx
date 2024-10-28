@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, Image, TouchableOpacity, ActivityIndicator, ScrollView, Animated, RefreshControl, Dimensions } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ActivityIndicator, ScrollView, Animated, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../services/supabaseClient';
@@ -17,6 +17,7 @@ import NotificationComponent from './notification/NotificationComponent';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
 import { useRequestNotifications } from '../../../hooks/useRequestNotifications';
+import TicketManagement from '../Ticketing/TicketManagement';
 import { useNotifications } from '../../../hooks/useNotifications';
 import NotificationList from '../../Notifications/NotificationList';
 
@@ -37,11 +38,12 @@ const UserProfileScreen: React.FC = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState('events');
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
   const [activeEventList, setActiveEventList] = useState<'your' | 'attended'>('your');
   const [showNotifications, setShowNotifications] = useState(false);
   const { unreadReceivedRequestsCount, unreadSentActionsCount } = useRequestNotifications(userId);
+
+
   const fetchData = useCallback(async () => {
     if (userId) {
       await fetchUserProfile();
@@ -94,12 +96,6 @@ const UserProfileScreen: React.FC = () => {
     }
   };
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
-  }, [fetchData]);
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'events':
@@ -133,7 +129,9 @@ const UserProfileScreen: React.FC = () => {
       case 'subscriptions':
         return <Subscriptions />;
       case 'services':
-        return <UserEventsList userId={userId as string} />; // Correction: Utilisation de UserEventsList au lieu de UserServicesList
+        return <UserServicesList userId={userId as string} />;
+        case 'tickets':
+          return <TicketManagement />;
       default:
         return null;
     }
@@ -221,9 +219,13 @@ const UserProfileScreen: React.FC = () => {
               <ActionButton onPress={() => navigation.navigate('ServiceSelection' as never)} iconName="briefcase-outline" text="New Service" />
             </View>
             
-            <View style={tw`flex-row justify-between`}>
+            <View style={tw`flex-row justify-between mb-4`}>
               <ActionButton onPress={() => navigation.navigate('EditProfile' as never)} iconName="pencil" text="Edit Profile" />
               <ActionButton onPress={() => navigation.navigate('ChatList' as never)} iconName="chatbubbles" text="Open Chat" />
+            </View>
+
+            <View style={tw`flex-row justify-between`}>
+              <ActionButton onPress={() => navigation.navigate('TicketScanning' as never)} iconName="qr-code-outline" text="Scan Tickets" />
             </View>
           </View>
         </BlurView>
@@ -259,7 +261,18 @@ const UserProfileScreen: React.FC = () => {
         </View>
       )}
     </TouchableOpacity>
-  </View>
+        </View>
+
+        <View style={tw`flex-row justify-around mt-6 mb-2`}>
+  {['events', 'friends', 'subscriptions', 'albums', 'tickets'].map((tab) => (
+    <TouchableOpacity
+      key={tab}
+      onPress={() => setActiveTab(tab)}
+    >
+      <Text style={tw`text-${activeTab === tab ? 'white' : 'blue-200'} font-semibold capitalize text-lg`}>{tab}</Text>
+    </TouchableOpacity>
+  ))}
+</View>
 
         <Animated.View
           style={[

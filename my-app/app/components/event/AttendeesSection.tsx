@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 import { LinearGradient } from 'expo-linear-gradient';
 import UserAvatar from './UserAvatar';
+import { Ionicons } from '@expo/vector-icons';
+import tw from 'twrnc';
 
 interface AttendeesSectionProps {
   eventId: number;
@@ -35,49 +37,36 @@ const AttendeesSection: React.FC<AttendeesSectionProps> = ({ eventId, refreshTri
   };
 
   const renderAttendee = ({ item }: { item: Attendee }) => (
-    <View style={styles.attendeeItem}>
-      <UserAvatar userId={item.id} size={50} />
+    <View style={tw`mr-3`}>
+      <UserAvatar 
+        userId={item.id} 
+        size={50} 
+        style={tw`border-2 border-white shadow-lg`}
+      />
     </View>
   );
 
   return (
     <LinearGradient
-      colors={['#FF8C00', '#FFA500']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
+      colors={['#4B0082', '#0066CC']}
+      style={tw`p-4 rounded-xl mt-4 shadow-lg`}
     >
-      <Text style={styles.title}>Attendees ({attendees.length})</Text>
+      <View style={tw`flex-row items-center mb-4`}>
+        <Ionicons name="people" size={24} color="white" />
+        <Text style={tw`text-lg font-bold text-white ml-2`}>
+          Attendees ({attendees.length})
+        </Text>
+      </View>
       <FlatList
         data={attendees}
         renderItem={renderAttendee}
         keyExtractor={(item) => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.attendeesList}
+        contentContainerStyle={tw`py-2`}
       />
     </LinearGradient>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
-  },
-  attendeesList: {
-    paddingVertical: 10,
-  },
-  attendeeItem: {
-    marginRight: 10,
-  },
-});
 
 export default AttendeesSection;

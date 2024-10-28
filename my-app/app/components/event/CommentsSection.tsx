@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabaseClient';
+import { Ionicons } from '@expo/vector-icons';
 import UserAvatar from './UserAvatar';
 import { useUser } from '../../UserContext';
+import tw from 'twrnc';
 
 interface Comment {
   id: number;
@@ -82,125 +84,84 @@ const CommentsSection: React.FC<{ eventId: number }> = ({ eventId }) => {
     }
   };
 
-  const renderComment = ({ item }: { item: Comment }) => (
-    <View style={styles.commentItem}>
-      <UserAvatar userId={item.user_id} size={40} />
-      <View style={styles.commentContent}>
-        <Text style={styles.commentText}>{item.details}</Text>
-        <TouchableOpacity onPress={() => setReplyingTo(item.id)}>
-          <Text style={styles.replyButton}>Reply</Text>
-        </TouchableOpacity>
-        {item.replies && item.replies.length > 0 && (
-          <FlatList
-            data={item.replies}
-            renderItem={renderComment}
-            keyExtractor={(reply) => reply.id.toString()}
-            style={styles.repliesList}
-          />
-        )}
-      </View>
-    </View>
-  );
-
   return (
     <LinearGradient
-      colors={['#FF8C00', '#FFA500']}
-      style={styles.container}
+      colors={['#4B0082', '#0066CC']}
+      style={tw`p-4 rounded-xl mt-4 shadow-lg`}
     >
-      <Text style={styles.title}>Comments</Text>
+      <View style={tw`flex-row items-center mb-4`}>
+        <Ionicons name="chatbubbles" size={24} color="white" />
+        <Text style={tw`text-lg font-bold text-white ml-2`}>
+          Comments ({comments.length})
+        </Text>
+      </View>
+
       <FlatList
         data={comments}
-        renderItem={renderComment}
+        renderItem={({ item }) => (
+          <View style={tw`mb-4`}>
+            <View style={tw`flex-row`}>
+              <UserAvatar 
+                userId={item.user_id} 
+                size={40} 
+                style={tw`border-2 border-white shadow-lg`}
+              />
+              <View style={tw`ml-3 flex-1`}>
+                <View style={tw`bg-white/20 p-3 rounded-lg`}>
+                  <Text style={tw`text-white`}>{item.details}</Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => setReplyingTo(item.id)}
+                  style={tw`mt-1.5`}
+                >
+                  <Text style={tw`text-white/70 text-sm`}>Reply</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {item.replies && item.replies.length > 0 && (
+              <View style={tw`ml-12 mt-2`}>
+                {item.replies.map(reply => (
+                  <View key={reply.id} style={tw`flex-row mb-3`}>
+                    <UserAvatar 
+                      userId={reply.user_id} 
+                      size={32} 
+                      style={tw`border-2 border-white shadow-lg`}
+                    />
+                    <View style={tw`ml-2 flex-1`}>
+                      <View style={tw`bg-white/10 p-2.5 rounded-lg`}>
+                        <Text style={tw`text-white text-sm`}>{reply.details}</Text>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
         keyExtractor={(item) => item.id.toString()}
-        style={styles.commentList}
+        style={tw`max-h-80`}
       />
-      <View style={styles.inputContainer}>
+
+      <View style={tw`flex-row items-center mt-4`}>
         <TextInput
-          style={styles.input}
+          style={tw`flex-1 bg-white/20 px-4 py-3 rounded-lg text-white`}
           placeholder={replyingTo ? "Write a reply..." : "Add a comment..."}
-          placeholderTextColor="#fff"
+          placeholderTextColor="rgba(255,255,255,0.6)"
           value={newComment}
           onChangeText={setNewComment}
         />
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmitComment}>
-          <Text style={styles.submitButtonText}>{replyingTo ? "Reply" : "Submit"}</Text>
+        <TouchableOpacity 
+          style={tw`ml-2 bg-white/20 px-4 py-3 rounded-lg`}
+          onPress={handleSubmitComment}
+        >
+          <Text style={tw`text-white font-medium`}>
+            {replyingTo ? "Reply" : "Send"}
+          </Text>
         </TouchableOpacity>
       </View>
     </LinearGradient>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#fff',
-  },
-  commentList: {
-    maxHeight: 300,
-  },
-  commentItem: {
-    flexDirection: 'row',
-    marginBottom: 10,
-  },
-  commentContent: {
-    marginLeft: 10,
-    flex: 1,
-  },
-  commentText: {
-    color: '#fff',
-  },
-  replyButton: {
-    color: '#eee',
-    fontSize: 12,
-    marginTop: 5,
-  },
-  replyItem: {
-    flexDirection: 'row',
-    marginTop: 5,
-    marginLeft: 20,
-  },
-  replyContent: {
-    marginLeft: 5,
-    flex: 1,
-  },
-  replyText: {
-    color: '#fff',
-    fontSize: 12,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    marginTop: 10,
-  },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#fff',
-    borderRadius: 5,
-    padding: 10,
-    color: '#fff',
-  },
-  submitButton: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 5,
-    marginLeft: 10,
-    justifyContent: 'center',
-  },
-  submitButtonText: {
-    color: '#FF8C00',
-    fontWeight: 'bold',
-  },
-  repliesList: {
-    marginLeft: 20,
-    marginTop: 10,
-  },
-});
 
 export default CommentsSection;
