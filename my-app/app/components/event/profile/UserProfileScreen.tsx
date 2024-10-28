@@ -230,14 +230,15 @@ const UserProfileScreen: React.FC = () => {
           </View>
         </BlurView>
 
-        <View style={tw`flex-row justify-center mt-6 mb-4 px-4`}>
-          <TouchableOpacity
-            style={tw`flex-1 bg-white/20 py-3 px-6 rounded-lg shadow-md mx-2 max-w-[160]`}
-            onPress={() => navigation.navigate('UserServicesScreen', { userId })}
-          >
-            <Text style={tw`text-white font-semibold text-center`}>Services</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+        <View style={tw`flex-row justify-center mt-6 mb-4`}>
+    <TouchableOpacity
+      style={tw`bg-white/20 py-2 px-3 rounded-lg shadow-md mx-1 max-w-[110]`}
+      onPress={() => navigation.navigate('UserServicesScreen' as never, { userId } as never)}
+    >
+      <Text style={tw`text-white font-semibold text-center text-sm`}>Services</Text>
+    </TouchableOpacity>
+    
+    <TouchableOpacity
       style={tw`bg-white/20 py-2 px-3 rounded-lg shadow-md mx-1 max-w-[110] flex-row items-center`}
       onPress={() => navigation.navigate('YourRequests', { userId, mode: 'sent' })}
     >

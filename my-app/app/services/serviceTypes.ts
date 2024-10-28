@@ -3,69 +3,68 @@ import { Linking } from 'react-native';
 
 
 
-export type Comment = {
+export type Service = {
   id: number;
+  name: string;
   details: string;
   user_id: string;
-  created_at: string;
-  personal_id: number;
-  user: { username: string; id: string };
-};
-
-export interface MediaItem {
-  url: string;
-  type?: string;
-}
-
-export type Service = {
+  type?: 'Personal' | 'Local' | 'Material';
+  priceperhour?: number;
+  price?: number;
+  price_per_hour?: number;
+  imageUrl?: string;
+  category?: string;
+  depositPercentage?: number;
+  subcategory?: { 
     id: number;
     name: string;
-    priceperhour: number;
+    category?: {
+      name: string;
+    };
+  };
+  media?: { url: string }[];
+  availability?: Array<{
+    id: number;
+    start: string;
+    end: string;
+    daysofweek: string;
+    date: string;
+    statusday?: 'available' | 'reserved' | 'exception';
+  }>;
+  comment?: Array<{
+    id: number;
     details: string;
     user_id: string;
-    subcategory?: { 
-      name: string;
-      category?: {
-        name: string;
-      };
-    };
-    media?: MediaItem[];
-    imageUrl?: string;
-    image: string;
-    startdate: string;
-    enddate: string;
-    availability: Array<{
-      id: number;
-      start: string;
-      end: string;
-      daysofweek: string;
-      date: string;
-    }>;
-    comment: Comment[];
-    like?: { user_id: string }[];
-    order: Array<{
-      user_id: string;
-      ticket_id: string;
-    }>;
-    request: Array<{
-      user_id: string;
-      status: string;
-    }>;
-    review: Array<{
-      user_id: string;
-      rate: number;
-    }>;
-    location?: {
-      latitude: number | null;
-      longitude: number | null;
-    } | null;
+    created_at: string;
+  }>;
+  like?: Array<{ user_id: string }>;
+  order?: Array<{
+    user_id: string;
+    ticket_id: string;
+  }>;
+  personal_user?: Array<{
+    user_id: string;
+    status: string;
+  }>;
+  review?: Array<{
+    user_id: string;
+    rate: number;
+    total: number;
+  }>;
+  location?: {
+    latitude: number;
+    longitude: number;
+  } | null;
+  startdate?: string;
+  enddate?: string;
+  percentage?: number;
 };
 
-export type ServiceRequest = {
+export type LocalServiceRequest = {
   requestData: {
     id: number;
     user_id: string;
-    personal_id: number;
+    local_id: number;
     status: string;
     created_at: string;
     hours: number;
@@ -113,7 +112,45 @@ export const makeServiceRequest = async (personalId: number, availabilityId: num
   }
 };
 
-export const initiatePayment = async (serviceId: number, amount: number): Promise<string | null> => {
+export const makeLocalServiceRequest = async (localId: number, availabilityId: number, hours: number): Promise<{ requestData: any; depositAmount: number } | null> => {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user) throw new Error('User not authenticated');
+
+    const { data: localData, error: localError } = await supabase
+      .from('local')
+      .select('priceperhour')
+      .eq('id', localId)
+      .single();
+    if (localError) throw localError;
+
+    const totalPrice = localData.priceperhour * hours;
+    const depositAmount = totalPrice * 0.25; // 25% deposit
+
+    const { data, error } = await supabase
+      .from('request')
+      .insert({
+        user_id: userData.user.id,
+        local_id: localId,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        hours: hours,
+        total_price: totalPrice,
+        deposit_amount: depositAmount
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { requestData: data, depositAmount };
+  } catch (error) {
+    console.error('Error making local service request:', error);
+    return null;
+  }
+};
+
+export const initiatePayment = async (requestId: number, amount: number) => {
   const FLOUCI_APP_TOKEN = "4c1e07ef-8533-4e83-bbeb-7f61c0b21931";
   const FLOUCI_APP_SECRET = "ee9d6f08-30c8-4dbb-8578-d51293ff2535";
 

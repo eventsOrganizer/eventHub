@@ -21,7 +21,8 @@ import EventCreationScreen from '../screens/EventCreationScreen';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
 import CategorySelectionScreen from '../screens/CategorySelectionScreen';
 import SubcategorySelectionScreen from '../screens/subcategorySelectionScreen';
-import EventSerialsList from '../components/event/Ticketing/EventSerialsList';  
+import EventSerialsList from '../components/event/Ticketing/EventSerialsList';  import CreatePersonalServiceStack from '../components/PersonalServiceCreation/createPersonalServiceStack';
+
 
 import GuestManagementScreen from '../screens/GuestManagementScreen';
 import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
@@ -33,13 +34,13 @@ import VideoRoomsScreen from '../components/event/video/VideoRoomsScreen';
 import VideoCall from '../components/event/video/VideoCall';
 // Define RootStackParamList to type your navigationimport EventDetailsScreen from '../screens/EventDetailsScreen';
 import OrganizerProfileScreen from '../components/event/OrganizerProfileScreen';
-import CreatePersonalServiceStack from '../components/PersonalServiceCreation/createPersonalServiceStack';
+import CreateLocalServiceStack from '../components/LocalServiceCreation/CreateLocalServiceStack';
 import ChatListScreen from '../components/event/ChatListScreen';
 import RequestsScreen from '../components/event/profile/RequestsScreen';
 import PersonalsScreen from '../screens/PersonalServiceScreen/PersonalsScreen';
 import PersonalDetail from '../screens/PersonalServiceScreen/PersonalDetail';
-import LocalServiceDetailScreen from '../components/LocalService/LocalServiceDetailScreen';
-import LocalServiceScreen from '../components/LocalService/LocalServiceScreen';
+import LocalServiceDetailScreen from "../screens/LocalServiceScreens/LocalDetail"
+import LocalsScreen from '../screens/LocalServiceScreens/LocalsScreen';
 import UserProfileScreen from '../components/event/profile/UserProfileScreen';
 import FriendRequestsScreen from '../components/event/profile/FriendRequestsScreen';
 import SavedScreen from '../components/event/profile/SavedScreen';
@@ -50,6 +51,7 @@ import EventCreation from '../components/event/EventCreation';
 import BookingScreen from '../screens/PersonalServiceScreen/BookingScreen';
 import CommentsScreen from '../screens/PersonalServiceScreen/CommentsScreen';
 import AddReviewScreen from '../screens/PersonalServiceScreen/AddReviewScreen';
+import LocalCommentSection from '../components/LocalService/LocalCommentSection';
 import ReviewScreen from '../screens/MaterialServiceScreens/ReviewScreen';
 // Inside your Stack.Navigator component, add this new Screen
 import CommentScreen from '../screens/MaterialServiceScreens/CommentScreen';
@@ -70,7 +72,8 @@ import { Material } from './types';
 import BasketScreen from '../screens/BasketScreen';
 import MaterialsOnboardingScreen from '../screens/MaterialServiceScreens/MaterialsOnboardingScreen';// import PaymentActionScreen from '../payment/PaymentActionScreen';
 import SearchResultsScreen from '../screens/SearchResultsScreen';
-
+import LocalAddReviewScreen from '../screens/LocalServiceScreens/LocalAddReviewScreen';
+import LocalBookingScreen from '../screens/LocalServiceScreens/LocalBookingScreen';
 
 
 import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail';
@@ -80,6 +83,8 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import TicketScanningScreen from '../components/event/Ticketing/TicketScanningScreen';
 import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
+import ServicesDetails from '../services/servicesDetailsInUserProfile/ServicesDetails';
+import LocalCommentsScreen from '../screens/LocalServiceScreens/LocalCommentsScreen';
 
 type RootStackParamList = {
   Onboarding: undefined;
@@ -109,9 +114,12 @@ type RootStackParamList = {
   Ticketing: { eventName: string; eventDescription: string; eventType: string; selectedCategory: string; selectedSubcategory: string; };
   EventSummary: { eventId: string };
   EventCreation: { eventType: string };
+  CreateLocalServiceStack: undefined;
   CommentScreen: { materialId: string };
   PersonalServiceCreationStack: undefined;
 
+  LocalAddReviewScreen:undefined;
+  LocalCommentsScreen:undefined;
   
   // Add the CreateService screen and pass serviceType as a param
   CreateService: { serviceType: string };
@@ -124,6 +132,11 @@ type RootStackParamList = {
   };
   UserProfile: { userId: string };  UserServicesScreen: undefined;
   MapScreen: undefined;
+  ServicesDetails: {
+    serviceId: number;
+    serviceType: 'Personal' | 'Local' | 'Material';
+  };
+  LocalBookingScreen: undefined;
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -140,7 +153,7 @@ type EventSetupOptionsScreenProps = {
   CreateLocalServiceStep3: undefined;
   CreateLocalServiceStep4: { formData: any };
   CreateLocalServiceStep5: { formData: any };
-  LocalServiceScreen: undefined;
+  LocalsScreen: undefined;
   LocalServiceDetails: { localServiceId: number };
   UserProfile: undefined;
   PaymentAction: { price: number; personalId: string };
@@ -298,9 +311,14 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true, title: 'Create Local Service - Step 5' }} 
   />
 
+        <Stack.Screen
+        name="CreateLocalServiceStack"
+        component={CreateLocalServiceStack}
+        options={{ headerShown: true, title: 'Create Local Service' }}
+        />
   <Stack.Screen
-    name="LocalServiceScreen"
-    component={LocalServiceScreen}
+    name="LocalsScreen"
+    component={LocalsScreen}
     options={{ title: 'Local Services' }}
   />
 
@@ -380,14 +398,6 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true, title: 'Subcategory Selection' }}
   />
 
-
-
-
-
-
-
-
-
   <Stack.Screen
     name="ServiceDetails"
     component={ServiceDetailsScreen}
@@ -409,7 +419,6 @@ const AppNavigation: React.FC = () => {
     component={UserServicesScreen} 
   />
     
-
   <Stack.Screen 
     name="YourRequests" 
     component={YourRequestsScreen} 
@@ -420,52 +429,85 @@ const AppNavigation: React.FC = () => {
     component={VideoRoomsScreen}
   />
 
-        <Stack.Screen
-          name="VideoCall"
-          component={VideoCall}
-        />
-         <Stack.Screen 
-        name="BookingScreen" 
-        component={BookingScreen}
-        options={{ headerShown: true, title: 'Réservation' }}
-      />
-      <Stack.Screen 
-        name="CommentsScreen" 
-        component={CommentsScreen}
-        options={{ headerShown: true, title: 'Commentaires' }}
-      />
-      <Stack.Screen 
-        name="AddReviewScreen" 
-        component={AddReviewScreen}
-        options={{ headerShown: true, title: 'Ajouter un avis' }}
-      />
+  <Stack.Screen
+    name="VideoCall"
+    component={VideoCall}
+  />
+  
+  <Stack.Screen 
+    name="BookingScreen" 
+    component={BookingScreen}
+    options={{ headerShown: true, title: 'Réservation' }}
+  />
+  
+  <Stack.Screen 
+    name="CommentsScreen" 
+    component={CommentsScreen}
+    options={{ headerShown: true, title: 'Commentaires' }}
+  />
+  
+  <Stack.Screen 
+    name="AddReviewScreen" 
+    component={AddReviewScreen}
+    options={{ headerShown: true, title: 'Ajouter un avis' }}
+  />
       
-      <Stack.Screen
-       name ="MaterialScreen" 
-      component={MaterialScreen} />
-      <Stack.Screen
-       name ="MaterialDetail" 
-      component={MaterialDetailScreen as any} />
-      <Stack.Screen
-       name ="Basket" 
-      component={BasketScreen} />
-      <Stack.Screen
-       name ="MaterialsOnboarding" 
-      component={MaterialsOnboardingScreen} />
-      <Stack.Screen
-       name ="ReviewScreen" 
-      component={ReviewScreen} />
-      <Stack.Screen
-       name ="CommentScreen" 
-      component={CommentScreen} />
-      <Stack.Screen
-        name="CreatePersonalServiceStack"
-        component={CreatePersonalServiceStack}
-        options={{ headerShown: false }}
-      />
-    <Stack.Screen name="MapScreen" component={MapScreen} />
+  <Stack.Screen
+    name="MaterialScreen" 
+    component={MaterialScreen} 
+  />
+  
+  <Stack.Screen
+    name="MaterialDetail" 
+    component={MaterialDetailScreen as any} 
+  />
+  
+  <Stack.Screen
+    name="Basket" 
+    component={BasketScreen} 
+  />
+  
+  <Stack.Screen
+    name="MaterialsOnboarding" 
+    component={MaterialsOnboardingScreen} 
+  />
+  
+  <Stack.Screen
+    name="ReviewScreen" 
+    component={ReviewScreen} 
+  />
+  
+  <Stack.Screen
+    name="CommentScreen" 
+    component={CommentScreen} 
+  />
+  
+  <Stack.Screen
+    name="CreatePersonalServiceStack"
+    component={CreatePersonalServiceStack}
+    options={{ headerShown: false }}
+  />
+  
+  <Stack.Screen 
+    name="MapScreen" 
+    component={MapScreen} 
+  />
+  
+  <Stack.Screen 
+    name="ServicesDetails" 
+    component={ServicesDetails}
+    options={{ 
+      headerShown: true, 
+      title: 'Détails du service' 
+    }}
+  />
+  
     <Stack.Screen name="TicketScanning" component={TicketScanningScreen} />
     <Stack.Screen name="EventSerialsList" component={EventSerialsList} />
+<Stack.Screen name="LocalAddReviewScreen" component={LocalAddReviewScreen}/>
+<Stack.Screen name="LocalCommentsScreen" component={LocalCommentSection}/>
+<Stack.Screen name="LocalBookingScreen" component={LocalBookingScreen}/>
+
 </Stack.Navigator> 
 
   )
