@@ -1,25 +1,32 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 
-interface LocationMapProps {
-  latitude: number;
-  longitude: number;
-  address: string;
+interface LocationDisplayProps {
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+  distance?: number | null;
 }
 
-const LocationMap: React.FC<LocationMapProps> = ({ latitude, longitude, address }) => {
-  // Vérification des coordonnées
+const LocationDisplay: React.FC<LocationDisplayProps> = ({
+  latitude,
+  longitude,
+  address,
+  distance
+}) => {
   if (!latitude || !longitude) {
     return (
-      <View style={styles.container}>
-        <Text>Localisation non disponible</Text>
+      <View style={styles.infoRow}>
+        <Ionicons name="location-outline" size={20} color="#FFF" />
+        <Text style={styles.infoText}>Adresse non disponible</Text>
       </View>
     );
   }
 
   const generateMapHTML = () => {
-    const escapedAddress = address.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    const escapedAddress = address?.replace(/'/g, "\\'").replace(/"/g, '\\"') || '';
     
     return `
       <!DOCTYPE html>
@@ -56,23 +63,39 @@ const LocationMap: React.FC<LocationMapProps> = ({ latitude, longitude, address 
   };
 
   return (
-    <View style={styles.container}>
-      <WebView
-        style={styles.map}
-        source={{ html: generateMapHTML() }}
-        scrollEnabled={false}
-        onError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          console.warn('WebView error: ', nativeEvent);
-        }}
-      />
+    <View>
+      <View style={styles.infoRow}>
+        <Ionicons name="location-outline" size={20} color="#FFF" />
+        <Text style={styles.infoText}>
+          {address || 'Adresse non disponible'}
+          {distance && ` (${distance.toFixed(1)} km)`}
+        </Text>
+      </View>
+      <View style={styles.mapContainer}>
+        <WebView
+          style={styles.map}
+          source={{ html: generateMapHTML() }}
+          scrollEnabled={false}
+        />
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    height: 300,
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  infoText: {
+    color: '#FFF',
+    fontSize: 14,
+    flex: 1,
+  },
+  mapContainer: {
+    height: 200,
+    marginTop: 10,
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -81,4 +104,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LocationMap;
+export default LocationDisplay;

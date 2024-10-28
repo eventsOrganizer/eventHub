@@ -2,26 +2,28 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-interface FilterButtonsProps {
+export interface FilterButtonsProps {
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
+  categories: string[];
 }
 
-const FilterButtons: React.FC<FilterButtonsProps> = ({ selectedCategory, onSelectCategory }) => {
+const FilterButtons: React.FC<FilterButtonsProps> = ({ selectedCategory, onSelectCategory, categories }) => {
   return (
     <View style={styles.filterContainer}>
-      <TouchableOpacity onPress={() => onSelectCategory('All')} style={styles.filterButton}>
-        <Icon name="filter-list" size={24} color={selectedCategory === 'All' ? '#4CAF50' : '#000'} />
-        <Text style={[styles.filterText, selectedCategory === 'All' && styles.activeFilterText]}>All</Text>
-      </TouchableOpacity>
-      {['Local', 'Personal', 'Material'].map((category) => (
+      {categories.map((category) => (
         <TouchableOpacity 
           key={category}
           onPress={() => onSelectCategory(category)} 
           style={styles.filterButton}
         >
           <Icon 
-            name={category === 'Personal' ? 'person' : category === 'Local' ? 'location-on' : 'shopping-cart'} 
+            name={
+              category === 'All' ? 'filter-list' :
+              category === 'Personal' ? 'person' : 
+              category === 'Local' ? 'location-on' : 
+              'shopping-cart'
+            } 
             size={24} 
             color={selectedCategory === category ? '#4CAF50' : '#000'} 
           />

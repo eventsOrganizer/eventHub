@@ -1,123 +1,63 @@
 import { supabase } from './supabaseClient';
 import { Linking } from 'react-native';
 
-export type Location = {
-  latitude: number | null; // Store latitude, can be null
-  longitude: number | null; // Store longitude, can be null
-};
 
-export type Comment = {
-  id: number;
-  details: string;
-  user_id: string;
-  created_at: string;
-  personal_id: number;
-  user: { username: string; id: string };
-};
-
-export interface MediaItem {
-  url: string;
-  type?: string;
-}
 
 export type Service = {
-    id: number;
-    name: string;
-    priceperhour: number;
-    details: string;
-    user_id: string;
-    subcategory?: { 
-      name: string;
-      category?: {
-        name: string;
-      };
-    };
-    media?: MediaItem[];
-    imageUrl?: string;
-    image: string;
-    startdate: string;
-    enddate: string;
-    availability: Array<{
-      id: number;
-      start: string;
-      end: string;
-      daysofweek: string;
-      date: string;
-    }>;
-    comment: Comment[];
-    like?: { user_id: string }[];
-    order: Array<{
-      user_id: string;
-      ticket_id: string;
-    }>;
-    request: Array<{
-      user_id: string;
-      status: string;
-    }>;
-    review: Array<{
-      user_id: string;
-      rate: number;
-    }>;
-    location?: {
-      latitude: number | null;
-      longitude: number | null;
-    } | null;
-};
-
-export type LocalComment = {
   id: number;
-  details: string;
-  user_id: string;
-  created_at: string;
-  local_id: number;
-};
-
-export type LocalService = {
-  id: number;
-  subcategory_id: number; // Include subcategory_id to match the schema
-  user_id: string;
-  priceperhour: number;
   name: string;
   details: string;
-  startdate: string; // Assuming this is a string type for date representation
-  enddate: string; // Same as above
-  disabled: boolean;
-  percentage?: number; // Assuming this is optional
-  location: {          // You can define this as per your needs
-    latitude: number | null; // Ensure null is allowed
-    longitude: number | null; // Ensure null is allowed
-  } | null; // Allow null if no location is provided
-  // Other existing properties...
-  comment: LocalComment[]; 
-  like: Array<{ user_id: string }>;
-  order: Array<{
+  user_id: string;
+  type?: 'Personal' | 'Local' | 'Material';
+  priceperhour?: number;
+  price?: number;
+  price_per_hour?: number;
+  imageUrl?: string;
+  category?: string;
+  depositPercentage?: number;
+  subcategory?: { 
+    id: number;
+    name: string;
+    category?: {
+      name: string;
+    };
+  };
+  media?: { url: string }[];
+  availability?: Array<{
+    id: number;
+    start: string;
+    end: string;
+    daysofweek: string;
+    date: string;
+    statusday?: 'available' | 'reserved' | 'exception';
+  }>;
+  comment?: Array<{
+    id: number;
+    details: string;
+    user_id: string;
+    created_at: string;
+  }>;
+  like?: Array<{ user_id: string }>;
+  order?: Array<{
     user_id: string;
     ticket_id: string;
   }>;
-  local_user: Array<{
+  personal_user?: Array<{
     user_id: string;
     status: string;
   }>;
-  review: Array<{
+  review?: Array<{
     user_id: string;
     rate: number;
+    total: number;
   }>;
-};
-
-
-
-export type ServiceRequest = {
-  requestData: {
-    id: number;
-    user_id: string;
-    personal_id: number;
-    status: string;
-    created_at: string;
-    hours: number;
-    total_price: number;
-    deposit_amount: number;
-  };
-  depositAmount: number;
+  location?: {
+    latitude: number;
+    longitude: number;
+  } | null;
+  startdate?: string;
+  enddate?: string;
+  percentage?: number;
 };
 
 export type LocalServiceRequest = {

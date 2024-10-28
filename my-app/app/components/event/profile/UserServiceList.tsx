@@ -1,30 +1,36 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Dimensions, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Image, StyleSheet, Dimensions, RefreshControl } from 'react-native';
 import { supabase } from '../../../services/supabaseClient';
 import { LinearGradient } from 'expo-linear-gradient';
+import FilterButtons, { FilterButtonsProps } from '../../../screens/FilterButtons';
 
 interface Service {
   id: number;
   name: string;
   type: string;
   media: { url: string }[];
+  details: string;
+  priceperhour?: number;
+  price?: number;
 }
 
 const { width: screenWidth } = Dimensions.get('window');
 const containerWidth = screenWidth - 40;
-const cardWidth = (containerWidth - 40) / 3;
-const cardHeight = cardWidth;
+const cardWidth = (containerWidth - 20) / 2; // 2 cards per row
+const cardHeight = cardWidth * 1.2; // Slightly taller than wide
 
 const UserServicesList: React.FC<{ userId: string }> = ({ userId }) => {
   const [userServices, setUserServices] = useState<Service[]>([]);
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
   const fetchUserServices = useCallback(async () => {
     const fetchServicesWithMedia = async (table: string, type: string) => {
       const { data, error } = await supabase
         .from(table)
         .select(`
-          id, name,
+          id, name, details, priceperhour, price,
           media (url)
         `)
         .eq('user_id', userId);
@@ -33,7 +39,12 @@ const UserServicesList: React.FC<{ userId: string }> = ({ userId }) => {
         console.error(`Error fetching ${type} services:`, error);
         return [];
       }
-      return data?.map(s => ({ ...s, type })) || [];
+      console.log(`${type} services data:`, data);
+      return data?.map(s => ({ 
+        ...s, 
+        type,
+        media: s.media || []
+      })) || [];
     };
 
     const personalServices = await fetchServicesWithMedia('personal', 'Crew');
@@ -41,7 +52,9 @@ const UserServicesList: React.FC<{ userId: string }> = ({ userId }) => {
     const materialServices = await fetchServicesWithMedia('material', 'Products');
 
     const allServices = [...personalServices, ...localServices, ...materialServices];
+    console.log('All services:', JSON.stringify(allServices, null, 2));
     setUserServices(allServices);
+    setFilteredServices(allServices);
   }, [userId]);
 
   useEffect(() => {
@@ -54,68 +67,84 @@ const UserServicesList: React.FC<{ userId: string }> = ({ userId }) => {
     setRefreshing(false);
   }, [fetchUserServices]);
 
-  const renderServiceCard = (service: Service) => (
-    <TouchableOpacity key={`${service.type}-${service.id}`} style={styles.cardContainer}>
-      <LinearGradient
-        colors={['#1a1a1a', '#2a2a2a']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradientBackground}
-      >
-        <Image source={{ uri: service.media[0]?.url || 'https://via.placeholder.com/150' }} style={styles.image} />
-        <View style={styles.textContainer}>
-          <Text style={styles.serviceName} numberOfLines={1} ellipsizeMode="tail">
-            {service.name}
-          </Text>
-          <Text style={styles.serviceType} numberOfLines={1} ellipsizeMode="tail">
-            {service.type}
-          </Text>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-
-  const renderServicePages = () => {
-    const pages = [];
-    for (let i = 0; i < userServices.length; i += 9) {
-      const pageServices = userServices.slice(i, i + 9);
-      pages.push(
-        <View key={i} style={styles.page}>
-          {pageServices.map(renderServiceCard)}
-        </View>
-      );
+  const filterServices = (category: string) => {
+    setSelectedCategory(category);
+    if (category === 'All') {
+      setFilteredServices(userServices);
+    } else {
+      setFilteredServices(userServices.filter(service => service.type === category));
     }
-    return pages;
+  };
+
+  const renderServiceCard = ({ item: service }: { item: Service }) => {
+    console.log('Rendering service:', service.id, service.name);
+    console.log('Service media:', service.media);
+    const imageUrl = service.media && service.media[0] ? service.media[0].url : 'https://via.placeholder.com/150';
+    console.log('Image URL:', imageUrl);
+
+    return (
+      <TouchableOpacity style={styles.cardContainer}>
+        <LinearGradient
+          colors={['#1a1a1a', '#2a2a2a']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientBackground}
+        >
+          <Image 
+            source={{ uri: imageUrl }} 
+            style={styles.image} 
+            resizeMode="cover"
+            onError={(e) => console.log('Image loading error:', e.nativeEvent.error)}
+          />
+          <View style={styles.textContainer}>
+            <Text style={styles.serviceName} numberOfLines={1} ellipsizeMode="tail">
+              {service.name}
+            </Text>
+            <Text style={styles.serviceType} numberOfLines={1} ellipsizeMode="tail">
+              {service.type}
+            </Text>
+            <Text style={styles.servicePrice} numberOfLines={1} ellipsizeMode="tail">
+              {service.type === 'Material' 
+                ? `$${service.price?.toFixed(2)}` 
+                : `$${service.priceperhour?.toFixed(2)}/hr`}
+            </Text>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Services</Text>
-      <ScrollView
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
+      <Text style={styles.title}>Vos services</Text>
+      <FilterButtons 
+        selectedCategory={selectedCategory}
+        onSelectCategory={filterServices}
+        categories={['All', 'Personal', 'Local', 'Material']}
+      />
+      <FlatList
+        data={filteredServices}
+        renderItem={renderServiceCard}
+        keyExtractor={(item) => `${item.type}-${item.id}`}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        contentContainerStyle={styles.scrollViewContent}
-      >
-        {userServices.length > 0 ? (
-          renderServicePages()
-        ) : (
+        ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No services found.</Text>
           </View>
-        )}
-      </ScrollView>
+        }
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 20,
-    height: cardHeight * 3 + 80,
+    flex: 1,
     width: containerWidth,
     alignSelf: 'center',
   },
@@ -126,55 +155,55 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     paddingHorizontal: 10,
   },
-  scrollViewContent: {
-    alignItems: 'flex-start',
-  },
-  page: {
-    width: containerWidth,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  columnWrapper: {
     justifyContent: 'space-between',
   },
   cardContainer: {
     width: cardWidth,
     height: cardHeight,
-    marginBottom: 10,
+    marginBottom: 20,
     borderRadius: 10,
     overflow: 'hidden',
+    backgroundColor: '#f0f0f0', // Ajoutez une couleur de fond pour voir les limites de la carte
   },
   gradientBackground: {
     flex: 1,
   },
   image: {
     width: '100%',
-    height: '70%',
+    height: '60%',
     resizeMode: 'cover',
   },
   textContainer: {
-    height: '30%',
+    height: '40%',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 2,
-  },
-  serviceTextContainer: {
-    marginLeft: 10,
+    padding: 5,
   },
   serviceName: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   serviceType: {
     color: '#ccc',
-    fontSize: 8,
+    fontSize: 12,
     textAlign: 'center',
+    marginTop: 2,
+  },
+  servicePrice: {
+    color: '#4CAF50',
+    fontSize: 12,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 2,
   },
   emptyContainer: {
-    width: containerWidth,
-    height: cardHeight * 3,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    height: 200,
   },
   emptyText: {
     textAlign: 'center',

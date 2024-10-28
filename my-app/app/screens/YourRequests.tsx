@@ -19,6 +19,7 @@ const YourRequests: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filteredRequests, setFilteredRequests] = useState<Request[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [categories, setCategories] = useState<string[]>(['All', 'Service', 'Item', 'Skill']);
   const { toast } = useToast();
   const { unreadCount } = useNotifications(userId);
 
@@ -165,6 +166,7 @@ const YourRequests: React.FC = () => {
       <FilterButtons 
         selectedCategory={selectedCategory}
         onSelectCategory={filterRequests}
+        categories={categories}
       />
 
       <FlatList
