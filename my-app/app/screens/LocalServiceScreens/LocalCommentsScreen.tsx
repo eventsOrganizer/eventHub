@@ -22,7 +22,8 @@ interface Comment {
 
 const LocalCommentsScreen = () => {
   const route = useRoute();
-  const { personalId } = route.params as { personalId: number };
+  const { localId } = route.params as { localId: number };
+  console.log('localId:', localId); // Log the localId to check its value
   const { userId } = useUser();
   const { toast } = useToast();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -36,7 +37,7 @@ const LocalCommentsScreen = () => {
     const { data, error } = await supabase
       .from('comment')
       .select(`id, details, user_id, created_at, user:user_id (username, media:media(url))`)
-      .eq('personal_id', personalId)
+      .eq('local_id', localId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -73,7 +74,7 @@ const LocalCommentsScreen = () => {
     const { data, error } = await supabase
       .from('comment')
       .insert({
-        personal_id: personalId,
+        local_id: localId,
         user_id: userId,
         details: newComment.trim(),
       })

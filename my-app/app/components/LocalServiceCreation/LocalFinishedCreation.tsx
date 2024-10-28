@@ -108,6 +108,7 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
         const availabilityData = Object.keys(formData.availableDates).map((dateString: string) => ({
           local_id: localData.id,
           date: dateString,
+          statusday: 'available', // Ensure you set a default status if required
         }));
 
         const { error: availabilityError } = await supabase
@@ -115,6 +116,19 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
           .insert(availabilityData);
 
         if (availabilityError) throw availabilityError;
+      }
+
+      // Insert location data if available
+      if (formData.location) {
+        const { error: locationError } = await supabase
+          .from('location')
+          .insert({
+            local_id: localData.id,
+            latitude: formData.location.latitude,
+            longitude: formData.location.longitude,
+          });
+
+        if (locationError) throw locationError;
       }
 
       Alert.alert('Success', 'Local service created successfully!');

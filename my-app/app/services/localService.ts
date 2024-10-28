@@ -146,7 +146,8 @@ export const fetchLocalServices = async (): Promise<ImportedLocalService[]> => {
         media (url),
         like (user_id),
         review (user_id, rate),
-        location!local_id (latitude, longitude)
+        location (latitude, longitude),
+        availability (start, end, daysofweek, date) // Ensure availability is fetched
       `)
       .order('id', { ascending: false });
 
@@ -166,10 +167,11 @@ export const fetchLocalServices = async (): Promise<ImportedLocalService[]> => {
       imageUrl: service.media && service.media.length > 0
         ? service.media[0].url
         : 'https://via.placeholder.com/150',
-      location: service.location && service.location.length > 0 ? {
-        latitude: parseFloat(service.location[0].latitude),
-        longitude: parseFloat(service.location[0].longitude)
-      } : null
+      location: service.location ? {
+        latitude: parseFloat(service.location.latitude),
+        longitude: parseFloat(service.location.longitude)
+      } : null,
+      availability: service.availability || [] // Ensure availability is processed
     }));
   } catch (error) {
     console.error('Unexpected error fetching local services:', error);
@@ -220,14 +222,14 @@ export const fetchLocalDetail = async (id: number): Promise<ImportedLocalService
       imageUrl: data.media && data.media.length > 0
         ? data.media[0].url
         : 'https://via.placeholder.com/150',
-      comments: data.comment || [], // Include comments
+      comments: data.comment || [],
       likes: data.like || [],
       availability: data.availability || [],
       location: data.location ? {
         latitude: parseFloat(data.location.latitude),
         longitude: parseFloat(data.location.longitude)
       } : null,
-      reviewCount: data.review ? data.review.length : 0 // Calculate review count from the review array
+      reviewCount: data.review ? data.review.length : 0
     };
 
     return transformedData;

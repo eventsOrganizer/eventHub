@@ -12,6 +12,7 @@ import { useUser } from '../../UserContext';
 import { useToast } from '../../hooks/useToast';
 import LocalServiceDetails from './components/LocalServiceDetails'; // Adjust import based on your actual component
 import LocalInfo from './LocalInfo';
+import LocalLocationMap from './components/LocalLocationMap';
 
 type RootStackParamList = {
   AddLocalReviewScreen: { localId: number; userId: string | null };
@@ -45,23 +46,20 @@ const LocalDetail: React.FC = () => {
 
   const getAddressFromCoordinates = async (latitude: number, longitude: number): Promise<string> => {
     try {
-      // Add delay to respect rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
         {
           headers: {
-            'User-Agent': 'YourAppName/1.0', // Replace with your app name
-            'Accept-Language': 'fr'
+            'User-Agent': 'ChakerApp/1.0', // Replace with your app name
+            'Accept-Language': 'en'
           }
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       return data.display_name || 'Address not found';
     } catch (error) {
@@ -76,7 +74,15 @@ const LocalDetail: React.FC = () => {
       const data = await fetchLocalDetail(localId);
       
       if (data) {
-        setLocalData(data as LocalService);
+        // Ensure all required properties are present
+        const completeLocalData: LocalService = {
+          ...data,
+          subcategory_id: data.subcategory_id || null,
+          disabled: data.disabled || false,
+          local_user: data.local_user || null,
+        };
+
+        setLocalData(completeLocalData);
         
         // Check for media
         if (data.media && Array.isArray(data.media)) {
@@ -91,10 +97,14 @@ const LocalDetail: React.FC = () => {
 
         // Check for location
         if (data.location) {
-          setAddress(await getAddressFromCoordinates(
-            data.location.latitude, 
-            data.location.longitude
-          ));
+          if (data.location.latitude !== null && data.location.longitude !== null) {
+            setAddress(await getAddressFromCoordinates(
+              data.location.latitude, 
+              data.location.longitude
+            ));
+          } else {
+            setAddress('Address not available');
+          }
         } else {
           setAddress('Address not available');
         }
@@ -215,51 +225,6 @@ const LocalDetail: React.FC = () => {
     setShowMap(prevShowMap => !prevShowMap);
   }, []);
 
-  const generateMapHTML = () => {
-    if (!localData?.location?.latitude || !localData?.location?.longitude) {
-      return '<p>Location not available</p>';
-    }
-    
-    const escapedAddress = address.replace(/'/g, "\\'").replace(/"/g, '\\"');
-    const lat = localData.location.latitude;
-    const lng = localData.location.longitude;
-    
-    if (!lat || !lng) {
-      return '<p>Invalid location coordinates</p>';
-    }
-    
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-          <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-          <style>
-            body { margin: 0; padding: 0; }
-            #map { height: 100vh; width: 100vw; }
-          </style>
-        </head>
-        <body>
-          <div id="map"></div>
-          <script>
-            var map = L.map('map', {
-              zoomControl: true,
-              attributionControl: true
-            }).setView([${lat}, ${lng}], 15);
-  
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              maxZoom: 19,
-            }).addTo(map);
-  
-            var marker = L.marker([${lat}, ${lng}]).addTo(map);
-            marker.bindPopup('${escapedAddress}').openPopup();
-          </script>
-        </body>
-      </html>
-    `;
-  };
-
   const renderItem = () => (
     <ScrollView style={styles.content}>
       <View style={styles.card}>
@@ -296,11 +261,17 @@ const LocalDetail: React.FC = () => {
         />
         {showMap && (
           <View style={styles.mapContainer}>
-            {localData?.location ? (
-              <WebView
-                style={styles.map}
-                source={{ html: generateMapHTML() }}
-                scrollEnabled={false}
+            {localData?.location && 
+             Array.isArray(localData.location) && 
+             localData.location.length > 0 &&
+             'latitude' in localData.location[0] && 
+             'longitude' in localData.location[0] && 
+             localData.location[0].latitude != null && 
+             localData.location[0].longitude != null ? (
+              <LocalLocationMap
+                latitude={localData.location[0].latitude}
+                longitude={localData.location[0].longitude}
+                address={address}
               />
             ) : (
               <Text>Location data not available</Text>

@@ -35,6 +35,7 @@ const LocalInfo: React.FC<LocalInfoProps> = ({
       <Text style={styles.price}>{localData.priceperhour}€/hour</Text>
       <Text style={styles.details}>{localData.details}</Text>
       
+      
       {(distance !== null || address) && (
         <View style={styles.locationInfo}>
           {distance !== null && (
