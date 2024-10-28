@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 interface LocationMapProps {
@@ -9,6 +9,15 @@ interface LocationMapProps {
 }
 
 const LocationMap: React.FC<LocationMapProps> = ({ latitude, longitude, address }) => {
+  // Vérification des coordonnées
+  if (!latitude || !longitude) {
+    return (
+      <View style={styles.container}>
+        <Text>Localisation non disponible</Text>
+      </View>
+    );
+  }
+
   const generateMapHTML = () => {
     const escapedAddress = address.replace(/'/g, "\\'").replace(/"/g, '\\"');
     

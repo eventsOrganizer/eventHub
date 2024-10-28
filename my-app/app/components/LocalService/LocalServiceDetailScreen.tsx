@@ -1,191 +1,252 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text, ScrollView, Image, Dimensions } from 'react-native';
+import { WebView } from 'react-native-webview';
+import * as Location from 'expo-location';
+import { useRoute } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { fetchLocalDetail, toggleLikeLocal } from '../../services/localService';
+import { fetchLocalAvailabilityData, LocalAvailabilityData } from '../../services/availabilityService';
+import { useUser } from '../../UserContext';
+import { useToast } from '../../hooks/useToast';
+import LocalInfo from './LocalInfo';
+import LocalDetails from './LocalDetails';
+import LocalBookingForm from './LocalBookingForm';
+import LocalReviewForm from './LocalReviewForm';
+import LocalCommentSection from './LocalCommentSection';
+import { LocalService } from '../../services/serviceTypes';
 import { supabase } from '../../services/supabaseClient';
-import AvailabilityList from '../PersonalServiceComponents/AvailabilityList';
-import CommentSection from '../PersonalServiceComponents/CommentSection';
-import useStripePayment from '../../payment/useStripePayment'
 
-type RootStackParamList = {
-  LocalServiceDetails: { localServiceId: number };
-  PaymentAction: { price: number; personalId: string };
-};
-
-type LocalServiceDetailScreenRouteProp = RouteProp<RootStackParamList, 'LocalServiceDetails'>;
-
-interface Media {
-  url: string;
-}
-
-interface Availability {
-  id: number;
-  start: string;
-  end: string;
-  daysofweek: string[];
-  date: string;
-}
-
-interface Comment {
-  id: number;
-  details: string;
-  user_id: string;
-  created_at: string;
-}
-
-interface LocalService {
-  id: number;
-  name: string;
-  details: string;
-  priceperhour: number;
-  media: Media[];
-  availability: Availability[];
-  comment: Comment[];
-  userId: string;
-}
+const { width } = Dimensions.get('window');
+const IMAGE_HEIGHT = width * 0.75;
 
 const LocalServiceDetailScreen: React.FC = () => {
-  const route = useRoute<LocalServiceDetailScreenRouteProp>();
-  const navigation = useNavigation();
-  const [service, setService] = useState<LocalService | null>(null);
+  const route = useRoute();
+  const { localServiceId } = route.params as { localServiceId: number };
+  const { userId } = useUser();
+  const { toast } = useToast();
+
+  const [localServiceData, setLocalServiceData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [availabilityData, setAvailabilityData] = useState<LocalAvailabilityData | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
+  const [distance, setDistance] = useState<number | null>(null);
+  const [address, setAddress] = useState<string>('Chargement de l\'adresse...');
+  const [likes, setLikes] = useState(0);
+  const [userHasLiked, setUserHasLiked] = useState(false);
 
-  const { createPaymentIntent, loading: paymentLoading, error: paymentError } = useStripePayment();
-
-  useEffect(() => {
-    const fetchServiceDetails = async () => {
-      const localServiceId = route.params?.localServiceId;
-
-      if (!localServiceId) {
-        setError('No service ID provided');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('local')
-          .select(`*,
-                    media (url),
-                    availability (id, start, end, daysofweek, date),
-                    comment (id, details, user_id, created_at)`)
-          .eq('id', localServiceId)
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await fetchLocalDetail(localServiceId);
+      if (data) {
+        setLocalServiceData(data);
+        setImages(data.media?.map((item: any) => item.url) || []);
+        if (data.location) {
+          setAddress(await getAddressFromCoordinates(data.location.latitude, data.location.longitude));
+        }
+        const availability = await fetchLocalAvailabilityData(localServiceId);
+        setAvailabilityData(availability);
+        const { count: likesCount } = await supabase
+          .from('like')
+          .select('id', { count: 'exact' })
+          .eq('local_id', localServiceId);
+        setLikes(likesCount || 0);
+        const { data: userLike } = await supabase
+          .from('like')
+          .select('*')
+          .eq('local_id', localServiceId)
+          .eq('user_id', userId)
           .single();
-
-        if (error) throw error;
-        if (!data) throw new Error('No data returned from the query');
-
-        setService(data);
-      } catch (error) {
-        setError('Failed to load service details');
-      } finally {
-        setIsLoading(false);
+        setUserHasLiked(!!userLike);
+      } else {
+        console.log('No data received from fetchLocalDetail');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching local service details:', error);
+      toast({
+        title: "Error",
+        description: "Impossible de charger les détails du service. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [localServiceId, userId, toast]);
 
-    fetchServiceDetails();
-  }, [route.params?.localServiceId]);
-
-  const handleBooking = async () => {
-    if (!service) return;
-
-    const amount = service.priceperhour * 100; // Assuming price is in dollars and you need cents
-
-    const clientSecret = await createPaymentIntent(amount);
-
-    if (clientSecret) {
-      navigation.navigate('PaymentScreen', { clientSecret });
+  const getAddressFromCoordinates = async (latitude: number, longitude: number): Promise<string> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'ChakerApp/1.0',
+            'Accept-Language': 'fr'
+          }
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.display_name || 'Adresse non trouvée';
+    } catch (error) {
+      console.error('Erreur lors de la récupération de l\'adresse:', error);
+      return 'Erreur lors de la récupération de l\'adresse';
     }
   };
 
-  if (isLoading || paymentLoading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-  if (paymentError) {
-    return <Text>Error: {paymentError}</Text>;
-  }
+  const handleLike = async () => {
+    if (!userId) {
+      toast({
+        title: "Authentification requise",
+        description: "Veuillez vous connecter pour aimer un service.",
+        variant: "default",
+      });
+      return;
+    }
 
-  if (error) {
-    Alert.alert('Error', error); // Display error alert
-    return (
-      <View style={styles.container}>
-        <Text>No service details available.</Text>
+    const result = await toggleLikeLocal(localServiceId, userId);
+
+    if (result !== null) {
+      setUserHasLiked(result);
+      setLikes(prev => (result ? prev + 1 : prev - 1));
+    }
+  };
+
+  const handleReviewSubmitted = () => {
+    toast({
+      title: "Succès",
+      description: "Votre avis a été soumis avec succès.",
+      variant: "default",
+    });
+    fetchData();
+  };
+
+  const renderItem = () => (
+    <View style={styles.card}>
+      <View style={styles.imageContainer}>
+        <ScrollView 
+          horizontal 
+          pagingEnabled 
+          showsHorizontalScrollIndicator={false}
+          decelerationRate="fast"
+          snapToInterval={width}
+        >
+          {images.length > 0 ? (
+            images.map((imageUrl, index) => (
+              <Image 
+                key={index} 
+                source={{ uri: imageUrl }} 
+                style={styles.image} 
+                resizeMode="cover"
+              />
+            ))
+          ) : (
+            <View style={styles.noImageContainer}>
+              <Text style={styles.noImageText}>Aucune image disponible</Text>
+            </View>
+          )}
+        </ScrollView>
       </View>
-    );
-  }
-
-  if (!service) {
-    return <Text>No service details available.</Text>;
-  }
-
-  if (!service) {
-    return <Text>No service details available.</Text>;
-  }
+      <LocalInfo 
+        localData={localServiceData} 
+        likes={likes}
+        userHasLiked={userHasLiked}
+        onLike={handleLike}
+        distance={distance}
+        address={address}
+      />
+      <LocalDetails localData={localServiceData} />
+      <LocalBookingForm
+        localId={localServiceId}
+        userId={userId}
+        availabilityData={availabilityData}
+        onBookingComplete={fetchData}
+      />
+      <LocalReviewForm localId={localServiceData?.id} onReviewSubmitted={handleReviewSubmitted} />
+      <LocalCommentSection 
+        comments={localServiceData?.comment.map(comment => ({
+          ...comment,
+          user: (comment as any).user || { username: "anonymous" }
+        })) || []}
+        localId={localServiceData?.id}
+        userId={userId}
+      />
+    </View>
+  );
 
   return (
-    <ScrollView style={styles.container}>
-      <Image source={{ uri: service.media[0]?.url }} style={styles.image} />
-      <View style={styles.infoContainer}>
-        <Text style={styles.name}>{service.name}</Text>
-        <Text style={styles.price}>${service.priceperhour}/hr</Text>
-        <Text style={styles.details}>{service.details}</Text>
-      </View>
-      <AvailabilityList availability={service.availability} personalId={service.id} />
-      <CommentSection comments={service.comment} personalId={service.id} />
-      <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
-        <Text style={styles.bookButtonText}>Book Now</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    <LinearGradient
+      colors={['#E6F2FF', '#C2E0FF', '#99CCFF', '#66B2FF']}
+      style={styles.container}
+    >
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      >
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <Text>Chargement...</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={[{ key: 'content' }]}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.key}
+          />
+        )}
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8', // Softer background color for a modern feel
+  },
+  content: {
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  imageContainer: {
+    height: IMAGE_HEIGHT,
+    marginBottom: 16,
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   image: {
-    width: '100%',
-    height: 250, // Slightly larger image to display more of the media
-    resizeMode: 'cover', // Maintain aspect ratio while filling the area
-    borderBottomLeftRadius: 20, // Rounded corners for the image
-    borderBottomRightRadius: 20,
-    marginBottom: 20, // Space between the image and the content below
+    width: width,
+    height: IMAGE_HEIGHT,
+    borderRadius: 10,
   },
-  infoContainer: {
-    paddingHorizontal: 16, // Reduced padding for a more compact look
-    paddingBottom: 20, // Extra padding at the bottom of the info section
-  },
-  name: {
-    fontSize: 26, // Slightly larger font size for the name
-    fontWeight: 'bold',
-    color: '#333', // Darker color for better contrast
-    marginBottom: 10,
-  },
-  price: {
-    fontSize: 20, // Increased size to emphasize the price
-    color: 'green', // Keep the price green for easy recognition
-    marginBottom: 15, // Increased margin for better spacing
-  },
-  details: {
-    fontSize: 16,
-    color: '#666', // Lighter color for secondary information
-    lineHeight: 24, // Improve readability by increasing line height
-  },
-  bookButton: {
-    backgroundColor: '#007AFF', // Vibrant blue color for the button
-    paddingVertical: 15, // Increase vertical padding for a larger touch target
-    borderRadius: 25, // Fully rounded button for a more modern look
+  noImageContainer: {
+    width: width,
+    height: IMAGE_HEIGHT,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 40, // Add horizontal margin for centering and balance
-    marginBottom: 30, // Extra bottom margin for spacing
-    elevation: 3, // Add shadow for a raised button effect on Android
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
   },
-  bookButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold', // Emphasize the button text
+  noImageText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

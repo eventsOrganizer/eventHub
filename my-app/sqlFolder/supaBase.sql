@@ -445,6 +445,7 @@ create table
     type character varying null,
     payment boolean null,
     payment_id text null,
+    token text null,
     constraint order_pkey primary key (id),
     constraint order_local_id_fkey foreign key (local_id) references local (id),
     constraint order_material_id_fkey foreign key (material_id) references material (id),
@@ -652,12 +653,21 @@ create table
   public.videoroom (
     id serial not null,
     url text not null,
-    creator_id uuid not null,
+    creator_id uuid null,
     is_connected boolean null default false,
     created_at timestamp with time zone null default current_timestamp,
+    event_id integer null,
+    is_ready boolean null default false,
+    name text null,
+    subcategory_id integer null,
+    details text null,
     constraint videoroom_pkey primary key (id),
-    constraint fk_creator foreign key (creator_id) references "user" (id) on delete cascade
+    constraint fk_creator foreign key (creator_id) references "user" (id) on delete cascade,
+    constraint fk_event foreign key (event_id) references event (id) on delete cascade,
+    constraint videoroom_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id)
   ) tablespace pg_default;
+
+create index if not exists idx_videoroom_event_id on public.videoroom using btree (event_id) tablespace pg_default;
 
 create table
   public.group_has_user (
@@ -674,3 +684,28 @@ create table
 create index if not exists idx_group_has_user_user on public.group_has_user using btree (user_id) tablespace pg_default;
 
 create index if not exists idx_group_has_user_group on public.group_has_user using btree (group_id) tablespace pg_default;
+
+
+create table
+  public.room_participants (
+    id serial not null,
+    room_id integer not null,
+    user_id uuid not null,
+    is_active boolean null default true,
+    joined_at timestamp with time zone null default current_timestamp,
+    left_at timestamp with time zone null,
+    last_heartbeat timestamp with time zone null,
+    daily_co_id character varying(255) null,
+    constraint room_participants_pkey primary key (id),
+    constraint unique_room_user unique (room_id, user_id),
+    constraint room_participants_room_id_fkey foreign key (room_id) references videoroom (id) on delete cascade,
+    constraint room_participants_user_id_fkey foreign key (user_id) references "user" (id) on delete cascade
+  ) tablespace pg_default;
+
+create index if not exists idx_room_participants_user_id on public.room_participants using btree (user_id) tablespace pg_default;
+
+create index if not exists idx_room_participants_last_heartbeat on public.room_participants using btree (last_heartbeat) tablespace pg_default;
+
+create index if not exists idx_room_participants_daily_co_id on public.room_participants using btree (daily_co_id) tablespace pg_default;
+
+create index if not exists idx_room_participants_room_id on public.room_participants using btree (room_id) tablespace pg_default;

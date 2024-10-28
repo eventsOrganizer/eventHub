@@ -41,3 +41,45 @@ export const fetchAvailabilityData = async (personalId: number): Promise<Availab
     throw error;
   }
 };
+
+export interface LocalAvailabilityData {
+  startDate: string;
+  endDate: string;
+  availability: Array<{
+    id: number;
+    date: string;
+    statusday: 'exception' | 'reserved' | 'available';
+  }>;
+}
+
+export const fetchLocalAvailabilityData = async (localId: number): Promise<LocalAvailabilityData> => {
+  try {
+    const { data: localData, error: localError } = await supabase
+      .from('local')
+      .select('startdate, enddate')
+      .eq('id', localId)
+      .single();
+
+    if (localError) throw localError;
+
+    const { data: availabilityData, error: availabilityError } = await supabase
+      .from('availability')
+      .select('id, date, statusday')
+      .eq('local_id', localId);
+
+    if (availabilityError) throw availabilityError;
+
+    return {
+      startDate: localData.startdate,
+      endDate: localData.enddate,
+      availability: availabilityData.map(item => ({
+        id: item.id,
+        date: item.date,
+        statusday: item.statusday as 'exception' | 'reserved' | 'available'
+      })),
+    };
+  } catch (error) {
+    console.error('Error fetching local availability data:', error);
+    throw error;
+  }
+};

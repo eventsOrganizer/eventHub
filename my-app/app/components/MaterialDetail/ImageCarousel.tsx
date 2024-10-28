@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Image, ScrollView, Dimensions, StyleSheet } from 'react-native';
-import { Video } from 'expo-av';
 import { BlurView } from 'expo-blur';
 import { Play } from 'lucide-react-native';
 
