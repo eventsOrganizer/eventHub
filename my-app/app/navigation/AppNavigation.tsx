@@ -80,6 +80,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import TicketingScreen from '../screens/TicketingScreen';
 import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
+import ServicesDetails from '../services/servicesDetailsInUserProfile/ServicesDetails';
 
 type RootStackParamList = {
   Onboarding: undefined;
@@ -123,6 +124,10 @@ type RootStackParamList = {
   };
   UserProfile: { userId: string };  UserServicesScreen: undefined;
   MapScreen: undefined;
+  ServicesDetails: {
+    serviceId: number;
+    serviceType: 'Personal' | 'Local' | 'Material';
+  };
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -378,14 +383,6 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true, title: 'Subcategory Selection' }}
   />
 
-
-
-
-
-
-
-
-
   <Stack.Screen
     name="ServiceDetails"
     component={ServiceDetailsScreen}
@@ -407,7 +404,6 @@ const AppNavigation: React.FC = () => {
     component={UserServicesScreen} 
   />
     
-
   <Stack.Screen 
     name="YourRequests" 
     component={YourRequestsScreen} 
@@ -418,50 +414,79 @@ const AppNavigation: React.FC = () => {
     component={VideoRoomsScreen}
   />
 
-        <Stack.Screen
-          name="VideoCall"
-          component={VideoCall}
-        />
-         <Stack.Screen 
-        name="BookingScreen" 
-        component={BookingScreen}
-        options={{ headerShown: true, title: 'Réservation' }}
-      />
-      <Stack.Screen 
-        name="CommentsScreen" 
-        component={CommentsScreen}
-        options={{ headerShown: true, title: 'Commentaires' }}
-      />
-      <Stack.Screen 
-        name="AddReviewScreen" 
-        component={AddReviewScreen}
-        options={{ headerShown: true, title: 'Ajouter un avis' }}
-      />
+  <Stack.Screen
+    name="VideoCall"
+    component={VideoCall}
+  />
+  
+  <Stack.Screen 
+    name="BookingScreen" 
+    component={BookingScreen}
+    options={{ headerShown: true, title: 'Réservation' }}
+  />
+  
+  <Stack.Screen 
+    name="CommentsScreen" 
+    component={CommentsScreen}
+    options={{ headerShown: true, title: 'Commentaires' }}
+  />
+  
+  <Stack.Screen 
+    name="AddReviewScreen" 
+    component={AddReviewScreen}
+    options={{ headerShown: true, title: 'Ajouter un avis' }}
+  />
       
-      <Stack.Screen
-       name ="MaterialScreen" 
-      component={MaterialScreen} />
-      <Stack.Screen
-       name ="MaterialDetail" 
-      component={MaterialDetailScreen as any} />
-      <Stack.Screen
-       name ="Basket" 
-      component={BasketScreen} />
-      <Stack.Screen
-       name ="MaterialsOnboarding" 
-      component={MaterialsOnboardingScreen} />
-      <Stack.Screen
-       name ="ReviewScreen" 
-      component={ReviewScreen} />
-      <Stack.Screen
-       name ="CommentScreen" 
-      component={CommentScreen} />
-      <Stack.Screen
-        name="CreatePersonalServiceStack"
-        component={CreatePersonalServiceStack}
-        options={{ headerShown: false }}
-      />
-    <Stack.Screen name="MapScreen" component={MapScreen} />
+  <Stack.Screen
+    name="MaterialScreen" 
+    component={MaterialScreen} 
+  />
+  
+  <Stack.Screen
+    name="MaterialDetail" 
+    component={MaterialDetailScreen as any} 
+  />
+  
+  <Stack.Screen
+    name="Basket" 
+    component={BasketScreen} 
+  />
+  
+  <Stack.Screen
+    name="MaterialsOnboarding" 
+    component={MaterialsOnboardingScreen} 
+  />
+  
+  <Stack.Screen
+    name="ReviewScreen" 
+    component={ReviewScreen} 
+  />
+  
+  <Stack.Screen
+    name="CommentScreen" 
+    component={CommentScreen} 
+  />
+  
+  <Stack.Screen
+    name="CreatePersonalServiceStack"
+    component={CreatePersonalServiceStack}
+    options={{ headerShown: false }}
+  />
+  
+  <Stack.Screen 
+    name="MapScreen" 
+    component={MapScreen} 
+  />
+  
+  <Stack.Screen 
+    name="ServicesDetails" 
+    component={ServicesDetails}
+    options={{ 
+      headerShown: true, 
+      title: 'Détails du service' 
+    }}
+  />
+  
 </Stack.Navigator> 
 
   )

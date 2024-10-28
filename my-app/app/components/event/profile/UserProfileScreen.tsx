@@ -231,7 +231,7 @@ const UserProfileScreen: React.FC = () => {
         <View style={tw`flex-row justify-center mt-6 mb-4`}>
     <TouchableOpacity
       style={tw`bg-white/20 py-2 px-3 rounded-lg shadow-md mx-1 max-w-[110]`}
-      onPress={() => navigation.navigate('UserServicesScreen', { userId })}
+      onPress={() => navigation.navigate('UserServicesScreen' as never, { userId } as never)}
     >
       <Text style={tw`text-white font-semibold text-center text-sm`}>Services</Text>
     </TouchableOpacity>

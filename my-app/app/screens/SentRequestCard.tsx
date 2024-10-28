@@ -32,13 +32,13 @@ const SentRequestCard: React.FC<SentRequestCardProps> = ({ item, onRequestDelete
   const calculateAdvancePayment = () => {
     const totalPrice = calculateTotalPrice();
     if (item.type === 'Material' && item.sell_or_rent === 'sell') {
-      return totalPrice; // Paiement total pour les articles à vendre
+      return totalPrice;
     }
     return (totalPrice * (item.percentage || 0)) / 100;
   };
 
   const calculateHours = (start: string, end: string) => {
-    if (start === 'Non spécifié' || end === 'Non spécifié') return 0;
+    if (start === 'Not specified' || end === 'Not specified') return 0;
     const startTime = new Date(`2000-01-01T${start}`);
     const endTime = new Date(`2000-01-01T${end}`);
     return (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
@@ -67,8 +67,8 @@ const SentRequestCard: React.FC<SentRequestCardProps> = ({ item, onRequestDelete
               <Text>Price: ${item.price?.toFixed(2) || '0.00'}</Text>
             </>
           )}
-          <Text>Price per hour: ${(item.priceperhour || item.price_per_hour || 0).toFixed(2)}</Text>
-          <Text>Percentage: {item.percentage}%</Text>
+          <Text>Price per hour: ${((item.priceperhour || item.price_per_hour || 0).toFixed(2))}</Text>
+          <Text>Percentage: {item.percentage.toFixed(2)}%</Text>
           
           <View style={styles.separator} />
           
