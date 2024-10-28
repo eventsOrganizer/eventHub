@@ -21,7 +21,7 @@ import EventCreationScreen from '../screens/EventCreationScreen';
 import EventDetailsScreen from '../screens/EventDetailsScreen';
 import CategorySelectionScreen from '../screens/CategorySelectionScreen';
 import SubcategorySelectionScreen from '../screens/subcategorySelectionScreen';
-
+import EventSerialsList from '../components/event/Ticketing/EventSerialsList';  
 
 import GuestManagementScreen from '../screens/GuestManagementScreen';
 import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
@@ -77,7 +77,7 @@ import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetai
 import PaymentActionScreen from '../payment/PaymentActionScreen';
 
 import NotificationsScreen from '../screens/NotificationsScreen';
-import TicketingScreen from '../screens/TicketingScreen';
+import TicketScanningScreen from '../components/event/Ticketing/TicketScanningScreen';
 import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
 
@@ -111,6 +111,7 @@ type RootStackParamList = {
   EventCreation: { eventType: string };
   CommentScreen: { materialId: string };
   PersonalServiceCreationStack: undefined;
+
   
   // Add the CreateService screen and pass serviceType as a param
   CreateService: { serviceType: string };
@@ -151,7 +152,8 @@ type EventSetupOptionsScreenProps = {
   YourRequests: undefined;
   VideoRooms: undefined;
   VideoCall: { roomUrl: string };
-
+  TicketScanning: undefined;
+  EventSerialsList: undefined;
  
 
 };
@@ -462,6 +464,8 @@ const AppNavigation: React.FC = () => {
         options={{ headerShown: false }}
       />
     <Stack.Screen name="MapScreen" component={MapScreen} />
+    <Stack.Screen name="TicketScanning" component={TicketScanningScreen} />
+    <Stack.Screen name="EventSerialsList" component={EventSerialsList} />
 </Stack.Navigator> 
 
   )

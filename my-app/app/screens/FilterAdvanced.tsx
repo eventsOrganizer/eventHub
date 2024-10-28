@@ -12,11 +12,22 @@ interface FilterAdvancedProps {
   lastMarkedLocation?: { latitude: number; longitude: number } | null;
 }
 
+// Define proper types for category and subcategory
+interface Category {
+  id: number | null;
+  name: string;
+}
+
+interface Subcategory {
+  id: number | null;
+  name: string;
+}
+
 const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, currentLocation, lastMarkedLocation }) => {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [subcategories, setSubcategories] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<number | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
   const [eventName, setEventName] = useState<string>('');
   const [perimeter, setPerimeter] = useState<string>('');
   const [eventType, setEventType] = useState<string>('');
@@ -42,14 +53,14 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
     } else if (currentLocation) {
       setUserLocation(currentLocation);
     }
-  }, [currentLocation, lastMarkedLocation, useMarkedLocation, perimeter]);
+  }, [currentLocation, lastMarkedLocation, useMarkedLocation]);
 
   useEffect(() => {
-    if (selectedCategory === null) {
+    if (selectedCategory === 'all') {
       setSubcategories([{ id: null, name: 'All' }]);
-      setSelectedSubcategory(null);
+      setSelectedSubcategory('all');
     } else {
-      fetchSubcategories(selectedCategory);
+      fetchSubcategories(parseInt(selectedCategory));
     }
   }, [selectedCategory]);
 
@@ -87,11 +98,6 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
   };
 
   const fetchSubcategories = async (categoryId: number) => {
-    if (categoryId === null) {
-      setSubcategories([{ id: null, name: 'All' }]);
-      return;
-    }
-    
     const { data, error } = await supabase
       .from('subcategory')
       .select('id, name')
@@ -111,15 +117,19 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
       Alert.alert('Error', 'Location not available. Please wait for your location to be determined or mark a location on the map.');
       return;
     }
-  
+
     try {
+      // Convert selectedCategory and selectedSubcategory to proper format for the database
+      const categoryId = selectedCategory === 'all' ? null : parseInt(selectedCategory);
+      const subcategoryId = selectedSubcategory === 'all' ? null : parseInt(selectedSubcategory);
+
       const { data, error } = await supabase.rpc('filter_events', {
         user_lat: userLocation.latitude,
         user_lon: userLocation.longitude,
         max_distance: perimeter ? parseFloat(perimeter) : null,
         search_name: eventName || null,
-        input_category_id: selectedCategory,
-        input_subcategory_id: selectedSubcategory,
+        input_category_id: categoryId,
+        input_subcategory_id: subcategoryId,
         event_type: eventType || null,
         is_private: privacy,
         min_price: minPrice ? parseFloat(minPrice) : null,
@@ -127,31 +137,28 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
         start_date: startDate?.toISOString() || null,
         end_date: endDate?.toISOString() || null
       });
-  
+
       if (error) {
         console.error('Error fetching filtered events:', error);
         Alert.alert('Error', 'Failed to fetch events. Please try again.');
         return;
       }
-  
-      console.log('Raw data from filter_events:', data);
-  
+
       let parsedData;
       try {
         parsedData = typeof data === 'string' ? JSON.parse(data) : data;
       } catch (parseError) {
         console.error('Error parsing JSON:', parseError);
-        console.log('Data causing parse error:', data);
         Alert.alert('Error', 'Failed to process event data. Please try again.');
         return;
       }
-  
+
       if (!Array.isArray(parsedData)) {
         console.error('Parsed data is not an array:', parsedData);
         Alert.alert('Error', 'Unexpected data format. Please try again.');
         return;
       }
-  
+
       const formattedData = parsedData.map((event: any) => ({
         ...event,
         distance: event.event_distance,
@@ -170,17 +177,11 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
     }
   };
 
-  const handleLocationTypeChange = (value: boolean) => {
-    setUseMarkedLocation(value);
-    setUserLocation(value && lastMarkedLocation ? lastMarkedLocation : currentLocation || null);
-  };
-
   return (
     <ScrollView style={tw`p-4 bg-white`}>
       <Button
         title={isFilterVisible ? "Hide Filters" : "Show Filters"}
         onPress={() => setIsFilterVisible(!isFilterVisible)}
-        style={tw`mb-4`}
       />
       {isFilterVisible && (
         <>
@@ -190,7 +191,10 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
             <Text style={tw`mb-1 text-sm`}>Use Location</Text>
             <Picker
               selectedValue={useMarkedLocation}
-              onValueChange={handleLocationTypeChange}
+              onValueChange={(value: boolean) => {
+                setUseMarkedLocation(value);
+                setUserLocation(value && lastMarkedLocation ? lastMarkedLocation : currentLocation || null);
+              }}
               style={tw`border border-gray-300 rounded`}
             >
               <Picker.Item label="Current Location" value={false} />
@@ -198,6 +202,50 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
             </Picker>
           </View>
 
+          <View style={tw`mb-4`}>
+            <Text style={tw`mb-1 text-sm`}>Category</Text>
+            <Picker
+              selectedValue={selectedCategory}
+              onValueChange={(itemValue: string) => {
+                setSelectedCategory(itemValue);
+                setSelectedSubcategory('all');
+              }}
+              style={tw`border border-gray-300 rounded`}
+            >
+              <Picker.Item label="All" value="all" />
+              {categories
+                .filter(category => category.id !== null)
+                .map((category) => (
+                  <Picker.Item 
+                    key={category.id} 
+                    label={category.name} 
+                    value={category.id.toString()} 
+                  />
+              ))}
+            </Picker>
+          </View>
+
+          <View style={tw`mb-4`}>
+            <Text style={tw`mb-1 text-sm`}>Subcategory</Text>
+            <Picker
+              selectedValue={selectedSubcategory}
+              onValueChange={(itemValue: string) => setSelectedSubcategory(itemValue)}
+              style={tw`border border-gray-300 rounded`}
+            >
+              <Picker.Item label="All" value="all" />
+              {subcategories
+                .filter(subcategory => subcategory.id !== null)
+                .map((subcategory) => (
+                  <Picker.Item 
+                    key={subcategory.id} 
+                    label={subcategory.name} 
+                    value={subcategory.id.toString()} 
+                  />
+              ))}
+            </Picker>
+          </View>
+
+          {/* Rest of your form fields... */}
           <View style={tw`mb-4`}>
             <Text style={tw`mb-1 text-sm`}>Event Name</Text>
             <TextInput
@@ -217,35 +265,6 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
               placeholder="Enter distance"
               keyboardType="numeric"
             />
-          </View>
-
-          <View style={tw`mb-4`}>
-            <Text style={tw`mb-1 text-sm`}>Category</Text>
-            <Picker
-              selectedValue={selectedCategory}
-              onValueChange={(itemValue) => {
-                setSelectedCategory(itemValue);
-                setSelectedSubcategory(null);
-              }}
-              style={tw`border border-gray-300 rounded`}
-            >
-              {categories.map((category) => (
-                <Picker.Item key={category.id} label={category.name} value={category.id} />
-              ))}
-            </Picker>
-          </View>
-
-          <View style={tw`mb-4`}>
-            <Text style={tw`mb-1 text-sm`}>Subcategory</Text>
-            <Picker
-              selectedValue={selectedSubcategory}
-              onValueChange={(itemValue) => setSelectedSubcategory(itemValue)}
-              style={tw`border border-gray-300 rounded`}
-            >
-              {subcategories.map((subcategory) => (
-                <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
-              ))}
-            </Picker>
           </View>
 
           <View style={tw`mb-4`}>

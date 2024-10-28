@@ -308,3 +308,643 @@ export default FilterAdvanced;
 
 
 
+/////////////////////////
+
+
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, ScrollView, TouchableOpacity, Linking, Dimensions } from 'react-native';
+import { supabase } from '../services/supabaseClient';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import EventMap from '../components/map/EventMap';
+import AttendeesSection from '../components/event/AttendeesSection';
+import PhotosSection from '../components/event/PhotosSection';
+import CommentsSection from '../components/event/CommentsSection';
+import styles from '../components/event/styles/eventDetailsStyles';
+import JoinEventButton from '../components/event/JoinEventButton';
+import UserAvatar from '../components/event/UserAvatar';
+import EventLike from '../components/event/EventLike';
+import EventReview from '../components/event/EventReview';
+
+interface EventDetails {
+  id: number;
+  name: string;
+  type: string;
+  details: string;
+  privacy: boolean;
+  subcategory: {
+    category: {
+      name: string;
+    };
+    name: string;
+  };
+  media: { url: string }[];
+  availability: Array<{
+    date: string;
+    start: string;
+    end: string;
+    daysofweek: string;
+  }>;
+  location: Array<{
+    longitude: number;
+    latitude: number;
+  }>;
+  user: {
+    email: string;
+    avatar_url?: string;
+  } | null;
+  user_id: string;
+  address: string;
+}
+
+const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, navigation: any }> = ({ route, navigation }) => {
+  const { eventId } = route.params;
+  const [eventDetails, setEventDetails] = useState<EventDetails | null>(null);
+  const [distance, setDistance] = useState<number | null>(null);
+  const [address, setAddress] = useState<string>('Loading address...');
+  const [attendeesRefreshTrigger, setAttendeesRefreshTrigger] = useState(0);
+
+  useEffect(() => {
+    const fetchEventDetails = async () => {
+      try {
+        const { data: eventData, error: eventError } = await supabase
+          .from('event')
+          .select(`
+            *,
+            subcategory (
+              name,
+              category (
+                name
+              )
+            ),
+            location (longitude, latitude),
+            availability (date, start, end, daysofweek),
+            media (url)
+          `)
+          .eq('id', eventId)
+          .single();
+    
+        console.log('Event Data:', eventData);
+    
+        if (eventError) {
+          console.error('Error fetching event details:', eventError);
+          return;
+        }
+    
+        if (eventData) {
+          const { data: userData, error: userError } = await supabase
+            .from('user')
+            .select('email')
+            .eq('id', eventData.user_id)
+            .single();
+    
+          console.log('User Data:', userData);
+    
+          if (userError) {
+            console.error('Error fetching user details:', userError);
+          } else {
+            eventData.user = {
+              ...eventData.user,
+              email: userData.email
+            };
+          }
+    
+          const { data: mediaData, error: mediaError } = await supabase
+            .from('media')
+            .select('url')
+            .eq('user_id', eventData.user_id)
+            .single();
+    
+          console.log('Media Data:', mediaData);
+    
+          if (mediaError) {
+            console.error('Error fetching user media:', mediaError);
+          } else {
+            eventData.user = {
+              ...eventData.user,
+              avatar_url: mediaData?.url || 'https://via.placeholder.com/150'
+            };
+          }
+        }
+    
+        console.log('Final Event Data:', eventData);
+        setEventDetails(eventData);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    fetchEventDetails();
+  }, [eventId]);
+
+  const handleJoinSuccess = () => {
+    setAttendeesRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleLeaveSuccess = () => {
+    setAttendeesRefreshTrigger(prev => prev + 1);
+  };
+
+  if (!eventDetails) {
+    return <View style={styles.loadingContainer}><Text style={styles.loadingText}>Loading...</Text></View>;
+  }
+
+  const openMap = () => {
+    const latitude = eventDetails.location[0]?.latitude || 0;
+    const longitude = eventDetails.location[0]?.longitude || 0;
+    const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+    Linking.openURL(url);
+  };
+
+  return (
+    <LinearGradient colors={['#000000', '#808080']} style={styles.container}>
+      <ScrollView>
+        <LinearGradient
+          colors={['#FF8C00', '#FFA500']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientHeader}
+        >
+          <Text style={styles.eventName}>{eventDetails.name}</Text>
+          <JoinEventButton
+            eventId={eventDetails.id}
+            privacy={eventDetails.privacy}
+            organizerId={eventDetails.user_id}
+            onJoinSuccess={handleJoinSuccess}
+            onLeaveSuccess={handleLeaveSuccess}
+          />
+          <View style={styles.organizerContainer}>
+  <UserAvatar userId={eventDetails.user_id} size={60} />
+  <View>
+    <Text style={styles.organizerLabel}>Organizer:</Text>
+    <Text style={styles.organizerEmail}>{eventDetails.user?.email || 'Unknown'}</Text>
+  </View>
+</View>
+        </LinearGradient>
+
+        <Image source={{ uri: eventDetails.media[0]?.url }} style={styles.eventImage} />
+
+        <View style={styles.contentContainer}>
+          <View style={styles.infoContainer}>
+            <View style={styles.infoRow}>
+              <Ionicons name="calendar" size={24} color="#FF8C00" />
+              <Text style={styles.infoText}>
+                {eventDetails.availability[0]?.date || 'N/A'} | {eventDetails.availability[0]?.start || 'N/A'}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="pricetag" size={24} color="#FF8C00" />
+              <Text style={styles.infoText}>
+                {eventDetails.subcategory.category.name} - {eventDetails.subcategory.name}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="business" size={24} color="#FF8C00" />
+              <Text style={styles.infoText}>{eventDetails.type}</Text>
+            </View>
+          </View>
+
+          <View style={styles.mapSection}>
+            <View style={styles.mapInfo}>
+              <Text style={styles.mapInfoTitle}>Address:</Text>
+              <Text style={styles.mapInfoText}>{address}</Text>
+              <Text style={styles.mapInfoTitle}>Distance:</Text>
+              <Text style={styles.mapInfoText}>{distance ? `${distance.toFixed(2)} km` : 'Calculating...'}</Text>
+              <TouchableOpacity style={styles.openMapButton} onPress={openMap}>
+                <Text style={styles.openMapButtonText}>Open in Google Maps</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.mapContainer}>
+              <EventMap
+                eventLatitude={eventDetails.location[0]?.latitude || 0}
+                eventLongitude={eventDetails.location[0]?.longitude || 0}
+                onDistanceCalculated={setDistance}
+                onAddressFound={setAddress}
+              />
+            </View>
+          </View>
+
+          <View style={styles.detailsContainer}>
+            <Text style={styles.sectionTitle}>Event Details</Text>
+            <Text style={styles.details}>{eventDetails.details}</Text>
+          </View>
+
+          <View style={styles.sectionsContainer}>
+            <AttendeesSection eventId={eventId} refreshTrigger={attendeesRefreshTrigger} />
+            <PhotosSection eventId={eventId} />
+            <CommentsSection eventId={eventId} />
+          </View>
+        </View>
+        
+        <EventLike eventId={eventId} />
+        <EventReview eventId={eventId} />
+    </ScrollView>
+    </LinearGradient>
+  );
+};
+
+export default EventDetailsScreen;
+
+
+ehre is the event detaisl screen so rewrite it whoel and updated withotu changign naythign in its core fucntionalities or anythign that is already set you will only add the the update to incldue this system !!! 
+
+
+
+//////////////////////////////////////////
+
+
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, AppState, FlatList, Modal, Alert } from 'react-native';
+import { WebView } from 'react-native-webview';
+import { supabase } from '../../../services/supabaseClient';
+import { Camera } from 'expo-camera';
+import { Audio } from 'expo-av';
+import { useUser } from '../../../UserContext';
+
+const DAILY_API_KEY = '731a44ab06649fabe8300c0f5d89fd8721f34d5f685549bc92a4b44b33f9401c';
+const DAILY_API_URL = 'https://api.daily.co/v1';
+
+interface Participant {
+  id: string;
+  user_id: string;
+  user_name: string;
+  join_time: string;
+}
+
+const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
+  const { roomUrl, isCreator, roomId } = route.params;
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [showParticipants, setShowParticipants] = useState(false);
+  const webViewRef = useRef<WebView>(null);
+  const { userId } = useUser();
+  const appState = useRef(AppState.currentState);
+
+  const fetchParticipants = useCallback(async () => {
+    try {
+      const response = await fetch(`${DAILY_API_URL}/presence`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${DAILY_API_KEY}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const roomName = roomUrl.split('/').pop();
+      const roomParticipants = data[roomName] || [];
+
+      setParticipants(roomParticipants.map((p: any) => ({
+        id: p.id,
+        user_id: p.userId,
+        user_name: p.userName,
+        join_time: p.joinTime
+      })));
+    } catch (error) {
+      console.error('Error fetching participants:', error);
+    }
+  }, [roomUrl]);
+
+  useEffect(() => {
+    console.log('VideoCall component mounted');
+    checkAndRequestPermissions();
+    joinRoom();
+    fetchParticipants();
+
+    const heartbeatInterval = setInterval(sendHeartbeat, 3000);
+    const participantsFetchInterval = setInterval(fetchParticipants, 15000);
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+
+    navigation.addListener('beforeRemove', (e: any) => {
+      e.preventDefault();
+      leaveRoom().then(() => navigation.dispatch(e.data.action));
+    });
+
+    return () => {
+      console.log('VideoCall component will unmount');
+      clearInterval(heartbeatInterval);
+      clearInterval(participantsFetchInterval);
+      appStateSubscription.remove();
+      leaveRoom();
+    };
+  }, [isCreator, roomId, userId, navigation, fetchParticipants]);
+
+  const sendHeartbeat = async () => {
+    try {
+      const { error } = await supabase
+        .from('room_participants')
+        .update({ last_heartbeat: new Date().toISOString() })
+        .match({ room_id: roomId, user_id: userId });
+
+      if (error) console.error('Error sending heartbeat:', error);
+    } catch (error) {
+      console.error('Exception when sending heartbeat:', error);
+    }
+  };
+
+  const handleAppStateChange = async (nextAppState: string) => {
+    if (appState.current.match(/active|foreground/) && nextAppState === 'background') {
+      await leaveRoom();
+    } else if (appState.current === 'background' && nextAppState === 'active') {
+      await joinRoom();
+    }
+    appState.current = nextAppState;
+  };
+
+  const checkAndRequestPermissions = async () => {
+    const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
+    const { status: audioStatus } = await Audio.requestPermissionsAsync();
+  
+    if (cameraStatus === 'granted' && audioStatus === 'granted') {
+      setPermissionsGranted(true);
+    } else {
+      setError('Camera and microphone permissions are required for video calls.');
+    }
+  };
+
+  const joinRoom = async () => {
+    try {
+      const { error } = await supabase
+        .from('room_participants')
+        .upsert({ room_id: roomId, user_id: userId, is_active: true, last_heartbeat: new Date().toISOString() },
+                 { onConflict: ['room_id', 'user_id'] });
+      
+      if (error) console.error('Error joining room:', error);
+      
+      if (isCreator) {
+        const { error: roomError } = await supabase
+          .from('videoroom')
+          .update({ is_connected: true })
+          .eq('id', roomId);
+        
+        if (roomError) console.error('Error updating room connection status:', roomError);
+      }
+    } catch (error) {
+      console.error('Exception when joining room:', error);
+    }
+  };
+
+  const leaveRoom = async () => {
+    try {
+      const { error } = await supabase
+        .from('room_participants')
+        .update({ is_active: false, left_at: new Date().toISOString() })
+        .match({ room_id: roomId, user_id: userId });
+
+      if (error) console.error('Error leaving room:', error);
+
+      if (isCreator) {
+        const { error: roomError } = await supabase
+          .from('videoroom')
+          .update({ is_connected: false })
+          .eq('id', roomId);
+        
+        if (roomError) console.error('Error updating room connection status:', roomError);
+      }
+    } catch (error) {
+      console.error('Exception when leaving room:', error);
+    }
+  };
+
+  const kickParticipant = async (participantId: string) => {
+    if (!isCreator) {
+      Alert.alert('Error', 'Only the room creator can kick participants.');
+      return;
+    }
+
+    try {
+      const roomName = roomUrl.split('/').pop();
+      const response = await fetch(`${DAILY_API_URL}/rooms/${roomName}/eject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${DAILY_API_KEY}`
+        },
+        body: JSON.stringify({ ids: [participantId] })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Kick response:', data);
+
+      // Update local state
+      setParticipants(prevParticipants => prevParticipants.filter(p => p.id !== participantId));
+
+      Alert.alert('Success', 'Participant has been kicked from the room.');
+    } catch (error) {
+      console.error('Error kicking participant:', error);
+      Alert.alert('Error', `Failed to kick participant: ${error.message}`);
+    }
+  };
+
+  const handleLoadEnd = () => {
+    setIsLoading(false);
+    fetchParticipants();
+  };
+
+  const handleError = (syntheticEvent: any) => {
+    const { nativeEvent } = syntheticEvent;
+    console.error('WebView error:', nativeEvent);
+    setError('Failed to load the video call. Please try again.');
+    setIsLoading(false);
+  };
+
+  const reloadWebView = () => {
+    setIsLoading(true);
+    setError(null);
+    webViewRef.current?.reload();
+  };
+
+  const handleMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.action === 'participantJoined' || data.action === 'participantLeft') {
+        fetchParticipants();
+      }
+    } catch (error) {
+      console.error('Error handling WebView message:', error);
+    }
+  };
+
+  const injectedJavaScript = `
+    (function() {
+      if (window.call) {
+        window.call.on('participant-joined', () => {
+          window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'participantJoined' }));
+        });
+        window.call.on('participant-left', () => {
+          window.ReactNativeWebView.postMessage(JSON.stringify({ action: 'participantLeft' }));
+        });
+      } else {
+        console.error('Daily.co call object not found');
+      }
+
+      navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    })();
+    true;
+  `;
+
+  return (
+    <View style={styles.container}>
+      {isLoading && <Text style={styles.loadingText}>Loading video call...</Text>}
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.reloadButton} onPress={reloadWebView}>
+            <Text style={styles.reloadButtonText}>Reload</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      {permissionsGranted && (
+        <>
+          <WebView
+            ref={webViewRef}
+            source={{ uri: roomUrl }}
+            style={styles.webview}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            mediaPlaybackRequiresUserAction={false}
+            allowsInlineMediaPlayback={true}
+            onLoadEnd={handleLoadEnd}
+            onError={handleError}
+            injectedJavaScript={injectedJavaScript}
+            onMessage={handleMessage}
+          />
+          {isCreator && (
+            <TouchableOpacity 
+              style={styles.participantsButton} 
+              onPress={() => setShowParticipants(true)}
+            >
+              <Text style={styles.participantsButtonText}>Manage Participants</Text>
+            </TouchableOpacity>
+          )}
+        </>
+      )}
+      <Modal visible={showParticipants} animationType="slide">
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Room Participants</Text>
+          <FlatList
+            data={participants}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.participantItem}>
+                <Text>{item.user_name || item.user_id}</Text>
+                {isCreator && item.user_id !== userId && (
+                  <TouchableOpacity 
+                    onPress={() => kickParticipant(item.id)}
+                    style={styles.kickButton}
+                  >
+                    <Text style={styles.kickButtonText}>Kick</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          />
+          <TouchableOpacity 
+            style={styles.closeButton} 
+            onPress={() => setShowParticipants(false)}
+          >
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  webview: {
+    flex: 1,
+  },
+  loadingText: {
+    textAlign: 'center',
+    margin: 10,
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    textAlign: 'center',
+    margin: 10,
+    fontSize: 16,
+    color: 'red',
+  },
+  reloadButton: {
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  reloadButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  participantsButton: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 5,
+  },
+  participantsButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: 'white',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  participantItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  kickButton: {
+    backgroundColor: 'red',
+    padding: 8,
+    borderRadius: 5,
+  },
+  kickButtonText: {
+    color: 'white',
+  },
+  closeButton: {
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+});
+
+export default VideoCall;
+
+
