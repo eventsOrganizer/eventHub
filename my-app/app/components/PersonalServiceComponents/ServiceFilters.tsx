@@ -28,7 +28,7 @@ interface ServiceFiltersProps {
         <View style={styles.searchBar}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search staff services"
+            placeholder="Search crew services"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />

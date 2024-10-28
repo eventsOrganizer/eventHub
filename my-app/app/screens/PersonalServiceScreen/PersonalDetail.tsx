@@ -12,6 +12,7 @@ import { useUser } from '../../UserContext';
 import { useToast } from '../../hooks/useToast';
 import PersonalInfo from '../../components/PersonalServiceComponents/PersonalInfo';
 import ServiceDetails from './components/ServiceDetails';
+import LocationMap from './components/LocationMap';
 
 interface ServiceWithLocation extends Service {
   location?: {
@@ -87,38 +88,52 @@ const PersonalDetail: React.FC = () => {
       if (data) {
         setPersonalData(data as ServiceWithImages);
         
-        // Correction de l'accès aux images
+        // Traitement des images
         if (data.media && Array.isArray(data.media)) {
           const imageUrls = data.media
             .filter((item: MediaItem) => item.type === 'image' || !item.type)
             .map((item: MediaItem) => item.url);
           setImages(imageUrls);
-        }
-        else {
+          console.log('Images trouvées:', imageUrls.length);
+        } else {
           setImages([]);
           console.log('Aucune image trouvée dans les données');
         }
-
-        if (data.location && data.location.latitude != null && data.location.longitude != null) {
-          setAddress(await getAddressFromCoordinates(data.location.latitude, data.location.longitude));
+  
+        // Traitement de l'adresse et de la distance
+        if (data.location && typeof data.location === 'object' && 'latitude' in data.location && 'longitude' in data.location) {
+          const { latitude, longitude } = data.location;
+          if (latitude != null && longitude != null) {
+            const addressResult = await getAddressFromCoordinates(latitude, longitude);
+            setAddress(addressResult);
+            
+            if (userLocation?.coords) {
+              const calculatedDistance = calculateDistance(
+                userLocation.coords.latitude,
+                userLocation.coords.longitude,
+                latitude,
+                longitude
+              );
+              setDistance(calculatedDistance);
+            }
+          } else {
+            setAddress('Coordonnées non disponibles');
+          }
         } else {
-          setAddress('Adresse non disponible');
+          setAddress('Données de localisation non disponibles');
         }
-
-        if (userLocation && data.location && data.location.latitude != null && data.location.longitude != null) {
-          const calculatedDistance = calculateDistance(
-            userLocation.coords.latitude,
-            userLocation.coords.longitude,
-            data.location.latitude,
-            data.location.longitude
-          );
-          setDistance(calculatedDistance);
-        }
-
+  
+  
+        // Récupération des données de disponibilité
         const availabilityData = await fetchAvailabilityData(personalId);
         setAvailabilityData(availabilityData);
       } else {
-        console.log('No data received from fetchPersonalDetail');
+        console.log('Aucune donnée reçue de fetchPersonalDetail');
+        toast({
+          title: "Erreur",
+          description: "Impossible de récupérer les détails du service.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Erreur dans fetchData:', error);
@@ -130,11 +145,10 @@ const PersonalDetail: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [personalId, toast]);
-
+  }, [personalId, userLocation, toast]);
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, []);
 
   const handleAuthenticatedAction = useCallback((action: () => void) => {
     if (!userId) {
@@ -232,23 +246,22 @@ const PersonalDetail: React.FC = () => {
   }, []);
 
   const generateMapHTML = () => {
-    if (!personalData?.location?.latitude || !personalData?.location?.longitude) {
+    if (!personalData?.location || !('latitude' in personalData.location) || !('longitude' in personalData.location)) {
       return '<p>Localisation non disponible</p>';
     }
     
+    const { latitude, longitude } = personalData.location;
+    if (latitude == null || longitude == null) {
+      return '<p>Coordonnées non valides</p>';
+    }
+  
     const escapedAddress = address.replace(/'/g, "\\'").replace(/"/g, '\\"');
     
     return `
       <!DOCTYPE html>
       <html>
         <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-          <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-          <style>
-            body { margin: 0; padding: 0; }
-            #map { height: 100vh; width: 100vw; }
-          </style>
+          <!-- ... (reste du code) ... -->
         </head>
         <body>
           <div id="map"></div>
@@ -256,13 +269,13 @@ const PersonalDetail: React.FC = () => {
             var map = L.map('map', {
               zoomControl: false,
               attributionControl: false
-            }).setView([${personalData.location.latitude}, ${personalData.location.longitude}], 15);
+            }).setView([${latitude}, ${longitude}], 15);
   
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
               maxZoom: 19,
             }).addTo(map);
   
-            var marker = L.marker([${personalData.location.latitude}, ${personalData.location.longitude}]).addTo(map);
+            var marker = L.marker([${latitude}, ${longitude}]).addTo(map);
             marker.bindPopup('${escapedAddress}').openPopup();
           </script>
         </body>
@@ -272,63 +285,72 @@ const PersonalDetail: React.FC = () => {
 
   const renderItem = () => (
     <ScrollView style={styles.content}>
-      <View style={styles.card}>
-        <View style={styles.imageContainer}>
-          <ScrollView 
-            horizontal 
-            pagingEnabled 
-            showsHorizontalScrollIndicator={false}
-            decelerationRate="fast"
-            snapToInterval={width}
-          >
-            {images.length > 0 ? (
-              images.map((imageUrl, index) => (
-                <Image 
-                  key={index} 
-                  source={{ uri: imageUrl }} 
-                  style={styles.image} 
-                  resizeMode="cover"
-                />
-              ))
-            ) : (
-              <View style={styles.noImageContainer}>
-                <Text style={styles.noImageText}>Aucune image disponible</Text>
+      {personalData && (
+        <>
+          <View style={styles.card}>
+            <View style={styles.imageContainer}>
+              <ScrollView 
+                horizontal 
+                pagingEnabled 
+                showsHorizontalScrollIndicator={false}
+                decelerationRate="fast"
+                snapToInterval={width}
+              >
+                {images.length > 0 ? (
+                  images.map((imageUrl, index) => (
+                    <Image 
+                      key={index} 
+                      source={{ uri: imageUrl }} 
+                      style={styles.image} 
+                      resizeMode="cover"
+                    />
+                  ))
+                ) : (
+                  <View style={styles.noImageContainer}>
+                    <Text style={styles.noImageText}>Aucune image disponible</Text>
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+            <PersonalInfo 
+              data={personalData} 
+              onLike={handleLike}
+              onToggleMap={toggleMap}
+              distance={distance}
+              address={address}
+            />
+            {showMap && (
+              <View style={styles.mapContainer}>
+                {personalData?.location && 
+                 'latitude' in personalData.location && 
+                 'longitude' in personalData.location && 
+                 personalData.location.latitude != null && 
+                 personalData.location.longitude != null ? (
+                  <LocationMap
+                    latitude={personalData.location.latitude}
+                    longitude={personalData.location.longitude}
+                    address={address}
+                  />
+                ) : (
+                  <Text style={styles.noLocationText}>
+                    Données de localisation non disponibles
+                  </Text>
+                )}
               </View>
             )}
-          </ScrollView>
-        </View>
-        <PersonalInfo 
-          data={personalData as Service} 
-          onLike={handleLike}
-          onToggleMap={toggleMap}
-          distance={distance}
-          address={address}
-        />
-        {showMap && (
-          <View style={styles.mapContainer}>
-            {personalData?.location ? (
-              <WebView
-                style={styles.map}
-                source={{ html: generateMapHTML() }}
-                scrollEnabled={false}
-              />
-            ) : (
-              <Text>Données de localisation non disponibles</Text>
-            )}
           </View>
-        )}
-      </View>
-      <View style={styles.card}>
-        <ServiceDetails 
-          personalData={personalData as Service}
-          onReviewPress={navigateToReviewScreen}
-          onCommentPress={navigateToCommentScreen}
-          onBookPress={navigateToBookingScreen}
-        />
-      </View>
+          <View style={styles.card}>
+            <ServiceDetails 
+              personalData={personalData}
+              onReviewPress={navigateToReviewScreen}
+              onCommentPress={navigateToCommentScreen}
+              onBookPress={navigateToBookingScreen}
+            />
+          </View>
+        </>
+      )}
     </ScrollView>
   );
-
   console.log('Rendering images, count:', images.length);
   images.forEach((image, index) => {
     console.log(`Image ${index + 1} URL:`, image);
@@ -374,10 +396,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     overflow: 'hidden',
   },
-  imageScrollView: {
-    height: IMAGE_HEIGHT,
-    marginBottom: 16,
-  },
   imageContainer: {
     height: IMAGE_HEIGHT,
     marginBottom: 16,
@@ -407,13 +425,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
   },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  noLocationText: {
+    textAlign: 'center',
+    color: '#666',
+    padding: 16,
+    fontSize: 14,
   },
 });
 

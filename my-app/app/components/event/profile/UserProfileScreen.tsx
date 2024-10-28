@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, Image, TouchableOpacity, ActivityIndicator, ScrollView, Animated, RefreshControl, Dimensions } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ActivityIndicator, ScrollView, Animated, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../services/supabaseClient';
@@ -17,6 +17,9 @@ import NotificationComponent from './notification/NotificationComponent';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
 import { useRequestNotifications } from '../../../hooks/useRequestNotifications';
+import TicketManagement from '../Ticketing/TicketManagement';
+import { useNotifications } from '../../../hooks/useNotifications';
+import NotificationList from '../../Notifications/NotificationList';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -31,15 +34,16 @@ interface UserProfile {
 
 const UserProfileScreen: React.FC = () => {
   const { userId } = useUser();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState('events');
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
   const [activeEventList, setActiveEventList] = useState<'your' | 'attended'>('your');
   const [showNotifications, setShowNotifications] = useState(false);
   const { unreadReceivedRequestsCount, unreadSentActionsCount } = useRequestNotifications(userId);
+
+
   const fetchData = useCallback(async () => {
     if (userId) {
       await fetchUserProfile();
@@ -57,6 +61,8 @@ const UserProfileScreen: React.FC = () => {
       useNativeDriver: true,
     }).start();
   }, [activeTab]);
+
+  const { unreadCount } = useNotifications(userId);
 
   const fetchUserProfile = async () => {
     if (!userId) return;
@@ -89,12 +95,6 @@ const UserProfileScreen: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
-  }, [fetchData]);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -129,7 +129,9 @@ const UserProfileScreen: React.FC = () => {
       case 'subscriptions':
         return <Subscriptions />;
       case 'services':
-        return <UserEventsList userId={userId as string} />; // Correction: Utilisation de UserEventsList au lieu de UserServicesList
+        return <UserServicesList userId={userId as string} />;
+        case 'tickets':
+          return <TicketManagement />;
       default:
         return null;
     }
@@ -137,7 +139,7 @@ const UserProfileScreen: React.FC = () => {
 
   useEffect(() => {
     if (activeTab === 'services') {
-      navigation.navigate('UserServicesScreen', { userId });
+      navigation.navigate('UserServicesScreen' as never, { userId } as never);
     }
   }, [activeTab, navigation, userId]);
 
@@ -174,7 +176,7 @@ const UserProfileScreen: React.FC = () => {
     >
       {showNotifications && (
         <View style={tw`absolute top-20 right-4 z-10 w-80 max-h-96 bg-white rounded-lg shadow-lg`}>
-          <NotificationComponent />
+          <NotificationList userId={userId} />
         </View>
       )}
       <ScrollView 
@@ -186,8 +188,16 @@ const UserProfileScreen: React.FC = () => {
             <View style={tw`flex-row justify-between items-center mb-6`}>
               <Text style={tw`text-white text-2xl font-bold`}>Profile</Text>
               <View style={tw`flex-row items-center`}>
-                <TouchableOpacity onPress={() => setShowNotifications(!showNotifications)}>
+                <TouchableOpacity 
+                  onPress={() => setShowNotifications(!showNotifications)}
+                  style={tw`relative mr-2`}
+                >
                   <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
+                  {unreadCount > 0 && (
+                    <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+                      <Text style={tw`text-white text-xs`}>{unreadCount}</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
                 <EventRequestBadge />
                 <FriendRequestBadge />
@@ -209,9 +219,13 @@ const UserProfileScreen: React.FC = () => {
               <ActionButton onPress={() => navigation.navigate('ServiceSelection' as never)} iconName="briefcase-outline" text="New Service" />
             </View>
             
-            <View style={tw`flex-row justify-between`}>
+            <View style={tw`flex-row justify-between mb-4`}>
               <ActionButton onPress={() => navigation.navigate('EditProfile' as never)} iconName="pencil" text="Edit Profile" />
               <ActionButton onPress={() => navigation.navigate('ChatList' as never)} iconName="chatbubbles" text="Open Chat" />
+            </View>
+
+            <View style={tw`flex-row justify-between`}>
+              <ActionButton onPress={() => navigation.navigate('TicketScanning' as never)} iconName="qr-code-outline" text="Scan Tickets" />
             </View>
           </View>
         </BlurView>
@@ -219,7 +233,7 @@ const UserProfileScreen: React.FC = () => {
         <View style={tw`flex-row justify-center mt-6 mb-4`}>
     <TouchableOpacity
       style={tw`bg-white/20 py-2 px-3 rounded-lg shadow-md mx-1 max-w-[110]`}
-      onPress={() => navigation.navigate('UserServicesScreen', { userId })}
+      onPress={() => navigation.navigate('UserServicesScreen' as never, { userId } as never)}
     >
       <Text style={tw`text-white font-semibold text-center text-sm`}>Services</Text>
     </TouchableOpacity>
@@ -247,7 +261,18 @@ const UserProfileScreen: React.FC = () => {
         </View>
       )}
     </TouchableOpacity>
-  </View>
+        </View>
+
+        <View style={tw`flex-row justify-around mt-6 mb-2`}>
+  {['events', 'friends', 'subscriptions', 'albums', 'tickets'].map((tab) => (
+    <TouchableOpacity
+      key={tab}
+      onPress={() => setActiveTab(tab)}
+    >
+      <Text style={tw`text-${activeTab === tab ? 'white' : 'blue-200'} font-semibold capitalize text-lg`}>{tab}</Text>
+    </TouchableOpacity>
+  ))}
+</View>
 
         <Animated.View
           style={[

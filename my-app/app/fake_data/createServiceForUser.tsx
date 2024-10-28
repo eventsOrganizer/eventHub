@@ -58,9 +58,9 @@ export const createUserAssignments = async () => {
     }));
 
     // Insert data into the database
-    await supabase.from('material_user').insert(materialUserEntries);
-    await supabase.from('local_user').insert(localUserEntries);
-    await supabase.from('personal_user').insert(personalUserEntries);
+    await supabase.from('request').insert(materialUserEntries);
+    await supabase.from('request').insert(localUserEntries);
+    await supabase.from('request').insert(personalUserEntries);
 
     console.log("User assignments created successfully");
   } catch (error) {

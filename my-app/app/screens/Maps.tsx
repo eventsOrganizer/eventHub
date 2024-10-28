@@ -8,7 +8,7 @@ import tw from 'twrnc';
 import FilterAdvanced from './FilterAdvanced';
 import { supabase } from '../services/supabaseClient';
 
-const MapScreen: React.FC = () => {
+const Maps: React.FC = () => {
   const navigation = useNavigation();
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -416,4 +416,4 @@ const MapScreen: React.FC = () => {
   );
 };
 
-export default MapScreen;
+export default Maps;

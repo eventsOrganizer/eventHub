@@ -47,13 +47,13 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       }
 
       const { data: personalUserData, error: personalUserError } = await supabase
-        .from('personal_user')
+        .from('request')
         .select('availability_id, status')
         .eq('personal_id', personalId)
         .eq('user_id', userId);
 
       if (personalUserError) {
-        console.error('Error fetching personal_user data:', personalUserError);
+        console.error('fffffffffffffffffffffffff data:', personalUserError);
         return;
       }
 

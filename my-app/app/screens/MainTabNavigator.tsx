@@ -7,6 +7,7 @@ import CalendarScreen from './CalendarScreen';
 import MapScreen from './MapScreen';
 import Signup from '../components/Auth/SignUp';
 import Signin from '../components/Auth/SignIn';
+import Maps from './Maps';
 import CreateLocalServiceStack from '../components/LocalServiceCreation/CreateLocalServiceStack';
 import CreatePersonalServiceStack from '../components/PersonalServiceCreation/createPersonalServiceStack';
 import tw from 'twrnc';
@@ -16,7 +17,7 @@ const Tab = createBottomTabNavigator();
 const icons = [
   { name: 'Home', icon: 'home', component: HomeScreen },
   { name: 'Calendar', icon: 'calendar', component: CalendarScreen },
-  { name: 'Map', icon: 'map', component: MapScreen },
+  { name: 'Map', icon: 'map', component: Maps },
   { name: 'Signup', icon: 'person-add', component: Signup },
   { name: 'Signin', icon: 'log-in', component: Signin },
   { name: 'CreatePersonal', icon: 'construct', component: CreatePersonalServiceStack },

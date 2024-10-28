@@ -1,40 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal, Switch } from 'react-native';
+import { Calendar } from 'react-native-calendars';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../services/supabaseClient';
 import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '../UserContext';
+import CloudinaryUpload from '../components/event/CloudinaryUpload';
+import MapScreen from './MapScreen';
+import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import ServiceCalendar from '../components/reuseableForCreationService/ServiceCalendar';
 import tw from 'twrnc';
-import NextButton from '../components/MaterialService/NextButton';
-import Card from '../components/event/card';
-import { Icon } from 'react-native-elements';
+import { createUpdate } from '../components/event/profile/notification/CreateUpdate';
 
-const EventCreation: React.FC = ({ navigation, route }) => {
-  const selectedServices = route.params?.selectedServices || [];
+const EventCreationScreen: React.FC = () => {
   const { userId } = useUser();
   const [currentStep, setCurrentStep] = useState(1);
   const [eventData, setEventData] = useState({
     name: '',
     details: '',
     eventType: '',
+    privacy: false,
     selectedCategory: '',
     selectedSubcategory: '',
-    startDate: '',
-    endDate: '',
-    imageUrls: [] as string[],
-    location: '',
-    isPrivate: false,
+    date: new Date(),
+    startTime: new Date(),
+    endTime: new Date(),
+    imageUrl: '',
+    location: null as { latitude: number; longitude: number } | null,
+    accessType: 'free' | 'paid',
+  ticketPrice: '',
+ticketQuantity: '',
   });
   const [exceptionDates, setExceptionDates] = useState<Date[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [showServiceMessage, setShowServiceMessage] = useState(false);
 
   useEffect(() => {
     fetchCategories();
+    console.log('Component mounted');
   }, []);
 
   useEffect(() => {
@@ -44,286 +54,368 @@ const EventCreation: React.FC = ({ navigation, route }) => {
   }, [eventData.selectedCategory]);
 
   const fetchCategories = async () => {
-    const { data, error } = await supabase.from('category').select('*').eq('type', 'event');
+    console.log('Fetching categories');
+    const { data, error } = await supabase.from('category').select('*');
     if (error) {
       console.error('Error fetching categories:', error);
     } else {
+      console.log('Categories fetched:', data);
       setCategories(data || []);
     }
   };
 
   const fetchSubcategories = async (categoryId: string) => {
-    const { data, error } = await supabase.from('subcategory').select('*').eq('category_id', categoryId);
+    console.log('Fetching subcategories for category:', categoryId);
+    const { data, error } = await supabase
+      .from('subcategory')
+      .select('*')
+      .eq('category_id', categoryId);
     if (error) {
       console.error('Error fetching subcategories:', error);
     } else {
+      console.log('Subcategories fetched:', data);
       setSubcategories(data || []);
     }
   };
 
   const handleInputChange = (name: string, value: any) => {
-    setEventData(prev => ({ ...prev, [name]: value }));
+    console.log(`Updating ${name} with value:`, value);
+    setEventData(prev => {
+      const newData = { ...prev, [name]: value };
+      console.log('New event data:', newData);
+      return newData;
+    });
   };
 
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
-      setEventData(prev => ({ ...prev, imageUrls: [...prev.imageUrls, result.assets[0].uri] }));
-    }
+  const handleLocationSelected = (location: { latitude: number; longitude: number }) => {
+    console.log('Location selected:', location);
+    setEventData(prev => ({ ...prev, location }));
+    setShowMap(false);
   };
 
   const handleCreateEvent = async () => {
+    console.log('Creating event with data:', eventData);
     if (!userId) {
-      Alert.alert('Error', 'User not logged in. Please log in to create an event.');
+      console.error('User not logged in');
+      Alert.alert('Error', 'User not logged in');
       return;
     }
 
-    if (!eventData.name || !eventData.details || !eventData.selectedSubcategory || !eventData.startDate || !eventData.endDate) {
-      Alert.alert('Error', 'Please fill all required fields.');
-      return;
-    }
+    const requiredFields = ['name', 'details', 'eventType', 'selectedSubcategory', 'location', 'imageUrl'];
+    const missingFields = requiredFields.filter(field => !eventData[field]);
 
-    if (eventData.imageUrls.length === 0) {
-      Alert.alert('Error', 'Please select at least one image for the event.');
+    if (missingFields.length > 0) {
+      console.error('Missing fields:', missingFields);
+      Alert.alert('Error', `Please fill the following fields: ${missingFields.join(', ')}`);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .insert([{
+      console.log('Inserting event into database');
+      const { data: newEvent, error: eventError } = await supabase
+        .from('event')
+        .insert({
           name: eventData.name,
           details: eventData.details,
-          event_type: eventData.eventType,
-          category_id: eventData.selectedCategory,
+          type: eventData.eventType,
+          privacy: eventData.privacy,
           subcategory_id: eventData.selectedSubcategory,
-          start_date: eventData.startDate,
-          end_date: eventData.endDate,
-          image_urls: eventData.imageUrls,
-          location: eventData.location,
-          is_private: eventData.isPrivate,
           user_id: userId,
-        }]);
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
-      setShowServiceMessage(true);
-      Alert.alert('Success', 'Event created successfully!');
-      navigation.navigate('Home');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to create event. Please try again.');
-      console.error('Error creating event:', error);
-    } finally {
-      setIsLoading(false);
+      if (eventError) throw eventError;
+
+      console.log('Event created:', newEvent);
+      const eventId = newEvent.id;
+
+      console.log('Inserting additional event data');
+      await Promise.all([
+        supabase.from('availability').insert({
+          event_id: eventId,
+          date: eventData.date.toISOString().split('T')[0],
+          start: eventData.startTime.toTimeString().split(' ')[0],
+          end: eventData.endTime.toTimeString().split(' ')[0],
+          daysofweek: eventData.date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase(),
+        }),
+        supabase.from('location').insert({
+          event_id: eventId,
+          longitude: eventData.location.longitude,
+          latitude: eventData.location.latitude,
+        }),
+        supabase.from('media').insert({
+          event_id: eventId,
+          url: eventData.imageUrl,
+          type: 'image',
+        }),
+        createUpdate(userId, 'event', eventId)
+      ]);
+
+      if (eventData.accessType === 'paid') {
+      console.log('Creating tickets for paid event');
+      const { error: ticketError } = await supabase.from('ticket').insert({
+        event_id: eventId,
+        price: eventData.ticketPrice,
+        quantity: eventData.ticketQuantity,
+      });
+
+      if (ticketError) throw ticketError;
     }
-  };
 
-  const handleDateSelection = (date: Date) => {
-    setExceptionDates(prev => [...prev, date]);
-  };
+    console.log('Event creation completed');
+    setIsLoading(false);
+    Alert.alert('Success', 'Event created successfully');
+    navigation.goBack();
+  } catch (error) {
+    console.error('Error creating event:', error);
+    setIsLoading(false);
+    Alert.alert('Error', 'Failed to create event. Please try again.');
+  }
+};
 
-  const getCategoryIcon = (categoryName: string) => {
-    switch (categoryName.toLowerCase()) {
-      case 'conference':
-        return 'business-center';
-      case 'music':
-        return 'music-note';
-      case 'art':
-        return 'palette';
-      case 'food':
-        return 'restaurant';
+  const renderStepContent = () => {
+    console.log('Rendering step:', currentStep);
+    switch (currentStep) {
+      case 1:
+        return (
+          <>
+            <Text style={tw`text-2xl font-bold mb-4 text-white`}>Event Details</Text>
+            <TextInput
+              style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
+              value={eventData.name}
+              onChangeText={(text) => handleInputChange('name', text)}
+              placeholder="Event Name"
+            />
+            <TextInput
+              style={tw`bg-white border border-gray-300 rounded-lg p-3 h-32 mb-4`}
+              value={eventData.details}
+              onChangeText={(text) => handleInputChange('details', text)}
+              placeholder="Event Description"
+              multiline
+            />
+            <View style={tw`flex-row items-center justify-between mb-4`}>
+              <Text style={tw`text-lg text-white`}>Private Event</Text>
+              <Switch
+                value={eventData.privacy}
+                onValueChange={(value) => handleInputChange('privacy', value)}
+                trackColor={{ false: "#767577", true: "#81b0ff" }}
+                thumbColor={eventData.privacy ? "#f5dd4b" : "#f4f3f4"}
+              />
+            </View>
+          </>
+        );
+        case 2:
+          return (
+            <>
+              <Text style={tw`text-2xl font-bold mb-4 text-white`}>Event Type & Category</Text>
+              <Picker
+                selectedValue={eventData.eventType}
+                onValueChange={(value) => handleInputChange('eventType', value)}
+                style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
+              >
+                <Picker.Item label="Select Event Type" value="" />
+                <Picker.Item label="Indoor" value="indoor" />
+                <Picker.Item label="Outdoor" value="outdoor" />
+                <Picker.Item label="Online" value="online" />
+              </Picker>
+              <Picker
+                selectedValue={eventData.selectedCategory}
+                onValueChange={(value) => handleInputChange('selectedCategory', value)}
+                style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
+              >
+                <Picker.Item label="Select Category" value="" />
+                {categories.map(category => (
+                  <Picker.Item key={category.id} label={category.name} value={category.id} />
+                ))}
+              </Picker>
+              <Picker
+                selectedValue={eventData.selectedSubcategory}
+                onValueChange={(value) => handleInputChange('selectedSubcategory', value)}
+                style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
+              >
+                <Picker.Item label="Select Subcategory" value="" />
+                {subcategories.map(subcategory => (
+                  <Picker.Item key={subcategory.id} label={subcategory.name} value={subcategory.id} />
+                ))}
+              </Picker>
+              <Picker
+                selectedValue={eventData.accessType}
+                onValueChange={(value) => handleInputChange('accessType', value)}
+                style={tw`bg-white border border-gray-300 rounded-lg mb-4`}
+              >
+                <Picker.Item label="Select Access Type" value="" />
+                <Picker.Item label="Free Access" value="free" />
+                <Picker.Item label="Paid Access" value="paid" />
+              </Picker>
+              {eventData.accessType === 'paid' && (
+                <>
+                  <TextInput
+                    style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
+                    value={eventData.ticketPrice}
+                    onChangeText={(text) => handleInputChange('ticketPrice', text)}
+                    placeholder="Ticket Price"
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
+                    value={eventData.ticketQuantity}
+                    onChangeText={(text) => handleInputChange('ticketQuantity', text)}
+                    placeholder="Ticket Quantity"
+                    keyboardType="numeric"
+                  />
+                </>
+              )}
+            </>
+          );
+      case 3:
+        return (
+          <>
+            <Text style={tw`text-2xl font-bold mb-4 text-white`}>Date & Time</Text>
+            <TouchableOpacity
+              style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text>{eventData.date.toDateString()}</Text>
+            </TouchableOpacity>
+            <DateTimePickerModal
+              isVisible={showDatePicker}
+              mode="date"
+              onConfirm={(date) => {
+                handleInputChange('date', date);
+                setShowDatePicker(false);
+              }}
+              onCancel={() => setShowDatePicker(false)}
+            />
+            <TouchableOpacity
+              style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
+              onPress={() => setShowStartTimePicker(true)}
+            >
+              <Text>{eventData.startTime.toLocaleTimeString()}</Text>
+            </TouchableOpacity>
+            <DateTimePickerModal
+              isVisible={showStartTimePicker}
+              mode="time"
+              onConfirm={(time) => {
+                handleInputChange('startTime', time);
+                setShowStartTimePicker(false);
+              }}
+              onCancel={() => setShowStartTimePicker(false)}
+            />
+            <TouchableOpacity
+              style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
+              onPress={() => setShowEndTimePicker(true)}
+            >
+              <Text>{eventData.endTime.toLocaleTimeString()}</Text>
+            </TouchableOpacity>
+            <DateTimePickerModal
+              isVisible={showEndTimePicker}
+              mode="time"
+              onConfirm={(time) => {
+                handleInputChange('endTime', time);
+                setShowEndTimePicker(false);
+              }}
+              onCancel={() => setShowEndTimePicker(false)}
+            />
+          </>
+        );
+      case 4:
+        return (
+          <>
+            <Text style={tw`text-2xl font-bold mb-4 text-white`}>Location</Text>
+            <TouchableOpacity
+              style={tw`bg-blue-500 p-3 rounded-lg items-center mb-4`}
+              onPress={() => setShowMap(true)}
+            >
+              <Text style={tw`text-white font-semibold`}>
+                {eventData.location ? 'Change Location' : 'Select Location'}
+              </Text>
+            </TouchableOpacity>
+            {eventData.location && (
+              <Text style={tw`text-white mb-4`}>
+                Latitude: {eventData.location.latitude.toFixed(6)}, Longitude: {eventData.location.longitude.toFixed(6)}
+              </Text>
+            )}
+            {showMap && (
+              <View style={tw`w-full aspect-square mb-4 rounded-lg overflow-hidden`}>
+                <MapScreen onLocationSelected={handleLocationSelected} />
+                <TouchableOpacity
+                  style={tw`absolute bottom-4 left-4 right-4 bg-red-500 p-3 rounded-lg items-center`}
+                  onPress={() => setShowMap(false)}
+                >
+                  <Text style={tw`text-white font-semibold`}>Close Map</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
+        );
+      case 5:
+        return (
+          <>
+            <Text style={tw`text-2xl font-bold mb-4 text-white`}>Upload Image</Text>
+            <CloudinaryUpload onImagesUploaded={(urls) => {
+  if (urls.length > 0) {
+    console.log('Image uploaded to Cloudinary:', urls[0]);
+    handleInputChange('imageUrl', urls[0]);
+  }
+}} />
+{eventData.imageUrl ? (
+  <Text style={tw`text-white mt-2`}>Image uploaded successfully: {eventData.imageUrl}</Text>
+) : (
+  <Text style={tw`text-white mt-2`}>No image uploaded yet</Text>
+)}
+          </>
+        );
       default:
-        return 'category'; // Default icon
+        return null;
     }
   };
-
-  const getSubcategoryIcon = (subcategoryName: string) => {
-    switch (subcategoryName.toLowerCase()) {
-      case 'presentation':
-        return 'presentation';
-      case 'concert':
-        return 'headset';
-      case 'painting':
-        return 'brush';
-      default:
-        return 'subcategory'; // Default icon
-    }
-  };
-
-  const renderOnboardingStep = () => (
-    <>
-      <Text style={tw`text-white text-lg mb-4`}>
-        Welcome to the event creation process! In this process, you will select an image, enter event details, and finalize your event.
-      </Text>
-      <NextButton onPress={() => setCurrentStep(2)} isLastStep={false} />
-    </>
-  );
-
-  const renderImageSelectionStep = () => (
-    <>
-      <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
-        {selectedImage ? (
-          <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
-        ) : (
-          <Text style={styles.imagePickerText}>Choose an Image</Text>
-        )}
-      </TouchableOpacity>
-      <NextButton onPress={() => setCurrentStep(3)} disabled={eventData.imageUrls.length === 0} isLastStep={false} />
-    </>
-  );
-
-  const renderEventDetailsStep = () => (
-    <>
-      <TextInput
-        placeholder="Event Name"
-        value={eventData.name}
-        onChangeText={(text) => handleInputChange('name', text)}
-        style={tw`mb-4 p-2 bg-white rounded`}
-      />
-      <TextInput
-        placeholder="Event Details"
-        value={eventData.details}
-        onChangeText={(text) => handleInputChange('details', text)}
-        style={tw`mb-4 p-2 bg-white rounded`}
-        multiline
-      />
-      <NextButton onPress={() => setCurrentStep(4)} isLastStep={false} />
-    </>
-  );
-
-  
-  const renderTypeCategoryStep = () => (
-    <>
-      <Text style={tw`text-white mb-4`}>Select Event Type:</Text>
-      <View style={tw`mb-4`}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <Card
-            title="Indoor"
-            icon={<Icon name="home" type="material" size={24} />}
-            onPress={() => handleInputChange('eventType', 'indoor')}
-            isSelected={eventData.eventType === 'indoor'}
-          />
-          <Card
-            title="Outdoor"
-            icon={<Icon name="nature" type="material-community" size={24} />}
-            onPress={() => handleInputChange('eventType', 'outdoor')}
-            isSelected={eventData.eventType === 'outdoor'}
-          />
-          <Card
-            title="Online"
-            icon={<Icon name="laptop" type="material" size={24} />}
-            onPress={() => handleInputChange('eventType', 'online')}
-            isSelected={eventData.eventType === 'online'}
-          />
-        </ScrollView>
-      </View>
-
-      <Text style={tw`text-white mb-4`}>Select Category:</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={tw`mb-4`}>
-        {categories.map(category => (
-          <Card
-            key={category.id}
-            title={category.name}
-            icon={<Icon name={getCategoryIcon(category.name)} size={24} />}
-            onPress={() => {
-              handleInputChange('selectedCategory', category.id);
-              handleInputChange('selectedSubcategory', ''); // Reset subcategory on category change
-            }}
-            isSelected={eventData.selectedCategory === category.id}
-          />
-        ))}
-      </ScrollView>
-
-      <Text style={tw`text-white mb-4`}>Select Subcategory:</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={tw`mb-4`}>
-        {subcategories.map(subcategory => (
-          <Card
-            key={subcategory.id}
-            title={subcategory.name}
-            icon={<Icon name={getSubcategoryIcon(subcategory.name)} size={24} />}
-            onPress={() => handleInputChange('selectedSubcategory', subcategory.id)}
-            isSelected={eventData.selectedSubcategory === subcategory.id}
-          />
-        ))}
-      </ScrollView>
-
-      <NextButton onPress={() => setCurrentStep(5)} isLastStep={false} />
-    </>
-  );
-
-  const renderCalendarStep = () => (
-    <>
-      <Text style={tw`text-white mb-4`}>Select Start and End Dates:</Text>
-      <ServiceCalendar
-        selectedStartDate={eventData.startDate}
-        selectedEndDate={eventData.endDate}
-        onDateSelect={(start, end) => {
-          handleInputChange('startDate', start);
-          handleInputChange('endDate', end);
-        }}
-        exceptionDates={exceptionDates}
-        onDateException={handleDateSelection}
-      />
-      <NextButton onPress={() => setCurrentStep(6)} isLastStep={false} />
-    </>
-  );
-
-  const renderMapStep = () => (
-    <>
-      <Text style={tw`text-white mb-4`}>Select Location:</Text>
-      {/* Placeholder for map component */}
-      <TouchableOpacity
-        onPress={() => Alert.alert('Location Picker', 'Implement the map selection screen here.')}
-        style={tw`mb-4 p-4 bg-white rounded`}>
-        <Text>Select Location</Text>
-      </TouchableOpacity>
-      <NextButton onPress={handleCreateEvent} isLoading={isLoading} isLastStep={true} />
-    </>
-  );
 
   return (
-    <LinearGradient colors={['#4c669f', '#3b5998', '#192f6a']} style={tw`flex-1 p-4`}>
-      {isLoading ? (
-        <ActivityIndicator size="large" color="#fff" />
-      ) : (
-        <>
-          {currentStep === 1 && renderOnboardingStep()}
-          {currentStep === 2 && renderImageSelectionStep()}
-          {currentStep === 3 && renderEventDetailsStep()}
-          {currentStep === 4 && renderTypeCategoryStep()}
-          {currentStep === 5 && renderCalendarStep()}
-          {currentStep === 6 && renderMapStep()}
-        </>
-      )}
+    <LinearGradient colors={['#4c669f', '#3b5998', '#192f6a']} style={tw`flex-1`}>
+      <ScrollView contentContainerStyle={tw`p-4`}>
+        <BlurView intensity={100} style={tw`rounded-lg p-4`}>
+          <Text style={tw`text-3xl font-bold mb-6 text-center text-white`}>Create New Event</Text>
+          {renderStepContent()}
+          <View style={tw`flex-row justify-between mt-4`}>
+            {currentStep > 1 && (
+              <TouchableOpacity
+                style={tw`bg-gray-500 py-2 px-4 rounded-full`}
+                onPress={() => setCurrentStep(currentStep - 1)}
+              >
+                <Text style={tw`text-white font-bold`}>Previous</Text>
+              </TouchableOpacity>
+            )}
+            {currentStep < 5 ? (
+              <TouchableOpacity
+                style={tw`bg-blue-500 py-2 px-4 rounded-full ml-auto`}
+                onPress={() => setCurrentStep(currentStep + 1)}
+              >
+                <Text style={tw`text-white font-bold`}>Next</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={tw`bg-green-500 py-2 px-4 rounded-full ml-auto`}
+                onPress={handleCreateEvent}
+              >
+                <Text style={tw`text-white font-bold`}>Create Event</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </BlurView>
+      </ScrollView>
+      <Modal visible={isLoading} transparent={true} animationType="fade">
+        <View style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}>
+          <View style={tw`bg-white p-6 rounded-lg items-center`}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={tw`text-lg font-bold mt-4 text-gray-800`}>Creating Event...</Text>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 };
 
-const styles = StyleSheet.create({
-  imagePicker: {
-    height: 200,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  imagePreview: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
-  },
-  imagePickerText: {
-    color: '#ccc',
-  },
-});
-
-export default EventCreation;
+export default EventCreationScreen;
