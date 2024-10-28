@@ -188,6 +188,18 @@ const { userId } = useUser();
     }
   
     try {
+
+      
+      if (userId === organizerId) {
+        navigation.navigate('VideoCall', { 
+          roomUrl: room.url, 
+          isCreator: true, 
+          roomId: room.id 
+        });
+        return;
+      }
+  
+
       // Check if the event requires a ticket
       const { data: ticketData, error: ticketError } = await supabase
         .from('ticket')
