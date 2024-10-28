@@ -37,7 +37,7 @@ export interface RequestResult {
     subcategory: string;
     category: string;
     details: string;
-    price?: number;
+    price?: number; // Prix fixe pour les services matériels à vendre
     requesterName?: string;
     requesterEmail?: string;
     createdAt?: string;
@@ -47,12 +47,19 @@ export interface RequestResult {
     statusday?: 'available' | 'reserved' | 'exception';
     imageUrl?: string | null;
     serviceImageUrl?: string | null;
-    creatorName?: string;
-    creatorImageUrl?: string | null;
+    creatorName: string;
+    creatorEmail: string;
+    creatorImageUrl: string | null;
     serviceCreator: {
       name: string;
       imageUrl: string | null;
     };
+    priceperhour?: number; // Tarif horaire pour les services personnels et locaux
+    price_per_hour?: number; // Tarif horaire pour les services matériels à louer
+    percentage: number; // Pourcentage d'avance pour tous les types de services
+    sell_or_rent?: 'sell' | 'rent'; // Pour les services matériels
+    availability?: string; // Ajout de la propriété availability
+    serviceName?: string; // Ajout de la propriété serviceName
   }
   
   export interface RouteParams {

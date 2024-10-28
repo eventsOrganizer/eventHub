@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, StatusBar, Image, Dimensions, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialTopTabScreenProps } from '@react-navigation/material-top-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,11 +8,16 @@ import MaterialOverview from '../../components/MaterialDetail/MaterialOverview';
 import AvailabilityCalendar from '../../components/MaterialDetail/AvailabilityCalendar';
 import { MessageCircle, Star, MessageSquare, Share2 } from 'lucide-react-native';
 import ActionButtons from '../../components/MaterialDetail/ActionButtons';
+import { ConfirmRentalModal } from '../../components/basket/ConfirmRentalModal';
+import { AuthRequiredModal } from '../../components/Auth/AuthRequiredModal';
 import { useBasket } from '../../components/basket/BasketContext';
 import { useWishlist } from '../../hooks/useWishlist';
+import { useUser } from '../../UserContext';
 import { Text, Card } from 'react-native-paper';
 import { themeColors } from '../../utils/themeColors';
 import { BlurView } from 'expo-blur';
+import { useToast } from '../../hooks/use-toast';
+import { createRentalRequest } from '../../services/rentalRequestService';
 
 type MaterialDetailScreenProps = MaterialTopTabScreenProps<RootStackParamList, 'MaterialDetail'>;
 
@@ -22,13 +27,17 @@ const MaterialDetailScreen: React.FC<MaterialDetailScreenProps> = ({ route, navi
   const { material } = route.params as { material: Material };
   const { addToBasket, basketItems } = useBasket();
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const { isAuthenticated, userId } = useUser();
+  const { toast } = useToast();
+  const [showRentalModal, setShowRentalModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   const theme = material.sell_or_rent === 'rent' ? themeColors.rent : themeColors.sale;
 
   const handleReviewPress = () => {
     navigation.navigate('ReviewScreen', { 
       materialId: material.id,
-      sellOrRent: material.sell_or_rent // Pass the sell_or_rent parameter
+      sellOrRent: material.sell_or_rent
     });
   };
 
@@ -40,6 +49,55 @@ const MaterialDetailScreen: React.FC<MaterialDetailScreenProps> = ({ route, navi
     // Implement share functionality
   };
 
+  const handleAddToBasket = () => {
+    if (material.sell_or_rent === 'rent') {
+      if (!isAuthenticated || !userId) {
+        setShowAuthModal(true);
+      } else {
+        setShowRentalModal(true);
+      }
+    } else {
+      addToBasket(material);
+      toast({
+        title: "Added to basket",
+        description: `${material.name} has been added to your basket`
+      });
+    }
+  };
+
+  const handleConfirmRental = async () => {
+    try {
+      if (!isAuthenticated || !userId) {
+        setShowAuthModal(true);
+        return;
+      }
+
+      await createRentalRequest(Number(material.id), userId);
+      
+      setShowRentalModal(false);
+      toast({
+        title: "Success",
+        description: "Rental request sent successfully"
+      });
+    } catch (error) {
+      console.error('Error creating rental request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send rental request. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSignIn = () => {
+    setShowAuthModal(false);
+    navigation.navigate('Signin' as never);
+  };
+
+  const handleSignUp = () => {
+    setShowAuthModal(false);
+    navigation.navigate('Signup' as never);
+  };
   return (
     <View style={styles.container}>
       <LinearGradient colors={theme.background} style={StyleSheet.absoluteFill} />
@@ -114,15 +172,29 @@ const MaterialDetailScreen: React.FC<MaterialDetailScreenProps> = ({ route, navi
 
       <ActionButtons 
         material={material}
-        onAddToBasket={addToBasket}
+        onAddToBasket={handleAddToBasket}
         onToggleWishlist={toggleWishlist}
         isWishlisted={isWishlisted(material.id)}
         theme={theme}
       />
+
+      <ConfirmRentalModal
+        visible={showRentalModal}
+        onClose={() => setShowRentalModal(false)}
+        onConfirm={handleConfirmRental}
+        materialName={material.name}
+      />
+
+      <AuthRequiredModal
+        visible={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        message="Please sign in to send rental requests"
+        onSignIn={handleSignIn}
+        onSignUp={handleSignUp}
+      />
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

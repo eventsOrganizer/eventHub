@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, Dimensions, FlatList, FlatListProps } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { 
   FadeIn, 
@@ -8,7 +9,6 @@ import Animated, {
   withTiming,
   useAnimatedStyle,
   withSequence,
-  useAnimatedProps
 } from 'react-native-reanimated';
 import { useBasket } from '../components/basket/BasketContext';
 import { useUser } from '../UserContext';
@@ -16,20 +16,28 @@ import { useToast } from "../hooks/use-toast";
 import { BasketItem } from '../components/basket/BasketItem';
 import { EmptyBasket } from '../components/basket/EmptyBasket';
 import { AuthRequiredModal } from '../components/Auth/AuthRequiredModal';
+import { ConfirmRentalModal } from '../components/basket/ConfirmRentalModal';
 import { BasketHeader } from '../components/basket/BasketHeader';
 import { BasketSummary } from '../components/basket/BasketSummary';
-import { Material } from '../navigation/types';
+import { Material, RootStackParamList } from '../navigation/types';
+import { useBasketActions } from '../components/basket/BasketActions';
 
 const { width } = Dimensions.get('window');
 const AnimatedFlatList = Animated.createAnimatedComponent<FlatListProps<Material>>(FlatList);
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+
+
 const BasketScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { basketItems, removeFromBasket } = useBasket();
   const { isAuthenticated } = useUser();
   const { toast } = useToast();
+  const { handleRentalRequest, handlePurchase } = useBasketActions();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [authMessage, setAuthMessage] = useState('');
+
 
   const backgroundStyle = useAnimatedStyle(() => ({
     opacity: withSequence(
@@ -38,10 +46,10 @@ const BasketScreen = () => {
     ),
   }));
 
-  const handleAction = useCallback((item: Material) => {
+  const handleAction = useCallback(async (item: Material) => {
     if (!isAuthenticated) {
       setAuthMessage(item.sell_or_rent === 'rent'
-        ? 'Please sign in to send rental requests' 
+        ? 'Please sign in to send rental requests'
         : 'Please sign in to complete your purchase'
       );
       setShowAuthModal(true);
@@ -49,17 +57,42 @@ const BasketScreen = () => {
     }
 
     if (item.sell_or_rent === 'rent') {
-      toast({
-        title: "Request Sent",
-        description: "Your rental request has been sent to the owner.",
-      });
+      setSelectedMaterial(item);
+      setShowConfirmModal(true);
     } else {
+      try {
+        await handlePurchase(item, () => removeFromBasket(item.id));
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to process your purchase. Please try again.",
+          variant: "destructive"
+        });
+      }
+    }
+  }, [handlePurchase, removeFromBasket, isAuthenticated, toast]);
+
+  const handleConfirmRental = async () => {
+    if (!selectedMaterial) return;
+
+    try {
+      await handleRentalRequest(selectedMaterial, () => {
+        removeFromBasket(selectedMaterial.id);
+        setShowConfirmModal(false);
+        setSelectedMaterial(null);
+        toast({
+          title: "Success",
+          description: "Rental request sent successfully",
+        });
+      });
+    } catch (error) {
       toast({
-        title: "Purchase Initiated",
-        description: "Proceeding to checkout...",
+        title: "Error",
+        description: "Failed to send rental request. Please try again.",
+        variant: "destructive"
       });
     }
-  }, [isAuthenticated, toast]);
+  };
 
   const handleCheckout = useCallback(() => {
     if (!isAuthenticated) {
@@ -67,11 +100,12 @@ const BasketScreen = () => {
       setShowAuthModal(true);
       return;
     }
+    
     toast({
       title: "Checkout Initiated",
       description: "Proceeding to payment...",
     });
-  }, [isAuthenticated, toast, navigation]);
+  }, [isAuthenticated, toast]);
 
   const renderItem = useCallback(({ item, index }: { item: Material; index: number }) => (
     <Animated.View
@@ -135,22 +169,35 @@ const BasketScreen = () => {
         <EmptyBasket onStartShopping={() => navigation.goBack()} />
       )}
 
-      <AuthRequiredModal
-        visible={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        message={authMessage}
-        onSignIn={() => {
-          setShowAuthModal(false);
-          navigation.navigate('Signin');
+      {!isAuthenticated && showAuthModal && (
+        <AuthRequiredModal
+          visible={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          message={authMessage}
+          onSignIn={() => {
+            setShowAuthModal(false);
+            navigation.navigate('Signin' as never);
+          }}
+          onSignUp={() => {
+            setShowAuthModal(false);
+            navigation.navigate('Signup' as never);
+          }}
+        />
+      )}
+
+      <ConfirmRentalModal
+        visible={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setSelectedMaterial(null);
         }}
-        onSignUp={() => {
-          setShowAuthModal(false);
-          navigation.navigate('Signup');
-        }}
+        onConfirm={handleConfirmRental}
+        materialName={selectedMaterial?.name || ''}
       />
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
