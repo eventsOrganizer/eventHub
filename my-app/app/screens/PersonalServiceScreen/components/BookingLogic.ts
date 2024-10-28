@@ -27,18 +27,9 @@ export const handleConfirm = async (
     if (personalError) throw personalError;
 
     // Insert into the request table
-    const { data: requestData, error: requestError } = await supabase
-      .from('request')
-      .insert({
-        user_id: userId,
-        status: 'pending',
-        personal_id: personalId,
-        created_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+  
 
-    if (requestError) throw requestError;
+   
 
     // Insert into the availability table
     const { data: availabilityData, error: availabilityError } = await supabase
@@ -57,18 +48,19 @@ export const handleConfirm = async (
       .single();
 
     if (availabilityError) throw availabilityError;
+    const { data: requestData, error: requestError } = await supabase
+    .from('request')
+    .insert({
+      user_id: userId,
+      status: 'pending',
+      personal_id: personalId,
+      availability_id: availabilityData.id,
+      created_at: new Date().toISOString()
+    })
+    .select()
+    .single();
+    if (requestError) throw requestError;
 
-    // Insert into the personal_user table
-    const { error: personalUserError } = await supabase
-      .from('personal_user')
-      .insert({
-        personal_id: personalId,
-        user_id: userId,
-        status: 'pending',
-        availability_id: availabilityData.id
-      });
-
-    if (personalUserError) throw personalUserError;
 
     console.log('Service request created successfully');
     return true;

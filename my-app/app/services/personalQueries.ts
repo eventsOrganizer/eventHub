@@ -4,24 +4,23 @@ import { Service } from './serviceTypes';
 export const fetchStaffServices = async (): Promise<Service[]> => {
   try {
     const { data, error } = await supabase
-      .from('personal')
-      .select(`
-        *,
-        subcategory (
-          name,
-          category (
-            name
-          )
-        ),
-        media (url),
-        availability (start, end, daysofweek, date),
-        comment (details, user_id),
-        like (user_id),
-        order (user_id, ticket_id),
-        personal_user (user_id, status),
-        review (user_id, rate, total)
-      `);
-
+    .from('personal')
+    .select(`
+      *,
+      subcategory (
+        name,
+        category (
+          name
+        )
+      ),
+      media (url),
+      availability (start, end, daysofweek, date),
+      comment (details, user_id),
+      like (user_id),
+      order (user_id, ticket_id),
+      request (user_id, status, availability_id),
+      review (user_id, rate, total)
+    `);
     if (error) throw error;
 
     return data.map((service: Service) => ({
@@ -49,18 +48,26 @@ export const fetchPersonalDetail = async (id: number): Promise<Service | null> =
             name
           )
         ),
-        media (url),
+        media (url, type),
         availability (start, end, daysofweek, date),
-        comment (details, user_id),
+        comment (
+          id,
+          details,
+          user_id,
+          created_at,
+          user (id, username)
+        ),
         like (user_id),
         order (user_id, ticket_id),
-        personal_user (user_id, status),
-        review (user_id, rate, total)
+        request (user_id, status, availability_id),
+        review (user_id, rate)
       `)
       .eq('id', id)
       .single();
 
     if (error) throw error;
+
+    if (!data) return null;
 
     return {
       ...data,

@@ -17,6 +17,8 @@ import NotificationComponent from './notification/NotificationComponent';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
 import TicketManagement from '../Ticketing/TicketManagement';
+import { useNotifications } from '../../../hooks/useNotifications';
+import NotificationList from '../../Notifications/NotificationList';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -31,7 +33,7 @@ interface UserProfile {
 
 const UserProfileScreen: React.FC = () => {
   const { userId } = useUser();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState('events');
   const [loading, setLoading] = useState(true);
@@ -56,6 +58,8 @@ const UserProfileScreen: React.FC = () => {
       useNativeDriver: true,
     }).start();
   }, [activeTab]);
+
+  const { unreadCount } = useNotifications(userId);
 
   const fetchUserProfile = async () => {
     if (!userId) return;
@@ -132,7 +136,7 @@ const UserProfileScreen: React.FC = () => {
 
   useEffect(() => {
     if (activeTab === 'services') {
-      navigation.navigate('UserServicesScreen', { userId });
+      navigation.navigate('UserServicesScreen' as never, { userId } as never);
     }
   }, [activeTab, navigation, userId]);
 
@@ -169,7 +173,7 @@ const UserProfileScreen: React.FC = () => {
     >
       {showNotifications && (
         <View style={tw`absolute top-20 right-4 z-10 w-80 max-h-96 bg-white rounded-lg shadow-lg`}>
-          <NotificationComponent />
+          <NotificationList userId={userId} />
         </View>
       )}
       <ScrollView 
@@ -181,8 +185,16 @@ const UserProfileScreen: React.FC = () => {
             <View style={tw`flex-row justify-between items-center mb-6`}>
               <Text style={tw`text-white text-2xl font-bold`}>Profile</Text>
               <View style={tw`flex-row items-center`}>
-                <TouchableOpacity onPress={() => setShowNotifications(!showNotifications)}>
+                <TouchableOpacity 
+                  onPress={() => setShowNotifications(!showNotifications)}
+                  style={tw`relative mr-2`}
+                >
                   <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
+                  {unreadCount > 0 && (
+                    <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+                      <Text style={tw`text-white text-xs`}>{unreadCount}</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
                 <EventRequestBadge />
                 <FriendRequestBadge />
