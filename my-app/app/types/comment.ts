@@ -1,10 +1,12 @@
 export interface Comment {
-    id: number;
-    user_id: string;
-    details: string;
-    created_at: string;
-    user: {
-      firstname: string;
-      lastname: string;
-    };
-  }
+  id: number;
+  details: string;
+  created_at: string;
+  user: {
+    id: string;
+    firstname: string;
+    lastname: string;
+    email: string;
+    avatarUrl: string;
+  };
+}
