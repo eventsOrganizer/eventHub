@@ -9,15 +9,15 @@ interface SubcategoryStepProps {
 }
 
 const subcategories = [
-  { id: 'audioVisual', label: 'Audio Visual', icon: 'headset' },
-  { id: 'furniture', label: 'Furniture', icon: 'bed' },
-  { id: 'plates', label: 'Plates', icon: 'restaurant' },
-  { id: 'cutlery', label: 'Cutlery', icon: 'restaurant-outline' },
-  { id: 'glassware', label: 'Glassware', icon: 'wine' },
-  { id: 'barEquipment', label: 'Bar Equipment', icon: 'beer' },
-  { id: 'cleaning', label: 'Cleaning', icon: 'brush' },
-  { id: 'decoration', label: 'Decoration', icon: 'color-palette' },
-  { id: 'tableware', label: 'Tableware', icon: 'cafe' },
+  { id: '159', label: 'Audio Visual', icon: 'headset' },
+  { id: '160', label: 'Furniture', icon: 'bed' },
+  { id: '161', label: 'Plates', icon: 'restaurant' },
+  { id: '184', label: 'Cutlery', icon: 'restaurant-outline' },
+  { id: '185', label: 'Glassware', icon: 'wine' },
+  { id: '186', label: 'Bar Equipment', icon: 'beer' },
+  { id: '182', label: 'Cleaning', icon: 'brush' },
+  { id: '188', label: 'Decoration', icon: 'color-palette' },
+  { id: '189', label: 'Tableware', icon: 'cafe' },
 ];
 
 const SubcategoryStep: React.FC<SubcategoryStepProps> = ({ formData, setFormData }) => {

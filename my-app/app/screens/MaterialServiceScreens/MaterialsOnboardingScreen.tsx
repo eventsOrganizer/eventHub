@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
+import { useNavigation } from '@react-navigation/native';
+import { useUser } from '../../UserContext';
+import { AuthRequiredModal } from '../../components/Auth/AuthRequiredModal';
 import StepIndicator from '../../components/MaterialService/StepIndicator';
 import SubcategoryStep from '../../components/MaterialService/SubcategoryStep';
 import RentOrSaleStep from '../../components/MaterialService/RentOrSaleStep';
@@ -11,9 +14,14 @@ import QuantityStep from '../../components/MaterialService/QuantityStep';
 import AvailabilityStep from '../../components/MaterialService/AvailabilityStep';
 import ConfirmationStep from '../../components/MaterialService/ConfirmationStep';
 import NextButton from '../../components/MaterialService/NextButton';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '../../../lib/supabase';
+import { useToast } from '../../hooks/use-toast';
 
 const MaterialsOnboardingScreen: React.FC = () => {
+  const navigation = useNavigation();
+  const { userId, isAuthenticated } = useUser();
+  const { toast } = useToast();
+  const [showAuthModal, setShowAuthModal] = useState(!isAuthenticated);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     subcategory: '',
@@ -22,9 +30,15 @@ const MaterialsOnboardingScreen: React.FC = () => {
     details: '',
     price: '',
     quantity: '1',
-    image: null as string | null,
-    availableDates: {} as { [date: string]: boolean },
+    mediaFiles: [],
+    availableDates: {},
   });
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+    }
+  }, [isAuthenticated]);
 
   const getSteps = () => {
     const baseSteps = ['Subcategory', 'Rent or Sale', 'Material Details', 'Price', 'Quantity'];
@@ -38,20 +52,28 @@ const MaterialsOnboardingScreen: React.FC = () => {
   const validateStep = () => {
     switch (step) {
       case 1:
-        return formData.subcategory !== '';
+        if (!formData.subcategory) {
+          toast({
+            title: "Error",
+            description: "Please select a subcategory",
+            variant: "destructive"
+          });
+          return false;
+        }
+        return true;
       case 2:
         return formData.rentOrSale !== '';
       case 3:
-        return formData.title !== '' && formData.details !== '' && formData.image !== null;
+        return formData.title !== '' && formData.details !== '' && formData.mediaFiles.length > 0;
       case 4:
         return formData.price !== '';
       case 5:
-        return true; // Quantity step is not required
+        return true;
       case 6:
         if (formData.rentOrSale === 'rent') {
           return Object.keys(formData.availableDates).some(date => formData.availableDates[date]);
         }
-        return true; // For 'sale' items, this step is skipped
+        return true;
       default:
         return true;
     }
@@ -59,15 +81,6 @@ const MaterialsOnboardingScreen: React.FC = () => {
 
   const handleNext = () => {
     if (!validateStep()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Required Fields',
-        text2: 'Please fill in all required fields before proceeding.',
-        visibilityTime: 3000,
-        autoHide: true,
-        topOffset: 30,
-        bottomOffset: 40,
-      });
       return;
     }
 
@@ -77,44 +90,69 @@ const MaterialsOnboardingScreen: React.FC = () => {
   };
 
   const handleConfirm = async () => {
+    if (!isAuthenticated || !userId) {
+      setShowAuthModal(true);
+      return;
+    }
+
     try {
-      // Prepare the data for insertion
-      const newMaterial = {
-        subcategory_id: formData.subcategory, // Assuming subcategory is the ID
-        user_id: 'USER_ID_HERE', // Replace with the actual user ID (you might need to fetch this from your auth system)
-        quantity: parseInt(formData.quantity),
-        price: formData.rentOrSale === 'sell' ? parseInt(formData.price) : null,
-        name: formData.title,
-        details: formData.details,
-        sell_or_rent: formData.rentOrSale,
-        price_per_hour: formData.rentOrSale === 'rent' ? parseInt(formData.price) : null,
-        startdate: formData.rentOrSale === 'rent' ? new Date() : null, // Set appropriate start date
-        enddate: formData.rentOrSale === 'rent' ? null : null, // Set appropriate end date if applicable
-        disabled: false,
-      };
+      const subcategoryId = parseInt(formData.subcategory);
+      if (isNaN(subcategoryId)) {
+        throw new Error('Invalid subcategory ID');
+      }
 
-      // Insert the new material into the Supabase table
-      const { data, error } = await supabase
+      // Convert 'sale' to 'sell' to match the database constraint
+      const sellOrRentValue = formData.rentOrSale === 'sale' ? 'sell' : formData.rentOrSale;
+
+      // Insert material with proper subcategory_id and sell_or_rent value
+      const { data: materialData, error: materialError } = await supabase
         .from('material')
-        .insert([newMaterial])
-        .select();
+        .insert([{
+          subcategory_id: subcategoryId,
+          user_id: userId,
+          quantity: parseInt(formData.quantity),
+          price: sellOrRentValue === 'sell' ? parseInt(formData.price) : null,
+          name: formData.title.trim(),
+          details: formData.details.trim(),
+          sell_or_rent: sellOrRentValue,
+          price_per_hour: sellOrRentValue === 'rent' ? parseInt(formData.price) : null,
+          startdate: sellOrRentValue === 'rent' ? new Date() : null,
+          enddate: null,
+          disabled: false
+        }])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (materialError) {
+        console.error('Material Error:', materialError);
+        throw materialError;
+      }
 
-      console.log('Material added successfully:', data);
+      if (!materialData) {
+        throw new Error('No material data returned');
+      }
 
-      // Show success toast
-      Toast.show({
-        type: 'success',
-        text1: 'Success',
-        text2: 'Your material has been submitted successfully!',
-        visibilityTime: 4000,
-        autoHide: true,
-        topOffset: 30,
-        bottomOffset: 40,
+      // Insert media entries
+      if (formData.mediaFiles && formData.mediaFiles.length > 0) {
+        const mediaPromises = formData.mediaFiles.map(file => 
+          supabase
+            .from('media')
+            .insert({
+              material_id: materialData.id,
+              url: file.uri,
+              type: file.type === 'video' ? 'video' : 'image'
+            })
+        );
+
+        await Promise.all(mediaPromises);
+      }
+
+      toast({
+        title: "Success",
+        description: "Material created successfully!",
       });
 
-      // Reset form and step
+      // Reset form and navigate back
       setFormData({
         subcategory: '',
         rentOrSale: '',
@@ -122,20 +160,18 @@ const MaterialsOnboardingScreen: React.FC = () => {
         details: '',
         price: '',
         quantity: '1',
-        image: null,
+        mediaFiles: [],
         availableDates: {},
       });
       setStep(1);
+      navigation.goBack();
+
     } catch (error) {
       console.error('Error submitting material:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Submission Failed',
-        text2: 'There was an error submitting your material. Please try again.',
-        visibilityTime: 4000,
-        autoHide: true,
-        topOffset: 30,
-        bottomOffset: 40,
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create material. Please try again.",
+        variant: "destructive"
       });
     }
   };
@@ -185,6 +221,20 @@ const MaterialsOnboardingScreen: React.FC = () => {
         )}
       </ScrollView>
       <Toast ref={(ref) => Toast.setRef(ref)} />
+      
+      <AuthRequiredModal
+        visible={showAuthModal}
+        onClose={() => navigation.goBack()}
+        message="Please sign in to create a new material"
+        onSignIn={() => {
+          setShowAuthModal(false);
+          navigation.navigate('SignIn' as never);
+        }}
+        onSignUp={() => {
+          setShowAuthModal(false);
+          navigation.navigate('SignUp' as never);
+        }}
+      />
     </LinearGradient>
   );
 };

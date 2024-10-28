@@ -3,8 +3,22 @@ import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'rea
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { MaterialIcons } from '@expo/vector-icons';
 
+interface MediaFile {
+  uri: string;
+  type: 'image' | 'video';
+}
+
 interface ConfirmationStepProps {
-  formData: any;
+  formData: {
+    subcategory: string;
+    rentOrSale: string;
+    title: string;
+    details: string;
+    price: string;
+    quantity: string;
+    mediaFiles: MediaFile[];
+    availableDates: Record<string, boolean>;
+  };
   onConfirm: () => void;
 }
 
@@ -14,7 +28,7 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({ formData, onConfirm
       <Text style={styles.title}>Confirm Your Material Details</Text>
       <ScrollView style={styles.scrollView}>
         <View style={styles.section}>
-          <Text style={styles.label}>Subcategory:</Text>
+          <Text style={styles.label}>Subcategory ID:</Text>
           <Text style={styles.value}>{formData.subcategory}</Text>
         </View>
         <View style={styles.section}>
@@ -47,13 +61,26 @@ const ConfirmationStep: React.FC<ConfirmationStepProps> = ({ formData, onConfirm
             </Text>
           </View>
         )}
-        {formData.image && (
+        
+        {formData.mediaFiles && formData.mediaFiles.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.label}>Image:</Text>
-            <Image source={{ uri: formData.image }} style={styles.image} />
+            <Text style={styles.label}>Media Files:</Text>
+            <ScrollView horizontal style={styles.mediaContainer}>
+              {formData.mediaFiles.map((file, index) => (
+                <View key={index} style={styles.mediaPreview}>
+                  <Image source={{ uri: file.uri }} style={styles.previewImage} />
+                  {file.type === 'video' && (
+                    <View style={styles.videoIndicator}>
+                      <MaterialIcons name="videocam" size={20} color="#fff" />
+                    </View>
+                  )}
+                </View>
+              ))}
+            </ScrollView>
           </View>
         )}
       </ScrollView>
+      
       <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
         <MaterialIcons name="check-circle" size={24} color="#fff" />
         <Text style={styles.confirmButtonText}>Confirm and Submit</Text>
@@ -91,11 +118,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
   },
-  image: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
+  mediaContainer: {
+    flexDirection: 'row',
     marginTop: 10,
+  },
+  mediaPreview: {
+    width: 100,
+    height: 100,
+    marginRight: 10,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  videoIndicator: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 12,
+    padding: 4,
   },
   confirmButton: {
     flexDirection: 'row',
