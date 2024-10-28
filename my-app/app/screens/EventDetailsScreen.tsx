@@ -49,7 +49,8 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
         media (url),
         ticket (
           id,
-          quantity
+          quantity,
+          price
         )
       `)
       .eq('id', eventId)
@@ -164,6 +165,7 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
         </View>
   
         <View style={tw`w-full px-4 pb-4`}>
+          {/* Updated Info Container with Price */}
           <LinearGradient
             colors={['#4B0082', '#0066CC']}
             style={tw`p-4 rounded-xl mt-4 shadow-lg`}
@@ -175,11 +177,29 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
               </Text>
             </View>
             <View style={tw`flex-row items-center mb-3`}>
-              <Ionicons name="pricetag" size={24} color="white" />
-              <Text style={tw`text-base text-white ml-3 font-medium`}>
-                {eventDetails.subcategory.category.name} - {eventDetails.subcategory.name}
-              </Text>
-            </View>
+  <Ionicons name="pricetag" size={24} color="white" />
+  <Text style={tw`text-base text-white ml-3 font-medium`}>
+    {eventDetails.subcategory.category.name} - {eventDetails.subcategory.name}
+  </Text>
+  <View style={tw`flex-1 items-end`}>
+    {eventDetails.ticket?.[0] ? (
+      <View style={tw`bg-white/10 px-5 py-0 rounded-md border border-white/20 flex-row items-center`}>
+        <Text style={tw`text-base text-white font-bold`}>
+          ${eventDetails.ticket[0].price}
+        </Text>
+        <Text style={tw`text-sm text-white/80 ml-1`}>
+          ({eventDetails.ticket[0].quantity})
+        </Text>
+      </View>
+    ) : (
+      <View style={tw`bg-green-500/20 px-2 py-0.5 rounded-md border border-green-500/30`}>
+        <Text style={tw`text-base text-green-400 font-bold`}>
+          FREE
+        </Text>
+      </View>
+    )}
+  </View>
+</View>
             <View style={tw`flex-row items-center`}>
               <Ionicons name="business" size={24} color="white" />
               <Text style={tw`text-base text-white ml-3 font-medium`}>
@@ -199,33 +219,33 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
             </View>
           )}
   
-  {(hasTickets && (isMember || isOrganizer)) && (
-  <View style={tw`mt-4`}>
-    <LinearGradient
-      colors={['#4B0082', '#0066CC']}
-      style={tw`p-4 rounded-xl shadow-lg h-30 relative`}
-    >
-      <View style={tw`items-center`}>
-        <View style={tw`flex-row items-center`}>
-          <Ionicons name="ticket" size={24} color="white" />
-          <Text style={tw`text-lg font-bold text-white ml-2`}>
-            {eventDetails.ticket?.[0]?.quantity || 0} Tickets Available
-          </Text>
-        </View>
-      </View>
-      <View style={tw`absolute bottom-4 left-22 right-22 flex-row items-center justify-center space-x-2`}>
-  <BuyTicket
-    eventId={eventDetails.id}
-    eventType={eventDetails.type as 'online' | 'indoor' | 'outdoor'}
-  />
-  <BuyForFriends
-    eventId={eventDetails.id}
-    eventType={eventDetails.type as 'online' | 'indoor' | 'outdoor'}
-  />
-</View>
-    </LinearGradient>
-  </View>
-)}
+          {(hasTickets && (isMember || isOrganizer)) && (
+            <View style={tw`mt-4`}>
+              <LinearGradient
+                colors={['#4B0082', '#0066CC']}
+                style={tw`p-4 rounded-xl shadow-lg h-30 relative`}
+              >
+                <View style={tw`items-center`}>
+                  <View style={tw`flex-row items-center`}>
+                    <Ionicons name="ticket" size={24} color="white" />
+                    <Text style={tw`text-lg font-bold text-white ml-2`}>
+                      {eventDetails.ticket?.[0]?.quantity || 0} Tickets Available
+                    </Text>
+                  </View>
+                </View>
+                <View style={tw`absolute bottom-4 left-22 right-22 flex-row items-center justify-center space-x-2`}>
+                  <BuyTicket
+                    eventId={eventDetails.id}
+                    eventType={eventDetails.type as 'online' | 'indoor' | 'outdoor'}
+                  />
+                  <BuyForFriends
+                    eventId={eventDetails.id}
+                    eventType={eventDetails.type as 'online' | 'indoor' | 'outdoor'}
+                  />
+                </View>
+              </LinearGradient>
+            </View>
+          )}
   
           <LinearGradient
             colors={['#4B0082', '#0066CC']}
