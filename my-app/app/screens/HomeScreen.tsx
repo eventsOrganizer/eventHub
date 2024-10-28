@@ -209,7 +209,8 @@ const HomeScreen: React.FC = () => {
           <View style={tw`mt-6`}>
             <Banner title="Services" />
             <SectionComponent 
-              title="TOP STAFF SERVICES"
+              title="TOP CREW SERVICES"
+             
               data={staffServices}
               onSeeAll={() => navigation.navigate('PersonalsScreen', { category: 'all' })}
               onItemPress={(item) => navigation.navigate('PersonalDetail', { personalId: item.id })}
@@ -217,9 +218,9 @@ const HomeScreen: React.FC = () => {
             />
 
             <SectionComponent 
-              title="LOCAL SERVICES" 
+              title="VENUE SERVICES" 
               data={locals} 
-              onSeeAll={() => navigation.navigate('LocalServiceScreen')}
+              onSeeAll={() => navigation.navigate('LocalsScreen')}
               onItemPress={(item) => {
                 console.log('Local service item:', item);
                 navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
@@ -228,7 +229,7 @@ const HomeScreen: React.FC = () => {
             />
             
             <SectionComponent 
-              title="MATERIALS" 
+              title="TOP EQUIPMENTS" 
               data={materialsAndFoodServices} 
               onSeeAll={() => navigation.navigate('MaterialScreen')}
               onItemPress={(item) => {

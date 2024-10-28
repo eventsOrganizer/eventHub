@@ -30,7 +30,7 @@ const StaffServiceCard: React.FC<StaffServiceCardProps> = ({ service, onPress })
     <TouchableOpacity style={styles.cardContainer} onPress={() => onPress(service)}>
       <BlurView intensity={80} tint="dark" style={styles.cardFrame}>
         <View style={styles.topBar}>
-          <Text style={styles.topBarText}>Personal</Text>
+          <Text style={styles.topBarText}>Crew</Text>
         </View>
         <Image source={{ uri: service.media[0]?.url }} style={styles.cardImage} />
         <View style={styles.cardContent}>

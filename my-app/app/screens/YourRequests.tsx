@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { useUser } from '../UserContext';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { handleRequestConfirmation, handleRequestRejection } from '../services/requestService';
 import { useToast } from '../hooks/useToast';
 import { useNotifications } from '../hooks/useNotifications';
@@ -10,10 +11,12 @@ import { fetchSentRequests, fetchReceivedRequests } from '../services/requestQue
 import   ReceivedRequestCard  from './ReceivedRequestCard';
 import  SentRequestCard  from './SentRequestCard';
 import  FilterButtons  from './FilterButtons';
+import { RootStackParamList } from '../navigation/types';
 
 const YourRequests: React.FC = () => {
   const { userId } = useUser();
   const route = useRoute<RouteProp<Record<string, RouteParams>, string>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { mode } = route.params;
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
@@ -181,8 +184,10 @@ const YourRequests: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f5f5f5',
+  },
+  content: {
+    flex: 1,
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -190,91 +195,96 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: '#333',
+    marginBottom: 24,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 20,
+    marginBottom: 24,
+    paddingHorizontal: 8,
   },
-  filterButton: {
-    flexDirection: 'column',
-    alignItems: 'center',
+  listContainer: {
+    paddingBottom: 24,
   },
-  filterText: {
-    fontSize: 12,
-    color: '#000',
-  },
-  activeFilterText: {
-    fontWeight: 'bold',
-    color: '#4CAF50',
-  },
-  requestItem: {
-    flexDirection: 'row',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
+  requestCard: {
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
   },
-  requestImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    marginRight: 15,
-  },
-  requestDetailsContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  serviceName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  subcategoryName: {
-    fontSize: 14,
-    color: '#757575',
-  },
-  requesterInfo: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 2,
-  },
-  dateInfo: {
-    fontSize: 12,
-    color: '#555',
-    marginBottom: 5,
-  },
-  iconsContainer: {
+  requestHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  requestName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  requestStatus: {
+    fontSize: 14,
+    color: '#666',
+  },
+  requestType: {
+    fontSize: 14,
+    color: '#666',
+  },
+  requestSubcategory: {
+    fontSize: 14,
+    color: '#666',
+  },
+  requestImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  expandedContent: {
+    marginBottom: 16,
+  },
+  expandedText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  detailButton: {
+    backgroundColor: '#4CAF50',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  detailButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 5,
+    marginTop: 16,
   },
   confirmButton: {
-    backgroundColor: '#4CAF50',
-    padding: 5,
-    borderRadius: 5,
     flex: 1,
-    marginRight: 5,
+    backgroundColor: '#4CAF50',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   rejectButton: {
-    backgroundColor: '#F44336',
-    padding: 5,
-    borderRadius: 5,
     flex: 1,
-    marginLeft: 5,
+    backgroundColor: '#f44336',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   buttonText: {
     color: '#FFF',

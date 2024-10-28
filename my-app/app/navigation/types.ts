@@ -42,9 +42,12 @@ export interface PersonalData {
 }
 
 export type RootStackParamList = {
+  LocalBookingScreen: { localId: number; availabilityData: any };
   Home: undefined;
   PersonalsScreen: { category?: string };
   PersonalDetail: { personalId: number };
+  LocalsScreen:{category?: string}
+  LocalServiceDetails: {localId: number}
   CreateLocalServiceStep2: undefined;
   CreateLocalServiceStep3: { 
       serviceName: string; 
@@ -117,7 +120,7 @@ export type RootStackParamList = {
     personalId: number;
     userId: string | null;
   };
-  ReviewScreen: { materialId: string };
+  ReviewScreen: { materialId: string; sellOrRent: 'sell' | 'rent' };
   CommentScreen: { materialId: string };
 
 
@@ -145,18 +148,32 @@ export interface Material {
   average_rating?: number;
 }
 
+export interface Request {
+  id: number;
+  name: string;
+  type: string;
+  status: string;
+  subcategory: string;
+  imageUrl: string | null;
+  serviceImageUrl: string | null;  // Add this line
+  requesterName?: string;
+  requesterEmail?: string;
+  createdAt?: string;
+  date?: string;
+  start?: string;
+  end?: string;
+}
+
 export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;
 export type BookingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'BookingScreen'>;
 export type CommentsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CommentsScreen'>;
 export type AddReviewScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AddReviewScreen'>;
 export type CreateLocalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep5'>;
 export type PersonalScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'PersonalsScreen'>;
+export type LocalScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'LocalsScreen'>;
 export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 export type CreatePersonalServiceStep1NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep1'>;
 export type CreatePersonalServiceStep2NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep2'>;
 export type CreatePersonalServiceStep3NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep3'>;
 export type CreatePersonalServiceStep5NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep5'>;
-<<<<<<< HEAD
-=======
 export type CreatePersonalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep4'>;
->>>>>>> origin

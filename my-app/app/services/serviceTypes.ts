@@ -60,6 +60,20 @@ export type Service = {
   percentage?: number;
 };
 
+export type LocalServiceRequest = {
+  requestData: {
+    id: number;
+    user_id: string;
+    local_id: number;
+    status: string;
+    created_at: string;
+    hours: number;
+    total_price: number;
+    deposit_amount: number;
+  };
+  depositAmount: number;
+};
+
 export const makeServiceRequest = async (personalId: number, availabilityId: number, hours: number): Promise<{ requestData: any; depositAmount: number } | null> => {
   try {
     const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -98,7 +112,45 @@ export const makeServiceRequest = async (personalId: number, availabilityId: num
   }
 };
 
-export const initiatePayment = async (serviceId: number, amount: number): Promise<string | null> => {
+export const makeLocalServiceRequest = async (localId: number, availabilityId: number, hours: number): Promise<{ requestData: any; depositAmount: number } | null> => {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user) throw new Error('User not authenticated');
+
+    const { data: localData, error: localError } = await supabase
+      .from('local')
+      .select('priceperhour')
+      .eq('id', localId)
+      .single();
+    if (localError) throw localError;
+
+    const totalPrice = localData.priceperhour * hours;
+    const depositAmount = totalPrice * 0.25; // 25% deposit
+
+    const { data, error } = await supabase
+      .from('request')
+      .insert({
+        user_id: userData.user.id,
+        local_id: localId,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        hours: hours,
+        total_price: totalPrice,
+        deposit_amount: depositAmount
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { requestData: data, depositAmount };
+  } catch (error) {
+    console.error('Error making local service request:', error);
+    return null;
+  }
+};
+
+export const initiatePayment = async (requestId: number, amount: number) => {
   const FLOUCI_APP_TOKEN = "4c1e07ef-8533-4e83-bbeb-7f61c0b21931";
   const FLOUCI_APP_SECRET = "ee9d6f08-30c8-4dbb-8578-d51293ff2535";
 

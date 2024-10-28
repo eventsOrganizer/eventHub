@@ -11,6 +11,7 @@ import { AnimatedHeader } from '../../components/MaterialService/AnimatedHeader'
 import { BottomActions } from '../../components/MaterialService/BottomActions';
 import { useToast } from "../../hooks/use-toast";
 import { themeColors } from '../../utils/themeColors';
+import { useBasket } from '../../components/basket/BasketContext';
 
 type MaterialsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MaterialScreen'>;
 
@@ -29,6 +30,7 @@ const MaterialsScreen = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const navigation = useNavigation<MaterialsScreenNavigationProp>();
   const { toast } = useToast();
+  const { basketItems, addToBasket } = useBasket();
 
   const scrollY = new Animated.Value(0);
   const headerOpacity = scrollY.interpolate({
@@ -70,8 +72,8 @@ const MaterialsScreen = () => {
     setRefreshing(false);
   };
 
-  const addToBasket = (material: Material) => {
-    setBasket([...basket, material]);
+  const addToBasketHandler = (material: Material) => {
+    addToBasket(material);
     showSnackbar(`${material.name} added to basket`);
   };
 
@@ -111,7 +113,7 @@ const MaterialsScreen = () => {
   const renderMaterialCard = ({ item }: { item: Material }) => (
     <MaterialCard
       material={item}
-      onAddToBasket={addToBasket}
+      onAddToBasket={addToBasketHandler}
       onToggleWishlist={toggleWishlist}
       isWishlisted={wishlist.includes(item.id)}
       onPress={() => navigation.navigate('MaterialDetail', { material: item })}
@@ -134,7 +136,7 @@ const MaterialsScreen = () => {
           headerOpacity={headerOpacity}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          basketCount={basket.length}
+          basketCount={basketItems.length}
           onBasketPress={navigateToBasket}
           selectedSubcategory={selectedSubcategory}
           onSelectSubcategory={setSelectedSubcategory}

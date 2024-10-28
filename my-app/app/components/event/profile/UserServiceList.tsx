@@ -47,9 +47,9 @@ const UserServicesList: React.FC<{ userId: string }> = ({ userId }) => {
       })) || [];
     };
 
-    const personalServices = await fetchServicesWithMedia('personal', 'Personal');
-    const localServices = await fetchServicesWithMedia('local', 'Local');
-    const materialServices = await fetchServicesWithMedia('material', 'Material');
+    const personalServices = await fetchServicesWithMedia('personal', 'Crew');
+    const localServices = await fetchServicesWithMedia('local', 'Venues');
+    const materialServices = await fetchServicesWithMedia('material', 'Products');
 
     const allServices = [...personalServices, ...localServices, ...materialServices];
     console.log('All services:', JSON.stringify(allServices, null, 2));
