@@ -4,9 +4,11 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { supabase } from '../../services/supabaseClient';
 import AvailabilityList from '../PersonalServiceComponents/AvailabilityList';
 import CommentSection from '../PersonalServiceComponents/CommentSection';
+
+
 type RootStackParamList = {
   LocalServiceDetails: { localServiceId: number };
-  PaymentAction: { price: number; personalId: string }
+  PaymentAction: { price: number; personalId: string };
 };
 
 type LocalServiceDetailScreenRouteProp = RouteProp<RootStackParamList, 'LocalServiceDetails'>;
@@ -48,12 +50,6 @@ const LocalServiceDetailScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-const [visible,setVisible]=useState(false)
-
-
-const onClose=()=>{
-  setVisible(false)
-}
   useEffect(() => {
     const fetchServiceDetails = async () => {
       const localServiceId = route.params?.localServiceId;
@@ -76,7 +72,8 @@ const onClose=()=>{
 
         if (error) throw error;
         if (!data) throw new Error('No data returned from the query');
-
+        
+        console.log('Fetched service data:', data);
         setService(data);
       } catch (error) {
         setError('Failed to load service details');
@@ -88,24 +85,47 @@ const onClose=()=>{
     fetchServiceDetails();
   }, [route.params?.localServiceId]);
 
-  const handleBooking = async () => {
-  
+  // const handleBooking = async () => {
+  //   if (!service) return;
 
-    setVisible(true)
+  //   const amount = service.priceperhour * 100; // Assuming price is in dollars and you need cents
 
+  //   const clientSecret = await createPaymentIntent(amount);
 
-    
-  };
+  //   if (clientSecret) {
+  //     navigation.navigate('PaymentScreen', { clientSecret });
+  //   }
+  // };
 
+  // if (isLoading || paymentLoading) {
+  //   return <ActivityIndicator size="large" color="#0000ff" />;
+  // }
 
+  // if (paymentError) {
+  //   return <Text>Error: {paymentError}</Text>;
+  // }
 
-  if (!service) {
-    return <Text>No service details available.</Text>;
-  }
+  // if (error) {
+  //   Alert.alert('Error', error); // Display error alert
+  //   return (
+  //     <View style={styles.container}>
+  //       <Text>No service details available.</Text>
+  //     </View>
+  //   );
+  // }
 
-  if (!service) {
-    return <Text>No service details available.</Text>;
-  }
+  // if (error) {
+  //   Alert.alert('Error', error); // Display error alert
+  //   return (
+  //     <View style={styles.container}>
+  //       <Text>No service details available.</Text>
+  //     </View>
+  //   );
+  // }
+
+  // if (!service) {
+  //   return <Text>No service details available.</Text>;
+  // }
 
   return (
     <ScrollView style={styles.container}>
@@ -115,12 +135,23 @@ const onClose=()=>{
         <Text style={styles.price}>${service.priceperhour}/hr</Text>
         <Text style={styles.details}>{service.details}</Text>
       </View>
-      <AvailabilityList availability={service.availability} personalId={service.id} />
-      <CommentSection comments={service.comment} personalId={service.id} />
-      <TouchableOpacity style={styles.bookButton} onPress={handleBooking}>
+      <AvailabilityList 
+        availability={service.availability} 
+        personalId={service.id} 
+      />
+      <CommentSection 
+        comments={service.comment}
+        personalId={service.id}
+      />
+      <TouchableOpacity 
+        style={styles.bookButton} 
+        onPress={() => {
+          // Implement booking logic here
+          console.log('Booking service:', service.id);
+        }}
+      >
         <Text style={styles.bookButtonText}>Book Now</Text>
       </TouchableOpacity>
-      <PaymentModal visible={visible} onClose={ onClose} amount={3000} local_id={80}/>
     </ScrollView>
   );
 };

@@ -77,8 +77,12 @@ import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetai
 
 import PaymentTestScreen from '../components/payment/PaymentTestScreen';
 
-
+import NotificationsScreen from '../screens/NotificationsScreen';
+import TicketingScreen from '../screens/TicketingScreen';
+import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
+
+import PaymentScreen from '../screens/PaymentScreen';
 
 type RootStackParamList = {
   Onboarding: undefined;
@@ -157,6 +161,7 @@ type EventSetupOptionsScreenProps = {
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
+
 
 const AppNavigation: React.FC = () => {
   const handleOnComplete = () => {
@@ -457,7 +462,10 @@ const AppNavigation: React.FC = () => {
         options={{ headerShown: false }}
       />
     <Stack.Screen name="MapScreen" component={MapScreen} />
-    <Stack.Screen name="PaymentTest" component={PaymentTestScreen} />
+    <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+
+  
+
 </Stack.Navigator> 
 
   )

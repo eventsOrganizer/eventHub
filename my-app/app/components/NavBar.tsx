@@ -5,7 +5,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from 'twrnc';
-
+// import PaymentScreen from '../screens/PaymentScreen';
 type NavBarProps = {
   selectedFilter: string | null;
   setSelectedFilter: (value: string | null) => void;
@@ -36,9 +36,7 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
             value={searchTerm}
             onChangeText={setSearchTerm}
           />
-          <TouchableOpacity onPress={() => navigation.navigate('PaymentTest',{amount:3000,local_id:80})} style={styles.button}>
-            <Text style={styles.buttonText}>Test Payment</Text>
-          </TouchableOpacity>
+      
           <TouchableOpacity onPress={handleSearch} style={tw`ml-2`}>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
           </TouchableOpacity>
@@ -49,7 +47,8 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
         <TouchableOpacity style={tw`p-2`}>
           <Ionicons name="notifications" size={24} color="#1a2a4a" />
         </TouchableOpacity>
-        <TouchableOpacity style={tw`p-2`} onPress={() => navigation.navigate('PaymentAction')}>
+        <TouchableOpacity style={tw`p-2`} onPress={() => navigation.navigate('PaymentScreen' ,  { amount: 3000, local_id: 37, user_id: 1 })}>
+               <Text style={styles.buttonText}>Test Payment</Text>
           <Ionicons name="chatbubbles-outline" size={24} color="#1a2a4a" />
         </TouchableOpacity>
         <View style={tw`w-30`}>

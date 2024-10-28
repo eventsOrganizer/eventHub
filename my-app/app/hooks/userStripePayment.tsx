@@ -1,27 +1,32 @@
 import { useState } from 'react';
 import { useConfirmPayment } from '@stripe/stripe-react-native';
-import { PaymentModalProps } from "../navigation/types";
 
 const useStripePayment = () => {
   const { confirmPayment, loading } = useConfirmPayment();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
 
-  const initiatePayment = async (cardDetails: any, billingDetails: { email: string }, paymentData: PaymentModalProps) => {
+  const initiatePayment = async (
+    cardDetails: any,
+    billingDetails: { email: string },
+    order: { amount: number; localId: number; userId: number }
+  ) => {
     try {
       const response = await fetch('https://api.stripe.com/v1/payment_intents', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Bearer sk_test_51QClepFlPYG1ImxpA4Br3T5n8kG5Rnsf3Q2xTqPusg5etFWUfHHPqKhFqvpN2zfhXMKtlKRNJ31B5pglrbnchPC600ue5pfwVv`, // Replace with your actual Stripe secret key
-        },
-        body: new URLSearchParams({
-          amount: "100", // Use the amount from paymentData
+         'Authorization': `Bearer sk_test_51QClepFlPYG1ImxpA4Br3T5n8kG5Rnsf3Q2xTqPusg5etFWUfHHPqKhFqvpN2zfhXMKtlKRNJ31B5pglrbnchPC600ue5pfwVv`
+               }    
+         , body: new URLSearchParams({
+          amount: (order.amount * 100).toString(), // Stripe expects the amount in cents
           currency: 'usd',
+          description: `Payment for local ID: ${order.localId}, User ID: ${order.userId}`,
         }).toString(),
       });
 
       const { client_secret, error: paymentError } = await response.json();
+
       if (paymentError) throw new Error(paymentError.message);
 
       if (client_secret && cardDetails?.complete) {
@@ -33,11 +38,11 @@ const useStripePayment = () => {
         });
 
         if (error) {
-          console.log("Error from Stripe", error);
+          console.log("Error from Stripe:", error);
           setErrorMessage(error.message);
           setPaymentSuccess(false);
         } else if (paymentIntent) {
-          console.log("Payment successful", paymentIntent);
+          console.log("Payment successful:", paymentIntent);
           setPaymentSuccess(true);
           setErrorMessage(null);
         }
@@ -46,6 +51,7 @@ const useStripePayment = () => {
       }
     } catch (error) {
       setErrorMessage((error as Error).message || 'Payment failed.');
+      console.error("Payment initiation error:", error);
     }
   };
 
