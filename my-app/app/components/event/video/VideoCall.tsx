@@ -40,52 +40,45 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
           'Authorization': `Bearer ${DAILY_API_KEY}`
         }
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+  
       const data = await response.json();
-      console.log('Daily.co presence data:', data);
-
       const roomName = roomUrl.split('/').pop();
-      console.log('Room name:', roomName);
       const dailyCoParticipants = data[roomName] || [];
-      console.log('Daily.co room participants:', dailyCoParticipants);
-
+  
       // Fetch participants from Supabase
       const { data: supabaseParticipants, error: supabaseError } = await supabase
         .from('room_participants')
         .select('*')
         .eq('room_id', roomId);
-
+  
       if (supabaseError) throw supabaseError;
-      console.log('Supabase room participants:', supabaseParticipants);
-
+  
       // Find unassociated Daily.co ID
       const unassociatedDailyCoId = dailyCoParticipants.find(
         (dcp: any) => !supabaseParticipants.some(sp => sp.daily_co_id === dcp.id)
       )?.id;
-
+  
       if (unassociatedDailyCoId) {
-        // Associate the unassociated Daily.co ID with the current user
         const { error: updateError } = await supabase
           .from('room_participants')
           .update({ daily_co_id: unassociatedDailyCoId })
           .match({ room_id: roomId, user_id: userId });
-
+  
         if (updateError) throw updateError;
-        console.log(`Associated Daily.co ID ${unassociatedDailyCoId} with user ${userId}`);
       }
-
+  
       // Refetch Supabase participants after potential update
       const { data: updatedSupabaseParticipants, error: updatedSupabaseError } = await supabase
         .from('room_participants')
         .select('*')
         .eq('room_id', roomId);
-
+  
       if (updatedSupabaseError) throw updatedSupabaseError;
-
+  
       // Combine and reconcile the data
       const reconciled = dailyCoParticipants.map((dailyCoParticipant: any) => {
         const supabaseParticipant = updatedSupabaseParticipants.find(
@@ -100,10 +93,31 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
           is_active: true
         };
       });
-
-      console.log('Reconciled participants:', reconciled);
-      setParticipants(reconciled);
-
+  
+      // Fetch emails for participants before setting state
+      const participantsWithEmails = await Promise.all(
+        reconciled.map(async (participant) => {
+          if (participant.user_id) {
+            const { data: userData, error } = await supabase
+              .from('user')
+              .select('email')
+              .eq('id', participant.user_id)
+              .single();
+            
+            if (!error && userData) {
+              return {
+                ...participant,
+                user_name: userData.email
+              };
+            }
+          }
+          return participant;
+        })
+      );
+  
+      console.log('Participants with emails:', participantsWithEmails);
+      setParticipants(participantsWithEmails);
+  
       // Update Supabase with the reconciled data
       for (const participant of reconciled) {
         await supabase
@@ -117,7 +131,7 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
             last_heartbeat: new Date().toISOString()
           }, { onConflict: ['room_id', 'user_id'] });
       }
-
+  
     } catch (error) {
       console.error('Error fetching participants:', error);
     }
@@ -325,22 +339,22 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Room Participants</Text>
           <FlatList
-            data={participants}
-            keyExtractor={(item) => item.daily_co_id}
-            renderItem={({ item }) => (
-              <View style={styles.participantItem}>
-                <Text>{`${item.user_name || item.user_id} (Daily.co ID: ${item.daily_co_id})`}</Text>
-                {isCreator && item.user_id !== userId && (
-                  <TouchableOpacity 
-                    onPress={() => kickParticipant(item.daily_co_id)}
-                    style={styles.kickButton}
-                  >
-                    <Text style={styles.kickButtonText}>Kick</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            )}
-          />
+  data={participants}
+  keyExtractor={(item) => item.daily_co_id}
+  renderItem={({ item }) => (
+    <View style={styles.participantItem}>
+      <Text>{`${item.user_name || item.user_id} (Daily.co ID: ${item.daily_co_id})`}</Text>
+      {isCreator && (
+        <TouchableOpacity 
+          onPress={() => kickParticipant(item.daily_co_id)}
+          style={styles.kickButton}
+        >
+          <Text style={styles.kickButtonText}>Kick</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  )}
+/>
           <TouchableOpacity 
             style={styles.closeButton} 
             onPress={() => setShowParticipants(false)}

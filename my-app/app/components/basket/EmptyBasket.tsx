@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-// import LottieView from 'lottie-react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text } from 'react-native-paper';
+import { ShoppingBag } from 'lucide-react-native';
 
 interface EmptyBasketProps {
   onStartShopping: () => void;
@@ -9,11 +10,9 @@ interface EmptyBasketProps {
 export const EmptyBasket: React.FC<EmptyBasketProps> = ({ onStartShopping }) => {
   return (
     <View style={styles.container}>
-      <Image
-        source={require('../../assets/empty-cart.png')}
-        style={styles.image}
-      />
-      <Text style={styles.text}>Your basket is empty</Text>
+      <ShoppingBag size={64} color="#ccc" />
+      <Text style={styles.title}>Your basket is empty</Text>
+      <Text style={styles.subtitle}>Add items to start shopping</Text>
       <TouchableOpacity style={styles.button} onPress={onStartShopping}>
         <Text style={styles.buttonText}>Start Shopping</Text>
       </TouchableOpacity>
@@ -26,22 +25,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  image: {
-    width: 200,
-    height: 200,
-    resizeMode: 'contain',
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 20,
+    color: '#333',
   },
-  text: {
-    fontSize: 18,
+  subtitle: {
+    fontSize: 16,
     color: '#666',
-    marginVertical: 20,
+    marginTop: 8,
   },
   button: {
     backgroundColor: '#4A90E2',
-    borderRadius: 10,
-    padding: 15,
-    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 20,
   },
   buttonText: {
     color: 'white',

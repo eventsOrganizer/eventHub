@@ -210,6 +210,7 @@ const HomeScreen: React.FC = () => {
             <Banner title="Services" />
             <SectionComponent 
               title="TOP CREW SERVICES"
+             
               data={staffServices}
               onSeeAll={() => navigation.navigate('PersonalsScreen', { category: 'all' })}
               onItemPress={(item) => navigation.navigate('PersonalDetail', { personalId: item.id })}
@@ -228,7 +229,7 @@ const HomeScreen: React.FC = () => {
             />
             
             <SectionComponent 
-              title="MATERIALS" 
+              title="TOP EQUIPMENTS" 
               data={materialsAndFoodServices} 
               onSeeAll={() => navigation.navigate('MaterialScreen')}
               onItemPress={(item) => {

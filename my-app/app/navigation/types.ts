@@ -120,7 +120,7 @@ export type RootStackParamList = {
     personalId: number;
     userId: string | null;
   };
-  ReviewScreen: { materialId: string };
+  ReviewScreen: { materialId: string; sellOrRent: 'sell' | 'rent' };
   CommentScreen: { materialId: string };
 
 
@@ -146,6 +146,22 @@ export interface Material {
   details: string;
   likes?: number;
   average_rating?: number;
+}
+
+export interface Request {
+  id: number;
+  name: string;
+  type: string;
+  status: string;
+  subcategory: string;
+  imageUrl: string | null;
+  serviceImageUrl: string | null;  // Add this line
+  requesterName?: string;
+  requesterEmail?: string;
+  createdAt?: string;
+  date?: string;
+  start?: string;
+  end?: string;
 }
 
 export interface PaymentModalProps {

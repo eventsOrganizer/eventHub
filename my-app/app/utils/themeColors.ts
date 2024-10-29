@@ -20,5 +20,6 @@ export const themeColors = {
       lightGray: '#D1D5DB',
       error: '#FF6B6B',
       success: '#4CAF50',
+      warning: '#FFA726',
     }
   };

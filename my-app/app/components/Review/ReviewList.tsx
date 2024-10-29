@@ -1,23 +1,27 @@
 import React from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
-import { Text } from 'react-native-paper';
+import { FlatList, StyleSheet } from 'react-native';
 import { ReviewItem } from './ReviewItem';
 import { Review } from '../../types/review';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 interface ReviewListProps {
   reviews: Review[];
+  theme: any;
 }
 
-export const ReviewList = ({ reviews }: ReviewListProps) => {
+export const ReviewList = ({ reviews, theme }: ReviewListProps) => {
+  const renderItem = ({ item, index }: { item: Review; index: number }) => (
+    <ReviewItem item={item} index={index} />
+  );
+
   return (
     <Animated.View entering={FadeInDown.delay(300)} style={styles.container}>
-      <Text style={styles.title}>All Reviews</Text>
       <FlatList
         data={reviews}
-        renderItem={({ item, index }) => <ReviewItem item={item} index={index} />}
+        renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
       />
     </Animated.View>
   );
@@ -27,9 +31,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  listContent: {
+    paddingBottom: 20,
   },
 });

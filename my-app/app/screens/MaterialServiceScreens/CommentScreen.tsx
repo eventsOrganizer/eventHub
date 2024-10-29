@@ -10,6 +10,7 @@ import { Comment } from '../../types/comment';
 import { CommentItem } from '../../components/Comments/CommentItem';
 import { CommentHeader } from '../../components/Comments/CommentHeader';
 import { AuthModal } from '../../components/Comments/AuthModal';
+import { useToast } from '../../hooks/use-toast';
 
 const ShimmerPlaceholder = createShimmerPlaceholder(LinearGradient);
 
@@ -18,34 +19,64 @@ type CommentScreenProps = StackScreenProps<RootStackParamList, 'CommentScreen'>;
 const CommentScreen: React.FC<CommentScreenProps> = ({ route, navigation }) => {
   const { materialId } = route.params as { materialId: string };
   const { userId } = useUser();
+  const { toast } = useToast();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchComments();
   }, []);
 
   const fetchComments = async () => {
-    const { data, error } = await supabase
-      .from('comment')
-      .select(`
-        id,
-        user_id,
-        details,
-        created_at,
-        user:user_id (firstname, lastname)
-      `)
-      .eq('material_id', materialId)
-      .order('created_at', { ascending: false });
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('comment')
+        .select(`
+          id,
+          details,
+          created_at,
+          user:user_id (
+            id,
+            firstname,
+            lastname,
+            email
+          )
+        `)
+        .eq('material_id', materialId)
+        .order('created_at', { ascending: false });
 
-    if (error) {
+      if (error) throw error;
+
+      const formattedComments = data.map(comment => ({
+        id: comment.id,
+        details: comment.details,
+        created_at: comment.created_at,
+        user: {
+          id: comment.user.id,
+          firstname: comment.user.firstname || 'Anonymous',
+          lastname: comment.user.lastname || 'User',
+          email: comment.user.email,
+          avatarUrl: `https://ui-avatars.com/api/?name=${
+            encodeURIComponent(comment.user.firstname || 'A')
+          }+${
+            encodeURIComponent(comment.user.lastname || 'U')
+          }&background=random&size=128`
+        }
+      }));
+
+      setComments(formattedComments);
+    } catch (error) {
       console.error('Error fetching comments:', error);
-    } else {
-      setComments(data.map(comment => ({
-        ...comment,
-        user: comment.user?.[0] || { firstname: 'Unknown', lastname: 'User' }
-      })));
+      toast({
+        title: "Error",
+        description: "Failed to load comments. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -55,19 +86,40 @@ const CommentScreen: React.FC<CommentScreenProps> = ({ route, navigation }) => {
       return;
     }
 
-    const { error } = await supabase
-      .from('comment')
-      .insert({
-        material_id: materialId,
-        user_id: userId,
-        details: newComment,
+    if (!newComment.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a comment",
+        variant: "destructive"
       });
+      return;
+    }
 
-    if (error) {
-      console.error('Error submitting comment:', error);
-    } else {
-      fetchComments();
+    try {
+      const { error } = await supabase
+        .from('comment')
+        .insert({
+          material_id: materialId,
+          user_id: userId,
+          details: newComment.trim(),
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Comment posted successfully",
+      });
+      
+      await fetchComments();
       setNewComment('');
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to post comment. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -94,7 +146,10 @@ const CommentScreen: React.FC<CommentScreenProps> = ({ route, navigation }) => {
         <FlatList
           data={comments}
           renderItem={({ item, index }) => (
-            <CommentItem item={item} index={index} />
+            <CommentItem 
+              item={item} 
+              index={index}
+            />
           )}
           keyExtractor={(item) => item.id.toString()}
           ListHeaderComponent={
@@ -106,7 +161,7 @@ const CommentScreen: React.FC<CommentScreenProps> = ({ route, navigation }) => {
             />
           }
           contentContainerStyle={styles.listContentContainer}
-          ListEmptyComponent={renderEmptyComponent}
+          ListEmptyComponent={isLoading ? renderEmptyComponent : null}
         />
         <AuthModal
           visible={isAuthModalVisible}
