@@ -245,7 +245,10 @@ const HomeScreen: React.FC = () => {
               title="Go to Video Rooms"
               onPress={() => navigation.navigate('VideoRooms')}
             />
+            
           </View>
+
+         
         </ScrollView>
         <FAB 
           isFabOpen={isFabOpen}
@@ -253,6 +256,7 @@ const HomeScreen: React.FC = () => {
           onCreateService={() => navigation.navigate('ServiceSelection')}
           onCreateEvent={() => navigation.navigate('EventCreation')}
         />
+         
       </LinearGradient>
     </SafeAreaView>
   );

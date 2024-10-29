@@ -168,6 +168,15 @@ export interface Request {
   end?: string;
 }
 
+export interface PaymentModalProps {
+  visible?: boolean;
+  onClose?: () => void;
+  amount: number; // Amount in cents
+  ticket_id?: string | undefined;
+  local_id?: number  | undefined;
+  personal_id?: number | undefined;
+  material_id?:  number | undefined;
+}
 export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;
 export type BookingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'BookingScreen'>;
 export type CommentsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CommentsScreen'>;

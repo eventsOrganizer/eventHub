@@ -25,9 +25,9 @@ import EventSerialsList from '../components/event/Ticketing/EventSerialsList';  
 
 
 import GuestManagementScreen from '../screens/GuestManagementScreen';
-import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
+
 import CreateServiceScreen from '../screens/CreateServiceScreen';
-import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen'
+
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ServiceSelection from '../screens/ServiceSelection';
 import VideoRoomsScreen from '../components/event/video/VideoRoomsScreen';
@@ -77,7 +77,8 @@ import LocalBookingScreen from '../screens/LocalServiceScreens/LocalBookingScree
 
 
 import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail';
-import PaymentActionScreen from '../payment/PaymentActionScreen';
+
+import PaymentTestScreen from '../components/payment/PaymentTestScreen';
 
 import NotificationsScreen from '../screens/NotificationsScreen';
 import TicketScanningScreen from '../components/event/Ticketing/TicketScanningScreen';
@@ -85,6 +86,8 @@ import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
 import ServicesDetails from '../services/servicesDetailsInUserProfile/ServicesDetails';
 import LocalCommentsScreen from '../screens/LocalServiceScreens/LocalCommentsScreen';
+
+import PaymentScreen from '../screens/PaymentScreen';
 
 type RootStackParamList = {
   Onboarding: undefined;
@@ -137,6 +140,7 @@ type RootStackParamList = {
     serviceType: 'Personal' | 'Local' | 'Material';
   };
   LocalBookingScreen: undefined;
+  PaymentTest: undefined; // Add this line
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -172,6 +176,7 @@ type EventSetupOptionsScreenProps = {
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
+
 
 const AppNavigation: React.FC = () => {
   const handleOnComplete = () => {
@@ -495,6 +500,10 @@ const AppNavigation: React.FC = () => {
     name="MapScreen" 
     component={MapScreen} 
   />
+    <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+
+  
+
   
   <Stack.Screen 
     name="ServicesDetails" 
@@ -515,5 +524,6 @@ const AppNavigation: React.FC = () => {
 
   )
 }
+
 
 export default AppNavigation;

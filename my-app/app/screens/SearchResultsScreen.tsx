@@ -1,15 +1,18 @@
+// my-app/app/screens/SearchResultsScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, TextInput, Text, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { supabase } from '../services/supabaseClient';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import tw from 'twrnc';
 
 type RootStackParamList = {
   SearchResults: { initialSearchTerm: string };
   EventDetails: { eventId: string };
   LocalServiceDetails: { localServiceId: string };
   PersonalDetails: { personalId: string };
-  MaterialDetails: { materialId: string }; // Assuming you have a MaterialDetails screen
+  MaterialDetails: { materialId: string };
 };
 
 type SearchResultsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SearchResults'>;
@@ -35,61 +38,41 @@ const SearchResultsScreen: React.FC<Props> = ({ navigation, route }) => {
       setLoading(true);
 
       try {
-        console.log('Searching for:', searchTerm);
-
-        // Fetch events
         const { data: eventData, error: eventError } = await supabase
           .from('event')
           .select('id, name, details')
           .ilike('name', `%${searchTerm}%`);
-
         if (eventError) throw eventError;
 
-        // Adding type 'event' to each item
         const eventsWithType = eventData?.map(item => ({ ...item, type: 'event' })) || [];
         setEventResults(eventsWithType);
 
-        // Fetch locals
         const { data: localData, error: localError } = await supabase
           .from('local')
           .select('id, name, details, priceperhour, media (url)')
           .ilike('name', `%${searchTerm}%`);
-
         if (localError) throw localError;
 
-        // Adding type 'local' to each item
         const localsWithType = localData?.map(item => ({ ...item, type: 'local' })) || [];
         setLocalResults(localsWithType);
 
-        // Fetch personal services
         const { data: personalData, error: personalError } = await supabase
           .from('personal')
           .select('id, name, details')
           .ilike('name', `%${searchTerm}%`);
-
         if (personalError) throw personalError;
 
-        // Adding type 'personal' to each item
         const personalsWithType = personalData?.map(item => ({ ...item, type: 'personal' })) || [];
         setPersonalResults(personalsWithType);
 
-        // Fetch materials
         const { data: materialData, error: materialError } = await supabase
           .from('material')
           .select('id, name, details')
           .ilike('name', `%${searchTerm}%`);
-
         if (materialError) throw materialError;
 
-        // Adding type 'material' to each item
         const materialsWithType = materialData?.map(item => ({ ...item, type: 'material' })) || [];
         setMaterialResults(materialsWithType);
-
-        // Log the fetched data for debugging
-        console.log('Fetched Events:', eventsWithType);
-        console.log('Fetched Locals:', localsWithType);
-        console.log('Fetched Personals:', personalsWithType);
-        console.log('Fetched Materials:', materialsWithType);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -101,133 +84,67 @@ const SearchResultsScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [searchTerm]);
 
   const handleItemPress = (item: { id: string; type: string }) => {
-    console.log('Item pressed:', item); // Log the entire item
-
     if (item.type === 'event') {
       navigation.navigate('EventDetails', { eventId: item.id });
     } else if (item.type === 'local') {
       navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
     } else if (item.type === 'personal') {
-      navigation.navigate('PersonalDetail', { personalId: item.id });
+      navigation.navigate('PersonalDetails', { personalId: item.id });
     } else if (item.type === 'material') {
-      navigation.navigate('MaterialDetail', { material: item });
-    } else {
-      console.warn('Unknown item type:', item.type); // Log the unknown type
+      navigation.navigate('MaterialDetails', { materialId: item.id });
     }
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#6a11cb', '#2575fc']} // Updated gradient colors
+      style={tw`flex-1 p-4`}  // Added padding for a better layout
+    >
       <TextInput
         value={searchTerm}
         onChangeText={setSearchTerm}
         placeholder="Refine search..."
-        style={styles.searchInput}
+        placeholderTextColor="#fff"  // Updated placeholder text color
+        style={tw`h-12 border border-gray-300 rounded-lg px-4 bg-white shadow-lg mb-5`}
       />
-      <View style={styles.toggleContainer}>
+      <View style={tw`flex-row justify-around mb-5`}>
         <TouchableOpacity
-          style={[styles.toggleButton, !searchForServices && styles.activeToggle]}
+          style={tw`${!searchForServices ? 'bg-blue-600' : 'bg-blue-300'} py-2 px-4 rounded-lg`} // Updated button color
           onPress={() => setSearchForServices(false)}
         >
-          <Text style={styles.toggleText}>Search Events</Text>
+          <Text style={tw`text-white font-semibold`}>Search Events</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.toggleButton, searchForServices && styles.activeToggle]}
+          style={tw`${searchForServices ? 'bg-blue-600' : 'bg-blue-300'} py-2 px-4 rounded-lg`} // Updated button color
           onPress={() => setSearchForServices(true)}
         >
-          <Text style={styles.toggleText}>Search Services</Text>
+          <Text style={tw`text-white font-semibold`}>Search Services</Text>
         </TouchableOpacity>
       </View>
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#fff" /> // Updated loading color
       ) : (
         <FlatList
           data={searchForServices ? [...personalResults, ...localResults, ...materialResults] : eventResults}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handleItemPress(item)} style={styles.itemContainer}>
+            <TouchableOpacity onPress={() => handleItemPress(item)} style={tw`flex-row p-4 bg-white rounded-lg shadow-lg mb-4`}>
               {item.media && item.media.length > 0 && item.media[0].url ? (
-                <Image source={{ uri: item.media[0].url }} style={styles.itemImage} />
+                <Image source={{ uri: item.media[0].url }} style={tw`w-16 h-16 rounded-full mr-4`} />
               ) : (
-                <View style={styles.placeholderImage} />
+                <View style={tw`w-16 h-16 bg-gray-300 rounded-full mr-4`} />
               )}
-              <View style={styles.textContainer}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemDescription}>{item.details}</Text>
-                {item.priceperhour && <Text style={styles.itemPrice}>${item.priceperhour}/hr</Text>}
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-lg font-bold text-gray-900`}>{item.name}</Text>
+                <Text style={tw`text-gray-600`}>{item.details}</Text>
+                {item.priceperhour && <Text style={tw`text-blue-500 font-semibold`}>${item.priceperhour}/hr</Text>}
               </View>
             </TouchableOpacity>
           )}
         />
       )}
-    </View>
+    </LinearGradient>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  searchInput: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 16,
-    paddingHorizontal: 8,
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  toggleButton: {
-    flex: 1,
-    padding: 10,
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
-    marginHorizontal: 5,
-  },
-  activeToggle: {
-    backgroundColor: '#00BFFF',
-  },
-  toggleText: {
-    color: '#000',
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  itemImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
-  },
-  placeholderImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#ccc',
-    marginRight: 16,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  itemDescription: {
-    fontSize: 14,
-    color: 'gray',
-  },
-  itemPrice: {
-    fontSize: 16,
-    color: 'green',
-  },
-});
 
 export default SearchResultsScreen;

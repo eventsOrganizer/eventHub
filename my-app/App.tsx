@@ -8,6 +8,7 @@ import { BasketProvider } from './app/components/basket/BasketContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'react-native';
 // import Background from './app/components/Background' DONT DELETE THIS  !!!!!!!!!!! ;
+import { StripeProvider } from '@stripe/stripe-react-native';
 
 const App = () => {
   return (
@@ -15,6 +16,9 @@ const App = () => {
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" />
         {/* <Background /> DONT DELETE THIS  !!!!!!!!!!! */}
+      <StripeProvider
+      publishableKey="pk_test_51QClepFlPYG1ImxpWSMG9xSRk1nx5GSs0ICY7GLfHDYRVpP8ALGVhJmkcehDZH4A67JOhek41fcQdFmXcjsJhEdo00y4GqAitW" // Replace with your actual Stripe publishable key
+    >
         <UserProvider>
           <Provider store={store}>
             <NavigationContainer>
@@ -22,6 +26,7 @@ const App = () => {
             </NavigationContainer>
           </Provider>
         </UserProvider>
+      </StripeProvider>
       </SafeAreaProvider>
     </BasketProvider>
   );
