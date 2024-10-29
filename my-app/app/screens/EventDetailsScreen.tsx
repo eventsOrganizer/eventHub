@@ -38,6 +38,9 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
       .from('event')
       .select(`
         *,
+      user:user_id (
+        email
+      ),
         subcategory (
           name,
           category (
