@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Image, ScrollView, Dimensions, StyleSheet } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Image, ScrollView, Dimensions, StyleSheet, TouchableOpacity } from 'react-native';
+import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { BlurView } from 'expo-blur';
-import { Play } from 'lucide-react-native';
+import { Play, Pause } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -10,7 +11,32 @@ interface ImageCarouselProps {
 }
 
 const ImageCarousel: React.FC<ImageCarouselProps> = ({ media }) => {
+  const [activeVideoIndex, setActiveVideoIndex] = useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<Video | null>(null);
+
   if (!media || media.length === 0) return null;
+
+  const handleVideoPress = async (index: number) => {
+    if (activeVideoIndex === index) {
+      if (videoRef.current) {
+        if (isPlaying) {
+          await videoRef.current.pauseAsync();
+        } else {
+          await videoRef.current.playAsync();
+        }
+        setIsPlaying(!isPlaying);
+      }
+    } else {
+      setActiveVideoIndex(index);
+      setIsPlaying(true);
+    }
+  };
+
+  const handleVideoStatusUpdate = (status: AVPlaybackStatus) => {
+    if (!status.isLoaded) return;
+    setIsPlaying(status.isPlaying);
+  };
 
   return (
     <View style={styles.container}>
@@ -23,14 +49,27 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ media }) => {
           <View key={index} style={styles.slide}>
             {item.type === 'video' ? (
               <View style={styles.videoContainer}>
-                <Image 
-                  source={{ uri: item.url }} 
+                <Video
+                  ref={index === activeVideoIndex ? videoRef : null}
+                  source={{ uri: item.url }}
                   style={styles.media}
-                  resizeMode="cover"
+                  resizeMode={ResizeMode.COVER}
+                  isLooping
+                  shouldPlay={activeVideoIndex === index && isPlaying}
+                  onPlaybackStatusUpdate={handleVideoStatusUpdate}
                 />
-                <BlurView intensity={80} style={styles.playButton}>
-                  <Play size={24} color="white" />
-                </BlurView>
+                <TouchableOpacity 
+                  style={styles.playButtonContainer}
+                  onPress={() => handleVideoPress(index)}
+                >
+                  <BlurView intensity={80} style={styles.playButton}>
+                    {activeVideoIndex === index && isPlaying ? (
+                      <Pause size={32} color="white" />
+                    ) : (
+                      <Play size={32} color="white" fill="white" />
+                    )}
+                  </BlurView>
+                </TouchableOpacity>
               </View>
             ) : (
               <Image 
@@ -43,7 +82,6 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ media }) => {
         ))}
       </ScrollView>
       
-      {/* Pagination dots */}
       <View style={styles.pagination}>
         {media.map((_, index) => (
           <View
@@ -77,17 +115,20 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  playButton: {
+  playButtonContainer: {
     position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [
-      { translateX: -25 },
-      { translateY: -25 }
-    ],
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  playButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
