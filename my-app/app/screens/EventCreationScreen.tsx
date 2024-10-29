@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import ServiceCalendar from '../components/reuseableForCreationService/ServiceCalendar';
 import tw from 'twrnc';
 import { createUpdate } from '../components/event/profile/notification/CreateUpdate';
+import { BlurView } from 'expo-blur';
 
 const EventCreationScreen: React.FC = () => {
   const { userId } = useUser();
