@@ -375,12 +375,15 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true }} 
   />
 
-  {/* <Stack.Screen
-    name="PaymentAction"
+  <Stack.Screen 
+    name="PaymentAction" 
     component={PaymentActionScreen}
-    options={{ headerShown: true, title: 'Payment' }}
-    initialParams={{ price: 200, personalId: '1' }}
-  /> */}
+    options={{ 
+   headerShown: true,
+   title: 'Payment'
+   }}
+
+/>
 
   <Stack.Screen 
     name="EventCreation" 

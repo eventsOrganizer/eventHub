@@ -43,18 +43,31 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = ({
   const getAddressFromCoordinates = async (latitude: number, longitude: number) => {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&accept-language=fr`
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&accept-language=fr&email=your-email@domain.com`,
+        {
+          headers: {
+            'User-Agent': 'YourApp/1.0',
+            'Accept': 'application/json'
+          }
+        }
       );
       
       if (!response.ok) {
-        throw new Error('Erreur réseau');
+        console.error('Erreur de réponse:', response.status, response.statusText);
+        const text = await response.text();
+        console.error('Contenu de la réponse:', text);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       return data.display_name || 'Adresse non trouvée';
     } catch (error) {
-      console.error('Erreur lors de la récupération de l\'adresse:', error);
-      return 'Adresse non disponible';
+      console.error('Erreur détaillée lors de la récupération de l\'adresse:', error);
+      return 'Adresse non disponible pour le moment';
     }
   };
 
@@ -83,7 +96,7 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = ({
           }
         } catch (error) {
           console.error('Erreur lors de la récupération des données de localisation:', error);
-          setAddress('Adresse non disponible');
+          setAddress('Adresse non disponible pour le moment');
         }
       }
     };
@@ -156,6 +169,7 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = ({
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

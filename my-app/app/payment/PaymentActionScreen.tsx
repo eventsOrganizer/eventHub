@@ -1,68 +1,40 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
-import { useStripe } from '@stripe/stripe-react-native'; // Make sure this is installed
+import { View, Text, ActivityIndicator, StyleSheet, Button } from 'react-native';
+import { useRoute, RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../navigation/types';
+import useStripePayment from '../payment/UseStripePayment';
 
-interface PaymentActionScreenProps {
-    price: number;
-    personalId: string;
-  }
-  
-const PaymentActionScreen: React.FC<PaymentActionScreenProps> = ({ price, personalId }) => {
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+type PaymentActionScreenRouteProp = RouteProp<RootStackParamList, 'PaymentAction'>;
 
-  const handlePayment = async () => {
-    try {
-      // Fetch payment intent client secret from your backend
-      const response = await fetch('https://your-backend.com/create-payment-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ personalId, amount: price, currency: 'usd' }),
-      });
+const PaymentActionScreen: React.FC = () => {
+  const route = useRoute<PaymentActionScreenRouteProp>();
+  const { price, personalId } = route.params;
+  const { handlePayment, loading } = useStripePayment();
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch payment intent from the server');
-      }
-
-      const { clientSecret } = await response.json();
-
-      // Initialize the payment sheet
-      const { error } = await initPaymentSheet({
-        paymentIntentClientSecret: clientSecret,
-        merchantDisplayName: 'Your Merchant Name',
-      });
-
-      if (error) {
-        console.error('Error initializing payment sheet:', error);
-        Alert.alert('Payment Initialization Error', error.message);
-        return;
-      }
-
-      // Present the payment sheet
-      const { error: paymentError } = await presentPaymentSheet();
-
-      if (paymentError) {
-        console.error('Error presenting payment sheet:', paymentError);
-        Alert.alert('Payment Error', `Failed to complete payment: ${paymentError.message}`);
-        return;
-      }
-
-      Alert.alert('Payment Success', 'Your payment was successful!');
-    } catch (error) {
-      console.error('Error initiating Stripe payment:', error);
-      Alert.alert('Payment Error', 'An error occurred while initiating payment.');
-    }
+  const onProcessPayment = async () => {
+    await handlePayment(personalId, price);
   };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Payment Action</Text>
-      <Button title="Process Payment" onPress={handlePayment} />
+      <Text style={styles.title}>Payment Processing</Text>
+      <Text style={styles.amount}>Amount to pay: ${price.toFixed(2)}</Text>
+      
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <View style={styles.buttonContainer}>
+          <Button
+            onPress={onProcessPayment}
+            title="Process Payment"
+            disabled={loading}
+          />
+        </View>
+      )}
     </View>
   );
 };
 
-// Moved styles block outside of the component
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -77,6 +49,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#333',
   },
+  amount: {
+    fontSize: 18,
+    marginBottom: 30,
+    color: '#666',
+  },
+  buttonContainer: {
+    width: '100%',
+    paddingHorizontal: 20,
+  }
 });
 
 export default PaymentActionScreen;

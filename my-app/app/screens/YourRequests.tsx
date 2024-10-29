@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useUser } from '../UserContext';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,10 +8,10 @@ import { useToast } from '../hooks/useToast';
 import { useNotifications } from '../hooks/useNotifications';
 import { Request, RouteParams } from '../services/requestTypes';
 import { fetchSentRequests, fetchReceivedRequests } from '../services/requestQuerries';
-import   ReceivedRequestCard  from './ReceivedRequestCard';
-import  SentRequestCard  from './SentRequestCard';
-import  FilterButtons  from './FilterButtons';
+import ReceivedRequestCard from './ReceivedRequestCard';
+import SentRequestCard from './SentRequestCard';
 import { RootStackParamList } from '../navigation/types';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const YourRequests: React.FC = () => {
   const { userId } = useUser();
@@ -22,7 +22,7 @@ const YourRequests: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filteredRequests, setFilteredRequests] = useState<Request[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [categories, setCategories] = useState<string[]>(['All', 'Service', 'Item', 'Skill']);
+  const [categories, setCategories] = useState<string[]>(['All', 'Crew', 'Local', 'Material']);
   const { toast } = useToast();
   const { unreadCount } = useNotifications(userId);
 
@@ -41,7 +41,7 @@ const YourRequests: React.FC = () => {
         ? await fetchSentRequests(userId)
         : await fetchReceivedRequests(userId);
         
-      console.log('Fetched requests:', data); // Pour le débogage
+      console.log('Fetched requests:', data);
       setRequests(data);
       setFilteredRequests(data);
     } catch (error) {
@@ -118,11 +118,19 @@ const YourRequests: React.FC = () => {
 
   const filterRequests = (category: string) => {
     setSelectedCategory(category);
-    setFilteredRequests(
-      category === 'All' 
-        ? requests 
-        : requests.filter(request => request.type === category)
-    );
+    if (category === 'All') {
+      setFilteredRequests(requests);
+    } else {
+      const filtered = requests.filter(request => {
+        // Pour Crew, on vérifie si c'est un service de type Personal
+        if (category === 'Crew') {
+          return request.type === 'Personal';
+        }
+        // Pour les autres catégories, on compare directement avec le type
+        return request.type === category;
+      });
+      setFilteredRequests(filtered);
+    }
   };
 
   const handleDelete = async (requestId: number) => {
@@ -152,6 +160,46 @@ const YourRequests: React.FC = () => {
     );
   };
 
+  const renderFilterButtons = () => (
+    <View style={styles.filterContainer}>
+      {categories.map((category) => (
+        <TouchableOpacity
+          key={category}
+          style={[
+            styles.filterButton,
+            selectedCategory === category && styles.selectedFilterButton
+          ]}
+          onPress={() => filterRequests(category)}
+        >
+          <Icon
+            name={getIconNameForCategory(category)}
+            size={24}
+            color={selectedCategory === category ? '#4CAF50' : '#666'}
+          />
+          <Text style={[
+            styles.filterText,
+            selectedCategory === category && styles.selectedFilterText
+          ]}>
+            {category}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
+  const getIconNameForCategory = (category: string) => {
+    switch (category) {
+      case 'Crew':
+        return 'group';
+      case 'Local':
+        return 'place';
+      case 'Material':
+        return 'inventory';
+      default:
+        return 'all-inclusive';
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -162,20 +210,12 @@ const YourRequests: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        {mode === 'sent' ? 'Your Requests' : 'Received Requests'}
-      </Text>
-      
-      <FilterButtons 
-        selectedCategory={selectedCategory}
-        onSelectCategory={filterRequests}
-        categories={categories}
-      />
-
+      {renderFilterButtons()}
       <FlatList
         data={filteredRequests}
         renderItem={renderRequestItem}
-        keyExtractor={item => `${item.type}-${item.id}`}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.listContainer}
       />
     </View>
   );
@@ -184,6 +224,7 @@ const YourRequests: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
   },
   content: {
     flex: 1,
@@ -207,8 +248,10 @@ const styles = StyleSheet.create({
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 24,
-    paddingHorizontal: 8,
+    marginBottom: 16,
+  },
+  filterButton: {
+    alignItems: 'center',
   },
   listContainer: {
     paddingBottom: 24,
@@ -319,6 +362,21 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 5,
   },
+  selectedFilterButton: {
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: 8,
+    padding: 8,
+  },
+  filterText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  selectedFilterText: {
+    color: '#4CAF50',
+    fontWeight: 'bold',
+  },
+
 });
 
 export default YourRequests;

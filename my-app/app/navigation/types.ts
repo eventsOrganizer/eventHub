@@ -128,6 +128,10 @@ export type RootStackParamList = {
   MaterialScreen: { materials: Material[] };
   MaterialsOnboarding: undefined;
   MaterialDetail: { material: Material };
+  PaymentAction: {
+    price: number;
+    personalId: string;
+  };
 };
 
 export interface Media {

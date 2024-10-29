@@ -1,9 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet } from 'react-native';
 import { Service } from '../../services/serviceTypes';
 
-// Ajoutez cette interface
 interface ServiceWithLocation extends Service {
   location?: {
     latitude: number;
@@ -13,18 +11,12 @@ interface ServiceWithLocation extends Service {
 
 interface ServiceInfoProps {
   data: ServiceWithLocation;
-  distance: number | null;
-  address: string;
-  onToggleMap: () => void;
-  availability?: any; // Ajoutez le type approprié
-  reviews?: any; // Ajoutez le type approprié
+  availability?: any;
+  reviews?: any;
 }
 
 const ServiceInfo: React.FC<ServiceInfoProps> = ({
   data,
-  distance,
-  address,
-  onToggleMap,
 }) => {
   return (
     <View style={styles.container}>
@@ -39,15 +31,12 @@ const ServiceInfo: React.FC<ServiceInfoProps> = ({
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.locationContainer} onPress={onToggleMap}>
-          <Ionicons name="location-outline" size={20} color="#FFF" />
-          <Text style={styles.locationText}>
-            {distance ? `${distance.toFixed(1)} km` : 'Distance N/A'}
+        <View style={styles.percentageContainer}>
+          <Text style={styles.percentageText}>
+          Deposit: {data.percentage || 25}%
           </Text>
-        </TouchableOpacity>
+        </View>
       </View>
-
-      <Text style={styles.address}>{address}</Text>
     </View>
   );
 };
@@ -78,21 +67,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  percentageContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     padding: 8,
     borderRadius: 8,
   },
-  locationText: {
+  percentageText: {
     color: '#FFF',
-    marginLeft: 5,
-  },
-  address: {
-    color: '#FFF',
-    fontSize: 14,
-    opacity: 0.8,
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
 

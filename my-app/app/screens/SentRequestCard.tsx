@@ -1,18 +1,26 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Modal, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/types';
 import ServiceDetailsCard from '../services/ServiceDetailsCard';
 import { Request } from '../services/requestTypes';
-import { deleteRequest } from '../services/requestService'; // Assurez-vous d'avoir cette fonction dans votre requestService
+import { deleteRequest } from '../services/requestService';
+import useStripePayment from '.././payment/UseStripePayment';
+
+type PaymentActionNavigationProp = StackNavigationProp<RootStackParamList, 'PaymentAction'>;
 
 interface SentRequestCardProps {
   item: Request;
-  onRequestDeleted: () => void; // Callback pour informer le composant parent de la suppression
+  onRequestDeleted: () => void;
 }
 
 const SentRequestCard: React.FC<SentRequestCardProps> = ({ item, onRequestDeleted }) => {
+  const navigation = useNavigation<PaymentActionNavigationProp>();
   const [showDetails, setShowDetails] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const { handlePayment, loading } = useStripePayment();
   const fallbackImage = 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b';
   
   const calculateTotalPrice = () => {
@@ -42,6 +50,15 @@ const SentRequestCard: React.FC<SentRequestCardProps> = ({ item, onRequestDelete
     const startTime = new Date(`2000-01-01T${start}`);
     const endTime = new Date(`2000-01-01T${end}`);
     return (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+  };
+
+  const handlePaymentConfirmation = async () => {
+    setShowPaymentModal(false);
+    const amount = calculateAdvancePayment();
+    navigation.navigate('PaymentAction', {
+      price: amount,
+      personalId: item.id.toString()
+    });
   };
 
   const renderPaymentModal = () => (
@@ -82,12 +99,12 @@ const SentRequestCard: React.FC<SentRequestCardProps> = ({ item, onRequestDelete
           <View style={styles.modalButtonContainer}>
             <TouchableOpacity
               style={[styles.modalButton, styles.confirmButton]}
-              onPress={() => {
-                // Implement payment confirmation logic here
-                setShowPaymentModal(false);
-              }}
+              onPress={handlePaymentConfirmation}
+              disabled={loading}
             >
-              <Text style={styles.buttonText}>Confirm</Text>
+              <Text style={styles.buttonText}>
+                {loading ? 'Processing...' : 'Confirm'}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modalButton, styles.cancelButton]}
