@@ -35,6 +35,13 @@ export default {
     SUPABASE_API_KEY: process.env.SUPABASE_API_KEY, // Load Supabase Anon Key from .env
   },
   plugins: [
+     [
+        "@stripe/stripe-react-native",
+        {
+          
+          "enableGooglePay": true
+        }
+      ],
     [
       "expo-font",
       {

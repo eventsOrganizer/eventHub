@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, StatusBar, FlatList, SafeAreaView } from 'react-native';
-import { StackScreenProps } from '@react-navigation/native';
+import  StackScreenProps  from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RootStackParamList } from '../../navigation/types';
 import { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';

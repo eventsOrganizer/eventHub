@@ -14,6 +14,9 @@ const LandingPage = ({ navigation }: any) => {
           onPress={() => navigation.navigate('EventCreation')}  // Navigate to EventCreation screen
           color="#4CAF50"
         />
+
+
+        
       </View>
     </ImageBackground>
   );
