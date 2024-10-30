@@ -16,6 +16,8 @@ import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import Button from '@mui/material/Button';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 import { useSelection } from '@/hooks/use-selection';
 import { CustomPaginationActions } from './CustomPagination';
@@ -48,6 +50,15 @@ export function CustomersTable({
   onRowsPerPageChange,
   onSelectionChange,
 }: CustomersTableProps): React.JSX.Element {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Ensure this code only runs on the client side
+    if (typeof window !== 'undefined') {
+      // Your client-side logic here
+    }
+  }, []);
+
   const rowIds = React.useMemo(() => {
     return rows.map((customer) => customer.email); // Ensure email is unique
   }, [rows]);
@@ -67,6 +78,10 @@ export function CustomersTable({
     } else {
       selectOne(email);
     }
+  };
+
+  const handleManageClick = (email: string) => {
+    router.push(`/dashboard/user-details?email=${email}`);
   };
 
   return (
@@ -132,7 +147,14 @@ export function CustomersTable({
                   <TableCell>{row.details}</TableCell>
                   <TableCell>{dayjs(row.signedUp).format('MMM D, YYYY')}</TableCell>
                   <TableCell>
-                    <Button variant="outlined" color="primary" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleManageClick(row.email);
+                      }}
+                    >
                       Manage
                     </Button>
                   </TableCell>
