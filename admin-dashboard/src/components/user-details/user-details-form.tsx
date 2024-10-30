@@ -8,7 +8,7 @@ import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
-import Grid from '@mui/material/Unstable_Grid2';
+import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 
 interface UserDetailsFormProps {
@@ -46,15 +46,14 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
               <Button onClick={handleEditClick} variant="contained">
                 {isEditable ? 'Cancel' : 'Edit'}
               </Button>
-             
             </Stack>
           }
         />
         <Divider />
         <CardContent>
-          <Grid container spacing={3}>
-            <Grid md={6} xs={12}>
-              <FormControl fullWidth required>
+          <Grid container spacing={4}>
+            <Grid item md={6} xs={12}>
+              <FormControl fullWidth required sx={{ mb: 2 }}>
                 <InputLabel>First name</InputLabel>
                 <OutlinedInput
                   label="First name"
@@ -64,8 +63,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 />
               </FormControl>
             </Grid>
-            <Grid md={6} xs={12}>
-              <FormControl fullWidth required>
+            <Grid item md={6} xs={12}>
+              <FormControl fullWidth required sx={{ mb: 2 }}>
                 <InputLabel>Last name</InputLabel>
                 <OutlinedInput
                   label="Last name"
@@ -75,8 +74,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 />
               </FormControl>
             </Grid>
-            <Grid md={6} xs={12}>
-              <FormControl fullWidth required>
+            <Grid item md={6} xs={12}>
+              <FormControl fullWidth required sx={{ mb: 2 }}>
                 <InputLabel>Email address</InputLabel>
                 <OutlinedInput
                   label="Email address"
@@ -86,8 +85,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 />
               </FormControl>
             </Grid>
-            <Grid md={6} xs={12}>
-              <FormControl fullWidth>
+            <Grid item md={6} xs={12}>
+              <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Phone number</InputLabel>
                 <OutlinedInput
                   label="Phone number"
@@ -98,8 +97,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 />
               </FormControl>
             </Grid>
-            <Grid md={6} xs={12}>
-              <FormControl fullWidth>
+            <Grid item md={6} xs={12}>
+              <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Age</InputLabel>
                 <OutlinedInput
                   label="Age"
@@ -110,8 +109,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 />
               </FormControl>
             </Grid>
-            <Grid md={6} xs={12}>
-              <FormControl fullWidth>
+            <Grid item md={6} xs={12}>
+              <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Gender</InputLabel>
                 <OutlinedInput
                   label="Gender"
@@ -121,8 +120,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 />
               </FormControl>
             </Grid>
-            <Grid md={12} xs={12}>
-              <FormControl fullWidth>
+            <Grid item md={12} xs={12}>
+              <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Details</InputLabel>
                 <OutlinedInput
                   label="Details"
@@ -134,8 +133,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 />
               </FormControl>
             </Grid>
-            <Grid md={12} xs={12}>
-              <FormControl fullWidth>
+            <Grid item md={12} xs={12}>
+              <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Bio</InputLabel>
                 <OutlinedInput
                   label="Bio"
