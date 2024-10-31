@@ -128,7 +128,7 @@ export default function PersonalServices(): React.JSX.Element {
     if (toEnable.length > 0) {
       await Promise.all(toEnable.map(async (id) => {
         const { error } = await supabase
-          .from('local')
+          .from('personal')
           .update({ disabled: false })
           .eq('id', id);
 
@@ -149,7 +149,7 @@ export default function PersonalServices(): React.JSX.Element {
     if (toDisable.length > 0) {
       await Promise.all(toDisable.map(async (id) => {
         const { error } = await supabase
-          .from('local')
+          .from('personal')
           .update({ disabled: true })
           .eq('id', id);
 
@@ -170,7 +170,7 @@ export default function PersonalServices(): React.JSX.Element {
     if (toDelete.length > 0) {
       await Promise.all(toDelete.map(async (id) => {
         const { error } = await supabase
-          .from('local')
+          .from('personal')
           .delete()
           .eq('id', id);
 
