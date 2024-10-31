@@ -250,43 +250,55 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
             </View>
           )}
   
-          <LinearGradient
-            colors={['#4B0082', '#0066CC']}
-            style={tw`mt-4 rounded-xl overflow-hidden shadow-lg`}
-          >
-            <View style={tw`flex-row h-52`}>
-              <View style={tw`p-4 flex-1`}>
-                <Text style={tw`text-lg font-bold text-white mb-2`}>Location</Text>
-                <Text style={tw`text-base text-white/90 mb-3`}>{address}</Text>
-                <Text style={tw`text-lg font-bold text-white mb-2`}>Distance</Text>
-                <Text style={tw`text-base text-white/90 mb-3`}>
-                  {distance ? `${distance.toFixed(2)} km` : 'Calculating...'}
-                </Text>
-                <TouchableOpacity 
-                  style={tw`bg-white/20 p-3 rounded-lg items-center mt-2`}
-                  onPress={openMap}
-                >
-                  <Text style={tw`text-white font-bold`}>Open in Maps</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={tw`flex-1`}>
-                <EventMap
-                  eventLatitude={eventDetails.location[0]?.latitude || 0}
-                  eventLongitude={eventDetails.location[0]?.longitude || 0}
-                  onDistanceCalculated={setDistance}
-                  onAddressFound={setAddress}
-                />
-              </View>
-            </View>
-          </LinearGradient>
-  
+          
+  <LinearGradient
+  colors={['#4B0082', '#0066CC']}
+  style={tw`mt-4 rounded-xl overflow-hidden shadow-lg`}
+>
+  <View style={tw`flex-row h-52`}>
+    <View style={tw`p-4 flex-1`}>
+      <View style={tw`h-36`}>
+        <Text style={tw`text-lg font-bold text-white mb-1`}>Location</Text>
+        <Text 
+          style={tw`text-base text-white/90 mb-1`}
+          numberOfLines={2}
+          ellipsizeMode="tail"
+        >
+          {address}
+        </Text>
+        <Text style={tw`text-lg font-bold text-white mb-1`}>Distance</Text>
+        <Text 
+          style={tw`text-base text-white/90`}
+          numberOfLines={1}
+        >
+          {distance ? `${distance.toFixed(2)} km` : 'Calculating...'}
+        </Text>
+      </View>
+      
+      <TouchableOpacity 
+        style={tw`bg-white/20 p-2 rounded-lg items-center`}
+        onPress={openMap}
+      >
+        <Text style={tw`text-white font-bold`}>Open in Maps</Text>
+      </TouchableOpacity>
+    </View>
+    <View style={tw`flex-1`}>
+      <EventMap
+        eventLatitude={eventDetails.location[0]?.latitude || 0}
+        eventLongitude={eventDetails.location[0]?.longitude || 0}
+        onDistanceCalculated={setDistance}
+        onAddressFound={setAddress}
+      />
+    </View>
+  </View>
+</LinearGradient>
           <LinearGradient
             colors={['#4B0082', '#0066CC']}
             style={tw`p-4 mt-4 rounded-xl shadow-lg`}
           >
             <Text style={tw`text-lg font-bold text-white mb-2`}>About this Event</Text>
             <Text style={tw`text-base text-white/90`}>
-              {eventDetails.description || 'No description available.'}
+              {eventDetails.details || 'No description available.'}
             </Text>
           </LinearGradient>
   

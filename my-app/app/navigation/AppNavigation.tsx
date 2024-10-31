@@ -88,6 +88,10 @@ import ServicesDetails from '../services/servicesDetailsInUserProfile/ServicesDe
 import LocalCommentsScreen from '../screens/LocalServiceScreens/LocalCommentsScreen';
 
 import PaymentScreen from '../screens/PaymentScreen';
+import ManageYourEvents from '../components/event/profile/ManageYourEvents';
+import EditEventScreen from '../components/event/profile/EditEventScreen';
+
+
 
 type RootStackParamList = {
   Onboarding: undefined;
@@ -171,7 +175,8 @@ type EventSetupOptionsScreenProps = {
   VideoCall: { roomUrl: string };
   TicketScanning: undefined;
   EventSerialsList: undefined;
- 
+  ManageYourEvents: undefined;
+  EditEventScreen: undefined;
 
 };
 
@@ -511,7 +516,20 @@ const AppNavigation: React.FC = () => {
 <Stack.Screen name="LocalAddReviewScreen" component={LocalAddReviewScreen}/>
 <Stack.Screen name="LocalCommentsScreen" component={LocalCommentSection}/>
 <Stack.Screen name="LocalBookingScreen" component={LocalBookingScreen}/>
-
+<Stack.Screen 
+  name="ManageYourEvents" 
+  component={ManageYourEvents}
+  options={{ headerShown: false }}
+/>
+<Stack.Screen
+  name="EditEvent"
+  component={EditEventScreen}
+  options={{
+    headerShown: false,
+    presentation: 'modal',
+    animation: 'slide_from_bottom'
+  }}
+/>
 </Stack.Navigator> 
 
   )

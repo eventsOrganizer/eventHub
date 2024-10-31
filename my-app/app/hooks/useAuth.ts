@@ -5,11 +5,13 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../navigation/types';
 import { useUser } from '../UserContext';
 
+
 const useAuth = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const navigation = useNavigation<StackNavigationProp<AuthStackParamList>>();
     const { userId, setUserId } = useUser();
+    const { selectedInterests } = useUser();
 
     const signup = async (firstname: string, lastname: string, username: string, email: string, password: string) => {
         const { data, error } = await supabase.auth.signUp({
@@ -32,6 +34,31 @@ const useAuth = () => {
             console.log('Signup successful:', data.user);
             setSuccess("Signup successful");
             setError(null);
+
+            // Debug logs
+            console.log('Starting interest save process...');
+            console.log('Selected interests:', selectedInterests);
+            
+            if (data.user && selectedInterests.length > 0) {
+                const interestsToInsert = selectedInterests.map(subcategoryId => ({
+                    user_id: data.user.id,  // Use the auth user ID directly
+                    subcategory_id: parseInt(subcategoryId)
+                }));
+
+                console.log('Interests to insert:', interestsToInsert);
+
+                const { error: insertError } = await supabase
+                    .from('interest')
+                    .insert(interestsToInsert);
+
+                if (insertError) {
+                    console.error('Failed to insert interests:', insertError);
+                } else {
+                    console.log('Interests saved successfully!');
+                }
+            }
+
+
         } else {
             console.error('Unexpected result:', data);
             setError("An unexpected error occurred");

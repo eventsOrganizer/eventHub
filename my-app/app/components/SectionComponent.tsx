@@ -37,7 +37,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
   };
 
   // Debugging: Check if items are being rendered
-  console.log('Rendering items for type:', type, 'Data:', data);
+  // console.log('Rendering items for type:', type, 'Data:', data);
 
   const renderLocalServices = () => {
     const pages = [];

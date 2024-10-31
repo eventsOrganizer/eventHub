@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, FlatList, RefreshControl, SafeAreaView, Button, ActivityIndicator, ScrollView } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, RefreshControl, SafeAreaView, Button, ActivityIndicator, ScrollView } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import tw from 'twrnc';
-
-// Components imports remain the same as original
+import { fetchEventsByUserInterests } from '../api/event/interestEventService';
 import NavBar from '../components/NavBar';
 import ServiceIcons from '../components/ServiceIcons';
 import EventSection from '../components/event/EventSection';
@@ -16,22 +15,26 @@ import FAB from '../components/FAB';
 import Banner from '../components/event/Banner';
 import { supabase } from '../services/supabaseClient';
 import { RootStackParamList } from '../navigation/types';
+import { useUser } from '../UserContext';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { userId, selectedInterests } = useUser();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState({
     events: [],
     topEvents: [],
+    interestEvents: [],
     staffServices: [],
     locals: [],
     materials: [],
     filteredEvents: [],
     filteredServices: []
   });
+
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
 
@@ -39,36 +42,39 @@ const HomeScreen: React.FC = () => {
     try {
       setLoading(true);
       const [events, topEvents, locals, staff, materials] = await Promise.all([
-        supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`),
-        supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).limit(10),
-        supabase.from('local').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`),
-        supabase.from('personal').select('*, subcategory (id,name,category(id,name)), media (url)').limit(5),
-        supabase.from('material').select('*, subcategory (id, name, category (id, name)), media (url)').limit(5)
+        // supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`),
+        // supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).limit(10),
+        // supabase.from('local').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`),
+        // supabase.from('personal').select('*, subcategory (id,name,category(id,name)), media (url)').limit(5),
+        // supabase.from('material').select('*, subcategory (id, name, category (id, name)), media (url)').limit(5)
       ]);
+
+      console.log('Fetching interest events for userId:', userId);
+      const interestEvents = await fetchEventsByUserInterests(userId, selectedInterests);
+      console.log('Interest Events Length:', interestEvents?.length || 0);
 
       setData({
         events: events.data || [],
         topEvents: topEvents.data || [],
+        interestEvents: interestEvents || [],
         staffServices: staff.data || [],
         locals: locals.data?.filter(item => item.subcategory !== null) || [],
         materials: materials.data || [],
         filteredEvents: events.data || [],
         filteredServices: staff.data || []
       });
+
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [userId, selectedInterests]);
 
   useFocusEffect(
     useCallback(() => {
       loadData();
-      return () => {
-        // Cleanup if needed
-      };
     }, [loadData])
   );
 
@@ -116,18 +122,24 @@ const HomeScreen: React.FC = () => {
           contentContainerStyle={tw`pb-40`}
           showsVerticalScrollIndicator={true}
           refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
-              onRefresh={loadData} 
-              colors={['#4B0082']} 
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={loadData} colors={['#4B0082']} />
           }
           nestedScrollEnabled={true}
         >
           <EventMarquee events={data.events.slice(0, 10)} />
           <ServiceIcons />
+          
           <View style={tw`mt-6`}>
             <Banner title="Events" />
+            {data.interestEvents.length > 0 && (
+              <EventSection 
+                title="EVENTS FOR YOU" 
+                events={data.interestEvents} 
+                navigation={navigation} 
+                onSeeAll={() => navigation.navigate('AllEvents', { filter: 'interests' })} 
+                isTopEvents={true} 
+              />
+            )}
             <EventSection 
               title="YOUR EVENTS" 
               events={data.filteredEvents} 
@@ -143,6 +155,7 @@ const HomeScreen: React.FC = () => {
               isTopEvents={true} 
             />
           </View>
+
           <View style={tw`mt-6`}>
             <Banner title="Services" />
             <SectionComponent 
@@ -167,11 +180,13 @@ const HomeScreen: React.FC = () => {
               type="material" 
             />
           </View>
+          
           <Button 
             title="Go to Video Rooms" 
             onPress={() => navigation.navigate('VideoRooms')} 
           />
         </ScrollView>
+        
         <FAB 
           isFabOpen={isFabOpen} 
           toggleFab={() => setIsFabOpen(!isFabOpen)} 
@@ -181,6 +196,6 @@ const HomeScreen: React.FC = () => {
       </LinearGradient>
     </SafeAreaView>
   );
-}
+};
 
 export default HomeScreen;
