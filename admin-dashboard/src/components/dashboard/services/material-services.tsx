@@ -28,6 +28,7 @@ export default function MaterialServices(): React.JSX.Element {
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [sortOrder, setSortOrder] = useState<string>('');
   const [subcategories, setSubcategories] = useState<{ id: string; name: string }[]>([]);
+  const [sellOrRentFilter, setSellOrRentFilter] = useState<string>('');
 
   useEffect(() => {
     fetchMaterials();
@@ -224,14 +225,20 @@ export default function MaterialServices(): React.JSX.Element {
     setSortOrder(sortOrder);
   };
 
+  const handleSellOrRentFilterChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setSellOrRentFilter(event.target.value as string);
+    setPage(0);
+  };
+
   const filteredMaterials = materials.filter(material => {
     const matchesSubcategory = subcategoryFilter === '' || material.subcategoryId === subcategoryFilter;
     const matchesSearch = material.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === '' || (statusFilter === 'enabled' ? !material.disabled : material.disabled);
     const matchesPrice = (minPrice === null || material.price >= minPrice) &&
                          (maxPrice === null || material.price <= maxPrice);
+    const matchesSellOrRent = sellOrRentFilter === '' || material.sell_or_rent === sellOrRentFilter;
 
-    return matchesSubcategory && matchesSearch && matchesStatus && matchesPrice;
+    return matchesSubcategory && matchesSearch && matchesStatus && matchesPrice && matchesSellOrRent;
   });
 
   const sortedMaterials = [...filteredMaterials].sort((a, b) => {
@@ -272,6 +279,8 @@ export default function MaterialServices(): React.JSX.Element {
         onSubcategoryFilterChange={(e) => setSubcategoryFilter(e.target.value as string)}
         onPriceFilter={handlePriceFilter}
         subcategories={subcategories}
+        sellOrRentFilter={sellOrRentFilter}
+        onSellOrRentFilterChange={handleSellOrRentFilterChange}
       />
       <MaterialTable
         count={filteredMaterials.length}

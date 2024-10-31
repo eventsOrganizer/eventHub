@@ -22,6 +22,7 @@ interface Material {
   price_per_hour: number;
   image?: string;
   disabled: boolean;
+  subcategoryName: string;
 }
 
 interface MaterialTableProps {
@@ -88,6 +89,7 @@ export function MaterialTable({
               <TableCell>Sell/Rent</TableCell>
               <TableCell>Price</TableCell>
               <TableCell>Price per Hour</TableCell>
+              <TableCell>Subcategory</TableCell>
               <TableCell>ID</TableCell>
             </TableRow>
           </TableHead>
@@ -145,6 +147,7 @@ export function MaterialTable({
                   <TableCell>{row.sell_or_rent}</TableCell>
                   <TableCell>{row.price}</TableCell>
                   <TableCell>{row.price_per_hour}</TableCell>
+                  <TableCell>{row.subcategoryName}</TableCell>
                   <TableCell>{row.id}</TableCell>
                 </TableRow>
               );

@@ -29,6 +29,8 @@ interface MaterialFilterProps {
   onSubcategoryFilterChange: (event: React.ChangeEvent<{ value: unknown }>) => void;
   subcategories: { id: string; name: string }[];
   onPriceFilter: (minPrice: number | null, maxPrice: number | null, sortOrder: string) => void;
+  sellOrRentFilter: string;
+  onSellOrRentFilterChange: (event: React.ChangeEvent<{ value: unknown }>) => void;
 }
 
 export function MaterialFilter({
@@ -46,6 +48,8 @@ export function MaterialFilter({
   onSubcategoryFilterChange,
   subcategories,
   onPriceFilter,
+  sellOrRentFilter,
+  onSellOrRentFilterChange,
 }: MaterialFilterProps): React.JSX.Element {
   const [priceModalOpen, setPriceModalOpen] = React.useState(false);
   const [minPrice, setMinPrice] = React.useState<number | ''>('');
@@ -99,6 +103,17 @@ export function MaterialFilter({
                 {subcategory.name}
               </MenuItem>
             ))}
+          </Select>
+        </FormControl>
+        <FormControl sx={{ minWidth: 100, mt: 1 }} margin="normal">
+          <InputLabel>Sell/Rent</InputLabel>
+          <Select
+            value={sellOrRentFilter}
+            onChange={onSellOrRentFilterChange}
+          >
+            <MenuItem value="">All</MenuItem>
+            <MenuItem value="sell">Sell</MenuItem>
+            <MenuItem value="rent">Rent</MenuItem>
           </Select>
         </FormControl>
         <Button variant="outlined" onClick={() => setPriceModalOpen(true)}>
