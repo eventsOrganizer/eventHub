@@ -15,6 +15,7 @@ interface EventCardProps {
     name: string;
     media: { url: string }[];
     subcategory: string | { name: string };
+    date: string;
   };
 }
 
@@ -73,6 +74,7 @@ export function EventCard({ event }: EventCardProps): React.JSX.Element {
             Details: {event.details}
           </Typography>
         </Box>
+        
       </CardContent>
     </Card>
   );

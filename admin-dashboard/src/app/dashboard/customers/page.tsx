@@ -6,14 +6,9 @@ import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
-import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
-
 import { CustomersFilters } from '@/components/dashboard/customer/customers-filters';
 import { CustomersTable } from '@/components/dashboard/customer/customers-table';
 import type { Customer } from '@/components/dashboard/customer/customers-table';
-
-// Import the supabase client from the supabase-client.tsx file
 import { supabase } from '../../../lib/supabase-client';
 
 export default function Page(): React.JSX.Element {
@@ -22,6 +17,7 @@ export default function Page(): React.JSX.Element {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -34,7 +30,8 @@ export default function Page(): React.JSX.Element {
           username, 
           email, 
           details,
-          media:media(url)
+          media:media(url),
+          disabled
         `);
 
       if (error) {
@@ -48,6 +45,7 @@ export default function Page(): React.JSX.Element {
           username: user.username ?? 'N/A',
           details: user.details ?? 'N/A',
           signedUp: new Date(),
+          disabled: user.disabled ?? false,
         }));
 
         setCustomers(formattedData);
@@ -55,7 +53,7 @@ export default function Page(): React.JSX.Element {
     };
 
     fetchCustomers();
-  }, []);
+  }, [selected]);
 
   const handlePageChange = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -75,11 +73,22 @@ export default function Page(): React.JSX.Element {
     setSelected(newSelected);
   };
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleStatusFilterChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setStatusFilter(event.target.value as string);
+  };
+
+  const selectedCustomers = customers.filter(customer => selected.has(customer.email));
+
+  const filteredCustomers = customers.filter(customer => {
+    const matchesSearch = customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          customer.username.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === '' ||
+                          (statusFilter === 'enabled' && !customer.disabled) ||
+                          (statusFilter === 'disabled' && customer.disabled);
+
+    return matchesSearch && matchesStatus;
+  });
 
   const paginatedCustomers = applyPagination(filteredCustomers, page, rowsPerPage);
 
@@ -98,7 +107,10 @@ export default function Page(): React.JSX.Element {
       <CustomersFilters
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
-        isDeleteEnabled={selected.size > 0} // Pass the selection state
+        isDeleteEnabled={selected.size > 0}
+        selectedCustomers={selectedCustomers}
+        statusFilter={statusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
       />
       <CustomersTable
         count={filteredCustomers.length}
@@ -107,7 +119,7 @@ export default function Page(): React.JSX.Element {
         rowsPerPage={rowsPerPage}
         onPageChange={handlePageChange}
         onRowsPerPageChange={handleRowsPerPageChange}
-        onSelectionChange={handleSelectionChange} // Handle selection change
+        onSelectionChange={handleSelectionChange}
       />
     </Stack>
   );

@@ -10,13 +10,15 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
+import { supabase } from '../../lib/supabase-client';
 
 interface UserDetailsFormProps {
   user: {
+    id: number;
     firstname: string;
     lastname: string;
     email: string;
-    phone?: string;
+    username: string;
     age: number;
     gender: string;
     details: string;
@@ -26,17 +28,48 @@ interface UserDetailsFormProps {
 
 export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Element {
   const [isEditable, setIsEditable] = React.useState(false);
+  const [formData, setFormData] = React.useState(user);
 
   const handleEditClick = () => {
     setIsEditable(!isEditable);
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('user')
+        .update({
+          firstname: formData.firstname,
+          lastname: formData.lastname,
+          email: formData.email,
+          username: formData.username,
+          age: formData.age,
+          gender: formData.gender,
+          details: formData.details,
+          bio: formData.bio,
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating user details:', error);
+      } else {
+        console.log('User details updated successfully');
+        setIsEditable(false);
+        window.location.reload(); // Reload the page
+      }
+    } catch (error) {
+      console.error('Unexpected error updating user details:', error);
+    }
+  };
+
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-      }}
-    >
+    <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader
           subheader="This user information can be edited"
@@ -57,8 +90,9 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 <InputLabel>First name</InputLabel>
                 <OutlinedInput
                   label="First name"
-                  name="firstName"
-                  defaultValue={user.firstname}
+                  name="firstname"
+                  value={formData.firstname}
+                  onChange={handleChange}
                   disabled={!isEditable}
                 />
               </FormControl>
@@ -68,8 +102,9 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 <InputLabel>Last name</InputLabel>
                 <OutlinedInput
                   label="Last name"
-                  name="lastName"
-                  defaultValue={user.lastname}
+                  name="lastname"
+                  value={formData.lastname}
+                  onChange={handleChange}
                   disabled={!isEditable}
                 />
               </FormControl>
@@ -80,19 +115,20 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 <OutlinedInput
                   label="Email address"
                   name="email"
-                  defaultValue={user.email}
+                  value={formData.email}
+                  onChange={handleChange}
                   disabled={!isEditable}
                 />
               </FormControl>
             </Grid>
             <Grid item md={6} xs={12}>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Phone number</InputLabel>
+              <FormControl fullWidth required sx={{ mb: 2 }}>
+                <InputLabel>Username</InputLabel>
                 <OutlinedInput
-                  label="Phone number"
-                  name="phone"
-                  type="tel"
-                  defaultValue={user.phone}
+                  label="Username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
                   disabled={!isEditable}
                 />
               </FormControl>
@@ -104,7 +140,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                   label="Age"
                   name="age"
                   type="number"
-                  defaultValue={user.age}
+                  value={formData.age}
+                  onChange={handleChange}
                   disabled={!isEditable}
                 />
               </FormControl>
@@ -115,7 +152,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 <OutlinedInput
                   label="Gender"
                   name="gender"
-                  defaultValue={user.gender}
+                  value={formData.gender}
+                  onChange={handleChange}
                   disabled={!isEditable}
                 />
               </FormControl>
@@ -126,7 +164,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 <OutlinedInput
                   label="Details"
                   name="details"
-                  defaultValue={user.details}
+                  value={formData.details}
+                  onChange={handleChange}
                   multiline
                   rows={4}
                   disabled={!isEditable}
@@ -139,7 +178,8 @@ export function UserDetailsForm({ user }: UserDetailsFormProps): React.JSX.Eleme
                 <OutlinedInput
                   label="Bio"
                   name="bio"
-                  defaultValue={user.bio}
+                  value={formData.bio}
+                  onChange={handleChange}
                   multiline
                   rows={4}
                   disabled={!isEditable}

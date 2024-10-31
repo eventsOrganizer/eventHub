@@ -34,6 +34,7 @@ interface Event {
   name: string;
   media: { url: string }[];
   subcategory: string;
+  
 }
 
 interface Service {
@@ -65,6 +66,7 @@ export default function UserDetailsPage(): React.JSX.Element {
   const [serviceTypeFilter, setServiceTypeFilter] = useState('');
   const [serviceSubcategoryFilter, setServiceSubcategoryFilter] = useState('');
   const [serviceSubcategories, setServiceSubcategories] = useState<string[]>([]);
+  const [isDisabled, setIsDisabled] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
     if (email) {
@@ -78,9 +80,11 @@ export default function UserDetailsPage(): React.JSX.Element {
           age,
           gender,
           email,
+          username,
           details,
           bio,
-          media:media(url)
+          media:media(url),
+          disabled
         `)
         .eq('email', email)
         .then(({ data, error }) => {
@@ -91,6 +95,7 @@ export default function UserDetailsPage(): React.JSX.Element {
             const avatarUrl = userData.media?.[0]?.url ?? '';
             setUser({ ...userData, avatar: avatarUrl });
             setUserId(userData.id);
+            setIsDisabled(userData.disabled);
           }
         });
     } else {
@@ -296,21 +301,37 @@ export default function UserDetailsPage(): React.JSX.Element {
                           service.details.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = serviceTypeFilter ? service.type === serviceTypeFilter : true;
     const matchesSubcategory = serviceSubcategoryFilter ? 
-      (typeof service.subcategory === 'string' ? 
-        service.subcategory === serviceSubcategoryFilter : 
-        service.subcategory.name === serviceSubcategoryFilter) 
-      : true;
+      service.subcategory === serviceSubcategoryFilter : true;
 
     return matchesSearch && matchesType && matchesSubcategory;
   });
 
-  if (!user) {
-    return <Typography>Loading...</Typography>;
-  }
+  const handleToggleDisable = async () => {
+    if (email !== undefined) {
+      try {
+        const { error } = await supabase
+          .from('user')
+          .update({ disabled: !isDisabled })
+          .eq('email', email);
+
+        if (error) {
+          console.error('Error updating user status:', error);
+        } else {
+          setIsDisabled(!isDisabled);
+        }
+      } catch (error) {
+        console.error('Unexpected error updating user status:', error);
+      }
+    }
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
+
+  if (!user) {
+    return <Typography>Loading...</Typography>;
+  }
 
   return (
     <Stack spacing={3}>
@@ -326,12 +347,19 @@ export default function UserDetailsPage(): React.JSX.Element {
         <Grid container spacing={3}>
           <Grid lg={4} md={6} xs={12}>
             <UserInfo user={user} />
-            <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end', mt: 2, mr: 12 }}>
-              <Button variant="contained" color="error">Disable</Button>
+            <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end', mt: 2, mr: 17 }}>
+              <Button variant="contained" color={isDisabled ? 'success' : 'error'} onClick={handleToggleDisable}>
+                {isDisabled ? 'Enable' : 'Disable'}
+              </Button>
               <Button variant="outlined" color="error">
                 Delete
               </Button>
             </Stack>
+            {isDisabled && (
+              <Typography variant="body2" color="red" sx={{ mt: 2, ml: 18.5 }}>
+                This account is disabled.
+              </Typography>
+            )}
           </Grid>
           <Grid lg={8} md={6} xs={12}>
             <UserDetailsForm user={user} />

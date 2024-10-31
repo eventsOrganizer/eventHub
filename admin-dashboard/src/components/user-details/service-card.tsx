@@ -49,7 +49,7 @@ export function ServiceCard({ service }: ServiceCardProps): React.JSX.Element {
             opacity: 0.8
           }}>
             <Typography variant="body2">
-              ID: {service.id}
+              {service.id}
             </Typography>
           </Box>
         </Box>

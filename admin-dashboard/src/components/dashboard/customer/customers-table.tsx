@@ -17,10 +17,11 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 import Button from '@mui/material/Button';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useSelection } from '@/hooks/use-selection';
 import { CustomPaginationActions } from './CustomPagination';
+import { supabase } from '@/lib/supabase-client';
 
 export interface Customer {
   avatar: string;
@@ -29,6 +30,7 @@ export interface Customer {
   email: string;
   details: string;
   signedUp: Date;
+  disabled: boolean;
 }
 
 interface CustomersTableProps {
@@ -84,6 +86,30 @@ export function CustomersTable({
     router.push(`/dashboard/user-details?email=${email}`);
   };
 
+  const handleToggleDisable = async (email: string, isDisabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('user')
+        .update({ disabled: !isDisabled })
+        .eq('email', email);
+
+      if (error) {
+        console.error('Error updating user status:', error);
+      } else {
+        // Update the local state to reflect the change
+        setCustomers((prevCustomers) =>
+          prevCustomers.map((customer) =>
+            customer.email === email ? { ...customer, disabled: !isDisabled } : customer
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Unexpected error updating user status:', error);
+    }
+  };
+
+  const [customers, setCustomers] = useState<Customer[]>([]);
+
   return (
     <Card>
       <Box sx={{ overflowX: 'auto' }}>
@@ -114,20 +140,34 @@ export function CustomersTable({
           <TableBody>
             {rows.map((row) => {
               const isSelected = selected?.has(row.email);
+              const isDisabled = row.disabled;
 
               return (
                 <TableRow
                   hover
                   key={row.email}
                   selected={isSelected}
-                  onClick={() => handleRowClick(row.email)} // Make row clickable
-                  sx={{ cursor: 'pointer' }} // Change cursor to pointer
+                  onClick={() => handleRowClick(row.email)}
+                  sx={{
+                    cursor: 'pointer',
+                    backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.1)' : 'inherit',
+                    opacity: isDisabled ? 0.5 : 1,
+                    '&:hover': {
+                      backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.04)',
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.08)',
+                      '&:hover': {
+                        backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.12)',
+                      },
+                    },
+                  }}
                 >
                   <TableCell padding="checkbox">
                     <Checkbox
                       checked={isSelected}
                       onChange={(event) => {
-                        event.stopPropagation(); // Prevent row click event
+                        event.stopPropagation();
                         if (event.target.checked) {
                           selectOne(row.email);
                         } else {
@@ -150,6 +190,11 @@ export function CustomersTable({
                     <Button
                       variant="outlined"
                       color="primary"
+                      sx={{
+                        opacity: 1,
+                        backgroundColor: 'white',
+                        zIndex: 1,
+                      }}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleManageClick(row.email);
@@ -167,12 +212,12 @@ export function CustomersTable({
       <Divider />
       <TablePagination
         component="div"
-        count={count} // Total number of customers
+        count={count}
         page={page}
         rowsPerPage={rowsPerPage}
         onPageChange={onPageChange}
         onRowsPerPageChange={onRowsPerPageChange}
-        rowsPerPageOptions={[5, 10, 25]} // Options for rows per page
+        rowsPerPageOptions={[5, 10, 25]}
         labelRowsPerPage="Rows per page"
       />
     </Card>
