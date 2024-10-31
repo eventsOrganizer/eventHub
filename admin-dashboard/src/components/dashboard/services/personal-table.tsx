@@ -14,7 +14,7 @@ import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import { useSelection } from '../../../hooks/use-selection';
 
-interface LocalService {
+interface PersonalService {
   id: string;
   name: string;
   price: number;
@@ -24,17 +24,17 @@ interface LocalService {
   disabled: boolean;
 }
 
-interface LocalTableProps {
+interface PersonalTableProps {
   count: number;
   page: number;
-  rows: LocalService[];
+  rows: PersonalService[];
   rowsPerPage: number;
   onPageChange: (event: unknown, newPage: number) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectionChange: (selected: Set<string>) => void;
 }
 
-export function LocalTable({
+export function PersonalTable({
   count,
   rows,
   page,
@@ -42,7 +42,7 @@ export function LocalTable({
   onPageChange,
   onRowsPerPageChange,
   onSelectionChange,
-}: LocalTableProps): React.JSX.Element {
+}: PersonalTableProps): React.JSX.Element {
   const rowIds = React.useMemo(() => {
     return rows.map((service) => service.id);
   }, [rows]);

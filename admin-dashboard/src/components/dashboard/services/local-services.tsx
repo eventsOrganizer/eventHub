@@ -2,15 +2,16 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { LocalServicesTable } from './local-table';
-import { LocalFilters } from './local-filter';
+import { LocalTable } from './local-table';
+import { LocalFilter } from './local-filter';
 import { supabase } from '../../../lib/supabase-client';
 
 interface LocalService {
   id: string;
   name: string;
   price: number;
-  subcategory: string;
+  subcategoryId: string;
+  subcategoryName: string;
   owner: string;
   image?: string;
   disabled: boolean;
@@ -50,10 +51,6 @@ export default function LocalServices(): React.JSX.Element {
     fetchSubcategories();
   }, []);
 
-  useEffect(() => {
-    console.log('Subcategory filter changed:', subcategoryFilter);
-  }, [subcategoryFilter]);
-
   const fetchLocalServices = async () => {
     try {
       const { data, error } = await supabase
@@ -62,7 +59,7 @@ export default function LocalServices(): React.JSX.Element {
           id,
           name,
           priceperhour,
-          subcategory: subcategory_id (name, category_id),
+          subcategory: subcategory_id (id, name),
           user: user_id (firstname, lastname),
           media: media (url),
           disabled
@@ -97,7 +94,8 @@ export default function LocalServices(): React.JSX.Element {
           id: service.id ?? 'N/A',
           name: service.name ?? 'N/A',
           price: service.priceperhour ?? 0,
-          subcategory: service.subcategory.name ?? 'N/A',
+          subcategoryId: service.subcategory.id ?? 'N/A',
+          subcategoryName: service.subcategory.name ?? 'N/A',
           owner: `${service.user.firstname ?? 'N/A'} ${service.user.lastname ?? 'N/A'}`,
           image: imageUrl,
           disabled: service.disabled ?? false,
@@ -198,7 +196,7 @@ export default function LocalServices(): React.JSX.Element {
   };
 
   const filteredServices = localServices.filter(service => {
-    const matchesSubcategory = subcategoryFilter === '' || service.subcategory === subcategoryFilter;
+    const matchesSubcategory = subcategoryFilter === '' || service.subcategoryId === subcategoryFilter;
     const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === '' || (statusFilter === 'enabled' ? !service.disabled : service.disabled);
     const matchesPrice = (minPrice === null || service.price >= minPrice) &&
@@ -230,7 +228,7 @@ export default function LocalServices(): React.JSX.Element {
   return (
     <Stack spacing={3}>
       <Typography variant="h4">Local Services</Typography>
-      <LocalFilters
+      <LocalFilter
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         isEnableDisabled={isEnableDisabled}
@@ -246,7 +244,7 @@ export default function LocalServices(): React.JSX.Element {
         onPriceFilter={handlePriceFilter}
         subcategories={subcategories}
       />
-      <LocalServicesTable
+      <LocalTable
         count={filteredServices.length}
         page={page}
         rows={paginatedServices}    

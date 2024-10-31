@@ -14,7 +14,7 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 
-interface LocalFilterProps {
+interface PersonalFilterProps {
   searchQuery: string;
   onSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   isEnableDisabled: boolean;
@@ -31,7 +31,7 @@ interface LocalFilterProps {
   onPriceFilter: (minPrice: number | null, maxPrice: number | null, sortOrder: string) => void;
 }
 
-export function LocalFilter({
+export function PersonalFilter({
   searchQuery,
   onSearchChange,
   isEnableDisabled,
@@ -46,7 +46,7 @@ export function LocalFilter({
   onSubcategoryFilterChange,
   subcategories,
   onPriceFilter,
-}: LocalFilterProps): React.JSX.Element {
+}: PersonalFilterProps): React.JSX.Element {
   const [priceModalOpen, setPriceModalOpen] = React.useState(false);
   const [minPrice, setMinPrice] = React.useState<number | ''>('');
   const [maxPrice, setMaxPrice] = React.useState<number | ''>('');
