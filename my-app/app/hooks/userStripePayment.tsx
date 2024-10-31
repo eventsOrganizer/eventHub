@@ -1,61 +1,81 @@
 import { useState } from 'react';
 import { useConfirmPayment } from '@stripe/stripe-react-native';
+import { PaymentResult } from '../types/paymentTypes';
+import { Alert } from 'react-native';
+import axios from 'axios';
 
-const useStripePayment = () => {
-  const { confirmPayment, loading } = useConfirmPayment();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
+interface PaymentOrder {
+  amount: number;
+  serviceId: number;
+  serviceType: 'personal' | 'local' | 'material';
+  userId: string;
+}
+
+export const useStripePayment = () => {
+  const { confirmPayment } = useConfirmPayment();
+  const [loading, setLoading] = useState(false);
 
   const initiatePayment = async (
     cardDetails: any,
     billingDetails: { email: string },
-    order: { amount: number; localId: number; userId: number }
-  ) => {
+    order: PaymentOrder
+  ): Promise<PaymentResult> => {
+    if (!cardDetails?.complete) {
+      Alert.alert('Error', 'Please enter complete card information');
+      return { success: false };
+    }
+
     try {
-      const response = await fetch('https://api.stripe.com/v1/payment_intents', {
-        method: 'POST',
+      setLoading(true);
+      
+      const response = await axios.post('https://api.stripe.com/v1/payment_intents', {
+        amount: Math.round(order.amount * 100),
+        currency: 'usd',
+        // description: `Payment for local ID: ${order.localId}, User ID: ${order.userId}`,
+      }, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-         'Authorization': `Bearer sk_test_51QClepFlPYG1ImxpA4Br3T5n8kG5Rnsf3Q2xTqPusg5etFWUfHHPqKhFqvpN2zfhXMKtlKRNJ31B5pglrbnchPC600ue5pfwVv`
-               }    
-         , body: new URLSearchParams({
-          amount: (order.amount * 100).toString(), // Stripe expects the amount in cents
-          currency: 'usd',
-          description: `Payment for local ID: ${order.localId}, User ID: ${order.userId}`,
-        }).toString(),
+          'Authorization': `Bearer sk_test_51QFaREKiWYtX8OEl0KqNf9ahbcp2FRIVomn7IQmNrHdYxv9DYBaxH1uUh906CVDUiyuiVNz95KnAWueGR8Mggqlu00mVfistGJ`
+        }
       });
 
-      const { client_secret, error: paymentError } = await response.json();
+      const { client_secret, error: paymentError } = response.data;
 
-      if (paymentError) throw new Error(paymentError.message);
-
-      if (client_secret && cardDetails?.complete) {
-        const { error, paymentIntent } = await confirmPayment(client_secret, {
-          paymentMethodType: 'Card',
-          paymentMethodData: {
-            billingDetails,
-          },
-        });
-
-        if (error) {
-          console.log("Error from Stripe:", error);
-          setErrorMessage(error.message);
-          setPaymentSuccess(false);
-        } else if (paymentIntent) {
-          console.log("Payment successful:", paymentIntent);
-          setPaymentSuccess(true);
-          setErrorMessage(null);
-        }
-      } else {
-        setErrorMessage('Please complete card details.');
+      if (paymentError) {
+        console.log('Failed to create payment intent', paymentError);
+        throw new Error('Failed to create payment intent');
       }
+
+      const { paymentIntent, error } = await confirmPayment(client_secret, {
+        paymentMethodType: 'Card',
+        paymentMethodData: {
+          billingDetails,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (!paymentIntent) {
+        throw new Error('Payment confirmation failed');
+      }
+
+      return {
+        success: true,
+        paymentIntentId: paymentIntent.id,
+      };
     } catch (error) {
-      setErrorMessage((error as Error).message || 'Payment failed.');
-      console.error("Payment initiation error:", error);
+      console.error('Payment error:', error);
+      Alert.alert(
+        'Payment Error',
+        error instanceof Error ? error.message : 'An unexpected error occurred'
+      );
+      return { success: false };
+    } finally {
+      setLoading(false);
     }
   };
 
-  return { initiatePayment, loading, paymentSuccess, errorMessage };
+  return { initiatePayment, loading };
 };
-
-export default useStripePayment;

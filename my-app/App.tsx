@@ -17,7 +17,7 @@ const App = () => {
         <StatusBar barStyle="light-content" />
         {/* <Background /> DONT DELETE THIS  !!!!!!!!!!! */}
       <StripeProvider
-      publishableKey="pk_test_51QClepFlPYG1ImxpWSMG9xSRk1nx5GSs0ICY7GLfHDYRVpP8ALGVhJmkcehDZH4A67JOhek41fcQdFmXcjsJhEdo00y4GqAitW" // Replace with your actual Stripe publishable key
+      publishableKey={"pk_test_51QFaREKiWYtX8OElX2ZV3OZYiPE9LUBKa48t6qu36Sf7DdmCay5xSs4syQn42KLxxzOVCVKmRsbnA0Zu1piSJHqh00XFn8pHXJ"} // Replace with your actual Stripe publishable key
     >
         <UserProvider>
           <Provider store={store}>

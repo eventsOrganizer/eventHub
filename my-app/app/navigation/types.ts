@@ -128,11 +128,28 @@ export type RootStackParamList = {
   MaterialScreen: { materials: Material[] };
   MaterialsOnboarding: undefined;
   MaterialDetail: { material: Material };
-  PaymentAction: {
-    price: number;
-    personalId: string;
+  PaymentScreen: {
+    amount: number;
+    totalPrice: number;
+    serviceId: number;
+    serviceType: 'personal' | 'local' | 'material';
+    userId: string;
+    requestId: number;
+    start: string;
+    end: string;
   };
-};
+  PaymentSuccess: {
+    requestId: number;
+    serviceId: number;
+    serviceType: 'personal' | 'local' | 'material';
+    paymentIntentId: string;
+    amount: number;
+    totalPrice: number;
+  };
+  YourRequests: {
+    mode: 'sent' | 'received';
+  };
+}
 
 export interface Media {
   url: string;

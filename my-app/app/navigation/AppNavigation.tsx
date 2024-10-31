@@ -78,20 +78,26 @@ import LocalBookingScreen from '../screens/LocalServiceScreens/LocalBookingScree
 
 import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail';
 
-import PaymentTestScreen from '../components/payment/PaymentTestScreen';
+import PaymentScreen  from '../screens/PaymentScreen';
+import PaymentSuccessScreen from '../screens/payment/PaymentSuccessScreen';
 
-import NotificationsScreen from '../screens/NotificationsScreen';
+import NotificationsScreen from '../components/event/NotificationsScreen';
 import TicketScanningScreen from '../components/event/Ticketing/TicketScanningScreen';
 import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
 import ServicesDetails from '../services/servicesDetailsInUserProfile/ServicesDetails';
 import LocalCommentsScreen from '../screens/LocalServiceScreens/LocalCommentsScreen';
 
-import PaymentScreen from '../screens/PaymentScreen';
+// import * as PaymentScreen from '../screens/PaymentScreen';
 
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
+  PaymentScreen: {
+    amount: number;
+    localId: number;
+    userId: number;
+  };
   Profile: undefined;
   Home: undefined;
   Map: undefined;
@@ -160,7 +166,6 @@ type EventSetupOptionsScreenProps = {
   LocalsScreen: undefined;
   LocalServiceDetails: { localServiceId: number };
   UserProfile: undefined;
-  PaymentAction: { price: number; personalId: string };
   SearchResultsScreen: { initialSearchTerm: string };
   ServiceDetails: { serviceId: string };
   ServiceSelection: undefined;
@@ -380,15 +385,16 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true }} 
   />
 
-  <Stack.Screen 
-    name="PaymentAction" 
-    component={PaymentActionScreen}
-    options={{ 
-   headerShown: true,
-   title: 'Payment'
-   }}
-
-/>
+      <Stack.Screen 
+        name="PaymentScreen" 
+        component={PaymentScreen}
+        options={{ headerShown: true, title: 'Payment' }}
+      />
+      <Stack.Screen 
+        name="PaymentSuccess" 
+        component={PaymentSuccessScreen}
+        options={{ headerShown: false }}
+      />
 
   <Stack.Screen 
     name="EventCreation" 
@@ -500,7 +506,7 @@ const AppNavigation: React.FC = () => {
     name="MapScreen" 
     component={MapScreen} 
   />
-    <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+    
 
   
 

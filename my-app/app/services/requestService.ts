@@ -30,59 +30,53 @@ const fetchRequestDetails = async (requestId: number, normalizedServiceType: str
   return data as unknown as RequestData;
 };
 
-export const handleRequestConfirmation = async (
-  requestId: number, 
-  serviceType: string,
-  serviceId: number
-): Promise<RequestResult> => {
+export const handleRequestConfirmation = async (requestId: number, type: string, serviceId: number) => {
   try {
-    const normalizedServiceType = serviceType.toLowerCase();
-    const requestData = await fetchRequestDetails(requestId, normalizedServiceType);
-    const serviceData = requestData[normalizedServiceType as keyof Pick<RequestData, 'personal' | 'local' | 'material'>];
-
-    if (!serviceData) {
-      throw new Error(`Service data not found for type: ${normalizedServiceType}`);
-    }
-
-    // Update availability status
-    const { error: availabilityError } = await supabase
-      .from('availability')
-      .update({ statusday: 'reserved' })
-      .eq(`${normalizedServiceType}_id`, serviceId);
-
-    if (availabilityError) throw availabilityError;
-
-    // Update request status and mark as read for provider
-    const { error: updateError } = await supabase
+    // 1. Get the request data to find the availability_id
+    const { data: requestData, error: requestError } = await supabase
       .from('request')
-      .update({ 
-        status: 'accepted' as RequestStatus,
-        is_read: true,
-        is_action_read: true // Set to true when provider takes action
-      })
+      .select('availability_id')
+      .eq('id', requestId)
+      .single();
+
+    if (requestError) throw requestError;
+
+    // 2. Update request status
+    const { error: updateRequestError } = await supabase
+      .from('request')
+      .update({ status: 'accepted' })
       .eq('id', requestId);
 
-    if (updateError) throw updateError;
+    if (updateRequestError) throw updateRequestError;
 
-    const notificationMessage = `Your request for ${serviceData.name} has been accepted by ${serviceData.user.firstname} ${serviceData.user.lastname}`;
-    
-    // Create notification and set is_read to false initially
-    const { error: notificationError } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: requestData.user_id,
-        title: 'Request Accepted',
-        message: notificationMessage,
-        created_at: new Date().toISOString(),
-        is_read: false // Initially unread for the requester
-      });
+    // 3. Update availability statusday to 'reserved'
+    if (requestData?.availability_id) {
+      const { error: availabilityError } = await supabase
+        .from('availability')
+        .update({ 
+          statusday: 'reserved'  // This was missing before
+        })
+        .eq('id', requestData.availability_id);
 
-    if (notificationError) throw notificationError;
+      if (availabilityError) throw availabilityError;
+    }
+
+    // 4. Update personal_user status if it exists
+    const { error: personalUserError } = await supabase
+      .from('personal_user')
+      .update({ status: 'accepted' })
+      .eq('personal_id', serviceId)
+      .eq('availability_id', requestData?.availability_id);
+
+    if (personalUserError) {
+      console.warn('Error updating personal_user:', personalUserError);
+      // Don't throw here as this is not critical
+    }
 
     return {
       success: true,
-      title: "Request Accepted",
-      message: notificationMessage,
+      title: "Success",
+      message: "Request confirmed successfully",
       variant: "default"
     };
   } catch (error) {
@@ -91,95 +85,60 @@ export const handleRequestConfirmation = async (
   }
 };
 
-export const handleRequestRejection = async (
-  requestId: number, 
-  serviceType: string,
-  serviceId: number
-): Promise<RequestResult> => {
+export const handleRequestRejection = async (requestId: number, type: string, serviceId: number) => {
   try {
-    const normalizedServiceType = serviceType.toLowerCase();
-    const requestData = await fetchRequestDetails(requestId, normalizedServiceType);
-    const serviceData = requestData[normalizedServiceType as keyof Pick<RequestData, 'personal' | 'local' | 'material'>];
-
-    if (!serviceData) {
-      throw new Error(`Service data not found for type: ${normalizedServiceType}`);
-    }
-
-    // Get the personal_user entry
-    const { data: personalUserData, error: fetchError } = await supabase
+    const { data: requestData, error: requestError } = await supabase
       .from('request')
       .select('availability_id')
-      .eq('personal_id', serviceId)
-      .eq('user_id', requestData.user_id);
+      .eq('id', requestId)
+      .single();
 
-    if (fetchError) throw fetchError;
+    if (requestError) throw requestError;
 
-    // Update availability status to available
-    if (personalUserData && personalUserData.length > 0) {
-      for (const entry of personalUserData) {
-        if (entry.availability_id) {
-          const { error: availabilityError } = await supabase
-            .from('availability')
-            .update({ 
-              statusday: 'available',
-              start: null,
-              end: null
-            })
-            .eq('id', entry.availability_id);
-
-          if (availabilityError) throw availabilityError;
-        }
-
-        // Remove the personal_user entry
-        const { error: personalUserError } = await supabase
-          .from('request')
-          .delete()
-          .eq('personal_id', serviceId)
-          .eq('user_id', requestData.user_id);
-
-        if (personalUserError) throw personalUserError;
-      }
-    }
-
-    // Update request status to refused
-    const { error: updateError } = await supabase
+    const { error: updateRequestError } = await supabase
       .from('request')
-      .update({ 
-        status: 'refused' as RequestStatus,
-        is_read: true,
-        is_action_read: true // Set to true when provider takes action
-      })
+      .update({ status: 'refused' })
       .eq('id', requestId);
 
-    if (updateError) throw updateError;
+    if (updateRequestError) throw updateRequestError;
 
-    const notificationMessage = `Your request for ${serviceData.name} has been refused by ${serviceData.user.firstname} ${serviceData.user.lastname}`;
-    
-    // Create notification and set is_read to false initially
-    const { error: notificationError } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: requestData.user_id,
-        title: 'Request Refused',
-        message: notificationMessage,
-        created_at: new Date().toISOString(),
-        is_read: false // Initially unread for the requester
-      });
+    if (requestData?.availability_id) {
+      const { error: availabilityError } = await supabase
+        .from('availability')
+        .update({
+          statusday: 'available',
+          start: null,
+          end: null,
+          daysofweek: null,
+          startdate: null,
+          enddate: null,
+        })
+        .eq('id', requestData.availability_id);
 
-    if (notificationError) throw notificationError;
+      if (availabilityError) throw availabilityError;
+    }
+
+    const { error: personalUserError } = await supabase
+      .from('personal_user')
+      .update({ status: 'refused' })
+      .eq('personal_id', serviceId)
+      .eq('availability_id', requestData?.availability_id);
+
+    if (personalUserError) {
+      console.warn('Error updating personal_user:', personalUserError);
+    }
 
     return {
       success: true,
-      title: "Request Refused",
-      message: notificationMessage,
-      variant: "destructive"
+      title: "Success",
+      message: "Request rejected successfully",
+      variant: "default"
     };
   } catch (error) {
-    console.error('Error refusing request:', error);
+    console.error('Error rejecting request:', error);
     throw error;
   }
 };
-
 export const deleteRequest = async (requestId: number) => {
   try {
     const { error } = await supabase
