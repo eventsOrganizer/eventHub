@@ -6,6 +6,9 @@ import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
+import dayjs from 'dayjs';
+import { useRouter } from 'next/navigation';
+
 import { CustomersFilters } from '@/components/dashboard/customer/customers-filters';
 import { CustomersTable } from '@/components/dashboard/customer/customers-table';
 import type { Customer } from '@/components/dashboard/customer/customers-table';
@@ -77,6 +80,27 @@ export default function Page(): React.JSX.Element {
     setStatusFilter(event.target.value as string);
   };
 
+  const handleDelete = async () => {
+    try {
+      const deletePromises = Array.from(selected).map(async (email) => {
+        const { error } = await supabase
+          .from('user')
+          .delete()
+          .eq('email', email);
+
+        if (error) {
+          console.error('Error deleting user:', error);
+        }
+      });
+
+      await Promise.all(deletePromises);
+      setCustomers((prevCustomers) => prevCustomers.filter(customer => !selected.has(customer.email)));
+      setSelected(new Set());
+    } catch (error) {
+      console.error('Unexpected error deleting users:', error);
+    }
+  };
+
   const selectedCustomers = customers.filter(customer => selected.has(customer.email));
 
   const filteredCustomers = customers.filter(customer => {
@@ -111,6 +135,7 @@ export default function Page(): React.JSX.Element {
         selectedCustomers={selectedCustomers}
         statusFilter={statusFilter}
         onStatusFilterChange={handleStatusFilterChange}
+        onDelete={handleDelete}
       />
       <CustomersTable
         count={filteredCustomers.length}

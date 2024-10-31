@@ -16,6 +16,7 @@ interface CustomersFiltersProps {
   selectedCustomers: any[];
   statusFilter: string;
   onStatusFilterChange: (event: React.ChangeEvent<{ value: unknown }>) => void;
+  onDelete: () => void;
 }
 
 export function CustomersFilters({
@@ -25,6 +26,7 @@ export function CustomersFilters({
   selectedCustomers,
   statusFilter,
   onStatusFilterChange,
+  onDelete,
 }: CustomersFiltersProps): React.JSX.Element {
   const allDisabledSelected = selectedCustomers.every(customer => customer.disabled);
   const allEnabledSelected = selectedCustomers.every(customer => !customer.disabled);
@@ -94,6 +96,7 @@ export function CustomersFilters({
             variant="outlined"
             color="error"
             disabled={!isDeleteEnabled}
+            onClick={onDelete}
           >
             Delete
           </Button>

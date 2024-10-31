@@ -1,5 +1,3 @@
-'use client';
-
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -14,35 +12,29 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import { useEffect, useState } from 'react';
-
 import { useSelection } from '../../../hooks/use-selection';
-import { supabase } from '../../../lib/supabase-client';
 
-export interface Event {
+interface LocalService {
   id: string;
   name: string;
-  type: string;
-  privacy: boolean;
-  owner: string;
+  price: number;
   subcategory: string;
+  owner: string;
   image?: string;
-  ownerImage?: string;
   disabled: boolean;
 }
 
-interface EventsTableProps {
+interface LocalServicesTableProps {
   count: number;
   page: number;
-  rows: Event[];
+  rows: LocalService[];
   rowsPerPage: number;
   onPageChange: (event: unknown, newPage: number) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectionChange: (selected: Set<string>) => void;
 }
 
-export function EventsTable({
+export function LocalServicesTable({
   count,
   rows,
   page,
@@ -50,9 +42,9 @@ export function EventsTable({
   onPageChange,
   onRowsPerPageChange,
   onSelectionChange,
-}: EventsTableProps): React.JSX.Element {
+}: LocalServicesTableProps): React.JSX.Element {
   const rowIds = React.useMemo(() => {
-    return rows.map((event) => event.id);
+    return rows.map((service) => service.id);
   }, [rows]);
 
   const { selectAll, deselectAll, selectOne, deselectOne, selected } = useSelection(rowIds);
@@ -71,30 +63,6 @@ export function EventsTable({
       selectOne(id);
     }
   };
-
-  const handleToggleDisable = async (id: string, isDisabled: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('event')
-        .update({ disabled: !isDisabled })
-        .eq('id', id);
-
-      if (error) {
-        console.error('Error updating event status:', error);
-      } else {
-        // Update the local state to reflect the change
-        setEvents((prevEvents) =>
-          prevEvents.map((event) =>
-            event.id === id ? { ...event, disabled: !isDisabled } : event
-          )
-        );
-      }
-    } catch (error) {
-      console.error('Unexpected error updating event status:', error);
-    }
-  };
-
-  const [events, setEvents] = useState<Event[]>([]);
 
   return (
     <Card>
@@ -117,10 +85,10 @@ export function EventsTable({
               </TableCell>
               <TableCell>Image</TableCell>
               <TableCell>Name</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Privacy</TableCell>
-              <TableCell>Owner</TableCell>
+              <TableCell>Price</TableCell>
               <TableCell>Subcategory</TableCell>
+              <TableCell>Owner</TableCell>
+              <TableCell>ID</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -174,21 +142,10 @@ export function EventsTable({
                     )}
                   </TableCell>
                   <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.type}</TableCell>
-                  <TableCell>{row.privacy ? 'Private' : 'Public'}</TableCell>
-                  <TableCell>
-                    <Stack direction="row" alignItems="center" spacing={2}>
-                      {row.ownerImage && (
-                        <Avatar
-                          src={row.ownerImage}
-                          alt={row.owner}
-                          sx={{ width: 32, height: 32, borderRadius: '50%' }}
-                        />
-                      )}
-                      <Typography variant="subtitle2">{row.owner}</Typography>
-                    </Stack>
-                  </TableCell>
+                  <TableCell>{row.price}</TableCell>
                   <TableCell>{row.subcategory}</TableCell>
+                  <TableCell>{row.owner}</TableCell>
+                  <TableCell>{row.id}</TableCell>
                 </TableRow>
               );
             })}
