@@ -105,26 +105,25 @@ export const createEventNotificationSystem = () => {
         `)
         .eq('id', orderId)
         .single();
-
+  
       if (error) throw error;
       if (!data) throw new Error('Order not found');
-
+  
       const eventOwnerId = data.ticket.event.user_id;
       const eventName = data.ticket.event.name;
-      const buyerName = `${data.user.email} ${data.user.username}`;
-
+      const buyerName = `${data.user.firstname} ${data.user.lastname}`;
+  
       await createNotification(
         eventOwnerId,
         'New Ticket Purchase',
         `${buyerName} has purchased a ticket for your event: ${eventName}`,
-        'ticket',
+        'payment',  // Changed from 'ticket' to 'payment'
         orderId
       );
     } catch (error) {
       console.error('Error creating ticket purchase notification:', error);
     }
   };
-
   return {
     handleEventRequestNotification,
     handleTicketPurchaseNotification,

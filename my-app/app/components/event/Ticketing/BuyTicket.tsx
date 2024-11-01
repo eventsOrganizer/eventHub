@@ -6,6 +6,7 @@ import { useUser } from '../../../UserContext';
 import tw from 'twrnc';
 import { LinearGradient } from 'expo-linear-gradient';
 import CloudinaryUpload from '../CloudinaryUpload';
+import { createEventNotificationSystem } from '../../../services/eventNotificationService';
 
 interface BuyTicketProps {
   eventId: number;
@@ -13,6 +14,7 @@ interface BuyTicketProps {
 }
 
 const BuyTicket: React.FC<BuyTicketProps> = ({ eventId, eventType }) => {
+  const { handleTicketPurchaseNotification } = createEventNotificationSystem();
   const [ticketAvailable, setTicketAvailable] = useState(false);
   const [ticketQuantity, setTicketQuantity] = useState(0);
   const [token, setToken] = useState<string | null>(null);
@@ -56,45 +58,52 @@ const BuyTicket: React.FC<BuyTicketProps> = ({ eventId, eventType }) => {
         const generatedToken = bcrypt.hashSync(`${ticketId}-${userId}`, 10);
       
         const { data: orderData, error: orderError } = await supabase
-          .from('order')
-          .insert({
-            user_id: userId,
-            ticket_id: ticketId,
-            type: eventType === 'online' ? 'online' : 'physical',
-            token: generatedToken,
-          })
-          .select()
-          .single();
-      
-        if (orderError) throw orderError;
-      
-        const { error: mediaError } = await supabase
-          .from('media')
-          .insert({
-            url: imageUrl,
-            order_id: orderData.id,
-            type: 'ticket_photo'
-          });
-      
-        if (mediaError) throw mediaError;
-      
-        const { error: updateError } = await supabase
-          .from('ticket')
-          .update({ quantity: ticketQuantity - 1 })
-          .eq('id', ticketId);
-      
-        if (updateError) throw updateError;
-      
-        setToken(generatedToken);
-        setTicketQuantity(prevQuantity => prevQuantity - 1);
-        setShowImageUpload(false);
-        Alert.alert('Success', 'Ticket purchased successfully!');
-      } catch (error) {
-        console.error('Error purchasing ticket:', error);
-        Alert.alert('Error', 'Failed to purchase ticket. Please try again.');
-      }
+        .from('order')
+        .insert({
+          user_id: userId,
+          ticket_id: ticketId,
+          type: eventType === 'online' ? 'online' : 'physical',
+          token: generatedToken,
+        })
+        .select()
+        .single();
+    
+      if (orderError) throw orderError;
+
+      // Add media
+      const { error: mediaError } = await supabase
+        .from('media')
+        .insert({
+          url: imageUrl,
+          order_id: orderData.id,
+          type: 'ticket_photo'
+        });
+    
+      if (mediaError) throw mediaError;
+    
+      // Update ticket quantity
+      const { error: updateError } = await supabase
+        .from('ticket')
+        .update({ quantity: ticketQuantity - 1 })
+        .eq('id', ticketId);
+    
+      if (updateError) throw updateError;
+
+      console.log('Creating notification for order:', orderData.id);
+      // Send notification to event owner
+      await handleTicketPurchaseNotification(orderData.id);
+      console.log('Notification sent successfully');
+
+      setToken(generatedToken);
+      setTicketQuantity(prevQuantity => prevQuantity - 1);
+      setShowImageUpload(false);
+      Alert.alert('Success', 'Ticket purchased successfully!');
+    } catch (error) {
+      console.error('Error in ticket purchase process:', error);
+      Alert.alert('Error', 'Failed to complete purchase. Please try again.');
     }
-  };
+  }
+};
  
   const handleBuyTicket = () => {
     setShowImageUpload(true);

@@ -4,7 +4,7 @@ export const createNotification = async (
   userId: string,
   title: string,
   message: string,
-  type: 'request' | 'response' | 'payment' = 'request',
+  type: 'request' | 'response' | 'payment' | 'ticket' = 'request',
   relatedId?: number
 ) => {
   try {

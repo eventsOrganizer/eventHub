@@ -54,6 +54,27 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({
     }
   };
 
+
+
+  const handleCancelRequest = async () => {
+    try {
+      const { error } = await supabase
+        .from('request')
+        .delete()
+        .eq('user_id', userId)
+        .eq('event_id', eventId)
+        .eq('status', 'pending');
+  
+      if (error) throw error;
+      setIsPending(false);
+      Alert.alert('Success', 'Request cancelled successfully');
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      Alert.alert('Error', 'Failed to cancel request');
+    }
+  };
+
+
   const handleJoin = async () => {
     if (!userId) return;
 
@@ -109,6 +130,10 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({
       }
     }
   };
+
+
+  
+
   const handleLeave = async () => {
     Alert.alert(
       "Leave Event",
@@ -150,8 +175,11 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({
 
   if (isPending) {
     return (
-      <TouchableOpacity style={styles.pendingButton} disabled>
-        <Text style={styles.buttonText}>Request Pending</Text>
+      <TouchableOpacity 
+        style={styles.pendingButton} 
+        onPress={handleCancelRequest}
+      >
+        <Text style={styles.buttonText}>Request Pending (Tap to Cancel)</Text>
       </TouchableOpacity>
     );
   }

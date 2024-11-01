@@ -19,6 +19,7 @@ interface EventRequest {
   id: number;
   user: { id: string; email: string };
   event: { id: number; name: string } | null;
+  status: 'pending' | 'accepted' | 'refused';
 }
 
 const { width, height } = Dimensions.get('window');
@@ -29,29 +30,29 @@ const RequestsScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const { userId } = useUser();
   const { handleEventRequestNotification } = createEventNotificationSystem();
-
   const fetchEventRequests = useCallback(async () => {
     if (!userId) return;
-
+  
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('request')
         .select(`
           id,
+          status,
           user:user_id (id, email),
           event:event_id (id, name)
         `)
-        .eq('status', 'pending')
-        .eq('event.user_id', userId);
-
+        .eq('event.user_id', userId)
+        .eq('status', 'pending');  // Added this line to filter pending requests only
+  
       if (error) throw error;
-
+  
       const validRequests = data.filter(request => request.event !== null);
       setEventRequests(validRequests as unknown as EventRequest[]);
     } catch (error) {
       console.error('Error fetching event requests:', error);
-      Alert.alert('Error', 'Failed to fetch event requests. Please try again.');
+      Alert.alert('Error', 'Failed to fetch event requests');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -62,7 +63,7 @@ const RequestsScreen: React.FC = () => {
     fetchEventRequests();
   }, [fetchEventRequests]);
 
-  const handleEventRequest = async (requestId: number, status: 'accepted' | 'rejected') => {
+  const handleEventRequest = async (requestId: number, status: 'accepted' | 'refused') => {
     try {
       if (status === 'accepted') {
         const { error } = await supabase
@@ -84,10 +85,10 @@ const RequestsScreen: React.FC = () => {
 
           if (insertError) throw insertError;
           
-          // Create notification for accepted request
           await handleEventRequestNotification(requestId, 'accepted');
         }
       } else {
+        // Update request to refused instead of deleting
         const { error } = await supabase
           .from('request')
           .update({ 
@@ -99,7 +100,6 @@ const RequestsScreen: React.FC = () => {
 
         if (error) throw error;
 
-        // Create notification for rejected request
         await handleEventRequestNotification(requestId, 'refused');
       }
 
@@ -107,7 +107,7 @@ const RequestsScreen: React.FC = () => {
       Alert.alert('Success', `Request ${status}`);
     } catch (error) {
       console.error('Error handling event request:', error);
-      Alert.alert('Error', 'Failed to handle request. Please try again.');
+      Alert.alert('Error', 'Failed to handle request');
     }
   };
 
@@ -116,20 +116,23 @@ const RequestsScreen: React.FC = () => {
       <Text style={styles.requestText}>
         {item.user.email} wants to join {item.event?.name}
       </Text>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.acceptButton]}
-          onPress={() => handleEventRequest(item.id, 'accepted')}
-        >
-          <Text style={styles.buttonText}>Accept</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, styles.rejectButton]}
-          onPress={() => handleEventRequest(item.id, 'rejected')}
-        >
-          <Text style={styles.buttonText}>Reject</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.statusText}>Status: {item.status}</Text>
+      {item.status === 'pending' && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, styles.acceptButton]}
+            onPress={() => handleEventRequest(item.id, 'accepted')}
+          >
+            <Text style={styles.buttonText}>Accept</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.rejectButton]}
+            onPress={() => handleEventRequest(item.id, 'refused')}
+          >
+            <Text style={styles.buttonText}>Reject</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 
@@ -160,13 +163,20 @@ const RequestsScreen: React.FC = () => {
           contentContainerStyle={styles.listContainer}
         />
       ) : (
-        <Text style={styles.emptyText}>No pending event requests</Text>
+        <Text style={styles.emptyText}>No event requests</Text>
       )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  // ... existing styles ...
+  statusText: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 10,
+    fontStyle: 'italic'
+  },
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
