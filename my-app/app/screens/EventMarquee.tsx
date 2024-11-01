@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { theme } from '../../lib/theme';
 
 interface EventMarqueeProps {
   events: Array<{ name: string }>;
@@ -28,18 +29,17 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
       useNativeDriver: true,
     });
 
-    const sequenceAnimation = Animated.sequence([animation, resetAnimation]);
-
-    Animated.loop(sequenceAnimation).start();
+    Animated.loop(Animated.sequence([animation, resetAnimation])).start();
 
     return () => {
-      sequenceAnimation.stop();
+      animation.stop();
+      resetAnimation.stop();
     };
   }, [events]);
 
   return (
     <View style={styles.container}>
-      <BlurView intensity={90} tint="dark" style={styles.blurContainer}>
+      <BlurView intensity={90} tint="light" style={styles.blurContainer}>
         <View style={styles.marqueeContainer}>
           <Animated.View 
             style={[
@@ -67,8 +67,9 @@ const styles = StyleSheet.create({
   container: {
     height: 50,
     justifyContent: 'center',
-    marginBottom: 15,
+    borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
+    backgroundColor: theme.colors.overlay,
   },
   blurContainer: {
     flex: 1,
@@ -85,20 +86,19 @@ const styles = StyleSheet.create({
   eventContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20,
+    marginRight: theme.spacing.md,
   },
   text: {
-    color: '#FFFFFF',
+    color: theme.colors.secondary,
     fontSize: 14,
     fontWeight: '600',
     letterSpacing: 0.5,
-    fontFamily: 'System',
   },
   bullet: {
-    color: '#FFA500',
+    color: theme.colors.accent,
     fontSize: 18,
     fontWeight: 'bold',
-    marginLeft: 10,
+    marginLeft: theme.spacing.sm,
   },
 });
 

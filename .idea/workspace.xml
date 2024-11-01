@@ -5,13 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b3a52c4f-9147-45ab-aab1-110060bf4890" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-app/app/components/Auth/AuthRequiredModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/Auth/AuthRequiredModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-app/app/components/basket/BasketItem.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/basket/BasketItem.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/FAB.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/FAB.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/NavBar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/NavBar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/ServiceIcons.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/ServiceIcons.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/event/BeautifulSectionHeader.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/event/BeautifulSectionHeader.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/event/EventCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/event/EventCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/components/event/EventSection.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/components/event/EventSection.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/app/navigation/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/navigation/types.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-app/app/screens/BasketScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/BasketScreen.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/my-app/app/screens/YourRequests.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/YourRequests.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/EventMarquee.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/EventMarquee.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/HomeScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/HomeScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my-app/app/screens/MainTabNavigator.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/app/screens/MainTabNavigator.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/my-app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/my-app/package.json" afterDir="false" />
     </list>

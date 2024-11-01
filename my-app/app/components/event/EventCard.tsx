@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../../lib/theme';
 import SuggestToFriendButton from '../suggestions/SuggestToFriendButton';
 
 const { width, height } = Dimensions.get('window');
@@ -37,6 +38,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onPress, children }) => {
     <TouchableOpacity
       style={styles.eventCardContainer}
       onPress={() => onPress(event)}
+      activeOpacity={0.7}
     >
       <View style={styles.eventCardFrame}>
         <View style={styles.imageContainer}>
@@ -44,6 +46,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onPress, children }) => {
             source={{ uri: event.media[0]?.url }}
             style={styles.eventCardImage}
           />
+          <View style={styles.overlay} />
           <View style={styles.joinButtonContainer}>
             {children}
           </View>
@@ -54,19 +57,23 @@ const EventCard: React.FC<EventCardProps> = ({ event, onPress, children }) => {
         <View style={styles.eventInfoContainer}>
           <Text style={styles.eventName} numberOfLines={1}>{event.name}</Text>
           <View style={styles.eventInfoRow}>
-            <Ionicons name="calendar-outline" size={12} color="#666" />
+            <Ionicons name="calendar-outline" size={16} color={theme.colors.eventIcon} />
             <Text style={styles.eventInfoText}>{event.availability.date}</Text>
           </View>
           <View style={styles.eventInfoRow}>
-            <Ionicons name="time-outline" size={12} color="#666" />
-            <Text style={styles.eventInfoText}>{event.availability.start} - {event.availability.end}</Text>
+            <Ionicons name="time-outline" size={16} color={theme.colors.eventIcon} />
+            <Text style={styles.eventInfoText}>
+              {event.availability.start} - {event.availability.end}
+            </Text>
           </View>
           <View style={styles.eventInfoRow}>
-            <Ionicons name="pricetag-outline" size={12} color="#666" />
-            <Text style={styles.eventInfoText} numberOfLines={1}>{event.subcategory.category.name} - {event.subcategory.name}</Text>
+            <Ionicons name="pricetag-outline" size={16} color={theme.colors.eventIcon} />
+            <Text style={styles.eventInfoText} numberOfLines={1}>
+              {event.subcategory.category.name} - {event.subcategory.name}
+            </Text>
           </View>
           <View style={styles.eventInfoRow}>
-            <Ionicons name="business-outline" size={12} color="#666" />
+            <Ionicons name="business-outline" size={16} color={theme.colors.eventIcon} />
             <Text style={styles.eventInfoText}>{event.type}</Text>
           </View>
         </View>
@@ -78,30 +85,27 @@ const EventCard: React.FC<EventCardProps> = ({ event, onPress, children }) => {
 const styles = StyleSheet.create({
   eventCardContainer: {
     width: width * 0.45,
-    height: height * 0.3,
-    marginRight: 10,
-    marginBottom: 10,
+    height: height * 0.35,
+    marginRight: theme.spacing.md,
+    marginBottom: theme.spacing.md,
   },
   eventCardFrame: {
     flex: 1,
-    borderRadius: 10,
+    borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#fff',
-    backgroundColor: '#fff',
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    elevation: 4,
+    borderColor: theme.colors.eventBorder,
+    backgroundColor: theme.colors.eventBackground,
+    ...(typeof theme.shadows.md === 'object' ? theme.shadows.md : {}),
   },
   imageContainer: {
-    height: '60%',
+    height: '55%',
     width: '100%',
     position: 'relative',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
   eventCardImage: {
     width: '100%',
@@ -109,36 +113,35 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   eventName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
+    ...theme.typography.subtitle,
+    color: theme.colors.eventTitle,
+    marginBottom: theme.spacing.xs,
   },
   eventInfoContainer: {
     flex: 1,
-    backgroundColor: '#fff',
-    padding: 10,
+    backgroundColor: theme.colors.eventBackground,
+    padding: theme.spacing.md,
   },
   eventInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 3,
+    marginBottom: theme.spacing.xs,
+    gap: theme.spacing.xs,
   },
   eventInfoText: {
-    fontSize: 10,
-    color: '#666',
-    marginLeft: 5,
+    ...theme.typography.caption,
+    color: theme.colors.eventText,
   },
   joinButtonContainer: {
     position: 'absolute',
-    top: 5,
-    right: 5,
+    top: theme.spacing.sm,
+    right: theme.spacing.sm,
     zIndex: 1,
   },
   suggestButtonContainer: {
     position: 'absolute',
-    top: 5,
-    left: 5,
+    top: theme.spacing.sm,
+    left: theme.spacing.sm,
     zIndex: 1,
   },
 });

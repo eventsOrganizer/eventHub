@@ -1,95 +1,85 @@
-import React from 'react';
-import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-
-const { width } = Dimensions.get('window');
+import { BlurView } from 'expo-blur';
+import { MotiView } from 'moti';
+import tw from 'twrnc';
+import { theme } from '../../lib/theme';
 
 const categories = [
-  { name: 'Music', icon: 'musical-notes', color: '#FF2D55' },
-  { name: 'Food', icon: 'restaurant', color: '#FF9500' },
-  { name: 'Photo', icon: 'camera', color: '#5856D6' },
-  { name: 'Sports', icon: 'basketball', color: '#FF3B30' },
-  { name: 'Politics', icon: 'megaphone', color: '#5AC8FA' },
-  { name: 'Art', icon: 'color-palette', color: '#4CD964' },
-  { name: 'Home', icon: 'home', color: '#007AFF' },
-  { name: 'Business', icon: 'briefcase', color: '#FF2D55' },
-  { name: 'Education', icon: 'school', color: '#FFCC00' },
-  { name: 'Tech', icon: 'hardware-chip', color: '#5856D6' },
+  { name: 'Music', icon: 'musical-notes', color: '#FF2D55', route: 'MusicCategory' },
+  { name: 'Food', icon: 'restaurant', color: '#FF9500', route: 'FoodCategory' },
+  { name: 'Photo', icon: 'camera', color: '#5856D6', route: 'PhotoCategory' },
+  { name: 'Sports', icon: 'basketball', color: '#FF3B30', route: 'SportsCategory' },
+  { name: 'Politics', icon: 'megaphone', color: '#5AC8FA', route: 'PoliticsCategory' },
+  { name: 'Art', icon: 'color-palette', color: '#4CD964', route: 'ArtCategory' },
+  { name: 'Home', icon: 'home', color: '#007AFF', route: 'HomeCategory' },
+  { name: 'Business', icon: 'briefcase', color: '#FF2D55', route: 'BusinessCategory' },
+  { name: 'Education', icon: 'school', color: '#FFCC00', route: 'EducationCategory' },
+  { name: 'Tech', icon: 'hardware-chip', color: '#5856D6', route: 'TechCategory' },
 ];
 
-const ServiceIcons: React.FC = () => {
+const ServiceIcons: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const [activeIcon, setActiveIcon] = useState<string | null>(null);
+
   return (
-    <View style={styles.container}>
-      <ScrollView
-        horizontal
+    <BlurView 
+      intensity={80} 
+      tint="light" 
+      style={tw`py-2`}
+    >
+      <ScrollView 
+        horizontal 
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        decelerationRate="fast"
-        snapToInterval={width / 5}
-        snapToAlignment="center"
+        contentContainerStyle={tw`px-4`}
       >
         {categories.map((category, index) => (
-          <TouchableOpacity key={index} style={styles.categoryContainer}>
-            <View style={[styles.iconBackground, { backgroundColor: category.color }]}>
-              <Ionicons name={category.icon as keyof typeof Ionicons.glyphMap} size={30} color="#FFFFFF" />
-            </View>
-            <Text style={styles.categoryName}>{category.name}</Text>
-          </TouchableOpacity>
+          <MotiView
+            key={index}
+            animate={{ 
+              translateY: [0, -2, 0],
+              scale: activeIcon === category.name ? [1, 1.1, 1] : 1
+            }}
+            transition={{ 
+              type: 'timing',
+              duration: 2000,
+              loop: true
+            }}
+          >
+            <TouchableOpacity
+              onPressIn={() => setActiveIcon(category.name)}
+              onPressOut={() => setActiveIcon(null)}
+              onPress={() => navigation.navigate(category.route)}
+              style={tw`
+                items-center justify-center
+                w-20 h-20 mx-2
+                ${activeIcon === category.name ? `bg-[${theme.colors.accent}]/5` : 'bg-transparent'}
+              `}
+            >
+              <View style={tw`
+                w-12 h-12
+                rounded-full
+                items-center justify-center
+                bg-[${theme.colors.overlay}]
+              `}>
+                <Ionicons
+                  name={category.icon as keyof typeof Ionicons.glyphMap}
+                  size={24}
+                  color={category.color}
+                />
+              </View>
+              <Text style={tw`
+                mt-1 text-xs font-semibold
+                text-[${theme.colors.secondary}]
+              `}>
+                {category.name}
+              </Text>
+            </TouchableOpacity>
+          </MotiView>
         ))}
       </ScrollView>
-
-      <LinearGradient
-        colors={['rgba(255,255,255,0.8)', 'rgba(255,255,255,0.2)']}
-        style={styles.flatSurface}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-    </View>
+    </BlurView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 20,
-    position: 'relative',
-    alignItems: 'center',
-  },
-  scrollContent: {
-    paddingHorizontal: 10,
-  },
-  categoryContainer: {
-    alignItems: 'center',
-    marginHorizontal: 5,
-    width: width / 5 - 10,
-  },
-  iconBackground: {
-    width: 60,
-    height: 60,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  categoryName: {
-    marginTop: 8,
-    fontSize: 11,
-    fontWeight: '500',
-    textAlign: 'center',
-    color: '#000000',
-  },
-  flatSurface: {
-    position: 'absolute',
-    bottom: -15,
-    width: '95%',
-    height: 15,
-    borderRadius: 10,
-    zIndex: -1,
-  },
-});
 
 export default ServiceIcons;

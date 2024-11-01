@@ -5,6 +5,7 @@ import { BlurView } from 'expo-blur';
 import EventCard from './EventCard';
 import YourEventCard from './YourEventCard';
 import JoinEventButton from './JoinEventButton';
+import { theme } from '../../../lib/theme';
 import tw from 'twrnc';
 
 const { height } = Dimensions.get('window');
@@ -17,7 +18,13 @@ interface EventSectionProps {
   isTopEvents: boolean;
 }
 
-const EventSection: React.FC<EventSectionProps> = ({ title, events, navigation, onSeeAll, isTopEvents }) => {
+const EventSection: React.FC<EventSectionProps> = ({ 
+  title, 
+  events, 
+  navigation, 
+  onSeeAll, 
+  isTopEvents 
+}) => {
   const renderEventCard = ({ item }: { item: any }) => (
     isTopEvents ? (
       <EventCard 
@@ -51,16 +58,56 @@ const EventSection: React.FC<EventSectionProps> = ({ title, events, navigation, 
   );
 
   return (
-    <View style={[tw`mb-6 rounded-3xl overflow-hidden`, { height: isTopEvents ? 'auto' : height * 0.8 }]}>
-      <BlurView intensity={80} tint="light" style={tw`flex-1 rounded-3xl`}>
-        <View style={tw`p-4`}>
-          <View style={tw`flex-row justify-between items-center mb-4 border-b border-white/30 pb-2`}>
-            <Text style={tw`text-2xl font-bold text-white`}>{title}</Text>
-            <TouchableOpacity onPress={onSeeAll} style={tw`flex-row items-center bg-white/20 py-2 px-3 rounded-full`}>
-              <Text style={tw`text-white text-sm font-medium mr-1`}>See All</Text>
-              <Ionicons name="arrow-forward" size={16} color="#fff" />
-            </TouchableOpacity>
+    <View style={[
+      tw`mb-6 rounded-3xl overflow-hidden`,
+      { height: isTopEvents ? 'auto' : height * 0.7 } // Reduced height for better proportions
+    ]}>
+      <BlurView 
+        intensity={60} 
+        tint="light" 
+        style={[
+          tw`flex-1 rounded-3xl`,
+          { backgroundColor: theme.colors.cardBg }
+        ]}
+      >
+        <View style={tw`flex-1`}>
+          <View style={[
+            tw`px-6 py-4`,
+            {
+              backgroundColor: theme.colors.overlay,
+              borderBottomWidth: 1,
+              borderBottomColor: theme.colors.eventBorder,
+            }
+          ]}>
+            <View style={tw`flex-row justify-between items-center`}>
+              <Text style={[
+                tw`text-xl font-bold`,
+                { color: theme.colors.cardTitle }
+              ]}>
+                {title}
+              </Text>
+              <TouchableOpacity 
+                onPress={onSeeAll} 
+                style={[
+                  tw`flex-row items-center py-2 px-4 rounded-full`,
+                  { backgroundColor: `${theme.colors.accent}15` }
+                ]}
+              >
+                <Text style={[
+                  tw`mr-2 font-semibold`,
+                  { color: theme.colors.accent }
+                ]}>
+                  See All
+                </Text>
+                <Ionicons 
+                  name="arrow-forward" 
+                  size={18} 
+                  color={theme.colors.accent}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
+
           <FlatList
             data={events}
             renderItem={renderEventCard}
@@ -68,7 +115,12 @@ const EventSection: React.FC<EventSectionProps> = ({ title, events, navigation, 
             horizontal={isTopEvents}
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={isTopEvents ? tw`pb-2` : tw`pb-4`}
+            contentContainerStyle={[
+              tw`p-4`,
+              {
+                gap: theme.spacing.md,
+              }
+            ]}
           />
         </View>
       </BlurView>

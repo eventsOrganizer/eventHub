@@ -1,24 +1,19 @@
-import React, { useState , useEffect } from 'react';
-import { View, ScrollView, RefreshControl, SafeAreaView, Button } from 'react-native';
-import { useNavigation , } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BlurView } from 'expo-blur';
-import NavBar from '../components/NavBar';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, RefreshControl, SafeAreaView, StatusBar } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MotiView } from 'moti';
+import tw from 'twrnc';
+import HomeHeader from '../components/home/HomeHeader';
 import ServiceIcons from '../components/ServiceIcons';
 import EventSection from '../components/event/EventSection';
-import SectionComponent from '../components/SectionComponent';
+import  ServicesSection  from '../components/home/ServicesSection';
 import EventMarquee from './EventMarquee';
 import FAB from '../components/FAB';
-import tw from 'twrnc';
 import { supabase } from '../services/supabaseClient';
-import { LinearGradient } from 'expo-linear-gradient';
-import { RootStackParamList } from '../navigation/types';
-import Banner from '../components/event/Banner';
+import { HomeScreenProps, HomeScreenSection } from '../navigation/types';
+import { theme } from '../../lib/theme';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-
-const HomeScreen: React.FC = () => {
-  const navigation = useNavigation<HomeScreenNavigationProp>();
+const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [topEvents, setTopEvents] = useState<any[]>([]);
@@ -34,7 +29,35 @@ const HomeScreen: React.FC = () => {
     loadData();
   }, []);
 
- 
+  const serviceSections: HomeScreenSection[] = React.useMemo(() => {
+    if (!staffServices || !locals || !materialsAndFoodServices) {
+      return [];
+    }
+
+    return [
+      {
+        title: "TOP CREW SERVICES",
+        data: staffServices || [],
+        type: "staff",
+        onSeeAll: () => navigation.navigate('PersonalsScreen', { category: 'all' }),
+        onItemPress: (item) => navigation.navigate('PersonalDetail', { personalId: item.id })
+      },
+      {
+        title: "VENUE SERVICES",
+        data: locals || [],
+        type: "local",
+        onSeeAll: () => navigation.navigate('LocalsScreen' as never),
+        onItemPress: (item) => navigation.navigate('LocalServiceDetails', { localId: item.id })
+      },
+      {
+        title: "TOP EQUIPMENTS",
+        data: materialsAndFoodServices || [],
+        type: "material",
+        onSeeAll: () => navigation.navigate('MaterialScreen' as never),
+        onItemPress: (item) => navigation.navigate('MaterialDetail', { material: item })
+      }
+    ];
+  }, [staffServices, locals, materialsAndFoodServices, navigation])
 
   const loadData = async () => {
     try {
@@ -162,97 +185,89 @@ const HomeScreen: React.FC = () => {
 
 
 
-
-
+  
+ 
   return (
-    <SafeAreaView style={tw`flex-1 bg-[#001F3F]`}>
+    <SafeAreaView style={tw`flex-1 bg-[${theme.colors.primary}]`}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <LinearGradient
-        colors={['#4B0082', '#0066CC', '#00BFFF', 'white']}
+        colors={[theme.colors.gradientStart, theme.colors.gradientMiddle, theme.colors.gradientEnd]}
         style={tw`flex-1`}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
-        <BlurView intensity={100} tint="dark" style={tw`py-4`}>
-          <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} onSearch={() => {}} />
-        </BlurView>
-        
-        <ScrollView
-          style={tw`flex-1`}
-          contentContainerStyle={tw`pb-20 pt-4`}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <EventMarquee events={events.slice(0, 10)} />
-
-          <View style={tw`mt-6`}>
-            <ServiceIcons />
-          </View>
-
-          <View style={tw`mt-6`}>
-            <Banner title="Events" />
-            <EventSection 
-              title="YOUR EVENTS" 
-              events={events} 
-              navigation={navigation}
-              onSeeAll={() => navigation.navigate('AllEvents')}
-              isTopEvents={false}
-            />
-
-            <EventSection 
-              title="HOT EVENTS" 
-              events={topEvents} 
-              navigation={navigation}
-              onSeeAll={() => navigation.navigate('AllEvents')}
-              isTopEvents={true}
+        <View style={tw`flex-1`}>
+          {/* Fixed Header */}
+          <View style={tw`absolute top-0 left-0 right-0 z-50`}>
+            <HomeHeader
+              selectedFilter={selectedFilter}
+              setSelectedFilter={setSelectedFilter}
+              onSearch={handleSearch}
             />
           </View>
 
-          <View style={tw`mt-6`}>
-            <Banner title="Services" />
-            <SectionComponent 
-              title="TOP CREW SERVICES"
-             
-              data={staffServices}
-              onSeeAll={() => navigation.navigate('PersonalsScreen', { category: 'all' })}
-              onItemPress={(item) => navigation.navigate('PersonalDetail', { personalId: item.id })}
-              type="staff"
-            />
+          {/* Event Marquee and Service Icons Container - Fixed */}
+          <View style={tw`absolute top-48 left-0 right-0 z-40 bg-transparent`}>
+            <MotiView
+              from={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', duration: 1000 }}
+              style={tw`shadow-lg rounded-${theme.borderRadius.lg} overflow-hidden mb-${theme.spacing.md} mx-4`}
+            >
+              <EventMarquee events={events?.slice(0, 10) || []} />
+            </MotiView>
 
-            <SectionComponent 
-              title="VENUE SERVICES" 
-              data={locals} 
-              onSeeAll={() => navigation.navigate('LocalsScreen')}
-              onItemPress={(item) => {
-                console.log('Local service item:', item);
-                navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
-              }}
-              type="local"
-            />
-            
-            <SectionComponent 
-              title="TOP EQUIPMENTS" 
-              data={materialsAndFoodServices} 
-              onSeeAll={() => navigation.navigate('MaterialScreen')}
-              onItemPress={(item) => {
-                console.log('Navigating to MaterialDetailScreen with item:', item);
-                navigation.navigate('MaterialDetail', { material: item });
-              }}
-              type="material"
-            />
+            <View style={tw`bg-[${theme.colors.gradientStart}]`}>
+              <ServiceIcons navigation={navigation} />
+            </View>
           </View>
 
-          <View style={tw`mt-6 mb-4`}>
-            <Button
-              title="Go to Video Rooms"
-              onPress={() => navigation.navigate('VideoRooms')}
+          {/* Scrollable Content */}
+          <ScrollView
+            style={tw`flex-1 mt-[360px]`} // Adjusted margin to account for fixed elements
+            contentContainerStyle={tw`pb-32`}
+            refreshControl={
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh}
+                tintColor={theme.colors.secondary}
+                colors={[theme.colors.secondary, theme.colors.accent]}
+              />
+            }
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Event Sections */}
+            <View style={tw`space-y-${theme.spacing.lg} px-4`}>
+              <EventSection 
+                title="YOUR EVENTS" 
+                events={events || []} 
+                navigation={navigation}
+                onSeeAll={() => navigation.navigate('AllEvents')}
+                isTopEvents={false}
+              />
+
+              <EventSection 
+                title="HOT EVENTS" 
+                events={topEvents || []} 
+                navigation={navigation}
+                onSeeAll={() => navigation.navigate('AllEvents')}
+                isTopEvents={true}
+              />
+
+              <ServicesSection sections={serviceSections} />
+            </View>
+          </ScrollView>
+
+          {/* FAB */}
+          <View style={tw`absolute bottom-0 right-0 z-50`}>
+            <FAB 
+              isFabOpen={isFabOpen}
+              toggleFab={toggleFab}
+              onCreateService={() => navigation.navigate('ServiceSelection')}
+              onCreateEvent={() => navigation.navigate('EventCreation')}
             />
           </View>
-        </ScrollView>
-        <FAB 
-          isFabOpen={isFabOpen}
-          toggleFab={toggleFab}
-          onCreateService={() => navigation.navigate('ServiceSelection')}
-          onCreateEvent={() => navigation.navigate('EventCreation')}
-        />
+        </View>
       </LinearGradient>
     </SafeAreaView>
   );

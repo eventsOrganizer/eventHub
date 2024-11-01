@@ -3,9 +3,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AvailabilityData } from '../services/availabilityService';
 
 export type AuthStackParamList = {
-    signIn: undefined,
-    SignUp: undefined;
-    Home: undefined;
+  signIn: undefined;
+  SignUp: undefined;
+  Home: undefined;
 };
 
 export type CreateLocalServiceStep5Params = {
@@ -16,9 +16,9 @@ export type CreateLocalServiceStep5Params = {
   availabilityFrom: string;
   availabilityTo: string;
   amenities: {
-      wifi: boolean;
-      parking: boolean;
-      aircon: boolean;
+    wifi: boolean;
+    parking: boolean;
+    aircon: boolean;
   };
 };
 
@@ -46,23 +46,29 @@ export type RootStackParamList = {
   Home: undefined;
   PersonalsScreen: { category?: string };
   PersonalDetail: { personalId: number };
-  LocalsScreen:{category?: string}
-  LocalServiceDetails: {localId: number}
+  LocalsScreen: { category?: string };
+  LocalServiceDetails: { localId: number };
   CreateLocalServiceStep2: undefined;
   CreateLocalServiceStep3: { 
-      serviceName: string; 
-      description: string; 
+    serviceName: string; 
+    description: string; 
   };
   CreateLocalServiceStep4: { 
-      formData: { 
-          serviceName: string; 
-          description: string; 
-          images: string[]; 
-          price: string; 
-      }; 
+    formData: { 
+      serviceName: string; 
+      description: string; 
+      images: string[]; 
+      price: string; 
+    }; 
   };
   CreateLocalServiceStep5: CreateLocalServiceStep5Params;
-
+  AllEvents: undefined;
+  ServiceSelection: undefined;
+  EventCreation: undefined;
+  VideoRooms: undefined;
+  UserProfile: undefined;
+  ChatList: undefined;
+  SearchResultsScreen: { initialSearchTerm: string };
   CreatePersonalServiceStep1: undefined;
   CreatePersonalServiceStep2: {
     serviceName: string;
@@ -122,8 +128,7 @@ export type RootStackParamList = {
   };
   ReviewScreen: { materialId: string; sellOrRent: 'sell' | 'rent' };
   CommentScreen: { materialId: string };
-
-
+  EventDetails: { eventId: number };
   Basket: { basket: Material[] }; 
   MaterialScreen: { materials: Material[] };
   MaterialsOnboarding: undefined;
@@ -155,13 +160,25 @@ export interface Request {
   status: string;
   subcategory: string;
   imageUrl: string | null;
-  serviceImageUrl: string | null;  // Add this line
+  serviceImageUrl: string | null;
   requesterName?: string;
   requesterEmail?: string;
   createdAt?: string;
   date?: string;
   start?: string;
   end?: string;
+}
+
+export interface HomeScreenSection {
+  title: string;
+  data: any[];
+  type: 'staff' | 'event' | 'local' | 'material';
+  onSeeAll: () => void;
+  onItemPress: (item: any) => void;
+}
+
+export interface HomeScreenProps {
+  navigation: HomeScreenNavigationProp;
 }
 
 export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;

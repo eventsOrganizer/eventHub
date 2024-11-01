@@ -65,4 +65,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BeautifulSectionHeader;
+export default Beautifulader;
