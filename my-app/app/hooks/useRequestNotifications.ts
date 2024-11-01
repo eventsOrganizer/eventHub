@@ -15,8 +15,13 @@ export const useRequestNotifications = (userId: string | null) => {
         .select('id')
         .eq('status', 'pending')
         .eq('is_read', false)
-        .or(`personal.user_id.eq.${userId},local.user_id.eq.${userId},material.user_id.eq.${userId}`);
-
+        .or(`
+          personal.user_id.eq.${userId},
+          local.user_id.eq.${userId},
+          material.user_id.eq.${userId},
+          event:event_id(user_id.eq.${userId})
+        `);
+    
       if (!receivedError) {
         setUnreadReceivedRequestsCount(receivedRequests?.length || 0);
       }

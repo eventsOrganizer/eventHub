@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState  } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+
 import { supabase } from '../services/supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,6 +33,17 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
   useEffect(() => {
     fetchEventDetails();
   }, [eventId, userId]);
+
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchEventDetails();
+      return () => {
+        // Optional cleanup if needed
+      };
+    }, [eventId, userId])
+  );
+
 
   const fetchEventDetails = async () => {
     try {
@@ -116,12 +129,22 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
 
   return (
     <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`flex-1`}>
-      <ScrollView>
-        <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`px-6 pt-6 pb-4 w-full`}>
-          <Text style={tw`text-3xl font-bold text-white mb-2 shadow-lg`}>
+    <ScrollView>
+      <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`px-6 pt-6 pb-4 w-full`}>
+        <View style={tw`flex-row justify-between items-center`}>
+          <Text style={tw`text-3xl font-bold text-white mb-2 shadow-lg flex-1`}>
             {eventDetails.name}
           </Text>
-        </LinearGradient>
+          {eventDetails.user_id === userId && (
+            <TouchableOpacity 
+              style={tw`ml-3 bg-white/20 p-2 rounded-full`}
+              onPress={() => navigation.navigate('EditEvent', { eventId: eventDetails.id })}
+            >
+              <Ionicons name="pencil" size={24} color="white" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </LinearGradient>
   
         <View style={tw`flex-row justify-between items-center px-4 py-4 bg-[#0066CC]/90`}>
           <View style={tw`flex-row items-center`}>
@@ -157,15 +180,18 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
           </View>
         </View>
   
-        <View style={tw`w-full -mt-2 px-4`}>
-          <JoinEventButton
-            eventId={eventDetails.id}
-            privacy={eventDetails.privacy}
-            organizerId={eventDetails.user_id}
-            onJoinSuccess={handleJoinSuccess}
-            onLeaveSuccess={handleLeaveSuccess}
-          />
-        </View>
+ 
+<View style={tw`w-full -mt-2 px-4`}>
+  {eventDetails.user_id !== userId && ( 
+    <JoinEventButton
+      eventId={eventDetails.id}
+      privacy={eventDetails.privacy}
+      organizerId={eventDetails.user_id}
+      onJoinSuccess={handleJoinSuccess}
+      onLeaveSuccess={handleLeaveSuccess}
+    />
+  )}
+</View>
   
         <View style={tw`w-full px-4 pb-4`}>
           {/* Updated Info Container with Price */}

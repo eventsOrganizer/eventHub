@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { supabase } from '../../../services/supabaseClient';
 import { useUser } from '../../../UserContext';
+import { createEventNotificationSystem } from '../../../services/eventNotificationService';
 
 interface EventRequest {
   id: number;
@@ -27,6 +28,7 @@ const RequestsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { userId } = useUser();
+  const { handleEventRequestNotification } = createEventNotificationSystem();
 
   const fetchEventRequests = useCallback(async () => {
     if (!userId) return;
@@ -65,7 +67,11 @@ const RequestsScreen: React.FC = () => {
       if (status === 'accepted') {
         const { error } = await supabase
           .from('request')
-          .update({ status })
+          .update({ 
+            status,
+            is_read: true,
+            is_action_read: true 
+          })
           .eq('id', requestId);
 
         if (error) throw error;
@@ -77,14 +83,24 @@ const RequestsScreen: React.FC = () => {
             .insert({ user_id: request.user.id, event_id: request.event.id });
 
           if (insertError) throw insertError;
+          
+          // Create notification for accepted request
+          await handleEventRequestNotification(requestId, 'accepted');
         }
       } else {
         const { error } = await supabase
           .from('request')
-          .delete()
+          .update({ 
+            status: 'refused',
+            is_read: true,
+            is_action_read: true 
+          })
           .eq('id', requestId);
 
         if (error) throw error;
+
+        // Create notification for rejected request
+        await handleEventRequestNotification(requestId, 'refused');
       }
 
       fetchEventRequests();

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
+import { createEventNotificationSystem } from '../../services/eventNotificationService';
 
 interface JoinEventButtonProps {
   eventId: number;
@@ -11,10 +12,17 @@ interface JoinEventButtonProps {
   onLeaveSuccess: () => void;
 }
 
-const JoinEventButton: React.FC<JoinEventButtonProps> = ({ eventId, privacy, organizerId, onJoinSuccess, onLeaveSuccess }) => {
+const JoinEventButton: React.FC<JoinEventButtonProps> = ({ 
+  eventId, 
+  privacy, 
+  organizerId, 
+  onJoinSuccess, 
+  onLeaveSuccess 
+}) => {
   const { userId } = useUser();
   const [isJoined, setIsJoined] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const { handleNewEventJoinRequest } = createEventNotificationSystem();
 
   useEffect(() => {
     checkJoinStatus();
@@ -67,27 +75,40 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({ eventId, privacy, org
         Alert.alert('Error', 'Failed to join the event. Please try again.');
       }
     } else {
-      const { data, error } = await supabase
-        .from('request')
-        .insert({
-          user_id: userId,
-          event_id: eventId,
-          status: 'pending',
-          personal_id: null,
-          local_id: null,
-          material_id: null
-        });
-
-      if (!error) {
+      try {
+        console.log('Creating join request...');
+        const { data: requestData, error } = await supabase
+          .from('request')
+          .insert({
+            user_id: userId,
+            event_id: eventId,
+            status: 'pending',
+            personal_id: null,
+            local_id: null,
+            material_id: null,
+            is_read: false,
+            is_action_read: false
+          })
+          .select()
+          .single();
+  
+        if (error) throw error;
+        if (!requestData) throw new Error('No request data returned');
+  
+        console.log('Request created:', requestData);
+        console.log('Sending notification to owner:', organizerId);
+        
+        // Send notification to event owner
+        await handleNewEventJoinRequest(requestData.id);
+        
         setIsPending(true);
-        Alert.alert('Request Sent', 'Your request to join this event has been sent to the organizer.');
-      } else {
+        Alert.alert('Success', 'Your request to join this event has been sent to the organizer.');
+      } catch (error) {
         console.error('Error sending join request:', error);
         Alert.alert('Error', 'Failed to send join request. Please try again.');
       }
     }
   };
-
   const handleLeave = async () => {
     Alert.alert(
       "Leave Event",
@@ -140,35 +161,35 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({ eventId, privacy, org
       <Text style={styles.buttonText}>{privacy ? 'Request to Join' : 'Join Event'}</Text>
     </TouchableOpacity>
   );
-}
-
+};
 
 const styles = StyleSheet.create({
   joinButton: {
     backgroundColor: 'rgba(76, 175, 80, 0.8)',
-    padding: 4,
+    padding: 12,
     borderRadius: 12,
     alignItems: 'center',
-    minWidth: 60,
+    minWidth: 120,
   },
   joinedButton: {
     backgroundColor: 'rgba(158, 158, 158, 0.8)',
-    padding: 4,
+    padding: 12,
     borderRadius: 12,
     alignItems: 'center',
-    minWidth: 60,
+    minWidth: 120,
   },
   pendingButton: {
     backgroundColor: 'rgba(255, 160, 0, 0.8)',
-    padding: 4,
+    padding: 12,
     borderRadius: 12,
     alignItems: 'center',
-    minWidth: 60,
+    minWidth: 120,
   },
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 8,
+    fontSize: 16,
   },
 });
+
 export default JoinEventButton;

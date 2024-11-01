@@ -3,7 +3,9 @@ import { supabase } from './supabaseClient';
 export const createNotification = async (
   userId: string,
   title: string,
-  message: string
+  message: string,
+  type: 'request' | 'response' | 'payment' = 'request',
+  relatedId?: number
 ) => {
   try {
     const { error } = await supabase.from('notifications').insert({
@@ -12,6 +14,8 @@ export const createNotification = async (
       message,
       created_at: new Date().toISOString(),
       is_read: false,
+      type,
+      related_id: relatedId
     });
 
     if (error) throw error;
