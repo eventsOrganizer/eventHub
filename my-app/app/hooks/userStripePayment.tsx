@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useConfirmPayment } from '@stripe/stripe-react-native';
-import { PaymentResult } from '../types/paymentTypes';
 import { Alert } from 'react-native';
+import { useConfirmPayment } from '@stripe/stripe-react-native';
 import axios from 'axios';
+import Constants from 'expo-constants';
 
 interface PaymentOrder {
   amount: number;
@@ -19,7 +19,7 @@ export const useStripePayment = () => {
     cardDetails: any,
     billingDetails: { email: string },
     order: PaymentOrder
-  ): Promise<PaymentResult> => {
+  ) => {
     if (!cardDetails?.complete) {
       Alert.alert('Error', 'Please enter complete card information');
       return { success: false };
@@ -28,14 +28,18 @@ export const useStripePayment = () => {
     try {
       setLoading(true);
       
+      const stripeSecretKey = Constants.expoConfig?.extra?.STRIPE_SECRET_KEY;
+      if (!stripeSecretKey) {
+        throw new Error('Stripe secret key is not configured');
+      }
+
       const response = await axios.post('https://api.stripe.com/v1/payment_intents', {
         amount: Math.round(order.amount * 100),
         currency: 'usd',
-        // description: `Payment for local ID: ${order.localId}, User ID: ${order.userId}`,
       }, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Bearer sk_test_51QFaREKiWYtX8OEl0KqNf9ahbcp2FRIVomn7IQmNrHdYxv9DYBaxH1uUh906CVDUiyuiVNz95KnAWueGR8Mggqlu00mVfistGJ`
+          'Authorization': `Bearer ${stripeSecretKey}`
         }
       });
 
@@ -67,11 +71,10 @@ export const useStripePayment = () => {
       };
     } catch (error) {
       console.error('Payment error:', error);
-      Alert.alert(
-        'Payment Error',
-        error instanceof Error ? error.message : 'An unexpected error occurred'
-      );
-      return { success: false };
+      return { 
+        success: false,
+        error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      };
     } finally {
       setLoading(false);
     }

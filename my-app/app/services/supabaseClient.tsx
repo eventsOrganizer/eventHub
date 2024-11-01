@@ -1,18 +1,16 @@
 import 'react-native-url-polyfill/auto';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_API_KEY } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// Vérifier si les variables d'environnement sont 
+import Constants from 'expo-constants';
 
-console.log("iiiiiiii",SUPABASE_URL, SUPABASE_API_KEY);
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_API_KEY) {
-  throw new Error('Supabase URL or API Key is missing');
+const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_URL;
+const supabaseKey = Constants.expoConfig?.extra?.SUPABASE_API_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing Supabase configuration. Please check your app.config.js and .env file.');
 }
 
-export const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_API_KEY, {
-  // export const supabase = createClient("https://cdvnddjpkcdvspccjvre.supabase.co/","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkdm5kZGpwa2NkdnNwY2NqdnJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjgzMzc1NzksImV4cCI6MjA0MzkxMzU3OX0.A0Z32L8JCwX29nuq2lbrJCiEZo2ai5k1Emf7PMClLJE" , {
+export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
@@ -25,6 +23,5 @@ export const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPAB
     },
   },
 });
-
 
 console.log('Supabase client initialized');

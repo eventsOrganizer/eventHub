@@ -9,9 +9,11 @@ export interface RequestResult {
     id: string;
     firstname: string;
     lastname: string;
+    email?: string;
   }
   
   export interface ServiceDetails {
+    id: number;
     name: string;
     user: RequestUser;
   }
@@ -24,6 +26,21 @@ export interface RequestResult {
     personal?: ServiceDetails;
     local?: ServiceDetails;
     material?: ServiceDetails;
+    status: RequestStatus;
+    is_read: boolean;
+    is_action_read: boolean;
+    payment_status: PaymentStatus;
+  }
+
+  export interface CreateRequestData {
+    user_id: string;
+    personal_id?: number;
+    local_id?: number;
+    material_id?: number;
+    status: RequestStatus;
+    payment_status?: PaymentStatus;
+    is_read?: boolean;
+    is_action_read?: boolean;
   }
   
   // Define valid request statuses based on database constraint
@@ -43,6 +60,8 @@ export interface RequestResult {
     user_id: string;
     status: RequestStatus;
     payment_status?: PaymentStatus;
+    is_read: boolean;
+    is_action_read: boolean;
     createdAt?: string;
   
     // Service identification
@@ -89,6 +108,21 @@ export interface RequestResult {
     imageUrl?: string | null;
     serviceImageUrl?: string | null;
   }
+
+ 
+  
+  export interface ServiceUser {
+    id: string;
+    firstname: string;
+    lastname: string;
+  }
+  
+  export interface ServiceData {
+    name: string;
+    user: ServiceUser;
+  }
+  
+
   
   export interface PaymentResult {
     success: boolean;

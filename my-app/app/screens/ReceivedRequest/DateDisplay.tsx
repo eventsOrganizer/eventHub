@@ -11,7 +11,7 @@ const DateDisplay: React.FC<DateDisplayProps> = ({ date, startTime, endTime }) =
   return (
     <View style={styles.dateContainer}>
       <Text style={styles.dateText}>Date: {date}</Text>
-      <Text style={styles.dateText}>De {startTime} à {endTime}</Text>
+      <Text style={styles.dateText}>From {startTime} to {endTime}</Text>
     </View>
   );
 };

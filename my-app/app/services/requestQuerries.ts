@@ -12,12 +12,11 @@ export const formatRequest = (req: any, type: string): Request => {
     local_id: type === 'local' ? req.local_id || service?.id : undefined,
     material_id: type === 'material' ? req.material_id || service?.id : undefined,
     name: service?.name || 'Unnamed Service',
-    status: req.status || 'Unknown Status',
+    status: req.status || 'pending',
     type: (type.charAt(0).toUpperCase() + type.slice(1)) as Request['type'],
     subcategory: service?.subcategory?.name || 'Unknown Subcategory',
     category: service?.subcategory?.category?.name || 'Unknown Category',
     details: service?.details || 'No details available',
-    // Utiliser le bon champ de prix selon le type de service
     priceperhour: (type === 'personal' || type === 'local') ? service?.priceperhour || 0 : undefined,
     price: type === 'material' ? service?.price || 0 : undefined,
     price_per_hour: type === 'material' ? service?.price_per_hour || 0 : undefined,
@@ -40,10 +39,13 @@ export const formatRequest = (req: any, type: string): Request => {
       imageUrl: serviceUser?.media?.[0]?.url || null
     },
     showDetails: false,
-    availabilityStatus: req.availability?.status || 'Unknown Status'
+    availabilityStatus: req.availability?.status || 'available',
+    is_read: req.is_read || false,
+    is_action_read: req.is_action_read || false,
+    payment_status: req.payment_status || null
   };
 };
-const baseRequestQuery = `
+ const baseRequestQuery = `
   id,
   status,
   created_at,
@@ -63,7 +65,7 @@ const baseRequestQuery = `
   )
 `;
 
-const serviceFields = {
+ const serviceFields = {
   personal: `
     id,
     name,
@@ -157,35 +159,55 @@ export const fetchReceivedRequests = async (userId: string): Promise<Request[]> 
     const [personalRequests, localRequests, materialRequests] = await Promise.all([
       supabase
         .from('request')
-        .select(`${baseRequestQuery}, personal:personal_id (${serviceFields.personal})`)
-        .not('personal_id', 'is', null)
+        .select(`
+          ${baseRequestQuery},
+          personal:personal_id!inner (
+            ${serviceFields.personal},
+            user_id
+          )
+        `)
         .eq('personal.user_id', userId)
-        .order('created_at', { ascending: false }),
+        .not('personal_id', 'is', null),
 
       supabase
         .from('request')
-        .select(`${baseRequestQuery}, local:local_id (${serviceFields.local})`)
-        .not('local_id', 'is', null)
+        .select(`
+          ${baseRequestQuery},
+          local:local_id!inner (
+            ${serviceFields.local},
+            user_id
+          )
+        `)
         .eq('local.user_id', userId)
-        .order('created_at', { ascending: false }),
+        .not('local_id', 'is', null),
 
       supabase
         .from('request')
-        .select(`${baseRequestQuery}, material:material_id (${serviceFields.material})`)
-        .not('material_id', 'is', null)
+        .select(`
+          ${baseRequestQuery},
+          material:material_id!inner (
+            ${serviceFields.material},
+            user_id
+          )
+        `)
         .eq('material.user_id', userId)
-        .order('created_at', { ascending: false })
+        .not('material_id', 'is', null)
     ]);
 
     if (personalRequests.error) throw personalRequests.error;
     if (localRequests.error) throw localRequests.error;
     if (materialRequests.error) throw materialRequests.error;
 
-    return [
+    const allRequests = [
       ...(personalRequests.data || []).map(req => formatRequest(req, 'personal')),
       ...(localRequests.data || []).map(req => formatRequest(req, 'local')),
       ...(materialRequests.data || []).map(req => formatRequest(req, 'material'))
     ];
+    return allRequests.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt) : new Date();
+      const dateB = b.createdAt ? new Date(b.createdAt) : new Date();
+      return dateB.getTime() - dateA.getTime();
+    });
   } catch (error) {
     console.error('Error in fetchReceivedRequests:', error);
     throw error;

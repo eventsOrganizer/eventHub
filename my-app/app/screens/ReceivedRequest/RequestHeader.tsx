@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 
+const DEFAULT_USER_IMAGE = 'https://via.placeholder.com/40';
+
 interface RequestHeaderProps {
-  imageUrl: string;
+  imageUrl?: string | null;
   requesterName: string;
   requesterEmail: string;
   showDetails: boolean;
@@ -16,14 +18,13 @@ const RequestHeader: React.FC<RequestHeaderProps> = ({
   showDetails,
   onToggleDetails,
 }) => {
-  const fallbackImage = 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b';
-
   return (
     <View style={styles.header}>
       <View style={styles.userInfo}>
         <Image 
-          source={{ uri: imageUrl || fallbackImage }} 
+          source={{ uri: imageUrl || DEFAULT_USER_IMAGE }} 
           style={styles.userImage}
+          defaultSource={{ uri: DEFAULT_USER_IMAGE }}
         />
         <View>
           <Text style={styles.name}>{requesterName}</Text>
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   name: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   email: {

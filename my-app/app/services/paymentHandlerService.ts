@@ -1,8 +1,9 @@
 import { supabase } from './supabaseClient';
-import { createOrder } from './orderService';
-import { PaymentResult } from '../services/requestTypes';
+import { PaymentResult } from '../types/paymentTypes';
+import { sendPaymentNotification } from './notificationService';
 
 export const verifyServiceExists = async (serviceId: number, serviceType: string) => {
+  console.log('Verifying service existence...');
   if (!serviceId || !serviceType) {
     throw new Error('Service ID and type are required');
   }
@@ -27,27 +28,55 @@ export const handlePaymentProcess = async (
   amount: number,
   totalPrice: number
 ) => {
-  if (paymentResult.success && paymentResult.paymentIntentId) {
-    const serviceIdField = `${serviceType.toLowerCase()}_id`;
-    
-    // Create order with new fields
-    const orderData = {
-      [serviceIdField]: serviceId,
-      user_id: userId,
-      payment: true,
-      payment_id: paymentResult.paymentIntentId,
-      request_id: requestId,
-      totalprice: totalPrice,
-      payedamount: amount
-    };
+  console.log('Processing payment result...');
+  if (!paymentResult.success || !paymentResult.paymentIntentId) {
+    throw new Error(paymentResult.error || "Payment failed for an unknown reason");
+  }
 
+  const serviceIdField = `${serviceType.toLowerCase()}_id`;
+  
+  try {
+    // Récupérer les informations du service et de l'utilisateur
+    const { data: serviceData, error: serviceError } = await supabase
+      .from(serviceType.toLowerCase())
+      .select(`
+        id,
+        name,
+        user_id
+      `)
+      .eq('id', serviceId)
+      .single();
+
+    if (serviceError || !serviceData) {
+      throw new Error('Service not found');
+    }
+
+    const { data: userData, error: userError } = await supabase
+      .from('user')
+      .select('firstname, lastname')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !userData) {
+      throw new Error('User not found');
+    }
+
+    // Créer la commande
     const { error: orderError } = await supabase
       .from('order')
-      .insert([orderData]);
+      .insert({
+        [serviceIdField]: serviceId,
+        user_id: userId,
+        payment: true,
+        payment_id: paymentResult.paymentIntentId,
+        request_id: requestId,
+        totalprice: totalPrice,
+        payedamount: amount
+      });
 
     if (orderError) throw orderError;
 
-    // Update request payment status
+    // Mettre à jour le statut de paiement de la demande
     const { error: requestError } = await supabase
       .from('request')
       .update({ payment_status: 'completed' })
@@ -55,8 +84,18 @@ export const handlePaymentProcess = async (
 
     if (requestError) throw requestError;
 
-    return paymentResult.paymentIntentId;
-  }
+    // Envoyer la notification de paiement
+    const userName = `${userData.firstname} ${userData.lastname}`;
+    await sendPaymentNotification(
+      serviceData.user_id,
+      requestId,
+      userName,
+      serviceData.name
+    );
 
-  throw new Error(paymentResult.error || "Payment failed for an unknown reason");
+    return paymentResult.paymentIntentId;
+  } catch (error) {
+    console.error('Error in payment process:', error);
+    throw error;
+  }
 };

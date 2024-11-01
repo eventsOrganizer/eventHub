@@ -9,24 +9,31 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'react-native';
 // import Background from './app/components/Background' DONT DELETE THIS  !!!!!!!!!!! ;
 import { StripeProvider } from '@stripe/stripe-react-native';
+import Constants from 'expo-constants';
 
 const App = () => {
+  const stripePublishableKey = Constants.expoConfig?.extra?.STRIPE_PUBLISHABLE_KEY;
+
+  if (!stripePublishableKey) {
+    console.warn('Stripe publishable key is not configured in app.config.js');
+  }
+
   return (
     <BasketProvider>
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" />
         {/* <Background /> DONT DELETE THIS  !!!!!!!!!!! */}
-      <StripeProvider
-      publishableKey={"pk_test_51QFaREKiWYtX8OElX2ZV3OZYiPE9LUBKa48t6qu36Sf7DdmCay5xSs4syQn42KLxxzOVCVKmRsbnA0Zu1piSJHqh00XFn8pHXJ"} // Replace with your actual Stripe publishable key
-    >
-        <UserProvider>
-          <Provider store={store}>
-            <NavigationContainer>
-              <AppNavigator />
-            </NavigationContainer>
-          </Provider>
-        </UserProvider>
-      </StripeProvider>
+        <StripeProvider
+          publishableKey={stripePublishableKey || ''}
+        >
+          <UserProvider>
+            <Provider store={store}>
+              <NavigationContainer>
+                <AppNavigator />
+              </NavigationContainer>
+            </Provider>
+          </UserProvider>
+        </StripeProvider>
       </SafeAreaProvider>
     </BasketProvider>
   );

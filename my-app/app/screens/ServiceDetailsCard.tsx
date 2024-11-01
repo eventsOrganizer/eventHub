@@ -3,43 +3,37 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 
 interface ServiceDetailsCardProps {
   name: string;
-  type: string;
-  subcategory: string;
-  category: string;
-  details: string;
+  type?: string;
+  subcategory?: string;
+  category?: string;
+  details?: string;
   price?: number;
-  imageUrl: string;
+  imageUrl?: string;
 }
 
 const ServiceDetailsCard: React.FC<ServiceDetailsCardProps> = ({
   name,
-  type,
-  subcategory,
-  category,
-  details,
+  type = 'Unknown Type',
+  subcategory = 'Uncategorized',
+  category = 'Uncategorized',
+  details = 'No details available',
   price,
-  imageUrl
+  imageUrl = 'https://via.placeholder.com/150',
 }) => {
-  const fallbackImage = 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b';
-  
   return (
     <View style={styles.container}>
-      <Image
-        source={{ uri: imageUrl || fallbackImage }}
+      <Image 
+        source={{ uri: imageUrl }} 
         style={styles.image}
-        resizeMode="cover"
       />
-      <View style={styles.content}>
-        <Text style={styles.title}>{name}</Text>
-        <Text style={styles.subtitle}>Type: {type}</Text>
-        <Text style={styles.subtitle}>Catégorie: {category}</Text>
-        <Text style={styles.subtitle}>Sous-catégorie: {subcategory}</Text>
+      <View style={styles.details}>
+        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.type}>{type}</Text>
+        <Text style={styles.category}>{category} - {subcategory}</Text>
+        <Text style={styles.description}>{details}</Text>
         {price !== undefined && (
-          <Text style={styles.price}>
-            Prix: {price} {type === 'Material' ? '' : '/heure'}
-          </Text>
+          <Text style={styles.price}>${price.toFixed(2)}</Text>
         )}
-        <Text style={styles.details}>{details}</Text>
       </View>
     </View>
   );
@@ -47,45 +41,45 @@ const ServiceDetailsCard: React.FC<ServiceDetailsCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
     backgroundColor: 'white',
     borderRadius: 8,
-    overflow: 'hidden',
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
-    marginVertical: 8,
   },
   image: {
     width: '100%',
     height: 200,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    borderRadius: 8,
+    marginBottom: 12,
   },
-  content: {
-    padding: 16,
+  details: {
+    gap: 8,
   },
-  title: {
+  name: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 8,
   },
-  subtitle: {
+  type: {
+    fontSize: 16,
+    color: '#666',
+  },
+  category: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 4,
+  },
+  description: {
+    fontSize: 14,
+    lineHeight: 20,
   },
   price: {
     fontSize: 16,
-    color: '#2E8B57',
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  details: {
-    fontSize: 14,
-    color: '#333',
+    fontWeight: 'bold',
+    color: '#4CAF50',
     marginTop: 8,
   },
 });

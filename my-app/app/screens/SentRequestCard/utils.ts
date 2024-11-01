@@ -30,17 +30,12 @@ const fetchServiceData = async (serviceId: number, serviceType: string): Promise
       .single();
 
     if (error) {
-      console.error('Supabase error:', error);
-      throw error;
-    }
-
-    if (!data) {
-      console.error('No data found for service:', serviceId);
+      console.error(`Error fetching ${serviceType} data:`, error);
       return null;
     }
+    if (!data) return null;
 
-    console.log('Service data fetched:', data);
-    return data as ServicePricing | null;
+    return data as ServicePricing;
   } catch (error) {
     console.error(`Error fetching ${serviceType} data:`, error);
     return null;
@@ -49,16 +44,22 @@ const fetchServiceData = async (serviceId: number, serviceType: string): Promise
 
 export const calculateHours = (start?: string, end?: string): number => {
   if (!start || !end || start === 'Not specified' || end === 'Not specified') return 0;
+  
   try {
-    const startTime = new Date(`2000-01-01T${start}`);
-    const endTime = new Date(`2000-01-01T${end}`);
+    // Utiliser une date fixe pour éviter les problèmes de changement de jour
+    const baseDate = '2000-01-01';
+    const startTime = new Date(`${baseDate}T${start}`);
+    const endTime = new Date(`${baseDate}T${end}`);
     
     if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
-      throw new Error('Invalid date format');
+      throw new Error('Invalid time format');
     }
     
-    const hours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-    return hours > 0 ? hours : 0;
+    const diffMs = endTime.getTime() - startTime.getTime();
+    const hours = diffMs / (1000 * 60 * 60);
+    
+    // S'assurer que le nombre d'heures est positif et arrondi à 2 décimales
+    return Math.max(0, Math.round(hours * 100) / 100);
   } catch (error) {
     console.error('Error calculating hours:', error);
     return 0;
@@ -85,7 +86,6 @@ export const calculateTotalPrice = async (
       return hours * (serviceData.price_per_hour || 0);
     }
 
-    // Pour les services personal et local
     return hours * (serviceData.priceperhour || 0);
   } catch (error) {
     console.error('Error calculating total price:', error);
@@ -105,12 +105,10 @@ export const calculateAdvancePayment = async (
 
     const totalPrice = await calculateTotalPrice(serviceId, serviceType, start, end);
 
-    // Pour les services material en vente, le paiement est total
     if (serviceType.toLowerCase() === 'material' && serviceData.sell_or_rent === 'sell') {
       return totalPrice;
     }
 
-    // Pour tous les autres cas, on applique le pourcentage
     return (totalPrice * (serviceData.percentage || 0)) / 100;
   } catch (error) {
     console.error('Error calculating advance payment:', error);

@@ -6,7 +6,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { Request } from '../../services/requestTypes';
 import RequestHeader from './RequestHeader';
 import RequestDetails from './RequestDetails';
-import RequestActions from './RequestActions';
+import PaymentSection from './PaymentSection';
 import PaymentModal from './PaymentModal';
 import { styles } from './styles';
 
@@ -34,10 +34,10 @@ const SentRequestCard: React.FC<SentRequestCardProps> = ({ item, onRequestDelete
         showDetails={showDetails}
       />
       
-      <RequestActions 
+      <PaymentSection 
         item={item}
-        onRequestDeleted={onRequestDeleted}
         onShowPaymentModal={() => setShowPaymentModal(true)}
+        onRequestDeleted={onRequestDeleted}
       />
       
       <PaymentModal

@@ -20,6 +20,15 @@ const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
   const { amount, totalPrice, serviceId, serviceType, requestId, userId } = route.params;
 
   const handlePayment = async (): Promise<PaymentResult> => {
+    console.log('Starting payment process with:', {
+      amount,
+      totalPrice,
+      serviceId,
+      serviceType,
+      requestId,
+      userId
+    });
+
     if (!userId || !serviceId || !serviceType || !requestId || !amount || !totalPrice) {
       const missingParams = [];
       if (!userId) missingParams.push('userId');
@@ -37,10 +46,11 @@ const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
         description: error,
         variant: "destructive",
       });
-      return { success: false, error: error };
+      return { success: false, error };
     }
 
     if (!cardDetails?.complete) {
+      console.log('Card details incomplete:', cardDetails);
       setErrorMessage("Please enter valid card information");
       return { success: false, error: "Invalid card information" };
     }
@@ -49,8 +59,10 @@ const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
     setErrorMessage(undefined);
 
     try {
+      console.log('Verifying service existence...');
       await verifyServiceExists(serviceId, serviceType);
 
+      console.log('Initiating payment with Stripe...');
       const result = await initiatePayment(cardDetails, { email: 'test@example.com' }, {
         amount,
         serviceId,
@@ -58,10 +70,13 @@ const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
         userId,
       });
 
+      console.log('Payment result:', result);
+
       if (!result.success) {
         throw new Error(result.error || 'Payment failed');
       }
 
+      console.log('Processing payment result...');
       const paymentIntentId = await handlePaymentProcess(
         result,
         serviceId,
@@ -72,6 +87,7 @@ const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
         totalPrice
       );
 
+      console.log('Payment successful, navigating to success screen...');
       navigation.navigate('PaymentSuccess', {
         requestId,
         serviceId,
@@ -81,11 +97,11 @@ const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
         totalPrice
       });
 
-      return { success: true };
+      return { success: true, paymentIntentId };
 
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Payment failed. Please try again.";
-      console.error('Payment error:', errorMsg);
+      console.error('Payment error details:', error);
       setErrorMessage(errorMsg);
       toast({
         title: "Payment Error",
@@ -95,6 +111,7 @@ const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
       return { success: false, error: errorMsg };
     } finally {
       setIsProcessing(false);
+      console.log('Payment process completed');
     }
   };
 

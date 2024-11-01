@@ -6,22 +6,24 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { handleRequestConfirmation, handleRequestRejection } from '../services/requestService';
 import { useToast } from '../hooks/useToast';
 import { useNotifications } from '../hooks/useNotifications';
-import { Request, RouteParams } from '../services/requestTypes';
+import { Request } from '../services/requestTypes';
 import { fetchSentRequests, fetchReceivedRequests } from '../services/requestQuerries';
-import ReceivedRequestCard from './ReceivedRequest/ReceivedRequestCard';
-import SentRequestCard from './SentRequestCard/index';
+import ReceivedRequestCard from '../screens/ReceivedRequest/ReceivedRequestCard';
+import SentRequestCard from '../screens/SentRequestCard';
 import { RootStackParamList } from '../navigation/types';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import StatusFilters from '../screens/SentRequestCard/StatusFilters';
 
 const YourRequests: React.FC = () => {
   const { userId } = useUser();
-  const route = useRoute<RouteProp<Record<string, RouteParams>, string>>();
+  const route = useRoute<RouteProp<Record<string, { mode: 'sent' | 'received' }>, string>>();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { mode } = route.params;
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [filteredRequests, setFilteredRequests] = useState<Request[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [categories] = useState<string[]>(['All', 'Crew', 'Local', 'Material']);
   const { toast } = useToast();
   const { unreadCount } = useNotifications(userId);
@@ -42,7 +44,7 @@ const YourRequests: React.FC = () => {
         : await fetchReceivedRequests(userId);
       
       setRequests(data);
-      setFilteredRequests(data);
+      filterRequests(selectedCategory, selectedStatus, data);
     } catch (error) {
       console.error('Error fetching requests:', error);
       toast({
@@ -55,6 +57,24 @@ const YourRequests: React.FC = () => {
     }
   };
 
+  const filterRequests = (category: string, status: string | null, requestsList = requests) => {
+    let filtered = [...requestsList];
+
+    if (category !== 'All') {
+      filtered = filtered.filter(request => 
+        category === 'Crew' ? request.type === 'Personal' : request.type === category
+      );
+    }
+
+    if (mode === 'sent' && status) {
+      filtered = filtered.filter(request => request.status === status);
+    }
+
+    setSelectedCategory(category);
+    setSelectedStatus(status);
+    setFilteredRequests(filtered);
+  };
+
   const handleConfirm = async (requestId: number) => {
     try {
       const request = requests.find(r => r.id === requestId);
@@ -65,22 +85,14 @@ const YourRequests: React.FC = () => {
         toast({
           title: result.title,
           description: result.message,
-          variant: result.variant as 'default' | 'destructive',
+          variant: "default",
         });
         
         const updatedRequests = requests.map(req => 
           req.id === requestId ? { ...req, status: 'accepted' as const } : req
         );
         setRequests(updatedRequests);
-        setFilteredRequests(
-          selectedCategory === 'All' 
-            ? updatedRequests 
-            : updatedRequests.filter(req => 
-                selectedCategory === 'Crew' 
-                  ? req.type === 'Personal'
-                  : req.type === selectedCategory
-              )
-        );
+        filterRequests(selectedCategory, selectedStatus, updatedRequests);
       }
     } catch (error) {
       console.error('Error confirming request:', error);
@@ -102,22 +114,14 @@ const YourRequests: React.FC = () => {
         toast({
           title: result.title,
           description: result.message,
-          variant: result.variant as 'default' | 'destructive',
+          variant: "default",
         });
         
         const updatedRequests = requests.map(req => 
           req.id === requestId ? { ...req, status: 'refused' as const } : req
         );
         setRequests(updatedRequests);
-        setFilteredRequests(
-          selectedCategory === 'All' 
-            ? updatedRequests 
-            : updatedRequests.filter(req => 
-                selectedCategory === 'Crew' 
-                  ? req.type === 'Personal'
-                  : req.type === selectedCategory
-              )
-        );
+        filterRequests(selectedCategory, selectedStatus, updatedRequests);
       }
     } catch (error) {
       console.error('Error rejecting request:', error);
@@ -129,33 +133,10 @@ const YourRequests: React.FC = () => {
     }
   };
 
-  const filterRequests = (category: string) => {
-    setSelectedCategory(category);
-    if (category === 'All') {
-      setFilteredRequests(requests);
-    } else {
-      const filtered = requests.filter(request => {
-        if (category === 'Crew') {
-          return request.type === 'Personal';
-        }
-        return request.type === category;
-      });
-      setFilteredRequests(filtered);
-    }
-  };
-
   const handleDelete = async (requestId: number) => {
     const updatedRequests = requests.filter(req => req.id !== requestId);
     setRequests(updatedRequests);
-    setFilteredRequests(
-      selectedCategory === 'All' 
-        ? updatedRequests 
-        : updatedRequests.filter(req => 
-            selectedCategory === 'Crew' 
-              ? req.type === 'Personal'
-              : req.type === selectedCategory
-          )
-    );
+    filterRequests(selectedCategory, selectedStatus, updatedRequests);
   };
 
   const renderRequestItem = ({ item }: { item: Request }) => {
@@ -196,7 +177,7 @@ const YourRequests: React.FC = () => {
             styles.filterButton,
             selectedCategory === category && styles.selectedFilterButton
           ]}
-          onPress={() => filterRequests(category)}
+          onPress={() => filterRequests(category, selectedStatus)}
         >
           <Icon
             name={getIconNameForCategory(category)}
@@ -225,6 +206,12 @@ const YourRequests: React.FC = () => {
   return (
     <View style={styles.container}>
       {renderFilterButtons()}
+      {mode === 'sent' && (
+        <StatusFilters
+          selectedStatus={selectedStatus}
+          onSelectStatus={(status) => filterRequests(selectedCategory, status)}
+        />
+      )}
       <FlatList
         data={filteredRequests}
         renderItem={renderRequestItem}
