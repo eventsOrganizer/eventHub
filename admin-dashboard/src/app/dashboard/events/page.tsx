@@ -12,8 +12,8 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
-import { EventsFilters } from '@/components/dashboard/events/events-filters'; 
-import { EventsTable, Event } from '@/components/dashboard/events/events-table';
+import { EventsFilters } from '../../../components/dashboard/events/events-filters';
+import { EventsTable, Event } from '../../../components/dashboard/events/events-table';
 import { supabase } from '../../../lib/supabase-client';
 
 export default function EventsPage(): React.JSX.Element {
@@ -37,10 +37,23 @@ export default function EventsPage(): React.JSX.Element {
     location: '',
     date: '',
   });
+  const [typeFilter, setTypeFilter] = useState('');
+  const [privacyFilter, setPrivacyFilter] = useState('');
+  const [subcategoryFilter, setSubcategoryFilter] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
     fetchEvents();
     fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    fetchSubcategories(selectedCategoryId);
+  }, [selectedCategoryId]);
+
+  useEffect(() => {
+    fetchEventSubcategories();
   }, []);
 
   const fetchEvents = async () => {
@@ -51,24 +64,44 @@ export default function EventsPage(): React.JSX.Element {
         name,
         type,
         privacy,
-        details,
-        subcategory_id,
-        user_id,
-        group_id
+        user: user_id (firstname, lastname),
+        subcategory: subcategory_id (name),
+        media: media (url),
+        disabled
       `);
 
     if (error) {
       console.error('Error fetching events:', error);
     } else {
-      const formattedData = data.map(event => ({
-        id: event.id ?? 'N/A',
-        name: event.name ?? 'N/A',
-        type: event.type ?? 'N/A',
-        privacy: event.privacy ?? false,
-        details: event.details ?? 'N/A',
-        subcategory_id: event.subcategory_id ?? 'N/A',
-        user_id: event.user_id ?? 'N/A',
-        group_id: event.group_id ?? 'N/A',
+      const formattedData = await Promise.all(data.map(async event => {
+        let imageUrl = null;
+
+        if (event.media && event.media.length > 0) {
+          imageUrl = event.media[0].url;
+        } else {
+          const { data: albumData, error: albumError } = await supabase
+            .from('album')
+            .select('media (url)')
+            .eq('event_id', event.id)
+            .limit(1);
+
+          if (albumError) {
+            console.error('Error fetching album image:', albumError);
+          } else if (albumData && albumData.length > 0) {
+            imageUrl = albumData[0].media[0].url;
+          }
+        }
+
+        return {
+          id: event.id ?? 'N/A',
+          name: event.name ?? 'N/A',
+          type: event.type ?? 'N/A',
+          privacy: event.privacy ?? false,
+          owner: `${event.user.firstname ?? 'N/A'} ${event.user.lastname ?? 'N/A'}`,
+          subcategory: event.subcategory.name ?? 'N/A',
+          image: imageUrl,
+          disabled: event.disabled ?? false,
+        };
       }));
 
       setEvents(formattedData);
@@ -100,6 +133,28 @@ export default function EventsPage(): React.JSX.Element {
     }
   };
 
+  const fetchEventSubcategories = async () => {
+    const { data, error } = await supabase
+      .from('subcategory')
+      .select(`
+        id,
+        name,
+        category:category_id (
+          type
+        )
+      `)
+      .eq('category.type', 'event');
+
+    if (error) {
+      console.error('Error fetching event subcategories:', error);
+    } else {
+      setSubcategories(data.map(subcategory => ({
+        id: subcategory.id,
+        name: subcategory.name
+      })));
+    }
+  };
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -128,14 +183,13 @@ export default function EventsPage(): React.JSX.Element {
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
-    setPage(0); // Reset to the first page on search
+    setPage(0);
   };
 
   const handleDeleteEvent = async (id: string) => {
     console.log(`Attempting to delete event with id: ${id}`);
   
     try {
-      // Delete related records in the event_has_user table
       const { error: eventHasUserError } = await supabase
         .from('event_has_user')
         .delete()
@@ -143,7 +197,6 @@ export default function EventsPage(): React.JSX.Element {
   
       if (eventHasUserError) throw new Error(`Error deleting related records in event_has_user: ${eventHasUserError.message}`);
   
-      // Delete related records in the request table
       const { error: requestError } = await supabase
         .from('request')
         .delete()
@@ -151,7 +204,6 @@ export default function EventsPage(): React.JSX.Element {
   
       if (requestError) throw new Error(`Error deleting related records in request: ${requestError.message}`);
   
-      // Delete related records in the review table
       const { error: reviewError } = await supabase
         .from('review')
         .delete()
@@ -159,7 +211,6 @@ export default function EventsPage(): React.JSX.Element {
   
       if (reviewError) throw new Error(`Error deleting related records in review: ${reviewError.message}`);
   
-      // Delete related records in the saved table
       const { error: savedError } = await supabase
         .from('saved')
         .delete()
@@ -167,7 +218,6 @@ export default function EventsPage(): React.JSX.Element {
   
       if (savedError) throw new Error(`Error deleting related records in saved: ${savedError.message}`);
   
-      // Delete related records in the like table
       const { error: likeError } = await supabase
         .from('like')
         .delete()
@@ -175,7 +225,6 @@ export default function EventsPage(): React.JSX.Element {
   
       if (likeError) throw new Error(`Error deleting related records in like: ${likeError.message}`);
   
-      // Now, delete the event
       const { error } = await supabase
         .from('event')
         .delete()
@@ -189,23 +238,51 @@ export default function EventsPage(): React.JSX.Element {
       console.error(err.message);
     }
   };
+
+  const handleEnableDisable = async (disable: boolean) => {
+    try {
+      const updatePromises = Array.from(selected).map(async (id) => {
+        const { error } = await supabase
+          .from('event')
+          .update({ disabled: disable })
+          .eq('id', id);
+
+        if (error) {
+          console.error('Error updating event status:', error);
+        }
+      });
+
+      await Promise.all(updatePromises);
+      setSelected(new Set());
+      fetchEvents();
+    } catch (error) {
+      console.error('Unexpected error updating events:', error);
+    }
+  };
+
   const handlePageChange = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
   const handleRowsPerPageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset to the first page
+    setPage(0);
   };
 
   const handleSelectionChange = (newSelected: Set<string>) => {
     setSelected(newSelected);
   };
 
-  const filteredEvents = events.filter(event =>
-    event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    event.details.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (event.details || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = typeFilter === '' || event.type === typeFilter;
+    const matchesPrivacy = privacyFilter === '' || event.privacy.toString() === privacyFilter;
+    const matchesSubcategory = subcategoryFilter === '' || event.subcategory === subcategoryFilter;
+    const matchesStatus = statusFilter === '' || (statusFilter === 'enabled' ? !event.disabled : event.disabled);
+
+    return matchesSearch && matchesType && matchesPrivacy && matchesSubcategory && matchesStatus;
+  });
 
   const paginatedEvents = applyPagination(filteredEvents, page, rowsPerPage);
 
@@ -226,10 +303,21 @@ export default function EventsPage(): React.JSX.Element {
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         isDeleteEnabled={selected.size > 0}
+        selectedEvents={Array.from(selected).map(id => events.find(event => event.id === id)).filter(Boolean)}
+        onEnableDisable={handleEnableDisable}
         onDelete={() => {
           selected.forEach(id => handleDeleteEvent(id));
           setSelected(new Set());
         }}
+        typeFilter={typeFilter}
+        onTypeFilterChange={(e) => setTypeFilter(e.target.value as string)}
+        privacyFilter={privacyFilter}
+        onPrivacyFilterChange={(e) => setPrivacyFilter(e.target.value as string)}
+        subcategoryFilter={subcategoryFilter}
+        onSubcategoryFilterChange={(e) => setSubcategoryFilter(e.target.value as string)}
+        subcategories={subcategories}
+        statusFilter={statusFilter}
+        onStatusFilterChange={(e) => setStatusFilter(e.target.value as string)}
       />
       <EventsTable
         count={filteredEvents.length}

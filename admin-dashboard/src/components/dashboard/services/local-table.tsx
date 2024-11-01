@@ -1,5 +1,3 @@
-'use client';
-
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -14,36 +12,29 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
-import dayjs from 'dayjs';
-import Button from '@mui/material/Button';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useSelection } from '../../../hooks/use-selection';
 
-import { useSelection } from '@/hooks/use-selection';
-import { CustomPaginationActions } from './CustomPagination';
-import { supabase } from '@/lib/supabase-client';
-
-export interface Customer {
-  avatar: string;
+interface LocalService {
+  id: string;
   name: string;
-  username: string;
-  email: string;
-  details: string;
-  signedUp: Date;
+  price: number;
+  subcategoryName: string;
+  owner: string;
+  image?: string;
   disabled: boolean;
 }
 
-interface CustomersTableProps {
+interface LocalTableProps {
   count: number;
   page: number;
-  rows: Customer[];
+  rows: LocalService[];
   rowsPerPage: number;
   onPageChange: (event: unknown, newPage: number) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectionChange: (selected: Set<string>) => void;
 }
 
-export function CustomersTable({
+export function LocalTable({
   count,
   rows,
   page,
@@ -51,64 +42,27 @@ export function CustomersTable({
   onPageChange,
   onRowsPerPageChange,
   onSelectionChange,
-}: CustomersTableProps): React.JSX.Element {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Ensure this code only runs on the client side
-    if (typeof window !== 'undefined') {
-      // Your client-side logic here
-    }
-  }, []);
-
+}: LocalTableProps): React.JSX.Element {
   const rowIds = React.useMemo(() => {
-    return rows.map((customer) => customer.email); // Ensure email is unique
+    return rows.map((service) => service.id);
   }, [rows]);
 
   const { selectAll, deselectAll, selectOne, deselectOne, selected } = useSelection(rowIds);
 
   React.useEffect(() => {
-    onSelectionChange(selected); // Notify parent about selection changes
+    onSelectionChange(selected);
   }, [selected, onSelectionChange]);
 
   const selectedSome = (selected?.size ?? 0) > 0 && (selected?.size ?? 0) < rows.length;
   const selectedAll = rows.length > 0 && selected?.size === rows.length;
 
-  const handleRowClick = (email: string) => {
-    if (selected?.has(email)) {
-      deselectOne(email);
+  const handleRowClick = (id: string) => {
+    if (selected?.has(id)) {
+      deselectOne(id);
     } else {
-      selectOne(email);
+      selectOne(id);
     }
   };
-
-  const handleManageClick = (email: string) => {
-    router.push(`/dashboard/user-details?email=${email}`);
-  };
-
-  const handleToggleDisable = async (email: string, isDisabled: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('user')
-        .update({ disabled: !isDisabled })
-        .eq('email', email);
-
-      if (error) {
-        console.error('Error updating user status:', error);
-      } else {
-        // Update the local state to reflect the change
-        setCustomers((prevCustomers) =>
-          prevCustomers.map((customer) =>
-            customer.email === email ? { ...customer, disabled: !isDisabled } : customer
-          )
-        );
-      }
-    } catch (error) {
-      console.error('Unexpected error updating user status:', error);
-    }
-  };
-
-  const [customers, setCustomers] = useState<Customer[]>([]);
 
   return (
     <Card>
@@ -129,25 +83,25 @@ export function CustomersTable({
                   }}
                 />
               </TableCell>
+              <TableCell>Image</TableCell>
               <TableCell>Name</TableCell>
-              <TableCell>Username</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Details</TableCell>
-              <TableCell>Signed Up</TableCell>
-              <TableCell> </TableCell>
+              <TableCell>Price</TableCell>
+              <TableCell>Subcategory</TableCell>
+              <TableCell>Owner</TableCell>
+              <TableCell>ID</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row) => {
-              const isSelected = selected?.has(row.email);
+              const isSelected = selected?.has(row.id);
               const isDisabled = row.disabled;
 
               return (
                 <TableRow
                   hover
-                  key={row.email}
+                  key={row.id}
                   selected={isSelected}
-                  onClick={() => handleRowClick(row.email)}
+                  onClick={() => handleRowClick(row.id)}
                   sx={{
                     cursor: 'pointer',
                     backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.1)' : 'inherit',
@@ -169,40 +123,29 @@ export function CustomersTable({
                       onChange={(event) => {
                         event.stopPropagation();
                         if (event.target.checked) {
-                          selectOne(row.email);
+                          selectOne(row.id);
                         } else {
-                          deselectOne(row.email);
+                          deselectOne(row.id);
                         }
                       }}
                     />
                   </TableCell>
                   <TableCell>
-                    <Stack sx={{ alignItems: 'center' }} direction="row" spacing={2}>
-                      <Avatar src={row.avatar} />
-                      <Typography variant="subtitle2">{row.name}</Typography>
-                    </Stack>
+                    {row.image ? (
+                      <Avatar
+                        src={row.image}
+                        alt={row.name}
+                        sx={{ width: 56, height: 56, borderRadius: '8px' }}
+                      />
+                    ) : (
+                      'N/A'
+                    )}
                   </TableCell>
-                  <TableCell>{row.username}</TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell>{row.details}</TableCell>
-                  <TableCell>{dayjs(row.signedUp).format('MMM D, YYYY')}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      sx={{
-                        opacity: 1,
-                        backgroundColor: 'white',
-                        zIndex: 1,
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleManageClick(row.email);
-                      }}
-                    >
-                      Manage
-                    </Button>
-                  </TableCell>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.price}</TableCell>
+                  <TableCell>{row.subcategoryName}</TableCell>
+                  <TableCell>{row.owner}</TableCell>
+                  <TableCell>{row.id}</TableCell>
                 </TableRow>
               );
             })}
