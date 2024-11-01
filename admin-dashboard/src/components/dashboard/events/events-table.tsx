@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -13,18 +15,21 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import { useEffect, useState } from 'react';
 
-import { useSelection } from '@/hooks/use-selection';
+import { useSelection } from '../../../hooks/use-selection';
+import { supabase } from '../../../lib/supabase-client';
 
 export interface Event {
   id: string;
   name: string;
   type: string;
   privacy: boolean;
-  details: string;
-  subcategory_id: number;
-  user_id: string;
-  group_id: number;
+  owner: string;
+  subcategory: string;
+  image?: string;
+  ownerImage?: string;
+  disabled: boolean;
 }
 
 interface EventsTableProps {
@@ -35,7 +40,6 @@ interface EventsTableProps {
   onPageChange: (event: unknown, newPage: number) => void;
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSelectionChange: (selected: Set<string>) => void;
-  onDelete: (id: string) => void; // Add this prop
 }
 
 export function EventsTable({
@@ -46,7 +50,6 @@ export function EventsTable({
   onPageChange,
   onRowsPerPageChange,
   onSelectionChange,
-  onDelete, // Add this prop
 }: EventsTableProps): React.JSX.Element {
   const rowIds = React.useMemo(() => {
     return rows.map((event) => event.id);
@@ -62,9 +65,37 @@ export function EventsTable({
   const selectedAll = rows.length > 0 && selected?.size === rows.length;
 
   const handleRowClick = (id: string) => {
-    console.log(`Row clicked with id: ${id}`);
-    onDelete(id); // Call the delete function
+    if (selected?.has(id)) {
+      deselectOne(id);
+    } else {
+      selectOne(id);
+    }
   };
+
+  const handleToggleDisable = async (id: string, isDisabled: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('event')
+        .update({ disabled: !isDisabled })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating event status:', error);
+      } else {
+        // Update the local state to reflect the change
+        setEvents((prevEvents) =>
+          prevEvents.map((event) =>
+            event.id === id ? { ...event, disabled: !isDisabled } : event
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Unexpected error updating event status:', error);
+    }
+  };
+
+  const [events, setEvents] = useState<Event[]>([]);
+
   return (
     <Card>
       <Box sx={{ overflowX: 'auto' }}>
@@ -84,18 +115,18 @@ export function EventsTable({
                   }}
                 />
               </TableCell>
+              <TableCell>Image</TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Type</TableCell>
               <TableCell>Privacy</TableCell>
-              <TableCell>Details</TableCell>
-              <TableCell>Subcategory ID</TableCell>
-              <TableCell>User ID</TableCell>
-              <TableCell>Group ID</TableCell>
+              <TableCell>Owner</TableCell>
+              <TableCell>Subcategory</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row) => {
               const isSelected = selected?.has(row.id);
+              const isDisabled = row.disabled;
 
               return (
                 <TableRow
@@ -103,7 +134,20 @@ export function EventsTable({
                   key={row.id}
                   selected={isSelected}
                   onClick={() => handleRowClick(row.id)}
-                  sx={{ cursor: 'pointer' }}
+                  sx={{
+                    cursor: 'pointer',
+                    backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.1)' : 'inherit',
+                    opacity: isDisabled ? 0.5 : 1,
+                    '&:hover': {
+                      backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.04)',
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.08)',
+                      '&:hover': {
+                        backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.12)',
+                      },
+                    },
+                  }}
                 >
                   <TableCell padding="checkbox">
                     <Checkbox
@@ -118,13 +162,33 @@ export function EventsTable({
                       }}
                     />
                   </TableCell>
+                  <TableCell>
+                    {row.image ? (
+                      <Avatar
+                        src={row.image}
+                        alt={row.name}
+                        sx={{ width: 56, height: 56, borderRadius: '8px' }}
+                      />
+                    ) : (
+                      'N/A'
+                    )}
+                  </TableCell>
                   <TableCell>{row.name}</TableCell>
                   <TableCell>{row.type}</TableCell>
                   <TableCell>{row.privacy ? 'Private' : 'Public'}</TableCell>
-                  <TableCell>{row.details}</TableCell>
-                  <TableCell>{row.subcategory_id}</TableCell>
-                  <TableCell>{row.user_id}</TableCell>
-                  <TableCell>{row.group_id}</TableCell>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={2}>
+                      {row.ownerImage && (
+                        <Avatar
+                          src={row.ownerImage}
+                          alt={row.owner}
+                          sx={{ width: 32, height: 32, borderRadius: '50%' }}
+                        />
+                      )}
+                      <Typography variant="subtitle2">{row.owner}</Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>{row.subcategory}</TableCell>
                 </TableRow>
               );
             })}
