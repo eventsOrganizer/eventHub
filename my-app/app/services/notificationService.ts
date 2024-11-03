@@ -4,7 +4,7 @@ export interface NotificationData {
   user_id: string;
   title: string;
   message: string,
-  type: 'request' | 'response' | 'payment' | 'ticket' = 'request',
+  type: 'request' | 'response' | 'payment' | 'ticket' ,
   related_id?: number;
 }
 

@@ -80,8 +80,8 @@ const LocalServiceDetailScreen: React.FC = () => {
             exceptionDates: availabilityData
               .filter(item => item.statusday === 'exception')
               .map(item => item.date),
-            startDate: data.startdate?.toString() || '',
-            endDate: data.enddate?.toString() || '',
+            startDate: data.startdate?.toString() || new Date().toISOString(),
+            endDate: data.enddate?.toString() || new Date().toISOString(),
             interval: 30
           };
 
@@ -169,7 +169,11 @@ const LocalServiceDetailScreen: React.FC = () => {
     navigation.navigate('LocalBookingScreen', {
       localId: localServiceData.id,
       userId: userId,
-      availabilityData: LocalAvailabilityData
+      availabilityData: {
+        ...LocalAvailabilityData,
+        startDate: LocalAvailabilityData.startDate?.toString() || new Date().toISOString(),
+        endDate: LocalAvailabilityData.endDate?.toString() || new Date().toISOString()
+      }
     });
   };
 
@@ -207,6 +211,7 @@ const LocalServiceDetailScreen: React.FC = () => {
         distance={distance}
         address={address}
         onToggleMap={() => {}}
+        onAddressFound={(newAddress: string) => setAddress(newAddress)}
       />
       {localServiceData && <LocalDetails localData={localServiceData} />}
       {LocalAvailabilityData && (

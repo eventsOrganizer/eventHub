@@ -4,11 +4,7 @@ import { sendRequestNotification, sendResponseNotification, sendPaymentNotificat
 
 interface ServiceResponse {
   name: string;
-  user: {
-    id: string;
-    firstname: string;
-    lastname: string;
-  };
+  user: ServiceUser;
 }
 
 interface ServiceUser {
@@ -36,15 +32,15 @@ const transformRawData = (rawData: any): RequestData => {
   };
 
   const transformServiceData = (serviceData: any): ServiceDetails | null => {
-    if (!serviceData || !serviceData.user) return null;
+    if (!serviceData?.user?.[0]) return null;
     return {
       id: serviceData.id,
       name: serviceData.name,
       user: {
-        id: serviceData.user.id,
-        firstname: serviceData.user.firstname,
-        lastname: serviceData.user.lastname,
-        email: serviceData.user.email
+        id: serviceData.user[0].id,
+        firstname: serviceData.user[0].firstname,
+        lastname: serviceData.user[0].lastname,
+        email: serviceData.user[0].email
       }
     };
   };
@@ -58,9 +54,9 @@ const transformRawData = (rawData: any): RequestData => {
     is_action_read: rawData.is_action_read,
     payment_status: rawData.payment_status,
     user: userData,
-    personal: rawData.personal ? transformServiceData(rawData.personal) : undefined,
-    local: rawData.local ? transformServiceData(rawData.local) : undefined,
-    material: rawData.material ? transformServiceData(rawData.material) : undefined
+    personal: rawData.personal ? transformServiceData(rawData.personal) || undefined : undefined,
+    local: rawData.local ? transformServiceData(rawData.local) || undefined : undefined,
+    material: rawData.material ? transformServiceData(rawData.material) || undefined : undefined
   };
 };
 
@@ -159,9 +155,9 @@ export const handleRequestConfirmation = async (requestId: number): Promise<Requ
 
     const service = requestData.personal || requestData.local || requestData.material;
     if (!service) throw new Error('Service not found');
-    if (!service[0] || !service[0].user) throw new Error('Service user not found');
+    if (!service.user) throw new Error('Service user not found');
 
-    const serviceOwnerName = `${service[0].user[0].firstname} ${service[0].user[0].lastname}`;
+    const serviceOwnerName = `${service.user.firstname} ${service.user.lastname}`;
 
     const { error: updateError } = await supabase
       .from('request')
@@ -178,7 +174,7 @@ export const handleRequestConfirmation = async (requestId: number): Promise<Requ
       requestData.user_id,
       requestId,
       'accepted',
-      service[0].name,
+      service.name,
       serviceOwnerName
     );
 
@@ -239,9 +235,9 @@ export const handleRequestRejection = async (requestId: number): Promise<Request
     // Get the correct service data
     const service = requestData.personal || requestData.local || requestData.material;
     if (!service) throw new Error('Service not found');
-    if (!service.user) throw new Error('Service user not found');
+    if (!service.user[0]) throw new Error('Service user not found');
 
-    const serviceOwnerName = `${service.user.firstname} ${service.user.lastname}`;
+    const serviceOwnerName = `${service.user[0].firstname} ${service.user[0].lastname}`;
 
     const { error: updateError } = await supabase
       .from('request')

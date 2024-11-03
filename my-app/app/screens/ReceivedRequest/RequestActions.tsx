@@ -6,6 +6,7 @@ interface RequestActionsProps {
   onConfirm: () => void;
   onReject: () => void;
   onDelete?: () => void;
+  serviceUserId?: string;
 }
 
 const RequestActions: React.FC<RequestActionsProps> = ({
@@ -13,6 +14,7 @@ const RequestActions: React.FC<RequestActionsProps> = ({
   onConfirm,
   onReject,
   onDelete,
+  serviceUserId,
 }) => {
   if (status === 'pending') {
     return (

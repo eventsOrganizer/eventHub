@@ -101,6 +101,12 @@ export interface LocalService {
     };
   
   };
+  availability: Array<{
+    date: string;
+    daysofweek: string[];
+    start?: string;
+    end?: string;
+  }>;
   // ... autres propriétés nécessaires ...
 }
 
