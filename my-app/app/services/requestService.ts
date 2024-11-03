@@ -235,9 +235,9 @@ export const handleRequestRejection = async (requestId: number): Promise<Request
     // Get the correct service data
     const service = requestData.personal || requestData.local || requestData.material;
     if (!service) throw new Error('Service not found');
-    if (!service.user[0]) throw new Error('Service user not found');
+    if (!service.user) throw new Error('Service user not found');
 
-    const serviceOwnerName = `${service.user[0].firstname} ${service.user[0].lastname}`;
+    const serviceOwnerName = `${service.user.firstname} ${service.user.lastname}`;
 
     const { error: updateError } = await supabase
       .from('request')
