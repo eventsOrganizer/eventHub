@@ -4,7 +4,7 @@ export interface NotificationData {
   user_id: string;
   title: string;
   message: string,
-  type: 'request' | 'response' | 'payment' | 'ticket' = 'request',
+  type: 'request' | 'response' | 'payment' | 'ticket',
   related_id?: number;
 }
 
@@ -94,5 +94,23 @@ export const sendPaymentNotification = async (
     message: `${userName} paid for your service '${serviceName}'`,
     type: 'payment',
     related_id: requestId
+  });
+
+  
+};
+
+export const createEventNotification = async (
+  userId: string,
+  title: string,
+  message: string,
+  type: 'request' | 'response' | 'payment' | 'ticket' = 'request',
+  relatedId?: number
+): Promise<boolean> => {
+  return createNotification({
+    user_id: userId,
+    title,
+    message,
+    type,
+    related_id: relatedId
   });
 };
