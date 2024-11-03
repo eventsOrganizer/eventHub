@@ -167,6 +167,7 @@ export const fetchReceivedRequests = async (userId: string): Promise<Request[]> 
           )
         `)
         .eq('personal.user_id', userId)
+        .neq('user_id', userId)
         .not('personal_id', 'is', null),
 
       supabase
@@ -179,6 +180,7 @@ export const fetchReceivedRequests = async (userId: string): Promise<Request[]> 
           )
         `)
         .eq('local.user_id', userId)
+        .neq('user_id', userId)
         .not('local_id', 'is', null),
 
       supabase
@@ -191,6 +193,7 @@ export const fetchReceivedRequests = async (userId: string): Promise<Request[]> 
           )
         `)
         .eq('material.user_id', userId)
+        .neq('user_id', userId)
         .not('material_id', 'is', null)
     ]);
 

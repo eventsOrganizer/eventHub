@@ -1,97 +1,141 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Assuming you're using MaterialIcons
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import * as Animatable from 'react-native-animatable';
+import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import ProgressBar from '../reuseableForCreationService/ProgressBar';
+import MapScreen from '../../screens/MapScreen';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 type RouteParams = {
   serviceName: string;
   description: string;
   images: string[];
-  price: string;
-  availabilityFrom: string;
-  availabilityTo: string;
-  subcategoryName: string;
+  price: number;
   subcategoryId: string;
+  subcategoryName: string;
+  startDate: string;
+  endDate: string;
+  interval: string;
+  exceptionDates: string[];
 };
 
 const CreateLocalServiceStep4 = () => {
   const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { serviceName, description, images, price, startDate, endDate, interval, exceptionDates, subcategoryName, subcategoryId } = route.params;
 
-  const { serviceName, description, images, price, availabilityFrom, availabilityTo, subcategoryName, subcategoryId } = route.params;
-
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [showMap, setShowMap] = useState(false);
   const [amenities, setAmenities] = useState({ wifi: false, parking: false, aircon: false });
 
+  const handleLocationSelected = (selectedLocation: { latitude: number; longitude: number }) => {
+    setLocation(selectedLocation);
+    setShowMap(false);
+  };
+
+  const toggleAmenity = (amenity: keyof typeof amenities) => {
+    setAmenities(prev => ({ ...prev, [amenity]: !prev[amenity] }));
+  };
+
   const handleNext = () => {
+    if (!location) {
+      Alert.alert("Erreur", "Veuillez sélectionner un emplacement avant de continuer.");
+      return;
+    }
+
     navigation.navigate('CreateLocalServiceStep5', {
       serviceName,
       description,
       images,
-      price,
-      availabilityFrom,
-      availabilityTo,
+      price: price.toString(),
+      location,
       amenities,
-      subcategoryName,
+      startDate,
+      endDate,
+      interval,
+      exceptionDates,
       subcategoryId,
+      subcategoryName
     });
   };
 
-  const toggleAmenity = (amenity: 'wifi' | 'parking' | 'aircon') => {
-    setAmenities({ ...amenities, [amenity]: !amenities[amenity] });
-  };
-
-  const getBorderStyle = (isActive: boolean) => {
-    return isActive ? { borderColor: 'red', borderWidth: 2 } : {};
-  };
-
   return (
-    <Animatable.View animation="fadeInUp" style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name="arrow-back" size={24} color="#fff" />
-      </TouchableOpacity>
+    <ScrollView style={styles.container}>
+      <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.card}>
+        <ProgressBar step={4} totalSteps={5} />
+        <Text style={styles.title}>Créer un service local</Text>
+        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 20 }}>Étape 4: Localisation et Équipements</Text>
 
-      {/* Spacing between the arrow and content */}
-      <View style={styles.spacing} />
-
-      <Animatable.Text animation="fadeInLeft" style={styles.title}>Select Amenities</Animatable.Text>
-
-      <View style={styles.cardContainer}>
-        {/* WiFi Card */}
         <TouchableOpacity
-          style={[styles.card, getBorderStyle(amenities.wifi)]}
-          onPress={() => toggleAmenity('wifi')}
+          style={styles.button}
+          onPress={() => setShowMap(true)}
         >
-          <Icon name="wifi" size={40} color={amenities.wifi ? 'red' : 'black'} />
+          <Text style={styles.buttonText}>
+            {location ? 'Modifier la localisation' : 'Sélectionner la localisation'}
+          </Text>
         </TouchableOpacity>
+        {location && (
+          <Text style={{ fontSize: 16, color: '#333', marginBottom: 20 }}>
+            Localisation sélectionnée: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+          </Text>
+        )}
+        {showMap && (
+          <View style={styles.container}>
+            <MapScreen onLocationSelected={handleLocationSelected} />
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setShowMap(false)}
+            >
+              <Text style={styles.buttonText}>Fermer la carte</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        <View style={{ flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 20 }}>Équipements disponibles</Text>
+          {Object.entries(amenities).map(([key, value]) => (
+            <TouchableOpacity
+              key={key}
+              style={{ backgroundColor: value ? '#007bff' : '#fff', padding: 10, borderRadius: 20, marginVertical: 5, width: '100%', alignItems: 'center', justifyContent: 'center' }}
+              onPress={() => toggleAmenity(key as keyof typeof amenities)}
+            >
+              <Icon name={getAmenityIcon(key)} size={24} color={value ? '#fff' : '#666'} />
+              <Text style={{ fontSize: 16, color: value ? '#fff' : '#333' }}>
+                {getAmenityLabel(key)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-        {/* Parking Card */}
         <TouchableOpacity
-          style={[styles.card, getBorderStyle(amenities.parking)]}
-          onPress={() => toggleAmenity('parking')}
+          style={[styles.button, !location && styles.buttonDisabled]}
+          onPress={handleNext}
+          disabled={!location}
         >
-          <Icon name="local-parking" size={40} color={amenities.parking ? 'red' : 'black'} />
+          <Text style={styles.buttonText}>Suivant</Text>
         </TouchableOpacity>
-
-        {/* Air Conditioning Card */}
-        <TouchableOpacity
-          style={[styles.card, getBorderStyle(amenities.aircon)]}
-          onPress={() => toggleAmenity('aircon')}
-        >
-          <Icon name="ac-unit" size={40} color={amenities.aircon ? 'red' : 'black'} />
-        </TouchableOpacity>
-      </View>
-
-      <Animatable.View animation="pulse" delay={400} style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
-      </Animatable.View>
-    </Animatable.View>
+      </Animated.View>
+    </ScrollView>
   );
+};
+
+const getAmenityIcon = (amenity: string): string => {
+  switch (amenity) {
+    case 'wifi': return 'wifi';
+    case 'parking': return 'local-parking';
+    case 'aircon': return 'ac-unit';
+    default: return 'help';
+  }
+};
+
+const getAmenityLabel = (amenity: string): string => {
+  switch (amenity) {
+    case 'wifi': return 'Wi-Fi';
+    case 'parking': return 'Parking';
+    case 'aircon': return 'Climatisation';
+    default: return amenity;
+  }
 };
 
 const styles = StyleSheet.create({
@@ -148,6 +192,30 @@ const styles = StyleSheet.create({
     color: '#fff', 
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  mapButton: {
+    backgroundColor: '#FF3B30',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#FF3B30',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    marginBottom: 20,
+  },
+  mapButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  amenitiesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  buttonDisabled: {
+    backgroundColor: '#ccc',
   },
 });
 

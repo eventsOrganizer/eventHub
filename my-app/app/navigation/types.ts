@@ -13,13 +13,8 @@ export type CreateLocalServiceStep5Params = {
   description: string;
   images: string[];
   price: string;
-  availabilityFrom: string;
-  availabilityTo: string;
-  amenities: {
-      wifi: boolean;
-      parking: boolean;
-      aircon: boolean;
-  };
+  location: { latitude: number; longitude: number };
+  amenities: { wifi: boolean; parking: boolean; aircon: boolean };
 };
 
 export interface PersonalData {
@@ -42,26 +37,54 @@ export interface PersonalData {
 }
 
 export type RootStackParamList = {
-  LocalBookingScreen: { localId: number; availabilityData: any };
+ 
   Home: undefined;
   PersonalsScreen: { category?: string };
   PersonalDetail: { personalId: number };
   LocalsScreen:{category?: string}
   LocalServiceDetails: {localId: number}
   CreateLocalServiceStep2: undefined;
-  CreateLocalServiceStep3: { 
-      serviceName: string; 
-      description: string; 
+  CreateLocalServiceStep3: {
+    serviceName: string;
+    description: string;
+    images: string[];
+    price: number;
+    subcategoryId: string;
+    subcategoryName: string;
   };
-  CreateLocalServiceStep4: { 
-      formData: { 
-          serviceName: string; 
-          description: string; 
-          images: string[]; 
-          price: string; 
-      }; 
+  CreateLocalServiceStep4: {
+    serviceName: string;
+    description: string;
+    images: string[];
+    price: number;
+    subcategoryId: string;
+    subcategoryName: string;
+    startDate: string;
+    endDate: string;
+    interval: string;
+    exceptionDates: string[];
   };
-  CreateLocalServiceStep5: CreateLocalServiceStep5Params;
+  CreateLocalServiceStep5: {
+    serviceName: string;
+    description: string;
+    images: string[];
+    price: string;
+    subcategoryId: string;
+    subcategoryName: string;
+    startDate: string;
+    endDate: string;
+    interval: string;
+    exceptionDates: string[];
+    location: {
+      latitude: number;
+      longitude: number;
+    };
+    amenities: {
+      wifi: boolean;
+      parking: boolean;
+      aircon: boolean;
+    };
+  };
 
   CreatePersonalServiceStep1: undefined;
   CreatePersonalServiceStep2: {
@@ -148,6 +171,22 @@ export type RootStackParamList = {
   };
   YourRequests: {
     mode: 'sent' | 'received';
+  };
+  LocalServiceDetailScreen: {
+    localId: number;
+  };
+  LocalCommentsScreen: {
+    localId: number;
+  };
+  LocalBookingScreen: {
+    localId: number;
+    userId: string;
+    availabilityData: {
+      startDate: string;
+      endDate: string;
+      availability: any[]; // ajustez le type selon vos besoins
+      interval: number;
+    };
   };
 }
 

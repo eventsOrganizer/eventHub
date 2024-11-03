@@ -104,18 +104,18 @@ const LocalCommentsScreen = () => {
     const diffInSeconds = Math.floor((now.getTime() - commentDate.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
-      return `${diffInSeconds} seconds ago`;
+      return `Il y a ${diffInSeconds} seconde${diffInSeconds > 1 ? 's' : ''}`;
     } else if (diffInSeconds < 3600) {
       const minutes = Math.floor(diffInSeconds / 60);
-      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+      return `Il y a ${minutes} minute${minutes > 1 ? 's' : ''}`;
     } else if (diffInSeconds < 86400) {
       const hours = Math.floor(diffInSeconds / 3600);
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+      return `Il y a ${hours} heure${hours > 1 ? 's' : ''}`;
     } else if (diffInSeconds < 2592000) {
       const days = Math.floor(diffInSeconds / 86400);
-      return `${days} day${days > 1 ? 's' : ''} ago`;
+      return `Il y a ${days} jour${days > 1 ? 's' : ''}`;
     } else {
-      return commentDate.toLocaleDateString();
+      return commentDate.toLocaleDateString('fr-FR');
     }
   };
 
@@ -123,7 +123,9 @@ const LocalCommentsScreen = () => {
     <View style={styles.commentItem}>
       <View style={styles.commentHeader}>
         <Image 
-          source={{ uri: item.user.media && item.user.media[0] ? item.user.media[0].url : 'https://via.placeholder.com/40' }} 
+          source={{ 
+            uri: item.user.media?.[0]?.url || 'https://via.placeholder.com/40'
+          }} 
           style={styles.avatar} 
         />
         <View style={styles.commentInfo}>
@@ -140,23 +142,27 @@ const LocalCommentsScreen = () => {
       colors={['#F0F4F8', '#E1E8ED', '#D2DCE5', '#C3D0D9']}
       style={styles.container}
     >
-      <Text style={styles.title}>Comments</Text>
+      <Text style={styles.title}>Commentaires</Text>
       <FlatList
         data={comments}
         renderItem={renderComment}
         keyExtractor={(item) => item.id.toString()}
-        ListEmptyComponent={<Text style={styles.emptyText}>No comments yet.</Text>}
+        ListEmptyComponent={<Text style={styles.emptyText}>Aucun commentaire pour le moment.</Text>}
       />
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Write a comment..."
+          placeholder="Écrivez un commentaire..."
           value={newComment}
           onChangeText={setNewComment}
           multiline
         />
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmitComment}>
-          <Text style={styles.submitButtonText}>Submit</Text>
+        <TouchableOpacity 
+          style={[styles.submitButton, !newComment.trim() && styles.submitButtonDisabled]}
+          onPress={handleSubmitComment}
+          disabled={!newComment.trim()}
+        >
+          <Text style={styles.submitButtonText}>Envoyer</Text>
         </TouchableOpacity>
       </View>
     </LinearGradient>
@@ -175,10 +181,18 @@ const styles = StyleSheet.create({
     color: '#4A90E2',
   },
   commentItem: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     marginBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E1E8ED',
-    paddingBottom: 8,
+    borderRadius: 12,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   commentHeader: {
     flexDirection: 'row',
@@ -190,6 +204,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 8,
+    borderWidth: 2,
+    borderColor: '#4A90E2',
   },
   commentInfo: {
     flex: 1,
@@ -217,10 +233,13 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#E1E8ED',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 8,
     backgroundColor: '#FFFFFF',
+    minHeight: 80,
+    textAlignVertical: 'top',
+    fontSize: 16,
   },
   submitButton: {
     backgroundColor: '#4A90E2',
@@ -231,6 +250,10 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#A0A0A0',
+    opacity: 0.7,
   },
 });
 

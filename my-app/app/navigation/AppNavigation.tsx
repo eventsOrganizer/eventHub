@@ -147,6 +147,16 @@ type RootStackParamList = {
   };
   LocalBookingScreen: undefined;
   PaymentTest: undefined; // Add this line
+  LocalCommentsScreen: {
+    localId: number;
+  };
+  LocalBookingScreen: {
+    localId: number;
+    userId: string;
+  };
+  LocalAddReviewScreen: {
+    localId: number;
+  };
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -523,7 +533,7 @@ const AppNavigation: React.FC = () => {
     <Stack.Screen name="TicketScanning" component={TicketScanningScreen} />
     <Stack.Screen name="EventSerialsList" component={EventSerialsList} />
 <Stack.Screen name="LocalAddReviewScreen" component={LocalAddReviewScreen}/>
-<Stack.Screen name="LocalCommentsScreen" component={LocalCommentSection}/>
+<Stack.Screen name="LocalCommentsScreen" component={LocalCommentsScreen}/>
 <Stack.Screen name="LocalBookingScreen" component={LocalBookingScreen}/>
 
 </Stack.Navigator> 

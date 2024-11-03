@@ -63,6 +63,47 @@ export interface Service {
   enddate?: string;
 }
 
+export interface LocalService {
+  id: number;
+  name: string;
+  priceperhour: number;
+  details: string;
+  like?: Array<{ user_id: string }>;
+  reviews?: Array<{
+    id: number;
+    rating: number;
+    user_id: string;
+    created_at: string;
+  }>;
+  media?: { url: string }[];
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  comment: Array<{
+    id: number;
+    content: string;
+    user?: {
+      username: string;
+    };
+  }>;
+  startdate?: Date | string | null;
+  enddate?: Date | string | null;
+  subcategory?: {
+    name: string;
+    category?: {
+      name: string;
+    };
+    amenities?: {
+      wifi?: boolean;
+      parking?: boolean;
+      aircon?: boolean;
+    };
+  
+  };
+  // ... autres propriétés nécessaires ...
+}
+
 export type LocalServiceRequest = {
   requestData: {
     id: number;
