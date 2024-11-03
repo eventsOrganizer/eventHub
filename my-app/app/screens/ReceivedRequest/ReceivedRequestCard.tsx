@@ -62,6 +62,7 @@ const ReceivedRequestCard: React.FC<ReceivedRequestCardProps> = ({
         onConfirm={() => onConfirm(item.id)}
         onReject={() => onReject(item.id)}
         onDelete={onDelete ? () => onDelete(item.id) : undefined}
+        serviceUserId={item.serviceId?.toString()}
       />
     </View>
   );
