@@ -93,7 +93,7 @@ export const useNotifications = () => {
           event: '*',
           schema: 'public',
           table: 'request',
-          filter: `or(user_id.eq.${userId},friend_id.eq.${userId})`,
+          filter: `or(user_id.eq.${userId},friend_id.eq.${userId},event:event_id(user_id.eq.${userId}))`,
         },
         (payload) => {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {

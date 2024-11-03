@@ -3,8 +3,8 @@ import { supabase } from './supabaseClient';
 export interface NotificationData {
   user_id: string;
   title: string;
-  message: string;
-  type: 'request' | 'response' | 'payment';
+  message: string,
+  type: 'request' | 'response' | 'payment' | 'ticket' = 'request',
   related_id?: number;
 }
 
