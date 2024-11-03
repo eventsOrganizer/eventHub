@@ -11,7 +11,6 @@ interface EventRequestNotification {
 }
 
 export const createEventNotificationSystem = () => {
-  // Fetch event request details
   const fetchEventRequestDetails = async (requestId: number): Promise<EventRequestNotification> => {
     const { data, error } = await supabase
       .from('request')
@@ -44,48 +43,40 @@ export const createEventNotificationSystem = () => {
     };
   };
 
-  // Handle new join request notifications
   const handleNewEventJoinRequest = async (requestId: number) => {
     try {
-      console.log('Fetching request details for ID:', requestId);
       const details = await fetchEventRequestDetails(requestId);
-      console.log('Request details:', details);
       
-      const message = `${details.requesterName} has requested to join your event: ${details.eventName}`;
-      console.log('Creating notification for owner:', details.eventOwnerId);
-      
-      const result = await createNotification(
-        details.eventOwnerId,
-        'New Join Request',
-        message,
-        'request',
-        requestId
-      );
-      console.log('Notification creation result:', result);
+      return await createNotification({
+        user_id: details.eventOwnerId,
+        title: 'New Join Request',
+        message: `${details.requesterName} has requested to join your event: ${details.eventName}`,
+        type: 'request',
+        related_id: requestId
+      });
     } catch (error) {
       console.error('Error creating event join request notification:', error);
+      return false;
     }
   };
 
-  // Handle event request notifications (for accept/refuse)
   const handleEventRequestNotification = async (requestId: number, status: 'accepted' | 'refused') => {
     try {
       const details = await fetchEventRequestDetails(requestId);
-      const message = `Your request to join ${details.eventName} has been ${status}`;
       
-      await createNotification(
-        details.userId,
-        `Event Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-        message,
-        'request',
-        requestId
-      );
+      return await createNotification({
+        user_id: details.userId,
+        title: `Event Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+        message: `Your request to join ${details.eventName} has been ${status}`,
+        type: 'response',
+        related_id: requestId
+      });
     } catch (error) {
       console.error('Error creating event request notification:', error);
+      return false;
     }
   };
 
-  // Handle ticket purchase notifications
   const handleTicketPurchaseNotification = async (orderId: number) => {
     try {
       const { data, error } = await supabase
@@ -109,24 +100,22 @@ export const createEventNotificationSystem = () => {
       if (error) throw error;
       if (!data) throw new Error('Order not found');
   
-      const eventOwnerId = data.ticket.event.user_id;
-      const eventName = data.ticket.event.name;
-      const buyerName = `${data.user.firstname} ${data.user.lastname}`;
-  
-      await createNotification(
-        eventOwnerId,
-        'New Ticket Purchase',
-        `${buyerName} has purchased a ticket for your event: ${eventName}`,
-        'payment',  // Changed from 'ticket' to 'payment'
-        orderId
-      );
+      return await createNotification({
+        user_id: data.ticket.event.user_id,
+        title: 'New Ticket Purchase',
+        message: `${data.user.firstname} ${data.user.lastname} has purchased a ticket for your event: ${data.ticket.event.name}`,
+        type: 'payment',  // Changed from 'ticket' to 'payment'
+        related_id: orderId
+      });
     } catch (error) {
       console.error('Error creating ticket purchase notification:', error);
+      return false;
     }
   };
+
   return {
     handleEventRequestNotification,
     handleTicketPurchaseNotification,
-    handleNewEventJoinRequest  // Make sure this is included
+    handleNewEventJoinRequest
   };
 };
