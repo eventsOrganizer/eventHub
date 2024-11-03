@@ -215,10 +215,10 @@ const UserProfileScreen: React.FC = () => {
         <View style={tw`mx-4 mt-6 mb-4`}>
           <Text style={tw`text-white text-xl font-bold mb-4`}>Events</Text>
           <View style={tw`bg-white/20 rounded-xl p-4`}>
-            <TouchableOpacity
-              style={tw`flex-row items-center justify-between mb-4`}
-              onPress={() => navigation.navigate('ManageYourEvents', { userId })}
-            >
+          <TouchableOpacity
+  style={tw`flex-row items-center justify-between mb-4`}
+  onPress={() => navigation.navigate('EventsManagement', { userId })}
+>
               <View style={tw`flex-row items-center`}>
                 <Ionicons name="calendar" size={24} color="white" />
                 <Text style={tw`text-white font-semibold ml-3`}>Manage Your Events</Text>
@@ -227,30 +227,30 @@ const UserProfileScreen: React.FC = () => {
             </TouchableOpacity>
             
             <View style={tw`flex-row justify-around items-center`}>
-  <TouchableOpacity
-    style={tw`items-center`}
-    onPress={() => navigation.navigate('YourRequests', { userId, mode: 'sent', type: 'event' })}
-  >
-    <Ionicons name="arrow-up-circle" size={32} color="white" />
-    {unreadSentActionsCount > 0 && (
-      <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
-        <Text style={tw`text-white text-xs`}>{unreadSentActionsCount}</Text>
-      </View>
-    )}
-  </TouchableOpacity>
-  
-  <Text style={tw`text-white text-sm mx-4`}>Requests</Text>
-  
-  <TouchableOpacity
-    style={tw`items-center`}
-    onPress={() => navigation.navigate('YourRequests', { userId, mode: 'received', type: 'event' })}
-  >
-    <Ionicons name="arrow-down-circle" size={32} color="white" />
-    {unreadReceivedRequestsCount > 0 && (
-      <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
-        <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
-      </View>
-    )}
+            <TouchableOpacity
+  style={tw`items-center`}
+  onPress={() => navigation.navigate('SentEventRequests')}
+>
+  <Ionicons name="arrow-up-circle" size={32} color="white" />
+  {unreadSentActionsCount > 0 && (
+    <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+      <Text style={tw`text-white text-xs`}>{unreadSentActionsCount}</Text>
+    </View>
+  )}
+</TouchableOpacity>
+
+<Text style={tw`text-white text-sm mx-4`}>Requests</Text>
+
+<TouchableOpacity
+  style={tw`items-center`}
+  onPress={() => navigation.navigate('ReceivedEventRequests')}
+>
+  <Ionicons name="arrow-down-circle" size={32} color="white" />
+  {unreadReceivedRequestsCount > 0 && (
+    <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+      <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
+    </View>
+  )}
   </TouchableOpacity>
 </View>
           </View>

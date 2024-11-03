@@ -181,8 +181,8 @@ const ManageYourEvents: React.FC = () => {
         <View style={tw`px-4 pt-6 pb-20`}>
           <View style={tw`flex-row justify-between items-center mb-8`}>
             <View>
-              <Text style={tw`text-white/80 text-base mb-1`}>Your Events</Text>
-              <Text style={tw`text-white text-3xl font-bold`}>Manage Events</Text>
+              {/* <Text style={tw`text-white/80 text-base mb-1`}>Your Events</Text> */}
+              <Text style={tw`text-white text-3xl font-bold`}>Your Events</Text>
             </View>
             <TouchableOpacity 
               style={tw`bg-white/20 p-4 rounded-2xl shadow-lg`}

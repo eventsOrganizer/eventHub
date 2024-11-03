@@ -74,6 +74,8 @@ import MaterialsOnboardingScreen from '../screens/MaterialServiceScreens/Materia
 import SearchResultsScreen from '../screens/SearchResultsScreen';
 import LocalAddReviewScreen from '../screens/LocalServiceScreens/LocalAddReviewScreen';
 import LocalBookingScreen from '../screens/LocalServiceScreens/LocalBookingScreen';
+import ReceivedEventRequests from '../components/event/profile/ReceivedEventRequests';
+import SentEventRequests from '../components/event/profile/SentEventRequests';
 
 
 import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail';
@@ -90,6 +92,7 @@ import LocalCommentsScreen from '../screens/LocalServiceScreens/LocalCommentsScr
 import PaymentScreen from '../screens/PaymentScreen';
 import ManageYourEvents from '../components/event/profile/ManageYourEvents';
 import EditEventScreen from '../components/event/profile/EditEventScreen';
+import EventsManagementScreen from '../components/event/profile/EventManagementScreen';
 
 
 
@@ -177,6 +180,9 @@ type EventSetupOptionsScreenProps = {
   EventSerialsList: undefined;
   ManageYourEvents: undefined;
   EditEventScreen: undefined;
+  EventsManagement: undefined;
+  ReceivedEventRequests: undefined;
+  SentEventRequests: undefined; 
 
 };
 
@@ -529,7 +535,45 @@ const AppNavigation: React.FC = () => {
     presentation: 'modal',
     animation: 'slide_from_bottom'
   }}
+/><Stack.Screen 
+  name="EventsManagement" 
+  component={EventsManagementScreen}
+  options={{
+    title: 'Events Management',
+    headerShown: true,
+  }}
 />
+<Stack.Screen 
+    name="ReceivedEventRequests" 
+    component={ReceivedEventRequests}
+    options={{
+      title: 'Received Requests',
+      headerShown: true,
+      headerStyle: {
+        backgroundColor: '#4B0082',
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    }}
+  />
+  
+  <Stack.Screen 
+    name="SentEventRequests" 
+    component={SentEventRequests}
+    options={{
+      title: 'Sent Requests',
+      headerShown: true,
+      headerStyle: {
+        backgroundColor: '#4B0082',
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    }}
+  />
 </Stack.Navigator> 
 
   )

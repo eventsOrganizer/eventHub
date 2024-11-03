@@ -30,27 +30,37 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({
 
   const checkJoinStatus = async () => {
     if (!userId) return;
-
-    const { data, error } = await supabase
-      .from('event_has_user')
-      .select()
-      .eq('user_id', userId)
-      .eq('event_id', eventId)
-      .single();
-
-    if (data) {
-      setIsJoined(true);
-    } else if (privacy) {
+  
+    try {
+      // First check if user is already joined
+      const { data: joinData, error: joinError } = await supabase
+        .from('event_has_user')
+        .select()
+        .eq('user_id', userId)
+        .eq('event_id', eventId)
+        .single();
+  
+      if (joinError && joinError.code !== 'PGRST116') throw joinError;
+  
+      if (joinData) {
+        setIsJoined(true);
+        return;
+      }
+  
+      // Then check for pending requests
       const { data: requestData, error: requestError } = await supabase
         .from('request')
         .select()
         .eq('user_id', userId)
         .eq('event_id', eventId)
+        .eq('status', 'pending')
         .single();
-
-      if (requestData && requestData.status === 'pending') {
-        setIsPending(true);
-      }
+  
+      if (requestError && requestError.code !== 'PGRST116') throw requestError;
+  
+      setIsPending(!!requestData);
+    } catch (error) {
+      console.error('Error checking join status:', error);
     }
   };
 
