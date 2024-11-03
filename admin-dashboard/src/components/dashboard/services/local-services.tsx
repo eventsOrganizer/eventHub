@@ -2,6 +2,11 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Modal from '@mui/material/Modal';
+import TextField from '@mui/material/TextField';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 import { LocalTable } from './local-table';
 import { LocalFilter } from './local-filter';
 import { supabase } from '../../../lib/supabase-client';
@@ -29,27 +34,28 @@ export default function LocalServices(): React.JSX.Element {
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [sortOrder, setSortOrder] = useState<string>('');
   const [subcategories, setSubcategories] = useState<{ id: string; name: string }[]>([]);
+  const [open, setOpen] = useState(false);
+  const [newSubcategoryName, setNewSubcategoryName] = useState('');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   useEffect(() => {
     fetchLocalServices();
-  }, []);
-
-  useEffect(() => {
-    const fetchSubcategories = async () => {
-      const { data, error } = await supabase
-        .from('subcategory')
-        .select('id, name')
-        .eq('category_id', 42); // Fetch only subcategories with category_id 42
-
-      if (error) {
-        console.error('Error fetching subcategories:', error);
-      } else {
-        setSubcategories(data || []);
-      }
-    };
-
     fetchSubcategories();
   }, []);
+
+  const fetchSubcategories = async () => {
+    const { data, error } = await supabase
+      .from('subcategory')
+      .select('id, name')
+      .eq('category_id', 42);
+
+    if (error) {
+      console.error('Error fetching subcategories:', error);
+    } else {
+      setSubcategories(data || []);
+    }
+  };
 
   const fetchLocalServices = async () => {
     try {
@@ -64,7 +70,7 @@ export default function LocalServices(): React.JSX.Element {
           media: media (url),
           disabled
         `)
-        .eq('subcategory.category_id', 42); // Filter for category ID 42
+        .eq('subcategory.category_id', 42);
 
       if (error) {
         console.error('Error fetching local services:', error);
@@ -105,6 +111,22 @@ export default function LocalServices(): React.JSX.Element {
       setLocalServices(formattedData);
     } catch (error) {
       console.error('Unexpected error fetching local services:', error);
+    }
+  };
+
+  const handleAddSubcategory = async () => {
+    const { error } = await supabase
+      .from('subcategory')
+      .insert([{ name: newSubcategoryName, category_id: 42 }]);
+
+    if (error) {
+      console.error('Error adding subcategory:', error);
+    } else {
+      setSnackbarMessage('Subcategory added successfully!');
+      setSnackbarOpen(true);
+      setOpen(false);
+      setNewSubcategoryName('');
+      fetchSubcategories();
     }
   };
 
@@ -228,6 +250,15 @@ export default function LocalServices(): React.JSX.Element {
   return (
     <Stack spacing={3}>
       <Typography variant="h4">Local Services</Typography>
+      <Button
+        variant="contained"
+        color="primary"
+        size="small"
+        style={{ alignSelf: 'flex-end' }}
+        onClick={() => setOpen(true)}
+      >
+        Add New Subcategory
+      </Button>
       <LocalFilter
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
@@ -253,6 +284,24 @@ export default function LocalServices(): React.JSX.Element {
         onRowsPerPageChange={handleRowsPerPageChange}
         onSelectionChange={handleSelectionChange}
       />
+      <Modal open={open} onClose={() => setOpen(false)}>
+        <div style={{ padding: '20px', background: 'white', borderRadius: '8px', margin: 'auto', maxWidth: '500px', top: '20%', position: 'absolute', left: '50%', transform: 'translate(-50%, -20%)' }}>
+          <Typography variant="h6">Add New Subcategory</Typography>
+          <TextField
+            label="Subcategory Name"
+            fullWidth
+            margin="normal"
+            value={newSubcategoryName}
+            onChange={(e) => setNewSubcategoryName(e.target.value)}
+          />
+          <Button onClick={handleAddSubcategory} variant="contained" color="primary" style={{ marginTop: '10px' }}>Submit</Button>
+        </div>
+      </Modal>
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }

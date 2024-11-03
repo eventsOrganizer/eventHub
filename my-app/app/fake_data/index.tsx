@@ -7,6 +7,7 @@ import { createDataForAllCategories } from "./createServices";
 import { createSeviceCategory } from "./createServiceCategory";
 import { fetchImages } from "./fetchImages";
 import { createUserAssignments } from "./createServiceForUser";
+import { createFakeComplaints } from "./createComplaints";
 // createEventCategoriesAndSubcategories();
 export const createFakeData = async () => {
 // await createEventCategoriesAndSubcategories();
@@ -17,6 +18,8 @@ export const createFakeData = async () => {
 //   await injectMedia();
 //   await injectLocations();
 // await createUserAssignments();
+await createFakeComplaints();
 };
-// createFakeData()
+createFakeData()
+console.log("done creating fake data for the cocmplaint")
 // console.log("images",fetchImages("nature", 10));

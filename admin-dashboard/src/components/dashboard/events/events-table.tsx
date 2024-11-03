@@ -26,6 +26,7 @@ export interface Event {
   type: string;
   privacy: boolean;
   owner: string;
+  category: string;
   subcategory: string;
   image?: string;
   ownerImage?: string;
