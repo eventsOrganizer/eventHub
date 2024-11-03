@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, RefreshControl, SafeAreaView, StatusBar } from 'react-native';
+import { View, ScrollView, RefreshControl, SafeAreaView, StatusBar, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import tw from 'twrnc';
@@ -12,7 +12,7 @@ import FAB from '../components/FAB';
 import { supabase } from '../services/supabaseClient';
 import { HomeScreenProps, HomeScreenSection } from '../navigation/types';
 import { theme } from '../../lib/theme';
-
+import Banner from '../components/event/Banner';
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [events, setEvents] = useState<any[]>([]);
@@ -197,7 +197,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         end={{ x: 1, y: 1 }}
       >
         <View style={tw`flex-1`}>
-          {/* Fixed Header */}
           <View style={tw`absolute top-0 left-0 right-0 z-50`}>
             <HomeHeader
               selectedFilter={selectedFilter}
@@ -206,12 +205,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             />
           </View>
 
-          {/* Event Marquee and Service Icons Container - Fixed */}
           <View style={tw`absolute top-48 left-0 right-0 z-40 bg-transparent`}>
             <MotiView
               from={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'spring', duration: 1000 }}
+              transition={{ 
+                type: 'timing',
+                duration: 1000,
+                delay: 0 
+              }}
               style={tw`shadow-lg rounded-${theme.borderRadius.lg} overflow-hidden mb-${theme.spacing.md} mx-4`}
             >
               <EventMarquee events={events?.slice(0, 10) || []} />
@@ -222,9 +224,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Scrollable Content */}
           <ScrollView
-            style={tw`flex-1 mt-[360px]`} // Adjusted margin to account for fixed elements
+            style={tw`flex-1 mt-[360px]`}
             contentContainerStyle={tw`pb-32`}
             refreshControl={
               <RefreshControl 
@@ -236,8 +237,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             }
             showsVerticalScrollIndicator={false}
           >
-            {/* Event Sections */}
             <View style={tw`space-y-${theme.spacing.lg} px-4`}>
+              <Banner title="Events" />
               <EventSection 
                 title="YOUR EVENTS" 
                 events={events || []} 
@@ -254,11 +255,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 isTopEvents={true}
               />
 
+              <Banner title="Services" />
               <ServicesSection sections={serviceSections} />
+
+              <TouchableOpacity
+                style={tw`bg-[${theme.colors.accent}] py-3 px-6 rounded-full my-4`}
+                onPress={() => navigation.navigate('VideoRooms')}
+              >
+                <Text style={tw`text-white text-center font-semibold`}>
+                  Go to Video Rooms
+                </Text>
+              </TouchableOpacity>
             </View>
           </ScrollView>
 
-          {/* FAB */}
           <View style={tw`absolute bottom-0 right-0 z-50`}>
             <FAB 
               isFabOpen={isFabOpen}

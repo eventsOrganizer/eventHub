@@ -6,6 +6,8 @@ import StaffServiceCard from './PersonalServiceComponents/StaffServiceCard';
 import EventCard from './event/EventCard';
 import LocalServiceCard from './LocalService/LocalServiceCard';
 import MaterialCard from './MaterialService/MaterialCard';
+import { theme } from '../../lib/theme';
+
 const { width } = Dimensions.get('window');
 
 interface SectionComponentProps {
@@ -29,15 +31,11 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
       case 'local':
         return <LocalServiceCard key={item.id} item={item} onPress={() => onItemPress(item)} />;
       case 'material':
-        // Ensure this is the correct component for "material"
         return <MaterialCard key={item.id} material={item} onPress={() => onItemPress(item)} />;
       default:
         return null;
     }
   };
-
-  // Debugging: Check if items are being rendered
-  console.log('Rendering items for type:', type, 'Data:', data);
 
   const renderLocalServices = () => {
     const pages = [];
@@ -45,7 +43,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
       const pageData = data.slice(i, i + 4);
       pages.push(
         <View key={i} style={styles.localPage}>
-          {pageData.map((item, index) => (
+          {pageData.map((item) => (
             <View key={item.id} style={styles.localItem}>
               {renderItem(item)}
             </View>
@@ -68,15 +66,14 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
     <View style={styles.section}>
       <BlurView
         style={styles.blurBackground}
-        blurType ="dark " 
-        blurAmount={10}
-        reducedTransparencyFallbackColor="rgba(0, 0, 0, 0.8)"
+        intensity={80}
+        tint="light"
       >
         <View style={styles.headerContainer}>
           <Text style={styles.sectionTitle}>{title}</Text>
           <TouchableOpacity onPress={onSeeAll} style={styles.seeAllButton}>
             <Text style={styles.seeAllButtonText}>See All</Text>
-            <Ionicons name="chevron-forward" size={16} color="#fff" />
+            <Ionicons name="chevron-forward" size={16} color={theme.colors.accent} />
           </TouchableOpacity>
         </View>
         <View style={styles.contentContainer}>
@@ -115,9 +112,10 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
 const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
-    borderRadius: 15,
+    borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
-    shadowColor: "#000",
+    backgroundColor: theme.colors.cardBg,
+    shadowColor: theme.colors.shadow,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -127,7 +125,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   blurBackground: {
-    borderRadius: 15,
+    borderRadius: theme.borderRadius.lg,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -136,7 +134,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
+    borderBottomColor: theme.colors.overlay,
   },
   contentContainer: {
     paddingVertical: 15,
@@ -144,25 +142,26 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#fff',
+    color: theme.colors.cardTitle,
     letterSpacing: 0.5,
   },
   seeAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: `${theme.colors.accent}15`,
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 20,
   },
   seeAllButtonText: {
-    color: '#fff',
+    color: theme.colors.accent,
     fontSize: 12,
     fontWeight: '500',
     marginRight: 4,
   },
   scrollViewContent: {
     paddingHorizontal: 10,
+    gap: 10,
   },
   localPage: {
     width: width - 30,
@@ -182,7 +181,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   pageIndicator: {
-    color: '#fff',
+    color: theme.colors.cardTitle,
     fontSize: 12,
   },
 });

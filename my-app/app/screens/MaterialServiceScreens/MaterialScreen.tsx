@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl, Animated } from 'react-native';
 import { Provider } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -86,16 +86,18 @@ const MaterialsScreen = () => {
     showSnackbar(wishlist.includes(materialId) ? 'Removed from wishlist' : 'Added to wishlist');
   };
 
-  const filteredMaterials = materials.filter(material => {
-    const inPriceRange =
-      (minPrice ? material.price >= parseFloat(minPrice) : true) &&
-      (maxPrice ? material.price <= parseFloat(maxPrice) : true);
-    
-    return (
-      inPriceRange &&
-      (searchQuery ? material.name.toLowerCase().includes(searchQuery.toLowerCase()) : true)
-    );
-  });
+  const filteredMaterials = useMemo(() => {
+    return materials.filter(material => {
+      const inPriceRange =
+        (minPrice ? material.price >= parseFloat(minPrice) : true) &&
+        (maxPrice ? material.price <= parseFloat(maxPrice) : true);
+      
+      return (
+        inPriceRange &&
+        (searchQuery ? material.name.toLowerCase().includes(searchQuery.toLowerCase()) : true)
+      );
+    });
+  }, [materials, minPrice, maxPrice, searchQuery]);
 
   const navigateToBasket = () => {
     navigation.navigate('Basket', { basket });
@@ -110,7 +112,7 @@ const MaterialsScreen = () => {
     setSnackbarVisible(true);
   };
 
-  const renderMaterialCard = ({ item }: { item: Material }) => (
+  const renderMaterialCard = useCallback(({ item }: { item: Material }) => (
     <MaterialCard
       material={item}
       onAddToBasket={addToBasketHandler}
@@ -118,7 +120,7 @@ const MaterialsScreen = () => {
       isWishlisted={wishlist.includes(item.id)}
       onPress={() => navigation.navigate('MaterialDetail', { material: item })}
     />
-  );
+  ), [wishlist, navigation, addToBasketHandler, toggleWishlist]);
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],

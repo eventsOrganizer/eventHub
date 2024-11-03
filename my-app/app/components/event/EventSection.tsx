@@ -8,7 +8,7 @@ import JoinEventButton from './JoinEventButton';
 import { theme } from '../../../lib/theme';
 import tw from 'twrnc';
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 interface EventSectionProps {
   title: string;
@@ -57,10 +57,13 @@ const EventSection: React.FC<EventSectionProps> = ({
     )
   );
 
+  // Calculate dynamic height based on screen dimensions and event type
+  const containerHeight = isTopEvents ? height * 0.35 : height * 0.6;
+
   return (
     <View style={[
       tw`mb-6 rounded-3xl overflow-hidden`,
-      { height: isTopEvents ? 'auto' : height * 0.7 } // Reduced height for better proportions
+      { height: containerHeight }
     ]}>
       <BlurView 
         intensity={60} 
@@ -71,6 +74,7 @@ const EventSection: React.FC<EventSectionProps> = ({
         ]}
       >
         <View style={tw`flex-1`}>
+          {/* Header Section */}
           <View style={[
             tw`px-6 py-4`,
             {
@@ -108,19 +112,27 @@ const EventSection: React.FC<EventSectionProps> = ({
             </View>
           </View>
 
+          {/* Events List */}
           <FlatList
             data={events}
             renderItem={renderEventCard}
             keyExtractor={(item) => item.id.toString()}
             horizontal={isTopEvents}
             showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator={true}
             contentContainerStyle={[
               tw`p-4`,
-              {
+              isTopEvents ? {
                 gap: theme.spacing.md,
+              } : {
+                gap: theme.spacing.md,
+                paddingBottom: theme.spacing.xl,
               }
             ]}
+            style={tw`flex-1`}
+            scrollEnabled={true}
+            bounces={true}
+            nestedScrollEnabled={true}
           />
         </View>
       </BlurView>
