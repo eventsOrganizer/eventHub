@@ -1,76 +1,106 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LocalService } from '../../../services/serviceTypes'; // Adjust import based on your actual type
-import moment from 'moment';
+import { LocalService } from '../../../services/serviceTypes';
 
 interface LocalServiceDetailsProps {
-  localServiceDetails: LocalService; // Define the prop type
+  localData: LocalService;
   onReviewPress: () => void;
   onCommentPress: () => void;
   onBookPress: () => void;
+  address: string;
+  distance: number | null;
 }
 
 const LocalServiceDetails: React.FC<LocalServiceDetailsProps> = ({
-  localServiceDetails,
+  localData,
   onReviewPress,
   onCommentPress,
   onBookPress,
+  address,
+  distance,
 }) => {
-  // Check if localServiceDetails is provided
-  if (!localServiceDetails) return null;
+  if (!localData) return null;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Local Service Details</Text>
+      <Text style={styles.title}>Détails du service</Text>
       <View style={styles.detailsContainer}>
         <View style={styles.iconContainer}>
           <Ionicons name="person-outline" size={24} color="#4A90E2" />
-          <Text>{localServiceDetails.name || 'N/A'}</Text>
+          <Text>{localData.name || 'N/A'}</Text>
         </View>
+        
         <View style={styles.iconContainer}>
           <Ionicons name="pricetag-outline" size={24} color="#4A90E2" />
-          <Text>{localServiceDetails.priceperhour || 0} per hour</Text>
+          <Text>{localData.priceperhour || 0}€ par heure</Text>
         </View>
-        <View style={styles.iconContainer}>
-          <Ionicons name="calendar-outline" size={24} color="#4A90E2" />
-          <Text>
-            {localServiceDetails.startdate ? moment(localServiceDetails.startdate).format('MMMM Do') : 'N/A'} to 
-            {localServiceDetails.enddate ? moment(localServiceDetails.enddate).format('MMMM Do YYYY') : 'N/A'}
-          </Text>
-        </View>
-        <View style={styles.iconContainer}>
-          <Ionicons name="information-circle-outline" size={24} color="#4A90E2" />
-          <Text>{localServiceDetails.details || 'No details available'}</Text>
-        </View>
-        {localServiceDetails.subcategory && (
+        
+        <View style={styles.locationSection}>
           <View style={styles.iconContainer}>
-            <Ionicons name="list-outline" size={24} color="#4A90E2" />
-            <Text>
-              {localServiceDetails.subcategory.name || 'N/A'} 
-              {localServiceDetails.subcategory.category?.name ? ` - ${localServiceDetails.subcategory.category.name}` : ''}
+            <Ionicons name="location-outline" size={24} color="#4A90E2" />
+            <Text style={styles.addressText}>
+              {localData.location ? address : 'Données de localisation non disponibles'}
             </Text>
           </View>
-        )}
+        </View>
+        
+        <View style={styles.amenitiesContainer}>
+          <Text style={styles.subtitle}>Équipements:</Text>
+          <View style={styles.amenitiesGrid}>
+            <View style={styles.amenityItem}>
+              <Ionicons 
+                name="wifi" 
+                size={24} 
+                color={localData.subcategory?.amenities?.wifi ? '#4A90E2' : '#666'} 
+              />
+              <Text style={styles.amenityText}>WiFi</Text>
+            </View>
+            <View style={styles.amenityItem}>
+              <Ionicons 
+                name="car" 
+                size={24} 
+                color={localData.subcategory?.amenities?.parking ? '#4A90E2' : '#666'} 
+              />
+              <Text style={styles.amenityText}>Parking</Text>
+            </View>
+            <View style={styles.amenityItem}>
+              <Ionicons 
+                name="snow" 
+                size={24} 
+                color={localData.subcategory?.amenities?.aircon ? '#4A90E2' : '#666'} 
+              />
+              <Text style={styles.amenityText}>Climatisation</Text>
+            </View>
+          </View>
+        </View>
+        
+        <View style={styles.iconContainer}>
+          <Ionicons name="information-circle-outline" size={24} color="#4A90E2" />
+          <Text>{localData.details || 'Aucun détail disponible'}</Text>
+        </View>
       </View>
+
       <View style={styles.actionContainer}>
         <TouchableOpacity style={styles.actionButton} onPress={onReviewPress}>
           <View style={styles.iconBackground}>
             <Ionicons name="star-outline" size={32} color="#4A90E2" />
           </View>
-          <Text style={styles.actionText}>Reviews</Text>
+          <Text style={styles.actionText}>Avis</Text>
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.actionButton} onPress={onCommentPress}>
           <View style={styles.iconBackground}>
             <Ionicons name="chatbubble-outline" size={32} color="#4A90E2" />
           </View>
-          <Text style={styles.actionText}>Comments</Text>
+          <Text style={styles.actionText}>Commentaires</Text>
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.actionButton} onPress={onBookPress}>
           <View style={styles.iconBackground}>
             <Ionicons name="calendar-outline" size={32} color="#4A90E2" />
           </View>
-          <Text style={styles.actionText}>Book</Text>
+          <Text style={styles.actionText}>Réserver</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -102,6 +132,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  locationSection: {
+    gap: 8,
+  },
+  amenitiesContainer: {
+    marginTop: 16,
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  amenitiesGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 8,
+  },
+  amenityItem: {
+    alignItems: 'center',
+  },
+  amenityText: {
+    marginTop: 4,
+    fontSize: 12,
+  },
+  addressText: {
+    flex: 1,
+    flexWrap: 'wrap',
   },
   actionContainer: {
     flexDirection: 'row',

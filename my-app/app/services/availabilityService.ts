@@ -43,17 +43,24 @@ export const fetchAvailabilityData = async (personalId: number): Promise<Availab
 };
 
 export interface LocalAvailabilityData {
-  startDate: string;
-  endDate: string;
   availability: Array<{
-    id: number;
-    date: string;
-    statusday: 'exception' | 'reserved' | 'available';
+    id: number | string;
+    local_id: number;
+    date?: string;
+    daysofweek?: string;
+    start: string;
+    end: string;
+    statusday?: string;
   }>;
+  exceptionDates: string[];
+  startDate?: string | Date | null;
+  endDate?: string | Date | null;
+  interval: number;
 }
 
 export const fetchLocalAvailabilityData = async (localId: number): Promise<LocalAvailabilityData> => {
   try {
+    // Récupérer d'abord les dates de début et de fin du local
     const { data: localData, error: localError } = await supabase
       .from('local')
       .select('startdate, enddate')
@@ -62,21 +69,29 @@ export const fetchLocalAvailabilityData = async (localId: number): Promise<Local
 
     if (localError) throw localError;
 
+    // Récupérer séparément toutes les disponibilités
     const { data: availabilityData, error: availabilityError } = await supabase
       .from('availability')
-      .select('id, date, statusday')
+      .select('*')
       .eq('local_id', localId);
 
     if (availabilityError) throw availabilityError;
 
+    // Séparer les disponibilités normales et les exceptions
+    const normalAvailabilities = availabilityData?.filter(item => 
+      item.statusday !== 'exception'
+    ) || [];
+    
+    const exceptionDates = availabilityData?.filter(item => 
+      item.statusday === 'exception'
+    ).map(item => item.date) || [];
+
     return {
       startDate: localData.startdate,
       endDate: localData.enddate,
-      availability: availabilityData.map(item => ({
-        id: item.id,
-        date: item.date,
-        statusday: item.statusday as 'exception' | 'reserved' | 'available'
-      })),
+      availability: normalAvailabilities,
+      interval: 30,
+      exceptionDates: exceptionDates
     };
   } catch (error) {
     console.error('Error fetching local availability data:', error);

@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
+import { format } from 'date-fns';
+import { parseISO } from 'date-fns';
 
 interface LocalFinishedCreationProps {
   formData: {
@@ -30,20 +32,8 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
       return;
     }
 
-    // Check if required fields are filled
-    if (!formData.title || !formData.details || !formData.price || !formData.subcategory || !formData.location) {
-      Alert.alert('Error', 'Please fill all the required fields.');
-      return;
-    }
-
-    // If availability is required, check if at least one date is selected
-    if (formData.requiresAvailability && Object.keys(formData.availableDates).length === 0) {
-      Alert.alert('Error', 'Please select at least one available date.');
-      return;
-    }
-
     try {
-      // Fetch the subcategory ID from the database
+      // Fetch subcategory ID
       const { data: subcategoryData, error: subcategoryError } = await supabase
         .from('subcategory')
         .select('id')
@@ -51,11 +41,8 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
         .single();
 
       if (subcategoryError || !subcategoryData) {
-        Alert.alert('Error', 'Subcategory not found.');
-        return;
+        throw new Error('Subcategory not found');
       }
-
-      const subcategoryId = subcategoryData.id;
 
       // Create local service
       const { data: localData, error: localError } = await supabase
@@ -63,18 +50,17 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
         .insert({
           name: formData.title,
           details: formData.details,
-          priceperhour: parseInt(formData.price), // Ensure price is an integer
+          priceperhour: parseInt(formData.price),
           percentage: parseInt(formData.percentage),
-          subcategory_id: subcategoryId, // Use fetched ID
+          subcategory_id: subcategoryData.id,
           user_id: userId,
           startdate: formData.startDate,
-          enddate: formData.endDate,
+          enddate: formData.endDate
         })
         .select()
         .single();
 
       if (localError) throw localError;
-      if (!localData) throw new Error('Failed to create local service');
 
       // Create album
       const { data: albumData, error: albumError } = await supabase
@@ -89,7 +75,7 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
 
       if (albumError) throw albumError;
 
-      // Insert images into media table
+      // Insert images
       for (const imageUrl of formData.images) {
         const { error: mediaError } = await supabase
           .from('media')
@@ -97,20 +83,23 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
             local_id: localData.id,
             url: imageUrl,
             album_id: albumData.id,
-            type: 'image',
+            type: 'image'
           });
 
         if (mediaError) throw mediaError;
       }
 
-      // Insert availability data only if availability is required
-      if (formData.requiresAvailability && Object.keys(formData.availableDates).length > 0) {
-        const availabilityData = Object.keys(formData.availableDates).map((dateString: string) => ({
-          local_id: localData.id,
-          date: dateString,
-          statusday: 'available', // Ensure you set a default status if required
-        }));
+      // Insert availability data
+      const availabilityData = formData.exceptionDates.map(dateString => ({
+        local_id: localData.id,
+        date: dateString,
+        startdate: formData.startDate,
+        enddate: formData.endDate,
+        daysofweek: format(parseISO(dateString), 'EEEE').toLowerCase(),
+        statusday: 'exception'
+      }));
 
+      if (availabilityData.length > 0) {
         const { error: availabilityError } = await supabase
           .from('availability')
           .insert(availabilityData);
@@ -118,24 +107,24 @@ const LocalFinishedCreation: React.FC<LocalFinishedCreationProps> = ({ formData,
         if (availabilityError) throw availabilityError;
       }
 
-      // Insert location data if available
+      // Insert location
       if (formData.location) {
         const { error: locationError } = await supabase
           .from('location')
           .insert({
-            local_id: localData.id,
-            latitude: formData.location.latitude,
             longitude: formData.location.longitude,
+            latitude: formData.location.latitude,
+            local_id: localData.id,
           });
 
         if (locationError) throw locationError;
       }
 
-      Alert.alert('Success', 'Local service created successfully!');
-      onConfirm(); // Call the onConfirm function to proceed
+      Alert.alert('Success', 'Service created successfully!');
+      onConfirm();
     } catch (error) {
-      console.error('Error submitting local service:', error);
-      Alert.alert('Error', 'An error occurred while creating the service. Please try again.');
+      console.error('Error creating local service:', error);
+      Alert.alert('Error', 'Failed to create service. Please try again.');
     }
   };
 

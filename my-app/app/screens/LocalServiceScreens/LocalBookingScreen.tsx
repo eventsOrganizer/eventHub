@@ -1,58 +1,70 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useUser } from '../../UserContext';
-import LocalAvailabilityCalendar from './components/LocalAvailabilityCalender';
-import { handleLocalConfirm } from './components/LocalBookingLogic'; // Adjusted import for handleConfirm
-import { RootStackParamList } from '../../navigation/types';
-import LocalTimePicker from './components/LocalTimePickers'; // Adjusted import for TimePicker
+import { useToast } from '../../hooks/useToast';
 import { LinearGradient } from 'expo-linear-gradient';
+import { RootStackParamList } from '../../navigation/types';
+import { handleLocalConfirm } from './components/LocalBookingLogic';
+import LocalAvailabilityCalendar from './components/LocalAvailabilityCalender';
+import TimePicker from '../PersonalServiceScreen/components/TimePicker';
 
-
-
-type LocalBookingScreenRouteProp = RouteProp<RootStackParamList, 'LocalBookingScreen'>; // Ensure 'LocalBookingScreen' is a key in RootStackParamList
-type LocalBookingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'LocalBookingScreen'>; // Ensure 'LocalBookingScreen' is a key in RootStackParamList
+type LocalBookingScreenRouteProp = RouteProp<RootStackParamList, 'LocalBookingScreen'>;
 
 const LocalBookingScreen: React.FC = () => {
   const route = useRoute<LocalBookingScreenRouteProp>();
-  const navigation = useNavigation<LocalBookingScreenNavigationProp>();
-  const { localId, availabilityData } = route.params; // Correctly destructuring localId
+  const navigation = useNavigation();
+  const { localId, availabilityData } = route.params;
   const { userId } = useUser();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [startHour, setStartHour] = useState('09:00');
   const [endHour, setEndHour] = useState('10:00');
 
   const handleBooking = async () => {
     if (!userId) {
-      Alert.alert("Authentication Required", "Please log in to book a service.");
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to book a service.",
+        variant: "default",
+      });
       return;
     }
 
     if (!selectedDate) {
-      Alert.alert("Missing Information", "Please select a date before submitting.");
+      toast({
+        title: "Missing Information",
+        description: "Please select a date before continuing.",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
-      const result = await handleLocalConfirm(localId, userId, selectedDate, startHour, endHour); // Use localId here
-      
-      if (result) {
-        Alert.alert(
-          "Success",
-          "Your booking request has been sent successfully.",
-          [
-            { text: "OK", onPress: () => navigation.goBack() }
-          ]
-        );
+      const success = await handleLocalConfirm(
+        localId,
+        userId,
+        selectedDate,
+        startHour,
+        endHour
+      );
+
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Your booking request has been sent successfully.",
+          variant: "default",
+        });
+        navigation.goBack();
       }
     } catch (error) {
       console.error('Error during booking:', error);
-      let errorMessage = "Booking failed. Please try again.";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      Alert.alert("Error", errorMessage);
+      toast({
+        title: "Error",
+        description: "Booking failed. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -64,24 +76,24 @@ const LocalBookingScreen: React.FC = () => {
       <ScrollView>
         <Text style={styles.title}>Book a Service</Text>
         <LocalAvailabilityCalendar
-          localId={localId} // Pass localId to AvailabilityCalendar
-          onSelectDate={(date: string) => setSelectedDate(date)}
+          localId={localId}
+          onSelectDate={setSelectedDate}
           startDate={availabilityData.startDate}
           endDate={availabilityData.endDate}
           availability={availabilityData.availability}
-          interval="Monthly"
+          interval={availabilityData.interval.toString()}
           selectedDate={selectedDate}
           userId={userId}
         />
-        <LocalTimePicker // Adjusted to use LocalTimePicker
+        <TimePicker
           label="Start Time"
           value={startHour}
-          onChange={(time: string) => setStartHour(time)}
+          onChange={setStartHour}
         />
-        <LocalTimePicker // Adjusted to use LocalTimePicker
+        <TimePicker
           label="End Time"
           value={endHour}
-          onChange={(time: string) => setEndHour(time)}
+          onChange={setEndHour}
         />
         <TouchableOpacity 
           style={[styles.bookButton, !selectedDate && styles.disabledButton]} 

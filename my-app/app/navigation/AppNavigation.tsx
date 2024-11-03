@@ -80,16 +80,17 @@ import SentEventRequests from '../components/event/profile/SentEventRequests';
 
 import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail';
 
-import PaymentTestScreen from '../components/payment/PaymentTestScreen';
+import PaymentScreen  from '../screens/PaymentScreen';
+import PaymentSuccessScreen from '../screens/payment/PaymentSuccessScreen';
 
-import NotificationsScreen from '../screens/NotificationsScreen';
+import NotificationsScreen from '../components/event/NotificationsScreen';
 import TicketScanningScreen from '../components/event/Ticketing/TicketScanningScreen';
 import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
 import ServicesDetails from '../services/servicesDetailsInUserProfile/ServicesDetails';
 import LocalCommentsScreen from '../screens/LocalServiceScreens/LocalCommentsScreen';
 
-import PaymentScreen from '../screens/PaymentScreen';
+// import * as PaymentScreen from '../screens/PaymentScreen';
 import ManageYourEvents from '../components/event/profile/ManageYourEvents';
 import EditEventScreen from '../components/event/profile/EditEventScreen';
 import EventsManagementScreen from '../components/event/profile/EventManagementScreen';
@@ -99,6 +100,11 @@ import EventsManagementScreen from '../components/event/profile/EventManagementS
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
+  PaymentScreen: {
+    amount: number;
+    localId: number;
+    userId: number;
+  };
   Profile: undefined;
   Home: undefined;
   Map: undefined;
@@ -148,6 +154,16 @@ type RootStackParamList = {
   };
   LocalBookingScreen: undefined;
   PaymentTest: undefined; // Add this line
+  LocalCommentsScreen: {
+    localId: number;
+  };
+  LocalBookingScreen: {
+    localId: number;
+    userId: string;
+  };
+  LocalAddReviewScreen: {
+    localId: number;
+  };
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -167,7 +183,6 @@ type EventSetupOptionsScreenProps = {
   LocalsScreen: undefined;
   LocalServiceDetails: { localServiceId: number };
   UserProfile: undefined;
-  PaymentAction: { price: number; personalId: string };
   SearchResultsScreen: { initialSearchTerm: string };
   ServiceDetails: { serviceId: string };
   ServiceSelection: undefined;
@@ -391,7 +406,16 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true }} 
   />
 
-
+      <Stack.Screen 
+        name="PaymentScreen" 
+        component={PaymentScreen}
+        options={{ headerShown: true, title: 'Payment' }}
+      />
+      <Stack.Screen 
+        name="PaymentSuccess" 
+        component={PaymentSuccessScreen}
+        options={{ headerShown: false }}
+      />
 
   <Stack.Screen 
     name="EventCreation" 
@@ -503,7 +527,7 @@ const AppNavigation: React.FC = () => {
     name="MapScreen" 
     component={MapScreen} 
   />
-    <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+    
 
   
 
@@ -520,7 +544,7 @@ const AppNavigation: React.FC = () => {
     <Stack.Screen name="TicketScanning" component={TicketScanningScreen} />
     <Stack.Screen name="EventSerialsList" component={EventSerialsList} />
 <Stack.Screen name="LocalAddReviewScreen" component={LocalAddReviewScreen}/>
-<Stack.Screen name="LocalCommentsScreen" component={LocalCommentSection}/>
+<Stack.Screen name="LocalCommentsScreen" component={LocalCommentsScreen}/>
 <Stack.Screen name="LocalBookingScreen" component={LocalBookingScreen}/>
 <Stack.Screen 
   name="ManageYourEvents" 

@@ -5,33 +5,104 @@ import { Service } from '../../services/serviceTypes';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import LocationMap from '../../screens/PersonalServiceScreen/components/LocationMap';
+import * as Location from 'expo-location';
+import { useState, useEffect } from 'react';
 
 interface ServiceDetailsProps {
   serviceData: Service;
-  distance?: number | null;
-  address?: string;
   serviceType: 'Personal' | 'Local' | 'Material';
 }
 
 const ServiceDetails: React.FC<ServiceDetailsProps> = ({
   serviceData,
-  distance,
-  address,
   serviceType
 }) => {
+  const [address, setAddress] = useState<string>('Chargement de l\'adresse...');
+  const [distance, setDistance] = useState<number | null>(null);
+
   const averageRating = serviceData.review?.length 
     ? serviceData.review.reduce((acc, rev) => acc + rev.rate, 0) / serviceData.review.length 
     : 0;
 
-  const formatDistance = (distance: number | null | undefined) => {
-    if (typeof distance === 'number') {
-      return `(${distance.toFixed(1)} km)`;
-    }
-    return '';
+  const locationData = Array.isArray(serviceData.location) 
+    ? serviceData.location[0] 
+    : serviceData.location;
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   };
 
-  // Extraire les coordonnées de localisation
-  const locationData = Array.isArray(serviceData.location) ? serviceData.location[0] : serviceData.location;
+  const getAddressFromCoordinates = async (latitude: number, longitude: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&accept-language=fr&email=your-email@domain.com`,
+        {
+          headers: {
+            'User-Agent': 'YourApp/1.0',
+            'Accept': 'application/json'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        console.error('Erreur de réponse:', response.status, response.statusText);
+        const text = await response.text();
+        console.error('Contenu de la réponse:', text);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      return data.display_name || 'Adresse non trouvée';
+    } catch (error) {
+      console.error('Erreur détaillée lors de la récupération de l\'adresse:', error);
+      return 'Adresse non disponible pour le moment';
+    }
+  };
+
+  useEffect(() => {
+    const fetchLocationData = async () => {
+      if (locationData?.latitude && locationData?.longitude) {
+        try {
+          // Récupérer l'adresse
+          const addressResult = await getAddressFromCoordinates(
+            locationData.latitude,
+            locationData.longitude
+          );
+          setAddress(addressResult);
+
+          // Récupérer la position actuelle et calculer la distance
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const currentLocation = await Location.getCurrentPositionAsync({});
+            const calculatedDistance = calculateDistance(
+              currentLocation.coords.latitude,
+              currentLocation.coords.longitude,
+              locationData.latitude,
+              locationData.longitude
+            );
+            setDistance(calculatedDistance);
+          }
+        } catch (error) {
+          console.error('Erreur lors de la récupération des données de localisation:', error);
+          setAddress('Adresse non disponible pour le moment');
+        }
+      }
+    };
+
+    fetchLocationData();
+  }, [locationData]);
 
   return (
     <View style={styles.container}>
@@ -66,31 +137,29 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = ({
 
       <View style={styles.separator} />
 
-      <View style={styles.infoSection}>
-        {locationData && locationData.latitude && locationData.longitude && (
-          <>
-            <View style={styles.infoRow}>
-              <Ionicons name="location-outline" size={20} color="#FFF" />
-              <Text style={styles.infoText}>
-                {address || 'Adresse non disponible'} {formatDistance(distance)}
-              </Text>
-            </View>
-            <View style={styles.mapContainer}>
-              <LocationMap
-                latitude={locationData.latitude}
-                longitude={locationData.longitude}
-                address={address || 'Adresse non disponible'}
-              />
-            </View>
-          </>
-        )}
-
-        <View style={styles.infoRow}>
-          <Ionicons name="cash-outline" size={20} color="#FFF" />
-          <Text style={styles.infoText}>
-            Acompte requis: {serviceData.percentage || 25}%
-          </Text>
+      {locationData && (
+        <View style={styles.infoSection}>
+          <View style={styles.infoRow}>
+            <Ionicons name="location-outline" size={20} color="#FFF" />
+            <Text style={styles.infoText}>
+              {address} {distance ? `(${distance.toFixed(1)} km)` : ''}
+            </Text>
+          </View>
+          <View style={styles.mapContainer}>
+            <LocationMap
+              latitude={locationData.latitude}
+              longitude={locationData.longitude}
+              address={address}
+            />
+          </View>
         </View>
+      )}
+
+      <View style={styles.infoRow}>
+        <Ionicons name="cash-outline" size={20} color="#FFF" />
+        <Text style={styles.infoText}>
+          Acompte requis: {serviceData.percentage || 25}%
+        </Text>
       </View>
 
       <View style={styles.separator} />
@@ -100,6 +169,8 @@ const ServiceDetails: React.FC<ServiceDetailsProps> = ({
     </View>
   );
 };
+
+
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

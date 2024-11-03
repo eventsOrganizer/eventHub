@@ -1,8 +1,9 @@
 import { supabase } from '../../../services/supabaseClient';
-import { differenceInHours, parse } from 'date-fns';
+import { differenceInHours, parse, format } from 'date-fns';
+import { enUS } from 'date-fns/locale';
 
 export const handleLocalConfirm = async (
-  personalId: number,
+  localId: number,
   userId: string,
   selectedDate: string,
   startHour: string,
@@ -14,43 +15,29 @@ export const handleLocalConfirm = async (
     const hours = differenceInHours(endDateTime, startDateTime);
 
     if (hours <= 0) {
-      throw new Error("End time must be after start time.");
+      throw new Error("L'heure de fin doit être après l'heure de début.");
     }
 
-    // Fetch personal data to get startdate and enddate
-    const { data: personalData, error: personalError } = await supabase
-      .from('personal')
+    // Récupérer les données du service local
+    const { data: localData, error: localError } = await supabase
+      .from('local')
       .select('startdate, enddate')
-      .eq('id', personalId)
+      .eq('id', localId)
       .single();
 
-    if (personalError) throw personalError;
+    if (localError) throw localError;
 
-    // Insert into the request table
-    const { data: requestData, error: requestError } = await supabase
-      .from('request')
-      .insert({
-        user_id: userId,
-        status: 'pending',
-        personal_id: personalId,
-        created_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (requestError) throw requestError;
-
-    // Insert into the availability table
+    // Insérer dans la table availability
     const { data: availabilityData, error: availabilityError } = await supabase
       .from('availability')
       .insert({
         start: startHour,
         end: endHour,
-        daysofweek: new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase(),
-        personal_id: personalId,
+        daysofweek: format(new Date(selectedDate), 'EEEE', { locale: enUS }).toLowerCase(),
+        local_id: localId,
         date: selectedDate,
-        startdate: personalData.startdate,
-        enddate: personalData.enddate,
+        startdate: localData.startdate,
+        enddate: localData.enddate,
         statusday: 'exception'
       })
       .select()
@@ -58,22 +45,28 @@ export const handleLocalConfirm = async (
 
     if (availabilityError) throw availabilityError;
 
-    // Insert into the personal_user table
-    const { error: personalUserError } = await supabase
-      .from('personal_user')
+    // Insérer dans la table request
+    const { data: requestData, error: requestError } = await supabase
+      .from('request')
       .insert({
-        personal_id: personalId,
         user_id: userId,
         status: 'pending',
-        availability_id: availabilityData.id
-      });
+        local_id: localId,
+        availability_id: availabilityData.id,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-    if (personalUserError) throw personalUserError;
+    if (requestError) throw requestError;
 
     console.log('Service request created successfully');
-    return true;
+    return {
+      success: true,
+      message: 'Demande de réservation créée avec succès'
+    };
   } catch (error) {
-    console.error('Error making service request:', error);
+    console.error('Error during booking:', error);
     throw error;
   }
 };

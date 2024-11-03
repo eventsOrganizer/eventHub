@@ -1,20 +1,22 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text, ScrollView, Image, Dimensions } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, FlatList, Text, ScrollView, Image, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { fetchLocalDetail, toggleLikeLocal } from '../../services/localService';
 import { fetchLocalAvailabilityData, LocalAvailabilityData } from '../../services/availabilityService';
 import { useUser } from '../../UserContext';
 import { useToast } from '../../hooks/useToast';
-import LocalInfo from './LocalInfo';
+import LocalInfo from '../../screens/LocalServiceScreens/LocalInfo';
 import LocalDetails from './LocalDetails';
 import LocalBookingForm from './LocalBookingForm';
 import LocalReviewForm from './LocalReviewForm';
 import LocalCommentSection from './LocalCommentSection';
 import { LocalService } from '../../services/serviceTypes';
 import { supabase } from '../../services/supabaseClient';
+import { RootStackParamList } from '../../navigation/types';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 const { width } = Dimensions.get('window');
 const IMAGE_HEIGHT = width * 0.75;
@@ -24,10 +26,11 @@ const LocalServiceDetailScreen: React.FC = () => {
   const { localServiceId } = route.params as { localServiceId: number };
   const { userId } = useUser();
   const { toast } = useToast();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-  const [localServiceData, setLocalServiceData] = useState(null);
+  const [localServiceData, setLocalServiceData] = useState<LocalService | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [availabilityData, setAvailabilityData] = useState<LocalAvailabilityData | null>(null);
+  const [LocalAvailabilityData, setLocalAvailabilityData] = useState<LocalAvailabilityData | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
@@ -42,37 +45,60 @@ const LocalServiceDetailScreen: React.FC = () => {
       if (data) {
         setLocalServiceData(data);
         setImages(data.media?.map((item: any) => item.url) || []);
-        if (data.location) {
-          setAddress(await getAddressFromCoordinates(data.location.latitude, data.location.longitude));
+
+        // D'abord, insérer les dates d'exception dans la table availability
+        for (const availabilityItem of data.availability) {
+          const { error: upsertError } = await supabase
+            .from('availability')
+            .upsert({
+              local_id: localServiceId,
+              date: availabilityItem.date,
+              daysofweek: availabilityItem.daysofweek,
+              start: availabilityItem.start || '00:00',
+              end: availabilityItem.end || '23:59',
+              statusday: 'exception' // Définir explicitement comme exception
+            }, {
+              onConflict: 'local_id,date'
+            });
+
+          if (upsertError) {
+            console.error('Error upserting exception date:', upsertError);
+          }
         }
-        const availability = await fetchLocalAvailabilityData(localServiceId);
-        setAvailabilityData(availability);
-        const { count: likesCount } = await supabase
-          .from('like')
-          .select('id', { count: 'exact' })
-          .eq('local_id', localServiceId);
-        setLikes(likesCount || 0);
-        const { data: userLike } = await supabase
-          .from('like')
+
+        // Ensuite, récupérer toutes les disponibilités
+        const { data: availabilityData, error } = await supabase
+          .from('availability')
           .select('*')
-          .eq('local_id', localServiceId)
-          .eq('user_id', userId)
-          .single();
-        setUserHasLiked(!!userLike);
-      } else {
-        console.log('No data received from fetchLocalDetail');
+          .eq('local_id', localServiceId);
+
+        if (!error && availabilityData) {
+          const formattedData = {
+            availability: availabilityData.filter(item => 
+              item.statusday === 'available' || item.statusday === 'reserved'
+            ),
+            exceptionDates: availabilityData
+              .filter(item => item.statusday === 'exception')
+              .map(item => item.date),
+            startDate: data.startdate?.toString() || '',
+            endDate: data.enddate?.toString() || '',
+            interval: 30
+          };
+
+          setLocalAvailabilityData(formattedData);
+        }
       }
     } catch (error) {
-      console.error('Error fetching local service details:', error);
+      console.error('Error:', error);
       toast({
-        title: "Error",
-        description: "Impossible de charger les détails du service. Veuillez réessayer.",
+        title: "Erreur",
+        description: "Impossible de charger les données.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  }, [localServiceId, userId, toast]);
+  }, [localServiceId, toast]);
 
   const getAddressFromCoordinates = async (latitude: number, longitude: number): Promise<string> => {
     try {
@@ -127,6 +153,26 @@ const LocalServiceDetailScreen: React.FC = () => {
     fetchData();
   };
 
+  const navigateToComments = () => {
+    if (localServiceData?.id) {
+      navigation.navigate('LocalCommentsScreen', {
+        localId: localServiceData.id
+      });
+    }
+  };
+
+  const navigateToBooking = () => {
+    if (!userId || !localServiceData?.id || !LocalAvailabilityData) {
+      Alert.alert('Erreur', 'Veuillez vous connecter pour effectuer une réservation');
+      return;
+    }
+    navigation.navigate('LocalBookingScreen', {
+      localId: localServiceData.id,
+      userId: userId,
+      availabilityData: LocalAvailabilityData
+    });
+  };
+
   const renderItem = () => (
     <View style={styles.card}>
       <View style={styles.imageContainer}>
@@ -160,23 +206,38 @@ const LocalServiceDetailScreen: React.FC = () => {
         onLike={handleLike}
         distance={distance}
         address={address}
+        onToggleMap={() => {}}
       />
-      <LocalDetails localData={localServiceData} />
-      <LocalBookingForm
-        localId={localServiceId}
-        userId={userId}
-        availabilityData={availabilityData}
-        onBookingComplete={fetchData}
-      />
-      <LocalReviewForm localId={localServiceData?.id} onReviewSubmitted={handleReviewSubmitted} />
+      {localServiceData && <LocalDetails localData={localServiceData} />}
+      {LocalAvailabilityData && (
+        <LocalBookingForm
+          localId={localServiceId}
+          userId={userId}
+          availabilityData={LocalAvailabilityData}
+          onBookingComplete={fetchData}
+        />
+      )}
       <LocalCommentSection 
-        comments={localServiceData?.comment.map(comment => ({
-          ...comment,
-          user: (comment as any).user || { username: "anonymous" }
-        })) || []}
-        localId={localServiceData?.id}
+        comments={localServiceData?.comment?.map(comment => ({
+          id: comment.id,
+          details: comment.content,
+          user: comment.user,
+          user_id: comment.user?.username || '',
+          created_at: new Date().toISOString(),
+          local_id: localServiceId
+        })) ?? []}
+        localId={localServiceData?.id ?? 0}
         userId={userId}
       />
+      <View style={styles.actionButtons}>
+        <TouchableOpacity style={styles.actionButton} onPress={navigateToComments}>
+          <Text style={styles.actionButtonText}>Voir les commentaires</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.actionButton} onPress={navigateToBooking}>
+          <Text style={styles.actionButtonText}>Réserver</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -247,6 +308,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 10,
+    marginVertical: 10,
+  },
+  actionButton: {
+    backgroundColor: '#4A90E2',
+    padding: 12,
+    borderRadius: 8,
+    minWidth: 150,
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

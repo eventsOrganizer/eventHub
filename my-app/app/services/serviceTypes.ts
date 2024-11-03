@@ -2,19 +2,22 @@ import { supabase } from './supabaseClient';
 import { Linking } from 'react-native';
 
 
+export type ServiceType = 'Personal' | 'Local' | 'Material';
 
-export type Service = {
+export interface Service {
   id: number;
   name: string;
   details: string;
   user_id: string;
-  type?: 'Personal' | 'Local' | 'Material';
-  priceperhour?: number;
-  price?: number;
-  price_per_hour?: number;
+  type?: ServiceType;
+   priceperhour?: number;        // Pour Personal et Local
+   price?: number;               // Pour Material (vente)
+   price_per_hour?: number;      // Pour Material (location)
+   percentage?: number;
+  quantity?: number;
+  sell_or_rent?: 'sell' | 'rent';
   imageUrl?: string;
   category?: string;
-  depositPercentage?: number;
   subcategory?: { 
     id: number;
     name: string;
@@ -47,6 +50,7 @@ export type Service = {
     status: string;
   }>;
   review?: Array<{
+    id: number;
     user_id: string;
     rate: number;
     total: number;
@@ -57,8 +61,48 @@ export type Service = {
   } | null;
   startdate?: string;
   enddate?: string;
-  percentage?: number;
-};
+}
+
+export interface LocalService {
+  id: number;
+  name: string;
+  priceperhour: number;
+  details: string;
+  like?: Array<{ user_id: string }>;
+  reviews?: Array<{
+    id: number;
+    rating: number;
+    user_id: string;
+    created_at: string;
+  }>;
+  media?: { url: string }[];
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  comment: Array<{
+    id: number;
+    content: string;
+    user?: {
+      username: string;
+    };
+  }>;
+  startdate?: Date | string | null;
+  enddate?: Date | string | null;
+  subcategory?: {
+    name: string;
+    category?: {
+      name: string;
+    };
+    amenities?: {
+      wifi?: boolean;
+      parking?: boolean;
+      aircon?: boolean;
+    };
+  
+  };
+  // ... autres propriétés nécessaires ...
+}
 
 export type LocalServiceRequest = {
   requestData: {
@@ -150,44 +194,3 @@ export const makeLocalServiceRequest = async (localId: number, availabilityId: n
   }
 };
 
-export const initiatePayment = async (requestId: number, amount: number) => {
-  const FLOUCI_APP_TOKEN = "4c1e07ef-8533-4e83-bbeb-7f61c0b21931";
-  const FLOUCI_APP_SECRET = "ee9d6f08-30c8-4dbb-8578-d51293ff2535";
-
-  try {
-    const response = await fetch('https://developers.flouci.com/api/generate_payment', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${FLOUCI_APP_TOKEN}`,
-      },
-      body: JSON.stringify({
-        app_token: FLOUCI_APP_TOKEN,
-        app_secret: FLOUCI_APP_SECRET,
-        amount: amount,
-        accept_url: `exp://192.168.100.2:8081/payment-success?serviceId=${serviceId}`,
-        cancel_url: `exp://192.168.100.2:8081/payment-cancel?serviceId=${serviceId}`,
-        decline_url: `exp://192.168.100.2:8081/payment-decline?serviceId=${serviceId}`,
-        webhook_url: `exp://192.168.100.2:8081/api/payment-webhook`,
-      }),
-    });
-  
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Flouci API error:', response.status, errorText);
-      throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
-    }
-  
-    const paymentData = await response.json();
-    console.log('Payment Response:', paymentData); // Log the full response for debugging
-  
-    if (paymentData?.result?.link) {
-      return paymentData.result.link;
-    } else {
-      throw new Error('Payment URL not found in the response');
-    }
-  } catch (error) {
-    console.error('Error initiating Flouci payment:', error);
-    return null;
-  }
-};
