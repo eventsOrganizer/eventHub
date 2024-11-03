@@ -4,8 +4,10 @@ import { supabase } from '../lib/supabase';
 interface UserContextType {
   userId: string | null;
   isAuthenticated: boolean;
+  selectedInterests: string[];
   setUserId: (id: string | null) => void;
   setIsAuthenticated: (isAuth: boolean) => void;
+  setSelectedInterests: (interests: string[]) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -13,9 +15,9 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   useEffect(() => {
-    // Check initial auth state
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -26,7 +28,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     checkAuth();
 
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUserId(session.user.id);
@@ -34,6 +35,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else {
         setUserId(null);
         setIsAuthenticated(false);
+        setSelectedInterests([]); // Clear interests when user logs out
       }
     });
 
@@ -43,7 +45,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   return (
-    <UserContext.Provider value={{ userId, isAuthenticated, setUserId, setIsAuthenticated }}>
+    <UserContext.Provider value={{ 
+      userId, 
+      isAuthenticated, 
+      selectedInterests,
+      setUserId, 
+      setIsAuthenticated,
+      setSelectedInterests
+    }}>
       {children}
     </UserContext.Provider>
   );
