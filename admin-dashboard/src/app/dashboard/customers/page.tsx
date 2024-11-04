@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import * as React from 'react';
+import React, { useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
-import dayjs from 'dayjs';
+import dayjs from 'daylljs';
 import { useRouter } from 'next/navigation';
 
 import { CustomersFilters } from '@/components/dashboard/customer/customers-filters';
 import { CustomersTable } from '@/components/dashboard/customer/customers-table';
-import type { Customer } from '@/components/dashboard/customer/customers-table';
+import { CreateUserModal } from '@/components/dashboard/customer/CreateUserModal';
 import { supabase } from '../../../lib/supabase-client';
+import type { Customer } from '@/components/dashboard/customer/customers-table';
 
 export default function Page(): React.JSX.Element {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -20,6 +20,7 @@ export default function Page(): React.JSX.Element {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [open, setOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
@@ -57,6 +58,13 @@ export default function Page(): React.JSX.Element {
 
     fetchCustomers();
   }, [selected]);
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  const handleCreateUser = (newUser) => {
+    setCustomers((prev) => [...prev, newUser]);
+  };
 
   const handlePageChange = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -122,12 +130,15 @@ export default function Page(): React.JSX.Element {
         <Stack spacing={1} sx={{ flex: '1 1 auto' }}>
           <Typography variant="h4">Users</Typography>
         </Stack>
-        <div>
-          <Button startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />} variant="contained">
-            Add
-          </Button>
-        </div>
+        <Button
+          startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />}
+          variant="contained"
+          onClick={handleOpen}
+        >
+          Add User
+        </Button>
       </Stack>
+      <CreateUserModal open={open} onClose={handleClose} onCreate={handleCreateUser} />
       <CustomersFilters
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
