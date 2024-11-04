@@ -1,114 +1,162 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LocalService } from '../../services/serviceTypes';
-import { useUser } from '../../UserContext';
+import LocationMapView from '../../components/map/LocationMapView';
 
 interface LocalInfoProps {
-  localData: LocalService;
-  onLike: () => void;
-  onToggleMap: () => void; // Add onToggleMap prop
-  distance?: number | null;
-  address?: string;
+  localData: any;
+  likes: number;
+  userHasLiked: boolean;
+  onLike: () => Promise<void>;
+  distance: number | null;
+  address: string;
+  onToggleMap: () => void;
+  onAddressFound: (address: string) => void;
 }
 
-const LocalInfo: React.FC<LocalInfoProps> = ({ 
-  localData, 
-  onLike, 
-  onToggleMap, // Destructure onToggleMap
-  distance, 
-  address 
+const LocalInfo: React.FC<LocalInfoProps> = ({
+  localData,
+  likes,
+  userHasLiked,
+  onLike,
+  distance,
+  address,
+  onToggleMap,
+  onAddressFound,
 }) => {
-  const { userId } = useUser();
+  const [showMap, setShowMap] = useState(false);
+  const averageRating = localData?.review?.reduce((acc: number, review: { rate: number }) => acc + review.rate, 0) / (localData?.review?.length || 1);
+  const reviewCount = localData?.review?.length || 0;
+
+  const handleToggleMap = () => {
+    setShowMap(!showMap);
+    onToggleMap();
+  };
+
+  const getValidCoordinates = () => {
+    console.log('LocalData in getValidCoordinates:', localData);
+    
+    if (!localData?.location) {
+      console.log('No location data available in LocalInfo');
+      return null;
+    }
+    
+    const locationData = Array.isArray(localData.location) 
+      ? localData.location[0] 
+      : localData.location;
+    
+    console.log('Processed location data:', locationData);
+    
+    if (!locationData) return null;
+    
+    const latitude = parseFloat(locationData.latitude);
+    const longitude = parseFloat(locationData.longitude);
+    
+    console.log('Parsed coordinates:', { latitude, longitude });
+    
+    if (isNaN(latitude) || isNaN(longitude)) {
+      console.error('Invalid coordinates:', { 
+        originalLat: locationData.latitude,
+        originalLon: locationData.longitude,
+        parsedLat: latitude,
+        parsedLon: longitude
+      });
+      return null;
+    }
+    
+    return { latitude, longitude };
+  };
+
+  const coordinates = getValidCoordinates();
 
   if (!localData) return null;
-
-  const isLiked = localData.like?.some(like => like.user_id) || false;
-  const reviewCount = localData.review?.length || 0;
-  const averageRating = localData.review && localData.review.length > 0
-    ? localData.review.reduce((sum, review) => sum + review.rate, 0) / reviewCount
-    : null;
 
   return (
     <View style={styles.infoContainer}>
       <Text style={styles.name}>{localData.name}</Text>
-      <Text style={styles.price}>{localData.priceperhour}€/hour</Text>
-      <Text style={styles.details}>{localData.details}</Text>
-      
-      
-      {(distance !== null || address) && (
-        <View style={styles.locationInfo}>
-          {distance !== null && (
-            <View style={styles.locationItem}>
-              <Ionicons name="location" size={24} color="#fff" />
-              <Text style={styles.locationText}>Distance: {distance?.toFixed(1)} km</Text>
-            </View>
-          )}
-          {address && (
-            <View style={styles.locationItem}>
-              <Ionicons name="map" size={24} color="#fff" />
-              <Text style={styles.locationText}>{address}</Text>
-            </View>
-          )}
-        </View>
-      )}
 
       <View style={styles.statsContainer}>
         <TouchableOpacity onPress={onLike} style={styles.likeButton}>
           <Ionicons 
-            name={isLiked ? "heart" : "heart-outline"} 
+            name={userHasLiked ? "heart" : "heart-outline"} 
             size={24} 
-            color={isLiked ? "red" : "white"} 
+            color={userHasLiked ? "red" : "#666"} 
           />
-          <Text style={styles.statText}>{localData.like?.length || 0} Likes</Text>
+          <Text style={styles.statText}>{likes} Likes</Text>
         </TouchableOpacity>
 
         <View style={styles.statItem}>
           <Ionicons name="star" size={24} color="gold" />
           <Text style={styles.statText}>
             {reviewCount} Reviews
-            {averageRating !== null && ` (${averageRating.toFixed(1)})`}
+            {averageRating ? ` (${averageRating.toFixed(1)})` : ''}
           </Text>
         </View>
 
-        <TouchableOpacity onPress={onToggleMap} style={styles.mapButton}>
-          <Ionicons name="location" size={24} color="white" />
+        <TouchableOpacity 
+          onPress={handleToggleMap} 
+          style={styles.mapButton}
+          activeOpacity={0.7}
+        >
+          <Ionicons 
+            name="location" 
+            size={24} 
+            color="#666"
+            style={styles.mapIcon}
+          />
+          {distance && (
+            <Text style={styles.distanceText}>
+              {distance.toFixed(1)} km
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
+
+      {!showMap && (
+        <View style={styles.addressContainer}>
+          <Text style={styles.addressText}>{address}</Text>
+        </View>
+      )}
+
+      {showMap && coordinates && (
+        <View style={styles.mapContainer}>
+          <LocationMapView
+            latitude={coordinates.latitude}
+            longitude={coordinates.longitude}
+            onAddressFound={onAddressFound}
+          />
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   infoContainer: {
-    padding: 16,
-    backgroundColor: 'transparent', // Darker semi-transparent background
+    backgroundColor: '#fff',
     borderRadius: 8,
+    padding: 16,
     marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
   },
   name: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#fff',
-  },
-  price: {
-    fontSize: 18,
-    color: '#E0E0E0',
-    marginBottom: 8,
-  },
-  details: {
-    color: '#fff',
-    marginBottom: 16,
+    color: '#333',
+    marginBottom: 10,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 8,
   },
   likeButton: {
     flexDirection: 'row',
@@ -116,29 +164,41 @@ const styles = StyleSheet.create({
   },
   mapButton: {
     padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#3498db',
+    flexDirection: 'column',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+  },
+  mapIcon: {
+    marginBottom: 4,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   statText: {
     marginLeft: 8,
-    color: '#fff',
+    color: '#444',
   },
-  locationInfo: {
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+  addressContainer: {
+    marginTop: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    padding: 8,
     borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
   },
-  locationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+  addressText: {
+    color: '#444',
   },
-  locationText: {
-    color: '#fff',
-    marginLeft: 8,
-    flex: 1,
-    fontSize: 14,
+  mapContainer: {
+    height: 300,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#f5f5f5',
+  },
+  distanceText: {
+    color: '#444',
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 

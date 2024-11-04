@@ -19,6 +19,7 @@ export interface Event {
   type: string;
   privacy: boolean;
   details: string;
+  category: string;
   subcategory_id: number;
   user_id: string;
   group_id: number;

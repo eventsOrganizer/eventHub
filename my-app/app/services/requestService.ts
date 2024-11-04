@@ -1,23 +1,90 @@
 import { supabase } from './supabaseClient';
-import { RequestResult, RequestData, RequestStatus } from './requestTypes';
+import { RequestResult, RequestData, RequestStatus, CreateRequestData } from './requestTypes';
+import { sendRequestNotification, sendResponseNotification, sendPaymentNotification } from './notificationService';
+
+interface ServiceResponse {
+  name: string;
+  user: ServiceUser;
+}
+
+interface ServiceUser {
+  id: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+}
+
+interface ServiceDetails {
+  id: number;
+  name: string;
+  user: ServiceUser;
+}
+
+const transformRawData = (rawData: any): RequestData => {
+  if (!rawData) throw new Error('No data provided for transformation');
+  if (!rawData.user) throw new Error('User data is missing');
+
+  const userData: ServiceUser = {
+    id: rawData.user.id,
+    firstname: rawData.user.firstname,
+    lastname: rawData.user.lastname,
+    email: rawData.user.email
+  };
+
+  const transformServiceData = (serviceData: any): ServiceDetails | null => {
+    if (!serviceData?.user?.[0]) return null;
+    return {
+      id: serviceData.id,
+      name: serviceData.name,
+      user: {
+        id: serviceData.user[0].id,
+        firstname: serviceData.user[0].firstname,
+        lastname: serviceData.user[0].lastname,
+        email: serviceData.user[0].email
+      }
+    };
+  };
+
+  return {
+    id: rawData.id,
+    user_id: rawData.user_id,
+    created_at: rawData.created_at,
+    status: rawData.status,
+    is_read: rawData.is_read,
+    is_action_read: rawData.is_action_read,
+    payment_status: rawData.payment_status,
+    user: userData,
+    personal: rawData.personal ? transformServiceData(rawData.personal) || undefined : undefined,
+    local: rawData.local ? transformServiceData(rawData.local) || undefined : undefined,
+    material: rawData.material ? transformServiceData(rawData.material) || undefined : undefined
+  };
+};
 
 const fetchRequestDetails = async (requestId: number, normalizedServiceType: string): Promise<RequestData> => {
-  const { data, error } = await supabase
+  const { data: rawData, error } = await supabase
     .from('request')
     .select(`
       id,
       user_id,
       created_at,
+      status,
+      is_read,
+      is_action_read,
+      payment_status,
       user:user_id (
         id,
         firstname,
-        lastname
+        lastname,
+        email
       ),
       ${normalizedServiceType}:${normalizedServiceType}_id (
+        id,
         name,
         user:user_id (
+          id,
           firstname,
-          lastname
+          lastname,
+          email
         )
       )
     `)
@@ -25,64 +92,96 @@ const fetchRequestDetails = async (requestId: number, normalizedServiceType: str
     .single();
 
   if (error) throw error;
-  if (!data) throw new Error('Request not found');
+  if (!rawData) throw new Error('Request not found');
 
-  return data as unknown as RequestData;
+  return transformRawData(rawData);
 };
 
-export const handleRequestConfirmation = async (
-  requestId: number, 
-  serviceType: string,
-  serviceId: number
-): Promise<RequestResult> => {
+export const createRequest = async (requestData: CreateRequestData): Promise<RequestData> => {
   try {
-    const normalizedServiceType = serviceType.toLowerCase();
-    const requestData = await fetchRequestDetails(requestId, normalizedServiceType);
-    const serviceData = requestData[normalizedServiceType as keyof Pick<RequestData, 'personal' | 'local' | 'material'>];
+    const { data: newRequest, error: requestError } = await supabase
+      .from('request')
+      .insert(requestData)
+      .select(`
+        id, user_id, created_at, status, is_read, is_action_read, payment_status,
+        user:user_id (id, firstname, lastname, email),
+        personal:personal_id (id, name, user:user_id(id, firstname, lastname, email)),
+        local:local_id (id, name, user:user_id(id, firstname, lastname, email)),
+        material:material_id (id, name, user:user_id(id, firstname, lastname, email))
+      `)
+      .single();
 
-    if (!serviceData) {
-      throw new Error(`Service data not found for type: ${normalizedServiceType}`);
-    }
+    if (requestError) throw requestError;
+    if (!newRequest) throw new Error('Failed to create request');
 
-    // Update availability status
-    const { error: availabilityError } = await supabase
-      .from('availability')
-      .update({ statusday: 'reserved' })
-      .eq(`${normalizedServiceType}_id`, serviceId);
+    const transformedRequest = transformRawData(newRequest);
+    const service = transformedRequest.personal || transformedRequest.local || transformedRequest.material;
+    
+    if (!service) throw new Error('Service not found');
+    if (!service.user) throw new Error('Service user not found');
 
-    if (availabilityError) throw availabilityError;
+    const requesterName = `${transformedRequest.user.firstname} ${transformedRequest.user.lastname}`;
+    
+    await sendRequestNotification(
+      service.user.id,
+      requestData.user_id,
+      requesterName,
+      service.name,
+      transformedRequest.id
+    );
 
-    // Update request status and mark as read for provider
+    return transformedRequest;
+  } catch (error) {
+    console.error('Error creating request:', error);
+    throw error;
+  }
+};
+
+export const handleRequestConfirmation = async (requestId: number): Promise<RequestResult> => {
+  try {
+    const { data: requestData, error: requestError } = await supabase
+      .from('request')
+      .select(`
+        id, user_id, status,
+        user:user_id (firstname, lastname),
+        personal:personal_id (name, user:user_id(id, firstname, lastname)),
+        local:local_id (name, user:user_id(id, firstname, lastname)),
+        material:material_id (name, user:user_id(id, firstname, lastname))
+      `)
+      .eq('id', requestId)
+      .single();
+
+    if (requestError || !requestData) throw new Error('Request not found');
+
+    const service = requestData.personal || requestData.local || requestData.material;
+    if (!service) throw new Error('Service not found');
+    if (!service.user) throw new Error('Service user not found');
+
+    const serviceOwnerName = `${service.user.firstname} ${service.user.lastname}`;
+
     const { error: updateError } = await supabase
       .from('request')
       .update({ 
         status: 'accepted' as RequestStatus,
-        is_read: true,
-        is_action_read: true // Set to true when provider takes action
+        is_action_read: true,
+        is_read: true
       })
       .eq('id', requestId);
 
     if (updateError) throw updateError;
 
-    const notificationMessage = `Your request for ${serviceData.name} has been accepted by ${serviceData.user.firstname} ${serviceData.user.lastname}`;
-    
-    // Create notification and set is_read to false initially
-    const { error: notificationError } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: requestData.user_id,
-        title: 'Request Accepted',
-        message: notificationMessage,
-        created_at: new Date().toISOString(),
-        is_read: false // Initially unread for the requester
-      });
-
-    if (notificationError) throw notificationError;
+    await sendResponseNotification(
+      requestData.user_id,
+      requestId,
+      'accepted',
+      service.name,
+      serviceOwnerName
+    );
 
     return {
       success: true,
-      title: "Request Accepted",
-      message: notificationMessage,
+      title: "Succès",
+      message: "Demande confirmée avec succès",
       variant: "default"
     };
   } catch (error) {
@@ -91,96 +190,117 @@ export const handleRequestConfirmation = async (
   }
 };
 
-export const handleRequestRejection = async (
-  requestId: number, 
-  serviceType: string,
-  serviceId: number
-): Promise<RequestResult> => {
+export const handleRequestRejection = async (requestId: number): Promise<RequestResult> => {
   try {
-    const normalizedServiceType = serviceType.toLowerCase();
-    const requestData = await fetchRequestDetails(requestId, normalizedServiceType);
-    const serviceData = requestData[normalizedServiceType as keyof Pick<RequestData, 'personal' | 'local' | 'material'>];
-
-    if (!serviceData) {
-      throw new Error(`Service data not found for type: ${normalizedServiceType}`);
-    }
-
-    // Get the personal_user entry
-    const { data: personalUserData, error: fetchError } = await supabase
+    const { data: requestData, error: requestError } = await supabase
       .from('request')
-      .select('availability_id')
-      .eq('personal_id', serviceId)
-      .eq('user_id', requestData.user_id);
+      .select(`
+        id,
+        user_id,
+        status,
+        user:user_id (
+          firstname,
+          lastname
+        ),
+        personal:personal_id (
+          name,
+          user:user_id (
+            id,
+            firstname,
+            lastname
+          )
+        ),
+        local:local_id (
+          name,
+          user:user_id (
+            id,
+            firstname,
+            lastname
+          )
+        ),
+        material:material_id (
+          name,
+          user:user_id (
+            id,
+            firstname,
+            lastname
+          )
+        )
+      `)
+      .eq('id', requestId)
+      .single();
 
-    if (fetchError) throw fetchError;
+    if (requestError || !requestData) throw new Error('Request not found');
 
-    // Update availability status to available
-    if (personalUserData && personalUserData.length > 0) {
-      for (const entry of personalUserData) {
-        if (entry.availability_id) {
-          const { error: availabilityError } = await supabase
-            .from('availability')
-            .update({ 
-              statusday: 'available',
-              start: null,
-              end: null
-            })
-            .eq('id', entry.availability_id);
+    // Get the correct service data
+    const service = requestData.personal || requestData.local || requestData.material;
+    if (!service) throw new Error('Service not found');
+    if (!service.user) throw new Error('Service user not found');
 
-          if (availabilityError) throw availabilityError;
-        }
+    const serviceOwnerName = `${service.user.firstname} ${service.user.lastname}`;
 
-        // Remove the personal_user entry
-        const { error: personalUserError } = await supabase
-          .from('request')
-          .delete()
-          .eq('personal_id', serviceId)
-          .eq('user_id', requestData.user_id);
-
-        if (personalUserError) throw personalUserError;
-      }
-    }
-
-    // Update request status to refused
     const { error: updateError } = await supabase
       .from('request')
       .update({ 
         status: 'refused' as RequestStatus,
-        is_read: true,
-        is_action_read: true // Set to true when provider takes action
+        is_action_read: true,
+        is_read: true
       })
       .eq('id', requestId);
 
     if (updateError) throw updateError;
 
-    const notificationMessage = `Your request for ${serviceData.name} has been refused by ${serviceData.user.firstname} ${serviceData.user.lastname}`;
-    
-    // Create notification and set is_read to false initially
-    const { error: notificationError } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: requestData.user_id,
-        title: 'Request Refused',
-        message: notificationMessage,
-        created_at: new Date().toISOString(),
-        is_read: false // Initially unread for the requester
-      });
-
-    if (notificationError) throw notificationError;
+    await sendResponseNotification(
+      requestData.user_id,
+      requestId,
+      'refused',
+      service.name,
+      serviceOwnerName
+    );
 
     return {
       success: true,
-      title: "Request Refused",
-      message: notificationMessage,
-      variant: "destructive"
+      title: "Succès",
+      message: "Demande refusée avec succès",
+      variant: "default"
     };
   } catch (error) {
-    console.error('Error refusing request:', error);
+    console.error('Error rejecting request:', error);
     throw error;
   }
 };
 
-export const deleteRequest = async (requestId: number) => {
+export const handlePaymentSuccess = async (
+  requestId: number,
+  serviceOwnerId: string,
+  userName: string,
+  serviceName: string
+): Promise<boolean> => {
+  try {
+    await sendPaymentNotification(serviceOwnerId, requestId, userName, serviceName);
+    return true;
+  } catch (error) {
+    console.error('Error handling payment success:', error);
+    return false;
+  }
+};
+
+export const markRequestAsRead = async (requestId: number): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('request')
+      .update({ is_read: true })
+      .eq('id', requestId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error marking request as read:', error);
+    return false;
+  }
+};
+
+export const deleteRequest = async (requestId: number): Promise<RequestResult> => {
   try {
     const { error } = await supabase
       .from('request')

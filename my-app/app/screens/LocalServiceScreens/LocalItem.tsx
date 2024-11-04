@@ -20,7 +20,7 @@ const LocalItem: React.FC<LocalItemProps> = ({ item, onPress }) => (
       <Text style={styles.localDetails}>{item.details}</Text>
       <View style={styles.localStats}>
         <Text style={styles.localLikes}>❤️ {item.like?.length || 0}</Text>
-        <Text style={styles.localReviews}>⭐ {item.review?.length || 0}</Text>
+        <Text style={styles.localReviews}>⭐ {item.reviews?.length || 0}</Text>
       </View>
     </View>
   </TouchableOpacity>

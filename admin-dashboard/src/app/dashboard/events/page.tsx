@@ -15,6 +15,7 @@ import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { EventsFilters } from '../../../components/dashboard/events/events-filters';
 import { EventsTable, Event } from '../../../components/dashboard/events/events-table';
 import { supabase } from '../../../lib/supabase-client';
+import AddCategoryModal from '../../../components/dashboard/events/event-category';
 
 export default function EventsPage(): React.JSX.Element {
   const [events, setEvents] = useState<Event[]>([]);
@@ -42,6 +43,7 @@ export default function EventsPage(): React.JSX.Element {
   const [subcategoryFilter, setSubcategoryFilter] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchEvents();
@@ -120,16 +122,32 @@ export default function EventsPage(): React.JSX.Element {
     }
   };
 
-  const fetchSubcategories = async (categoryId: string) => {
-    const { data, error } = await supabase
-      .from('subcategory')
-      .select('id, name')
-      .eq('category_id', categoryId);
+  const fetchSubcategories = async () => {
+    try {
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('category')
+        .select('id')
+        .eq('type', 'event');
 
-    if (error) {
-      console.error('Error fetching subcategories:', error);
-    } else {
-      setSubcategories(data);
+      if (categoryError) {
+        console.error('Error fetching categories:', categoryError);
+        return;
+      }
+
+      const categoryIds = categoryData.map(category => category.id);
+
+      const { data: subcategoryData, error: subcategoryError } = await supabase
+        .from('subcategory')
+        .select('id, name')
+        .in('category_id', categoryIds);
+
+      if (subcategoryError) {
+        console.error('Error fetching subcategories:', subcategoryError);
+      } else {
+        setSubcategories(subcategoryData);
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching subcategories:', error);
     }
   };
 
@@ -286,6 +304,14 @@ export default function EventsPage(): React.JSX.Element {
 
   const paginatedEvents = applyPagination(filteredEvents, page, rowsPerPage);
 
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
+
+  const handleCategoryAdded = () => {
+    fetchSubcategories();
+    console.log('Category added');
+  };
+
   return (
     <Stack spacing={3}>
       <Stack direction="row" spacing={3}>
@@ -293,9 +319,14 @@ export default function EventsPage(): React.JSX.Element {
           <Typography variant="h4">Events</Typography>
         </Stack>
         <div>
-          <Button startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />} variant="contained" onClick={handleOpen}>
-            Add
-          </Button>
+        <Button variant="contained" onClick={handleOpenModal}>
+        Add Category
+      </Button>
+      <AddCategoryModal
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        onCategoryAdded={handleCategoryAdded}
+      />
         </div>
       </Stack>
 
@@ -413,6 +444,8 @@ export default function EventsPage(): React.JSX.Element {
           <Button onClick={handleSubmit} variant="contained" color="primary">Submit</Button>
         </div>
       </Modal>
+
+      
     </Stack>
   );
 }
