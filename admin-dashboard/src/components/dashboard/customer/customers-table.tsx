@@ -190,11 +190,7 @@ export function CustomersTable({
                     <Button
                       variant="outlined"
                       color="primary"
-                      sx={{
-                        opacity: 1,
-                        backgroundColor: 'white',
-                        zIndex: 1,
-                      }}
+                      sx={{ opacity: 1 }}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleManageClick(row.email);

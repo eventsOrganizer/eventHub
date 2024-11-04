@@ -60,7 +60,7 @@ export function EventsFilters({
           }
           sx={{ maxWidth: '500px' }}
         />
-        <FormControl sx={{ minWidth: 100,  mt: 1 }} margin="normal">
+        <FormControl sx={{ minWidth: 100, mt: 1 }} margin="normal">
           <InputLabel>Type</InputLabel>
           <Select
             value={typeFilter}
@@ -72,7 +72,7 @@ export function EventsFilters({
             <MenuItem value="indoor">Indoor</MenuItem>
           </Select>
         </FormControl>
-        <FormControl sx={{ minWidth: 100,  mt: 1 }} margin="normal">
+        <FormControl sx={{ minWidth: 100, mt: 1 }} margin="normal">
           <InputLabel>Privacy</InputLabel>
           <Select
             value={privacyFilter}
@@ -83,15 +83,15 @@ export function EventsFilters({
             <MenuItem value="false">Public</MenuItem>
           </Select>
         </FormControl>
-        <FormControl sx={{ minWidth: 100,  mt: 1 , mr: 40 }} margin="normal">
-          <InputLabel>Category</InputLabel>
+        <FormControl sx={{ minWidth: 100, mt: 1 }} margin="normal">
+          <InputLabel>Subcategory</InputLabel>
           <Select
             value={subcategoryFilter}
             onChange={onSubcategoryFilterChange}
           >
             <MenuItem value="">All</MenuItem>
             {subcategories.map((subcategory) => (
-              <MenuItem key={subcategory.id} value={subcategory.name}>
+              <MenuItem key={subcategory.id} value={subcategory.id}>
                 {subcategory.name}
               </MenuItem>
             ))}
