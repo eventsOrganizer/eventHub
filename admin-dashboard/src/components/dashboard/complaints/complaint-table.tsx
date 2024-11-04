@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -7,7 +7,9 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TablePagination from '@mui/material/TablePagination';
 import Checkbox from '@mui/material/Checkbox';
+import Button from '@mui/material/Button';
 import { useSelection } from '@/hooks/use-selection';
+import ComplaintDetailsModal from './complaint-modal'; // Import the modal component
 
 interface Complaint {
   id: number;
@@ -15,6 +17,7 @@ interface Complaint {
   status: string;
   category: string;
   title: string;
+  details: string;
 }
 
 interface ComplaintTableProps {
@@ -36,6 +39,7 @@ const ComplaintTable: React.FC<ComplaintTableProps> = ({
   onRowsPerPageChange,
   onSelectionChange = () => {},
 }) => {
+  const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const rowIds = React.useMemo(() => complaints.map((complaint) => complaint.id), [complaints]);
   const { selectAll, deselectAll, selectOne, deselectOne, selected } = useSelection(rowIds);
 
@@ -89,6 +93,7 @@ const ComplaintTable: React.FC<ComplaintTableProps> = ({
             <TableCell>Created At</TableCell>
             <TableCell>Status</TableCell>
             <TableCell>Category</TableCell>
+            <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -133,6 +138,19 @@ const ComplaintTable: React.FC<ComplaintTableProps> = ({
                 <TableCell>{new Date(complaint.created_at).toLocaleString()}</TableCell>
                 <TableCell>{formatStatus(complaint.status)}</TableCell>
                 <TableCell>{complaint.category}</TableCell>
+                <TableCell>
+  <Button
+    variant="text"
+    color="primary"
+    onClick={(e) => {
+      e.stopPropagation();
+      setSelectedComplaint(complaint);
+    }}
+  >
+    View Details
+  </Button>
+</TableCell>
+
               </TableRow>
             );
           })}
@@ -148,6 +166,13 @@ const ComplaintTable: React.FC<ComplaintTableProps> = ({
         rowsPerPageOptions={[5, 10, 25]}
         labelRowsPerPage="Rows per page"
       />
+      {selectedComplaint && (
+  <ComplaintDetailsModal
+    open={Boolean(selectedComplaint)}
+    onClose={() => setSelectedComplaint(null)}
+    complaint={selectedComplaint}
+  />
+)}
     </Card>
   );
 };
