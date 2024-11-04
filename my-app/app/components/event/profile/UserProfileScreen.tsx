@@ -119,7 +119,6 @@ const UserProfileScreen: React.FC = () => {
         contentContainerStyle={tw`pb-10`}
       >
         <BlurView intensity={80} tint="dark" style={tw`overflow-hidden rounded-3xl mx-4 mt-6 shadow-xl`}>
-          {/* Keep existing profile content */}
           <View style={tw`p-6`}>
             <View style={tw`flex-row justify-between items-center mb-6`}>
               <Text style={tw`text-white text-2xl font-bold`}>Profile</Text>
@@ -135,7 +134,6 @@ const UserProfileScreen: React.FC = () => {
                     </View>
                   )}
                 </TouchableOpacity>
-                <EventRequestBadge />
                 <FriendRequestBadge />
                 <InvitationButton />
               </View>
@@ -151,28 +149,28 @@ const UserProfileScreen: React.FC = () => {
             </View>
             
             <View style={tw`flex-row justify-between mb-4`}>
-              <ActionButton onPress={() => navigation.navigate('EventCreation' as never)} iconName="add-circle-outline" text="New Event" />
-              <ActionButton onPress={() => navigation.navigate('ServiceSelection' as never)} iconName="briefcase-outline" text="New Service" />
+              <ActionButton onPress={() => navigation.navigate('EventCreation')} iconName="add-circle-outline" text="New Event" />
+              <ActionButton onPress={() => navigation.navigate('ServiceSelection')} iconName="briefcase-outline" text="New Service" />
             </View>
             
             <View style={tw`flex-row justify-between mb-4`}>
-              <ActionButton onPress={() => navigation.navigate('EditProfile' as never)} iconName="pencil" text="Edit Profile" />
-              <ActionButton onPress={() => navigation.navigate('ChatList' as never)} iconName="chatbubbles" text="Open Chat" />
+              <ActionButton onPress={() => navigation.navigate('EditProfile')} iconName="pencil" text="Edit Profile" />
+              <ActionButton onPress={() => navigation.navigate('ChatList')} iconName="chatbubbles" text="Open Chat" />
             </View>
-
+  
             <View style={tw`flex-row justify-between`}>
-              <ActionButton onPress={() => navigation.navigate('TicketScanning' as never)} iconName="qr-code-outline" text="Scan Tickets" />
+              <ActionButton onPress={() => navigation.navigate('TicketScanning')} iconName="qr-code-outline" text="Scan Tickets" />
             </View>
           </View>
         </BlurView>
-
-        {/* New Services Section */}
+  
+        {/* Services Section */}
         <View style={tw`mx-4 mt-6`}>
           <Text style={tw`text-white text-xl font-bold mb-4`}>Services</Text>
           <View style={tw`bg-white/20 rounded-xl p-4`}>
             <TouchableOpacity
               style={tw`flex-row items-center justify-between mb-4`}
-              onPress={() => navigation.navigate('UserServicesScreen' as never, { userId } as never)}
+              onPress={() => navigation.navigate('UserServicesScreen', { userId })}
             >
               <View style={tw`flex-row items-center`}>
                 <Ionicons name="briefcase" size={24} color="white" />
@@ -182,43 +180,43 @@ const UserProfileScreen: React.FC = () => {
             </TouchableOpacity>
             
             <View style={tw`flex-row justify-around items-center`}>
-  <TouchableOpacity
-    style={tw`items-center`}
-    onPress={() => navigation.navigate('YourRequests', { userId, mode: 'sent', type: 'service' })}
-  >
-    <Ionicons name="arrow-up-circle" size={32} color="white" />
-    {unreadSentActionsCount > 0 && (
-      <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
-        <Text style={tw`text-white text-xs`}>{unreadSentActionsCount}</Text>
-      </View>
-    )}
-  </TouchableOpacity>
-  
-  <Text style={tw`text-white text-sm mx-4`}>Requests</Text>
-  
-  <TouchableOpacity
-    style={tw`items-center`}
-    onPress={() => navigation.navigate('YourRequests', { userId, mode: 'received', type: 'service' })}
-  >
-    <Ionicons name="arrow-down-circle" size={32} color="white" />
-    {unreadReceivedRequestsCount > 0 && (
-      <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
-        <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
-      </View>
-    )}
-  </TouchableOpacity>
-</View>
+              <TouchableOpacity
+                style={tw`items-center`}
+                onPress={() => navigation.navigate('YourRequests', { userId, mode: 'sent', type: 'service' })}
+              >
+                <Ionicons name="arrow-up-circle" size={32} color="white" />
+                {unreadSentActionsCount > 0 && (
+                  <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+                    <Text style={tw`text-white text-xs`}>{unreadSentActionsCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              
+              <Text style={tw`text-white text-sm mx-4`}>Requests</Text>
+              
+              <TouchableOpacity
+                style={tw`items-center`}
+                onPress={() => navigation.navigate('YourRequests', { userId, mode: 'received', type: 'service' })}
+              >
+                <Ionicons name="arrow-down-circle" size={32} color="white" />
+                {unreadReceivedRequestsCount > 0 && (
+                  <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+                    <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-
-        {/* New Events Section */}
-        <View style={tw`mx-4 mt-6 mb-4`}>
+  
+        {/* Events Section */}
+        <View style={tw`mx-4 mt-6`}>
           <Text style={tw`text-white text-xl font-bold mb-4`}>Events</Text>
           <View style={tw`bg-white/20 rounded-xl p-4`}>
-          <TouchableOpacity
-  style={tw`flex-row items-center justify-between mb-4`}
-  onPress={() => navigation.navigate('EventsManagement', { userId })}
->
+            <TouchableOpacity
+              style={tw`flex-row items-center justify-between mb-4`}
+              onPress={() => navigation.navigate('EventsManagement', { userId })}
+            >
               <View style={tw`flex-row items-center`}>
                 <Ionicons name="calendar" size={24} color="white" />
                 <Text style={tw`text-white font-semibold ml-3`}>Manage Your Events</Text>
@@ -227,42 +225,77 @@ const UserProfileScreen: React.FC = () => {
             </TouchableOpacity>
             
             <View style={tw`flex-row justify-around items-center`}>
-            <TouchableOpacity
-  style={tw`items-center`}
-  onPress={() => navigation.navigate('SentEventRequests')}
->
-  <Ionicons name="arrow-up-circle" size={32} color="white" />
-  {unreadSentActionsCount > 0 && (
-    <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
-      <Text style={tw`text-white text-xs`}>{unreadSentActionsCount}</Text>
-    </View>
-  )}
-</TouchableOpacity>
-
-<Text style={tw`text-white text-sm mx-4`}>Requests</Text>
-
-<TouchableOpacity
-  style={tw`items-center`}
-  onPress={() => navigation.navigate('ReceivedEventRequests')}
->
-  <Ionicons name="arrow-down-circle" size={32} color="white" />
-  {unreadReceivedRequestsCount > 0 && (
-    <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
-      <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
-    </View>
-  )}
-  </TouchableOpacity>
-</View>
+              <TouchableOpacity
+                style={tw`items-center`}
+                onPress={() => navigation.navigate('SentEventRequests')}
+              >
+                <Ionicons name="arrow-up-circle" size={32} color="white" />
+                {unreadSentActionsCount > 0 && (
+                  <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+                    <Text style={tw`text-white text-xs`}>{unreadSentActionsCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+  
+              <Text style={tw`text-white text-sm mx-4`}>Requests</Text>
+  
+              <TouchableOpacity
+                style={tw`items-center`}
+                onPress={() => navigation.navigate('ReceivedEventRequests')}
+              >
+                <Ionicons name="arrow-down-circle" size={32} color="white" />
+                {unreadReceivedRequestsCount > 0 && (
+                  <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+                    <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-
-        {/* Sidebar Toggle Button */}
-        <TouchableOpacity
-          style={tw`absolute top-4 right-4 z-50 bg-white/20 p-2 rounded-full`}
-          onPress={() => navigation.navigate('Sidebar')}
-        >
-          <Ionicons name="menu" size={28} color="white" />
-        </TouchableOpacity>
+  
+        {/* Social Section */}
+        <View style={tw`mx-4 mt-6`}>
+          <Text style={tw`text-white text-xl font-bold mb-4`}>Social</Text>
+          <TouchableOpacity
+            style={tw`bg-[#003791] rounded-3xl p-4 shadow-lg overflow-hidden`}
+            onPress={() => navigation.navigate('Social')}
+          >
+            <BlurView intensity={40} tint="dark" style={tw`p-4 rounded-2xl`}>
+              <View style={tw`flex-row items-center justify-between`}>
+                <View style={tw`flex-row items-center`}>
+                  <Ionicons name="people" size={24} color="white" />
+                  <Text style={tw`text-white font-semibold ml-3`}>Social Hub</Text>
+                </View>
+                <View style={tw`flex-row items-center`}>
+                  {unreadReceivedRequestsCount > 0 && (
+                    <View style={tw`bg-red-500 rounded-full w-5 h-5 justify-center items-center mr-2`}>
+                      <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
+                    </View>
+                  )}
+                  <Ionicons name="chevron-forward" size={24} color="white" />
+                </View>
+              </View>
+            </BlurView>
+          </TouchableOpacity>
+        </View>
+  
+        {/* Interests Section */}
+        <View style={tw`mx-4 mt-6 mb-4`}>
+          <Text style={tw`text-white text-xl font-bold mb-4`}>Interests</Text>
+          <TouchableOpacity
+            style={tw`bg-white/20 rounded-xl p-4`}
+            onPress={() => navigation.navigate('InterestsList', { userId })}
+          >
+            <View style={tw`flex-row items-center justify-between`}>
+              <View style={tw`flex-row items-center`}>
+                <Ionicons name="heart" size={24} color="white" />
+                <Text style={tw`text-white font-semibold ml-3`}>Manage Your Interests</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="white" />
+            </View>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
