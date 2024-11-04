@@ -1,5 +1,6 @@
 import { supabase } from '../../services/supabaseClient';
-import { format, differenceInHours } from 'date-fns';
+import { format,parse, differenceInHours } from 'date-fns';
+import { enUS } from 'date-fns/locale';
 
 export const handleLocalConfirm = async (
   localId: number,
@@ -17,20 +18,21 @@ export const handleLocalConfirm = async (
       throw new Error("End time must be after start time.");
     }
 
-    const { data: availabilityData, error: availabilityError } = await supabase
-      .from('availability')
-      .insert({
-        date: selectedDate,
-        daysofweek: format(new Date(selectedDate), 'EEEE').toLowerCase(),
-        local_id: localId,
-        startdate: selectedDate,
-        enddate: selectedDate,
-        statusday: 'exception',
-        start: startHour,
-        end: endHour
-      })
-      .select()
-      .single();
+// Insérer dans la table availability
+const { data: availabilityData, error: availabilityError } = await supabase
+  .from('availability')
+  .insert({
+    start: startHour,
+    end: endHour,
+    daysofweek: new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase(),
+    local_id: localId,
+    date: selectedDate,
+    startdate: startDateTime.toISOString(),
+    enddate: endDateTime.toISOString(),
+    statusday: 'reserved'
+  })
+  .select()
+  .single();
 
     if (availabilityError) throw availabilityError;
 

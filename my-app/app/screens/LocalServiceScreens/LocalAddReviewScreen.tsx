@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, StatusBar } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { addLocalReview } from '../../services/localService'; // Adjust import based on your actual service
+import { addLocalReview } from '../../services/localService';
 import { useUser } from '../../UserContext';
 import { useToast } from '../../hooks/useToast';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -10,7 +10,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 const LocalAddReviewScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { localId } = route.params as { localId: number }; // Get localId from route params
+  const { localId } = route.params as { localId: number };
   const { userId } = useUser();
   const { toast } = useToast();
   const [rating, setRating] = useState(0);
@@ -22,8 +22,8 @@ const LocalAddReviewScreen = () => {
   const handleSubmitReview = async () => {
     if (!userId) {
       toast({
-        title: "Authentication Required",
-        description: "Please log in to submit a review.",
+        title: "Authentification requise",
+        description: "Veuillez vous connecter pour soumettre un avis.",
         variant: "default",
       });
       return;
@@ -31,25 +31,25 @@ const LocalAddReviewScreen = () => {
 
     if (rating === 0) {
       toast({
-        title: "Invalid Rating",
-        description: "Please select at least one star.",
+        title: "Note invalide",
+        description: "Veuillez sélectionner au moins une étoile.",
         variant: "destructive",
       });
       return;
     }
 
-    const success = await addLocalReview(localId, userId, rating); // Use localId for local service
+    const success = await addLocalReview(localId, userId, rating);
     if (success) {
       toast({
-        title: "Success",
-        description: "Your review has been submitted successfully.",
+        title: "Succès",
+        description: "Votre avis a été soumis avec succès.",
         variant: "default",
       });
       navigation.goBack();
     } else {
       toast({
-        title: "Error",
-        description: "Failed to submit the review. Please try again.",
+        title: "Erreur",
+        description: "Échec de la soumission de l'avis. Veuillez réessayer.",
         variant: "destructive",
       });
     }
@@ -63,7 +63,7 @@ const LocalAddReviewScreen = () => {
       <StatusBar barStyle="light-content" />
       <ScrollView style={styles.scrollView}>
         <View style={styles.contentContainer}>
-          <Text style={styles.title}>Submit a Review</Text>
+          <Text style={styles.title}>Donner un avis</Text>
           <View style={styles.starsContainer}>
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity key={star} onPress={() => handleStarPress(star)}>
@@ -77,7 +77,7 @@ const LocalAddReviewScreen = () => {
             ))}
           </View>
           <TouchableOpacity style={styles.submitButton} onPress={handleSubmitReview}>
-            <Text style={styles.submitButtonText}>Submit Review</Text>
+            <Text style={styles.submitButtonText}>Soumettre l'avis</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -1,74 +1,55 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { View, Text, StyleSheet } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 
 interface LocalLocationMapProps {
   latitude: number;
   longitude: number;
-  address: string;
 }
 
-const LocalLocationMap: React.FC<LocalLocationMapProps> = ({ latitude, longitude, address }) => {
-  const generateMapHTML = () => {
-    const escapedAddress = address.replace(/'/g, "\\'").replace(/"/g, '\\"');
-    
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-          <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-          <style>
-            body { margin: 0; padding: 0; }
-            #map { height: 100vh; width: 100vw; }
-          </style>
-        </head>
-        <body>
-          <div id="map"></div>
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              var map = L.map('map', {
-                zoomControl: true,
-                attributionControl: false
-              }).setView([${latitude}, ${longitude}], 15);
-    
-              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-              }).addTo(map);
-    
-              var marker = L.marker([${latitude}, ${longitude}]).addTo(map);
-              marker.bindPopup('${escapedAddress}').openPopup();
-            });
-          </script>
-        </body>
-      </html>
-    `;
+const LocalLocationMap: React.FC<LocalLocationMapProps> = ({ latitude, longitude }) => {
+  if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
+    return (
+      <View style={styles.container}>
+        <Text>Localisation non disponible</Text>
+      </View>
+    );
+  }
+
+  const region = {
+    latitude: Number(latitude),
+    longitude: Number(longitude),
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
   };
 
   return (
     <View style={styles.container}>
-      <WebView
+      <MapView
         style={styles.map}
-        source={{ html: generateMapHTML() }}
-        scrollEnabled={false}
-        onError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          console.warn('WebView error: ', nativeEvent);
-        }}
-      />
+        region={region}
+        initialRegion={region}
+      >
+        <Marker coordinate={region} title="Localisation" />
+      </MapView>
+      <Text style={styles.addressText}>Localisation</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    height: 300,
+    marginVertical: 16,
     borderRadius: 8,
     overflow: 'hidden',
   },
   map: {
-    flex: 1,
+    height: 200,
+  },
+  addressText: {
+    padding: 8,
+    backgroundColor: 'white',
+    fontSize: 14,
   },
 });
 

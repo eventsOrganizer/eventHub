@@ -1,7 +1,39 @@
 import { supabase } from './supabaseClient';
 import { Service as ImportedService } from './serviceTypes';
 
-export const fetchStaffServices = async (): Promise<ImportedService[]> => {
+interface Comment {
+  details: string;
+  user_id: string;
+  user: { username: string };
+}
+
+interface Like {
+  user_id: string;
+}
+
+interface Location {
+  latitude: number;
+  longitude: number;
+}
+
+interface Service extends Omit<ImportedService, 'comment'> {
+  comments?: Comment[];
+  likes?: Like[];
+  location?: Location | null;
+  imageUrl?: string;
+  priceperhour: number;
+  percentage?: number;
+  media?: { url: string; type?: string }[];
+  subcategory?: {
+    id: number;
+    name: string;
+    category?: {
+      name: string;
+    };
+  };
+}
+
+export const fetchStaffServices = async (): Promise<Service[]> => {
   try {
     const { data, error } = await supabase
       .from('personal')
@@ -29,7 +61,6 @@ export const fetchStaffServices = async (): Promise<ImportedService[]> => {
       return [];
     }
 
-    console.log(`Found ${data.length} services`);
     return data.map((service: any) => ({
       ...service,
       imageUrl: service.media && service.media.length > 0
@@ -41,16 +72,6 @@ export const fetchStaffServices = async (): Promise<ImportedService[]> => {
     return [];
   }
 };
-
-interface PersonalData {
-  media?: { url: string }[];
-  comment?: Comment[];
-  like?: Like[];
-  location?: {
-    latitude: number;
-    longitude: number;
-  };
-}
 
 export const fetchPersonalDetail = async (id: number): Promise<Service | null> => {
   try {
@@ -79,49 +100,22 @@ export const fetchPersonalDetail = async (id: number): Promise<Service | null> =
     if (error) throw error;
     if (!data) return null;
 
-    console.log('Raw data from Supabase:', JSON.stringify(data, null, 2));
-
-    const processedData = {
+    return {
       ...data,
-      images: data.media ? data.media.filter((item: { type: string }) => item.type === 'image').map((item: { url: string }) => item.url) : [],
+      images: data.media?.map((item: { url: string }) => item.url) || [],
       comments: data.comment || [],
       likes: data.like || [],
-      location: data.location && data.location.length > 0 ? {
-        latitude: parseFloat(data.location[0].latitude) || null,
-        longitude: parseFloat(data.location[0].longitude) || null
-      } : null
+      location: data.location?.[0] ? {
+        latitude: parseFloat(data.location[0].latitude),
+        longitude: parseFloat(data.location[0].longitude)
+      } : null,
+      priceperhour: data.priceperhour || 0
     };
-
-    console.log('Processed images:', processedData.images);
-
-    return processedData;
   } catch (error) {
     console.error('Error fetching personal detail:', error);
     return null;
   }
 };
-
-interface Comment {
-  details: string;
-  user_id: string;
-  user: { username: string };
-}
-
-interface Like {
-  user_id: string;
-}
-
-interface Location {
-  latitude: number;
-  longitude: number;
-}
-
-interface Service extends Omit<ImportedService, 'comment'> {
-  comments?: Comment[];
-  likes?: Like[];
-  location?: Location | null;
-  imageUrl?: string;
-}
 
 export const toggleLike = async (personalId: number, userId: string | null) => {
   try {

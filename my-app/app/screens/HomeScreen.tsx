@@ -1,262 +1,198 @@
-import React, { useState , useEffect } from 'react';
-import { View, ScrollView, RefreshControl, SafeAreaView, Button } from 'react-native';
-import { useNavigation , } from '@react-navigation/native';
+import React, { useState, useCallback } from 'react';
+import { View, RefreshControl, SafeAreaView, Button, ActivityIndicator, ScrollView } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import tw from 'twrnc';
+import { fetchEventsByUserInterests } from '../api/event/interestEventService';
 import NavBar from '../components/NavBar';
 import ServiceIcons from '../components/ServiceIcons';
 import EventSection from '../components/event/EventSection';
 import SectionComponent from '../components/SectionComponent';
 import EventMarquee from './EventMarquee';
 import FAB from '../components/FAB';
-import tw from 'twrnc';
-import { supabase } from '../services/supabaseClient';
-import { LinearGradient } from 'expo-linear-gradient';
-import { RootStackParamList } from '../navigation/types';
 import Banner from '../components/event/Banner';
+import { supabase } from '../services/supabaseClient';
+import { RootStackParamList } from '../navigation/types';
+import { useUser } from '../UserContext';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  const [events, setEvents] = useState<any[]>([]);
-  const [topEvents, setTopEvents] = useState<any[]>([]);
-  const [staffServices, setStaffServices] = useState<any[]>([]);
-  const [locals, setLocals] = useState<any[]>([]);
-  const [materialsAndFoodServices, setMaterialsAndFoodServices] = useState<any[]>([]);
-  const [isFabOpen, setIsFabOpen] = useState(false);
-  const [filteredEvents, setFilteredEvents] = useState<any[]>(events);
-  const [filteredServices, setFilteredServices] = useState<any[]>(staffServices);
+  const { userId, selectedInterests } = useUser();
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [data, setData] = useState({
+    events: [],
+    topEvents: [],
+    interestEvents: [],
+    staffServices: [],
+    locals: [],
+    materials: [],
+    filteredEvents: [],
+    filteredServices: []
+  });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const [isFabOpen, setIsFabOpen] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
 
- 
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      console.log('Loading data...'); // Log when loading starts
-      const [
-        eventsData,
-        topEventsData,
-        localsData,
-        staffServicesData,
-        materialsData // Add materialsData here
-      ] = await Promise.all([
-        fetchEvents(),
-        fetchTopEvents(),
-        fetchLocals(),
-        fetchStaffServices(),
-        fetchMaterials() // Call fetchMaterials here
+      setLoading(true);
+      const [events, topEvents, locals, staff, materials] = await Promise.all([
+        supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`),
+        supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).limit(10),
+        supabase.from('local').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`),
+        supabase.from('personal').select('*, subcategory (id,name,category(id,name)), media (url)').limit(5),
+        supabase.from('material').select('*, subcategory (id, name, category (id, name)), media (url)').limit(5)
       ]);
 
-      console.log('Data loaded:', {
-        eventsData,
-        topEventsData,
-        localsData,
-        staffServicesData,
-        materialsData
-      }); // Log all loaded data
+      console.log('Fetching interest events for userId:', userId);
+      const interestEvents = await fetchEventsByUserInterests(userId, selectedInterests);
+      console.log('Interest Events Length:', interestEvents?.length || 0);
 
-      setEvents(eventsData);
-      setTopEvents(topEventsData);
-      setLocals(localsData);
-      setStaffServices(staffServicesData);
-      setMaterialsAndFoodServices(materialsData); // Set materials data
+      setData({
+        events: events.data || [],
+        topEvents: topEvents.data || [],
+        interestEvents: interestEvents || [],
+        staffServices: staff.data || [],
+        locals: locals.data?.filter(item => item.subcategory !== null) || [],
+        materials: materials.data || [],
+        filteredEvents: events.data || [],
+        filteredServices: staff.data || []
+      });
 
-      console.log('Materials and Food Services:', materialsData); // Log materials data
     } catch (error) {
-      console.error('Error fetching data:', error); // Log any errors during loading
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [userId, selectedInterests]);
 
-  const fetchEvents = async () => {
-    const { data, error } = await supabase
-      .from('event')
-      .select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`);
-    if (error) throw new Error(error.message);
-    return data || [];
-  };
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
-  const fetchTopEvents = async () => {
-    const { data, error } = await supabase
-      .from('event')
-      .select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`)
-      .limit(10);
-    if (error) throw new Error(error.message);
-    return data || [];
-  };
-
-  const fetchLocals = async () => {
-    const { data, error } = await supabase
-      .from('local')
-      .select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`)
-    if (error) throw new Error(error.message);
-    return (data || []).filter(item => item.subcategory !== null);
-  };
-
-  const fetchStaffServices = async () => {
-    const { data, error } = await supabase
-      .from('personal')
-      .select('*, subcategory (id,name,category(id,name)), media (url) ')
-      .limit(5);
-    if (error) throw new Error(error.message);
-    return data || [];
-  };
-  const fetchMaterials = async () => {
-    const { data, error } = await supabase
-      .from('material')
-      .select('*, subcategory (id, name, category (id, name)), media (url)')
-      .limit(5);
-
-    if (error) throw new Error(error.message);
-    return data || [];
-
- 
-  };
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    loadData().then(() => setRefreshing(false));
-  }, []);
-
-  const toggleFab = () => setIsFabOpen(!isFabOpen);
-
-
-  const handleSearch = (searchTerm: string) => {
+  const handleSearch = useCallback((searchTerm: string) => {
     if (!searchTerm) {
-      setFilteredEvents(events);
-      setFilteredServices(staffServices);
+      setData(prev => ({
+        ...prev,
+        filteredEvents: prev.events,
+        filteredServices: prev.staffServices
+      }));
       return;
     }
-  
-    const normalizedSearchTerm = searchTerm.toLowerCase();
-  
-    // Filter events
-    const newFilteredEvents = events.filter(event => {
-      const title = event.title?.toLowerCase() || '';
-      const description = event.description?.toLowerCase() || '';
-      return title.includes(normalizedSearchTerm) || description.includes(normalizedSearchTerm);
-    });
-  
-    // Filter services
-    const newFilteredServices = staffServices.filter(service => {
-      const name = service.name?.toLowerCase() || '';
-      const details = service.details?.toLowerCase() || '';
-      return name.includes(normalizedSearchTerm) || details.includes(normalizedSearchTerm);
-    });
-  
-    // Additional filtering based on selected filter
-    if (selectedFilter === 'this_week') {
-      // Implement your logic to filter for this week
-    } else if (selectedFilter === 'this_month') {
-      // Implement your logic to filter for this month
-    }
-  
-    setFilteredEvents(newFilteredEvents);
-    setFilteredServices(newFilteredServices);
-  };
-  
 
+    const term = searchTerm.toLowerCase();
+    setData(prev => ({
+      ...prev,
+      filteredEvents: prev.events.filter(event => 
+        (event.name?.toLowerCase() || '').includes(term) || 
+        (event.description?.toLowerCase() || '').includes(term)
+      ),
+      filteredServices: prev.staffServices.filter(service =>
+        (service.name?.toLowerCase() || '').includes(term) ||
+        (service.details?.toLowerCase() || '').includes(term)
+      )
+    }));
+  }, []);
 
-
-
+  if (loading) {
+    return (
+      <SafeAreaView style={tw`flex-1 justify-center items-center bg-[#001F3F]`}>
+        <ActivityIndicator size="large" color="#4B0082" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={tw`flex-1 bg-[#001F3F]`}>
-      <LinearGradient
-        colors={['#4B0082', '#0066CC', '#00BFFF', 'white']}
-        style={tw`flex-1`}
-      >
+      <LinearGradient colors={['#4B0082', '#0066CC', '#00BFFF', 'white']} style={tw`flex-1`}>
         <BlurView intensity={100} tint="dark" style={tw`py-4`}>
-          <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} onSearch={() => {}} />
+          <NavBar selectedFilter={selectedFilter} setSelectedFilter={setSelectedFilter} onSearch={handleSearch} />
         </BlurView>
         
         <ScrollView
           style={tw`flex-1`}
-          contentContainerStyle={tw`pb-20 pt-4`}
+          contentContainerStyle={tw`pb-40`}
+          showsVerticalScrollIndicator={true}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={loadData} colors={['#4B0082']} />
           }
+          nestedScrollEnabled={true}
         >
-          <EventMarquee events={events.slice(0, 10)} />
-
-          <View style={tw`mt-6`}>
-            <ServiceIcons />
-          </View>
-
+          <EventMarquee events={data.events.slice(0, 10)} />
+          <ServiceIcons />
+          
           <View style={tw`mt-6`}>
             <Banner title="Events" />
+            {data.interestEvents.length > 0 && (
+              <EventSection 
+                title="EVENTS FOR YOU" 
+                events={data.interestEvents} 
+                navigation={navigation} 
+                onSeeAll={() => navigation.navigate('AllEvents', { filter: 'interests' })} 
+                isTopEvents={true} 
+              />
+            )}
             <EventSection 
               title="YOUR EVENTS" 
-              events={events} 
-              navigation={navigation}
-              onSeeAll={() => navigation.navigate('AllEvents')}
-              isTopEvents={false}
+              events={data.filteredEvents} 
+              navigation={navigation} 
+              onSeeAll={() => navigation.navigate('AllEvents')} 
+              isTopEvents={false} 
             />
-
             <EventSection 
               title="HOT EVENTS" 
-              events={topEvents} 
-              navigation={navigation}
-              onSeeAll={() => navigation.navigate('AllEvents')}
-              isTopEvents={true}
+              events={data.topEvents} 
+              navigation={navigation} 
+              onSeeAll={() => navigation.navigate('AllEvents')} 
+              isTopEvents={true} 
             />
           </View>
 
           <View style={tw`mt-6`}>
             <Banner title="Services" />
             <SectionComponent 
-              title="TOP CREW SERVICES"
-             
-              data={staffServices}
-              onSeeAll={() => navigation.navigate('PersonalsScreen', { category: 'all' })}
-              onItemPress={(item) => navigation.navigate('PersonalDetail', { personalId: item.id })}
-              type="staff"
+              title="TOP CREW SERVICES" 
+              data={data.staffServices} 
+              onSeeAll={() => navigation.navigate('PersonalsScreen', { category: 'all' })} 
+              onItemPress={(item) => navigation.navigate('PersonalDetail', { personalId: item.id })} 
+              type="staff" 
             />
-
             <SectionComponent 
               title="VENUE SERVICES" 
-              data={locals} 
-              onSeeAll={() => navigation.navigate('LocalsScreen')}
-              onItemPress={(item) => {
-                console.log('Local service item:', item);
-                navigation.navigate('LocalServiceDetails', { localServiceId: item.id });
-              }}
-              type="local"
+              data={data.locals} 
+              onSeeAll={() => navigation.navigate('LocalsScreen')} 
+              onItemPress={(item) => navigation.navigate('LocalServiceDetails', { localServiceId: item.id })} 
+              type="local" 
             />
-            
             <SectionComponent 
               title="TOP EQUIPMENTS" 
-              data={materialsAndFoodServices} 
-              onSeeAll={() => navigation.navigate('MaterialScreen')}
-              onItemPress={(item) => {
-                console.log('Navigating to MaterialDetailScreen with item:', item);
-                navigation.navigate('MaterialDetail', { material: item });
-              }}
-              type="material"
+              data={data.materials} 
+              onSeeAll={() => navigation.navigate('MaterialScreen')} 
+              onItemPress={(item) => navigation.navigate('MaterialDetail', { material: item })} 
+              type="material" 
             />
           </View>
-
-          <View style={tw`mt-6 mb-4`}>
-            <Button
-              title="Go to Video Rooms"
-              onPress={() => navigation.navigate('VideoRooms')}
-            />
-            
-          </View>
-
-         
+          
+          <Button 
+            title="Go to Video Rooms" 
+            onPress={() => navigation.navigate('VideoRooms')} 
+          />
         </ScrollView>
+        
         <FAB 
-          isFabOpen={isFabOpen}
-          toggleFab={toggleFab}
-          onCreateService={() => navigation.navigate('ServiceSelection')}
-          onCreateEvent={() => navigation.navigate('EventCreation')}
+          isFabOpen={isFabOpen} 
+          toggleFab={() => setIsFabOpen(!isFabOpen)} 
+          onCreateService={() => navigation.navigate('ServiceSelection')} 
+          onCreateEvent={() => navigation.navigate('EventCreation')} 
         />
-         
       </LinearGradient>
     </SafeAreaView>
   );

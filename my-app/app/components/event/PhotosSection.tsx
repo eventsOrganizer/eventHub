@@ -17,6 +17,7 @@ const PhotosSection: React.FC<{ eventId: number }> = ({ eventId }) => {
 
   useEffect(() => {
     fetchPhotos();
+    {console.log(eventId)}
   }, [eventId]);
 
   const fetchPhotos = async () => {
@@ -30,6 +31,7 @@ const PhotosSection: React.FC<{ eventId: number }> = ({ eventId }) => {
       console.error('Error fetching photos:', error);
     } else {
       setPhotos(data || []);
+      console.log(data)
     }
   };
 

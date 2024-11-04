@@ -1,0 +1,93 @@
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  amountContainer: {
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 30,
+    width: '95%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  amountLabel: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 8,
+  },
+  amountValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#28a745',
+  },
+  cardContainer: {
+    width: '95%',
+    padding: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  label: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 10,
+  },
+  cardField: {
+    width: '100%',
+    height: 50,
+  },
+  cardStyle: {
+    backgroundColor: '#ffffff',
+    color: '#000000',
+  },
+  button: {
+    width: '95%',
+    padding: 16,
+    backgroundColor: '#28a745',
+    borderRadius: 12,
+    marginTop: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  buttonDisabled: {
+    backgroundColor: '#93c9a0',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  errorText: {
+    color: '#dc3545',
+    marginTop: 16,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 8,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+});

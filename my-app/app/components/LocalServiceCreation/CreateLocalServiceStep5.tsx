@@ -1,174 +1,230 @@
 import React from 'react';
-import { View, Text, Image, Button, StyleSheet, ScrollView, Alert, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { supabase } from '../../services/supabaseClient'; // Ensure correct import path
-import { useUser } from '../../UserContext'; // Importing useUser
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Assuming you're using MaterialIcons
+import { supabase } from '../../services/supabaseClient';
+import { useUser } from '../../UserContext';
+import { format, parseISO } from 'date-fns';
+import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
+import ProgressBar from '../reuseableForCreationService/ProgressBar';
+import moment from 'moment';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+interface Location {
+  latitude: number;
+  longitude: number;
+}
 
 type RouteParams = {
   serviceName: string;
   description: string;
   images: string[];
   price: string;
-  availabilityFrom: string;
-  availabilityTo: string;
+  subcategoryId: string;
+  subcategoryName: string;
+  startDate: string;
+  endDate: string;
+  interval: string;
+  exceptionDates: string[];
+  location: Location;
   amenities: {
     wifi: boolean;
     parking: boolean;
     aircon: boolean;
   };
-  subcategoryName: string;
-  subcategoryId: string; // Add subcategoryId here
 };
 
-type NavigationProps = StackNavigationProp<RootStackParamList, 'CreateLocalServiceStep5'>;
-
-const CreateLocalServiceStep5 = () => {
-  const navigation = useNavigation<NavigationProps>();
+const CreateLocalServiceStep5: React.FC = () => {
+  const navigation = useNavigation();
   const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
-  const { serviceName, description, images, price, availabilityFrom, availabilityTo, amenities, subcategoryName, subcategoryId } = route.params; // Extract subcategoryId
-
-  // Accessing userId from the context
   const { userId } = useUser();
+  const { 
+    serviceName, 
+    description, 
+    images, 
+    price,
+    subcategoryId,
+    subcategoryName,
+    startDate,
+    endDate,
+    interval,
+    exceptionDates = [],
+    location,
+    amenities
+  } = route.params;
 
   const handleConfirm = async () => {
-    // Check if userId and subcategoryId are available
-    if (!userId) {
-      Alert.alert('You must be logged in to create a service.');
-      return;
-    }
-
-    if (!subcategoryId) {
-      Alert.alert('Subcategory ID is required.');
-      return;
-    }
-
     try {
-      // Insert the local service
+      if (!userId) {
+        Alert.alert('Error', 'You must be logged in to create a service');
+        return;
+      }
+
+      // Create local service
       const { data: localData, error: localError } = await supabase
         .from('local')
         .insert({
           name: serviceName,
           details: description,
-          priceperhour: parseFloat(price),
-          subcategory_id: parseInt(subcategoryId), // Ensure this is a valid integer
+          price: parseFloat(price),
+          subcategory_id: subcategoryId,
           user_id: userId,
+          startdate: startDate,
+          enddate: endDate,
+          interval: interval
         })
         .select()
         .single();
 
       if (localError) throw localError;
 
-      // Create an album for the service
-      const { data: albumData, error: albumError } = await supabase
-        .from('album')
+      // Insert availability data
+      const availabilityData = exceptionDates.map(dateString => ({
+        local_id: localData.id,
+        date: dateString,
+        startdate: startDate,
+        enddate: endDate,
+        daysofweek: format(parseISO(dateString), 'EEEE').toLowerCase(),
+        statusday: 'exception'
+      }));
+
+      if (availabilityData.length > 0) {
+        const { error: availabilityError } = await supabase
+          .from('availability')
+          .insert(availabilityData);
+
+        if (availabilityError) throw availabilityError;
+      }
+
+      // Insert location
+      if (location) {
+        const { error: locationError } = await supabase
+          .from('location')
+          .insert({
+            latitude: location.latitude,
+            longitude: location.longitude,
+            local_id: localData.id
+          });
+
+        if (locationError) throw locationError;
+      }
+
+      // Insert amenities
+      const { error: amenitiesError } = await supabase
+        .from('amenities')
         .insert({
-          name: `${serviceName} Album`,
-          details: `Album for ${serviceName}`,
-          user_id: userId,
-        })
-        .select()
-        .single();
+          local_id: localData.id,
+          wifi: amenities.wifi,
+          parking: amenities.parking,
+          aircon: amenities.aircon
+        });
 
-      if (albumError) throw albumError;
+      if (amenitiesError) throw amenitiesError;
 
-      // Insert images into the media table
-      const mediaPromises = images.map(imageUrl => 
-        supabase
+      // Insert images
+      for (const imageUrl of images) {
+        const { error: mediaError } = await supabase
           .from('media')
           .insert({
-            local_id: localData.id,
             url: imageUrl,
-            album_id: albumData.id,
-            user_id: userId,
-          })
-      );
+            local_id: localData.id
+          });
 
-      await Promise.all(mediaPromises);
+        if (mediaError) throw mediaError;
+      }
 
-      Alert.alert('Service and images submitted successfully!');
-      navigation.navigate('Home');
+      Alert.alert('Success', 'Service created successfully!');
+      navigation.navigate('HomeScreen' as never);
     } catch (error) {
-      console.error('Error submitting service:', error);
-      Alert.alert('Error submitting service. Please try again.');
+      console.error('Error creating local service:', error);
+      Alert.alert('Error', 'Failed to create service. Please try again.');
     }
   };
 
   return (
-    <View style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name="arrow-back" size={24} color="#fff" />
-      </TouchableOpacity>
+    <ScrollView style={styles.container}>
+      <Animated.View entering={FadeInRight} exiting={FadeOutLeft} style={styles.card}>
+        <ProgressBar step={5} totalSteps={5} />
+        <Text style={styles.title}>Créer un service local</Text>
+        <Text style={styles.subtitle}>Étape 5: Confirmation</Text>
 
-      {/* Spacing between the arrow and content */}
-      <View style={styles.spacing} />
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoLabel}>Nom:</Text>
+          <Text style={styles.infoText}>{serviceName}</Text>
 
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <Image source={{ uri: images[0] }} style={styles.image} />
+          <Text style={styles.infoLabel}>Description:</Text>
+          <Text style={styles.infoText}>{description}</Text>
 
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.label}>Local Name:</Text>
-            <Text style={styles.value}>{serviceName}</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <Text style={styles.label}>Price:</Text>
-            <Text style={styles.price}>${price} /hr</Text>
-          </View>
-        </View>
+          <Text style={styles.infoLabel}>Prix:</Text>
+          <Text style={styles.infoText}>{price}€/heure</Text>
 
-        <Text style={styles.label}>Category:</Text>
-        <Text style={styles.subcategory}>{subcategoryName}</Text>
+          <Text style={styles.infoLabel}>Intervalle:</Text>
+          <Text style={styles.infoText}>{interval}</Text>
 
-        {/* Center only the "Description:" label */}
-        <Text style={[styles.label, styles.centeredLabel]}>Description:</Text>
-        <Text style={styles.description}>{description}</Text>
+          <Text style={styles.infoLabel}>Date de début:</Text>
+          <Text style={styles.infoText}>{moment(startDate).format('MMMM Do YYYY')}</Text>
 
-        <View style={styles.availabilityContainer}>
-          <View style={styles.availability}>
-            <Text style={styles.label}>Available From:</Text>
-            <Text style={styles.value}>{availabilityFrom}</Text>
-          </View>
-          <View style={styles.availability}>
-            <Text style={styles.label}>Available To:</Text>
-            <Text style={styles.value}>{availabilityTo}</Text>
-          </View>
-        </View>
+          <Text style={styles.infoLabel}>Date de fin:</Text>
+          <Text style={styles.infoText}>{moment(endDate).format('MMMM Do YYYY')}</Text>
 
-        <Text style={styles.label}>Amenities:</Text>
-        <View style={styles.amenitiesContainer}>
-          <View style={styles.amenity}>
-            <Icon name="wifi" size={30} color={amenities.wifi ? 'red' : 'grey'} />
-            <Text style={[styles.amenityText, { color: amenities.wifi ? '#fff' : 'grey' }]}>Wifi</Text>
-          </View>
-          <View style={styles.amenity}>
-            <Icon name="local-parking" size={30} color={amenities.parking ? 'red' : 'grey'} />
-            <Text style={[styles.amenityText, { color: amenities.parking ? '#fff' : 'grey' }]}>Parking</Text>
-          </View>
-          <View style={styles.amenity}>
-            <Icon name="ac-unit" size={30} color={amenities.aircon ? 'red' : 'grey'} />
-            <Text style={[styles.amenityText, { color: amenities.aircon ? '#fff' : 'grey' }]}>Air Conditioning</Text>
-          </View>
-        </View>
-
-        <Text style={styles.label}>Images:</Text>
-        <FlatList
-          data={images}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <Image source={{ uri: item }} style={styles.scrollableImage} />
+          <Text style={styles.infoLabel}>Dates d'exception:</Text>
+          {exceptionDates.length > 0 ? (
+            exceptionDates.map((date, index) => (
+              <Text key={index} style={styles.infoText}>
+                -{moment(date).format('MMMM Do YYYY')}
+              </Text>
+            ))
+          ) : (
+            <Text style={styles.infoText}>Aucune</Text>
           )}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-        />
-      </ScrollView>
-      <View style={styles.buttonContainer}>
-        <Button title="Confirm and Submit" onPress={handleConfirm} color="#FF3B30" />
-      </View>
-    </View>
+        </View>
+
+        <View style={styles.amenitiesContainer}>
+          <Text style={styles.infoLabel}>Équipements:</Text>
+          <View style={styles.amenitiesGrid}>
+            <View style={styles.amenityItem}>
+              <Icon name="wifi" size={24} color={amenities.wifi ? '#FF3B30' : '#666'} />
+              <Text style={styles.amenityText}>WiFi</Text>
+            </View>
+            <View style={styles.amenityItem}>
+              <Icon name="local-parking" size={24} color={amenities.parking ? '#FF3B30' : '#666'} />
+              <Text style={styles.amenityText}>Parking</Text>
+            </View>
+            <View style={styles.amenityItem}>
+              <Icon name="ac-unit" size={24} color={amenities.aircon ? '#FF3B30' : '#666'} />
+              <Text style={styles.amenityText}>Climatisation</Text>
+            </View>
+          </View>
+        </View>
+
+        {location && (
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoLabel}>Localisation:</Text>
+            <Text style={styles.infoText}>
+              Latitude: {location.latitude.toFixed(6)}
+            </Text>
+            <Text style={styles.infoText}>
+              Longitude: {location.longitude.toFixed(6)}
+            </Text>
+          </View>
+        )}
+
+        <Text style={styles.imagesTitle}>Images</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageContainer}>
+          {images.map((imageUri, index) => (
+            <Image key={index} source={{ uri: imageUri }} style={styles.image} />
+          ))}
+        </ScrollView>
+
+        <TouchableOpacity 
+          style={styles.button}
+          onPress={handleConfirm}
+        >
+          <Text style={styles.buttonText}>Confirmer et Soumettre</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </ScrollView>
   );
 };
 
@@ -177,98 +233,76 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  backButton: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    zIndex: 1,
-  },
-  spacing: {
-    height: 60, // Spacing after the back button
-  },
-  scrollView: {
+  card: {
+    backgroundColor: '#111',
+    borderRadius: 10,
     padding: 20,
-    paddingBottom: 80, // Make space for the sticky button
+    margin: 20,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerRight: {
-    alignItems: 'flex-end',
-  },
-  subcategory: {
-    fontSize: 16,
-    color: '#fff',
-    marginLeft: 10,
-  },
-  price: {
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FF3B30',
+    marginBottom: 10,
   },
-  label: {
+  subtitle: {
+    fontSize: 16,
+    color: '#fff',
+    marginBottom: 20,
+  },
+  infoContainer: {
+    marginBottom: 20,
+  },
+  infoLabel: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 5,
   },
-  centeredLabel: {
-    textAlign: 'center', // Center only the Description label
-  },
-  description: {
+  infoText: {
     fontSize: 16,
     color: '#fff',
-    marginBottom: 20, // Space between description and next element
-    textAlign: 'center', // Center the description text
-  },
-  value: {
-    fontSize: 16,
-    color: '#fff',
-    marginBottom: 15,
-  },
-  image: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  availabilityContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  availability: {
-    flex: 1,
-    marginHorizontal: 5, // Add spacing between the availability items
+    marginBottom: 10,
   },
   amenitiesContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 20,
   },
-  amenity: {
+  amenitiesGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  amenityItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   amenityText: {
     marginLeft: 10,
   },
-  scrollableImage: {
+  imagesTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  imageContainer: {
+    marginBottom: 20,
+  },
+  image: {
     width: 100,
     height: 100,
     borderRadius: 10,
     marginRight: 10,
   },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
+  button: {
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });
 

@@ -1,28 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useUser } from '../UserContext';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { handleRequestConfirmation, handleRequestRejection } from '../services/requestService';
 import { useToast } from '../hooks/useToast';
 import { useNotifications } from '../hooks/useNotifications';
-import { Request, RouteParams } from '../services/requestTypes';
+import { Request } from '../services/requestTypes';
 import { fetchSentRequests, fetchReceivedRequests } from '../services/requestQuerries';
-import   ReceivedRequestCard  from './ReceivedRequestCard';
-import  SentRequestCard  from './SentRequestCard';
-import  FilterButtons  from './FilterButtons';
+import ReceivedRequestCard from '../screens/ReceivedRequest/ReceivedRequestCard';
+import SentRequestCard from '../screens/SentRequestCard';
 import { RootStackParamList } from '../navigation/types';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import StatusFilters from '../screens/SentRequestCard/StatusFilters';
 
 const YourRequests: React.FC = () => {
   const { userId } = useUser();
-  const route = useRoute<RouteProp<Record<string, RouteParams>, string>>();
+  const route = useRoute<RouteProp<Record<string, { mode: 'sent' | 'received' }>, string>>();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { mode } = route.params;
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [filteredRequests, setFilteredRequests] = useState<Request[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [categories, setCategories] = useState<string[]>(['All', 'Service', 'Item', 'Skill']);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [categories] = useState<string[]>(['All', 'Crew', 'Local', 'Material']);
   const { toast } = useToast();
   const { unreadCount } = useNotifications(userId);
 
@@ -40,10 +42,9 @@ const YourRequests: React.FC = () => {
       const data = mode === 'sent' 
         ? await fetchSentRequests(userId)
         : await fetchReceivedRequests(userId);
-        
-      console.log('Fetched requests:', data); // Pour le débogage
+      
       setRequests(data);
-      setFilteredRequests(data);
+      filterRequests(selectedCategory, selectedStatus, data);
     } catch (error) {
       console.error('Error fetching requests:', error);
       toast({
@@ -56,6 +57,24 @@ const YourRequests: React.FC = () => {
     }
   };
 
+  const filterRequests = (category: string, status: string | null, requestsList = requests) => {
+    let filtered = [...requestsList];
+
+    if (category !== 'All') {
+      filtered = filtered.filter(request => 
+        category === 'Crew' ? request.type === 'Personal' : request.type === category
+      );
+    }
+
+    if (mode === 'sent' && status) {
+      filtered = filtered.filter(request => request.status === status);
+    }
+
+    setSelectedCategory(category);
+    setSelectedStatus(status);
+    setFilteredRequests(filtered);
+  };
+
   const handleConfirm = async (requestId: number) => {
     try {
       const request = requests.find(r => r.id === requestId);
@@ -66,15 +85,14 @@ const YourRequests: React.FC = () => {
         toast({
           title: result.title,
           description: result.message,
-          variant: result.variant,
+          variant: "default",
         });
         
-        // Update local state immediately
         const updatedRequests = requests.map(req => 
           req.id === requestId ? { ...req, status: 'accepted' as const } : req
         );
         setRequests(updatedRequests);
-        setFilteredRequests(updatedRequests);
+        filterRequests(selectedCategory, selectedStatus, updatedRequests);
       }
     } catch (error) {
       console.error('Error confirming request:', error);
@@ -96,15 +114,14 @@ const YourRequests: React.FC = () => {
         toast({
           title: result.title,
           description: result.message,
-          variant: result.variant,
+          variant: "default",
         });
         
-        // Update local state immediately
         const updatedRequests = requests.map(req => 
           req.id === requestId ? { ...req, status: 'refused' as const } : req
         );
         setRequests(updatedRequests);
-        setFilteredRequests(updatedRequests);
+        filterRequests(selectedCategory, selectedStatus, updatedRequests);
       }
     } catch (error) {
       console.error('Error rejecting request:', error);
@@ -116,31 +133,17 @@ const YourRequests: React.FC = () => {
     }
   };
 
-  const filterRequests = (category: string) => {
-    setSelectedCategory(category);
-    setFilteredRequests(
-      category === 'All' 
-        ? requests 
-        : requests.filter(request => request.type === category)
-    );
-  };
-
   const handleDelete = async (requestId: number) => {
     const updatedRequests = requests.filter(req => req.id !== requestId);
     setRequests(updatedRequests);
-    setFilteredRequests(updatedRequests);
-  };
-
-  const handleRequestDeleted = () => {
-    // Rafraîchir la liste des demandes après une suppression
-    fetchRequests();
+    filterRequests(selectedCategory, selectedStatus, updatedRequests);
   };
 
   const renderRequestItem = ({ item }: { item: Request }) => {
     return mode === 'sent' ? (
       <SentRequestCard 
         item={item} 
-        onRequestDeleted={handleRequestDeleted}
+        onRequestDeleted={() => handleDelete(item.id)}
       />
     ) : (
       <ReceivedRequestCard 
@@ -152,6 +155,46 @@ const YourRequests: React.FC = () => {
     );
   };
 
+  const getIconNameForCategory = (category: string) => {
+    switch (category) {
+      case 'Crew':
+        return 'group';
+      case 'Local':
+        return 'place';
+      case 'Material':
+        return 'inventory';
+      default:
+        return 'all-inclusive';
+    }
+  };
+
+  const renderFilterButtons = () => (
+    <View style={styles.filterContainer}>
+      {categories.map((category) => (
+        <TouchableOpacity
+          key={category}
+          style={[
+            styles.filterButton,
+            selectedCategory === category && styles.selectedFilterButton
+          ]}
+          onPress={() => filterRequests(category, selectedStatus)}
+        >
+          <Icon
+            name={getIconNameForCategory(category)}
+            size={24}
+            color={selectedCategory === category ? '#4CAF50' : '#666'}
+          />
+          <Text style={[
+            styles.filterText,
+            selectedCategory === category && styles.selectedFilterText
+          ]}>
+            {category}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -162,20 +205,18 @@ const YourRequests: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        {mode === 'sent' ? 'Your Requests' : 'Received Requests'}
-      </Text>
-      
-      <FilterButtons 
-        selectedCategory={selectedCategory}
-        onSelectCategory={filterRequests}
-        categories={categories}
-      />
-
+      {renderFilterButtons()}
+      {mode === 'sent' && (
+        <StatusFilters
+          selectedStatus={selectedStatus}
+          onSelectStatus={(status) => filterRequests(selectedCategory, status)}
+        />
+      )}
       <FlatList
         data={filteredRequests}
         renderItem={renderRequestItem}
-        keyExtractor={item => `${item.type}-${item.id}`}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.listContainer}
       />
     </View>
   );
@@ -184,9 +225,6 @@ const YourRequests: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  content: {
-    flex: 1,
     padding: 16,
   },
   loadingContainer: {
@@ -194,131 +232,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 24,
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 24,
-    paddingHorizontal: 8,
+    marginBottom: 16,
+  },
+  filterButton: {
+    alignItems: 'center',
+  },
+  selectedFilterButton: {
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: 8,
+    padding: 8,
+  },
+  filterText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  selectedFilterText: {
+    color: '#4CAF50',
+    fontWeight: 'bold',
   },
   listContainer: {
     paddingBottom: 24,
-  },
-  requestCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-  },
-  requestHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  requestName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  requestStatus: {
-    fontSize: 14,
-    color: '#666',
-  },
-  requestType: {
-    fontSize: 14,
-    color: '#666',
-  },
-  requestSubcategory: {
-    fontSize: 14,
-    color: '#666',
-  },
-  requestImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  expandedContent: {
-    marginBottom: 16,
-  },
-  expandedText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  detailButton: {
-    backgroundColor: '#4CAF50',
-    padding: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  detailButtonText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-  },
-  confirmButton: {
-    flex: 1,
-    backgroundColor: '#4CAF50',
-    padding: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  rejectButton: {
-    flex: 1,
-    backgroundColor: '#f44336',
-    padding: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#FFF',
-    textAlign: 'center',
-    fontSize: 12,
-  },
-  serviceNameLink: {
-    color: 'blue',
-    textDecorationLine: 'underline',
-    marginBottom: 5,
-  },
-  serviceDetailsCard: {
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  serviceDetailImage: {
-    width: '100%',
-    height: 100,
-    borderRadius: 5,
-    marginBottom: 10,
-    resizeMode: 'cover',
-  },
-  serviceDetailText: {
-    fontSize: 12,
-    marginBottom: 3,
-  },
-  statusText: {
-    textAlign: 'center',
-    fontWeight: 'bold',
-    color: '#666',
-    marginTop: 5,
-  },
+  }
 });
 
 export default YourRequests;
