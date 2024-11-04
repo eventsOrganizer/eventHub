@@ -204,29 +204,29 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({
 const styles = StyleSheet.create({
   joinButton: {
     backgroundColor: 'rgba(76, 175, 80, 0.8)',
-    padding: 12,
-    borderRadius: 12,
+    padding: 4,
+    borderRadius: 8,
     alignItems: 'center',
-    minWidth: 120,
+    minWidth: 80,
   },
   joinedButton: {
     backgroundColor: 'rgba(158, 158, 158, 0.8)',
-    padding: 12,
-    borderRadius: 12,
+    padding: 4,
+    borderRadius: 8,
     alignItems: 'center',
-    minWidth: 120,
+    minWidth: 80,
   },
   pendingButton: {
     backgroundColor: 'rgba(255, 160, 0, 0.8)',
-    padding: 12,
-    borderRadius: 12,
+    padding: 4,
+    borderRadius: 8,
     alignItems: 'center',
-    minWidth: 120,
+    minWidth: 80,
   },
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 10,
   },
 });
 
