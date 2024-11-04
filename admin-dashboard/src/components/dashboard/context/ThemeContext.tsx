@@ -1,37 +1,38 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+// import React, { createContext, useContext, useState, ReactNode } from 'react';
+// import { ThemeProvider, createTheme } from '@mui/material/styles';
 
-interface ThemeContextType {
-  toggleTheme: () => void;
-  isDarkMode: boolean;
-}
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+// interface ThemeContextType {
+//   toggleTheme: () => void;
+//   isDarkMode: boolean;
+// }
 
-export const useThemeContext = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useThemeContext must be used within a ThemeProvider');
-  }
-  return context;
-};
+// const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const CustomThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+// export const useThemeContext = () => {
+//   const context = useContext(ThemeContext);
+//   if (!context) {
+//     throw new Error('useThemeContext must be used within a ThemeProvider');
+//   }
+//   return context;
+// };
 
-  const toggleTheme = () => {
-    setIsDarkMode((prevMode) => !prevMode);
-  };
+// export const CustomThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+//   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  const theme = createTheme({
-    palette: {
-      mode: isDarkMode ? 'dark' : 'light',
-    },
-  });
+//   const toggleTheme = () => {
+//     setIsDarkMode((prevMode) => !prevMode);
+//   };
 
-  return (
-    <ThemeContext.Provider value={{ toggleTheme, isDarkMode }}>
-      <ThemeProvider theme={theme}>{children}</ThemeProvider>
-    </ThemeContext.Provider>
-  );
-};
+//   const theme = createTheme({
+//     palette: {
+//       mode: isDarkMode ? 'dark' : 'light',
+//     },
+//   });
+
+//   return (
+//     <ThemeContext.Provider value={{ toggleTheme, isDarkMode }}>
+//       <ThemeProvider theme={theme}>{children}</ThemeProvider>
+//     </ThemeContext.Provider>
+//   );
+// };

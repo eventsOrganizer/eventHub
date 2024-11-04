@@ -33,12 +33,9 @@ const defaultValues = { email: 'sofia@devias.io', password: 'Secret1' } satisfie
 
 export function SignInForm(): React.JSX.Element {
   const router = useRouter();
-
   const { checkSession } = useUser();
-
-  const [showPassword, setShowPassword] = React.useState<boolean>();
-
   const [isPending, setIsPending] = React.useState<boolean>(false);
+  const [showPassword, setShowPassword] = React.useState<boolean>(false);
 
   const {
     control,
@@ -50,21 +47,23 @@ export function SignInForm(): React.JSX.Element {
   const onSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
       setIsPending(true);
+      try {
+        const { error } = await authClient.signInWithPassword(values);
+        if (error) {
+          setError('root', { type: 'server', message: error });
+          setIsPending(false);
+          return;
+        }
 
-      const { error } = await authClient.signInWithPassword(values);
-
-      if (error) {
-        setError('root', { type: 'server', message: error });
+        // Refresh the auth state
+        await checkSession?.();
+        router.refresh();
+      } catch (error) {
+        console.error('Unexpected error during sign-in:', error);
+        setError('root', { message: 'Unexpected error occurred. Please try again.' });
+      } finally {
         setIsPending(false);
-        return;
       }
-
-      // Refresh the auth state
-      await checkSession?.();
-
-      // UserProvider, for this case, will not refresh the router
-      // After refresh, GuestGuard will handle the redirect
-      router.refresh();
     },
     [checkSession, router, setError]
   );
@@ -82,13 +81,13 @@ export function SignInForm(): React.JSX.Element {
       </Stack>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={2}>
-          <Controller
+        <Controller
             control={control}
             name="email"
             render={({ field }) => (
               <FormControl error={Boolean(errors.email)}>
                 <InputLabel>Email address</InputLabel>
-                <OutlinedInput {...field} label="Email address" type="email" />
+                <OutlinedInput {...field} label="Email address" type="email" autoComplete="username" />
                 {errors.email ? <FormHelperText>{errors.email.message}</FormHelperText> : null}
               </FormControl>
             )}
@@ -122,6 +121,7 @@ export function SignInForm(): React.JSX.Element {
                   }
                   label="Password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
                 />
                 {errors.password ? <FormHelperText>{errors.password.message}</FormHelperText> : null}
               </FormControl>

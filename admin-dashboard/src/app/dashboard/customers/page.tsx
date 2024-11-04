@@ -5,7 +5,7 @@ import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
-import dayjs from 'dayjs';
+import dayjs from 'daylljs';
 import { useRouter } from 'next/navigation';
 
 import { CustomersFilters } from '@/components/dashboard/customer/customers-filters';
@@ -13,7 +13,6 @@ import { CustomersTable } from '@/components/dashboard/customer/customers-table'
 import { CreateUserModal } from '@/components/dashboard/customer/CreateUserModal';
 import { supabase } from '../../../lib/supabase-client';
 import type { Customer } from '@/components/dashboard/customer/customers-table';
-import { supabase } from '../../../lib/supabase-client';
 
 export default function Page(): React.JSX.Element {
   const [customers, setCustomers] = useState<Customer[]>([]);
