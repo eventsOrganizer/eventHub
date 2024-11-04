@@ -12,7 +12,9 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import { useSelection } from '../../../hooks/use-selection';
+import { useRouter } from 'next/navigation';
 
 interface LocalService {
   id: string;
@@ -64,6 +66,8 @@ export function LocalTable({
     }
   };
 
+  const router = useRouter();
+
   return (
     <Card>
       <Box sx={{ overflowX: 'auto' }}>
@@ -85,10 +89,13 @@ export function LocalTable({
               </TableCell>
               <TableCell>Image</TableCell>
               <TableCell>Name</TableCell>
+              
               <TableCell>Price</TableCell>
+             
               <TableCell>Subcategory</TableCell>
               <TableCell>Owner</TableCell>
               <TableCell>ID</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -142,10 +149,23 @@ export function LocalTable({
                     )}
                   </TableCell>
                   <TableCell>{row.name}</TableCell>
+         
                   <TableCell>{row.price}</TableCell>
+              
                   <TableCell>{row.subcategoryName}</TableCell>
                   <TableCell>{row.owner}</TableCell>
                   <TableCell>{row.id}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/local-details?id=${row.id}`);
+                      }}
+                    >
+                      View Details
+                    </Button>
+                  </TableCell>
                 </TableRow>
               );
             })}

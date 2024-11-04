@@ -8,11 +8,13 @@ import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
+import Button from '@mui/material/Button';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import { useSelection } from '../../../hooks/use-selection';
+import { useRouter } from 'next/navigation';
 
 interface Material {
   id: string;
@@ -65,6 +67,8 @@ export function MaterialTable({
     }
   };
 
+  const router = useRouter();
+
   return (
     <Card>
       <Box sx={{ overflowX: 'auto' }}>
@@ -91,6 +95,7 @@ export function MaterialTable({
               <TableCell>Price per Hour</TableCell>
               <TableCell>Subcategory</TableCell>
               <TableCell>ID</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -149,6 +154,17 @@ export function MaterialTable({
                   <TableCell>{row.price_per_hour}</TableCell>
                   <TableCell>{row.subcategoryName}</TableCell>
                   <TableCell>{row.id}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/material-details?id=${row.id}`);
+                      }}
+                    >
+                      View Details
+                    </Button>
+                  </TableCell>
                 </TableRow>
               );
             })}

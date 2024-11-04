@@ -4,12 +4,16 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import Button from '@mui/material/Button';
+import { useRouter } from 'next/navigation';
 
 interface ServicesTableProps {
   services: any[];
 }
 
 export function ServicesTable({ services }: ServicesTableProps): React.JSX.Element {
+  const router = useRouter();
+
   return (
     <Table>
       <TableHead> 
@@ -19,6 +23,7 @@ export function ServicesTable({ services }: ServicesTableProps): React.JSX.Eleme
           <TableCell>Price Per Hour</TableCell>
           <TableCell>Start Date</TableCell>
           <TableCell>End Date</TableCell>
+          <TableCell>Actions</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -29,6 +34,14 @@ export function ServicesTable({ services }: ServicesTableProps): React.JSX.Eleme
             <TableCell>{service.priceperhour}</TableCell>
             <TableCell>{service.startdate}</TableCell>
             <TableCell>{service.enddate}</TableCell>
+            <TableCell>
+              <Button
+                variant="outlined"
+                onClick={() => router.push(`/services-details?id=${service.id}`)}
+              >
+                View Details
+              </Button>
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
