@@ -1,14 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
+import { FAB } from 'react-native-paper';
+import { MotiView } from 'moti';
 import { PersonalScreenNavigationProp } from '../../navigation/types';
 import { Service } from '../../services/serviceTypes';
 import { fetchStaffServices } from '../../services/personalService';
 import CategoryList from '../../components/PersonalServiceComponents/CategoryList';
 import ServiceItem from './ServiceItem';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { FAB } from 'react-native-paper';
+import { theme } from '../../../lib/theme';
 
 const PersonalsScreen: React.FC = () => {
   const [staffServices, setStaffServices] = useState<Service[]>([]);
@@ -96,61 +99,82 @@ const PersonalsScreen: React.FC = () => {
     );
   }
 
+  
   return (
     <LinearGradient
-      colors={['#D0DCE8', '#B8C8D9', '#A0B4CA', '#88A0BB']}
-      style={styles.container as ViewStyle}
+      colors={[theme.colors.gradientStart, theme.colors.gradientMiddle, theme.colors.gradientEnd]}
+      style={styles.container}
     >
-      <View style={styles.filterContainer as ViewStyle}>
-        <View style={styles.searchBar as ViewStyle}>
-          <Ionicons name="search" size={18} color="#FFFFFF" style={styles.searchIcon as TextStyle} />
-          <TextInput
-            style={styles.searchInput as TextStyle}
-            placeholder="Rechercher des services"
-            placeholderTextColor="#CCCCCC"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+      <MotiView
+        from={{ opacity: 0, translateY: -20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 500 }}
+        style={styles.content}
+      >
+        <BlurView intensity={80} tint="light" style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Ionicons name="search" size={20} color={theme.colors.secondary} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search services"
+              placeholderTextColor={theme.colors.cardDescription}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+          <View style={styles.priceFilter}>
+            <TextInput
+              style={styles.priceInput}
+              placeholder="Min price"
+              placeholderTextColor={theme.colors.cardDescription}
+              value={minPrice}
+              onChangeText={setMinPrice}
+              keyboardType="numeric"
+            />
+            <View style={styles.priceSeparator} />
+            <TextInput
+              style={styles.priceInput}
+              placeholder="Max price"
+              placeholderTextColor={theme.colors.cardDescription}
+              value={maxPrice}
+              onChangeText={setMaxPrice}
+              keyboardType="numeric"
+            />
+          </View>
+        </BlurView>
+
+        <CategoryList selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.accent} />
+          </View>
+        ) : error ? (
+          <BlurView intensity={80} tint="light" style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={loadServices}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </BlurView>
+        ) : (
+          <FlatList
+            data={displayedServices}
+            renderItem={renderServiceItem}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.serviceListContent}
+            onEndReached={loadMoreServices}
+            onEndReachedThreshold={0.1}
+            showsVerticalScrollIndicator={false}
           />
-        </View>
-        <View style={styles.priceFilter as ViewStyle}>
-          <TextInput
-            style={styles.priceInput as TextStyle}
-            placeholder="Min"
-            placeholderTextColor="#CCCCCC"
-            value={minPrice}
-            onChangeText={setMinPrice}
-            keyboardType="numeric"
-          />
-         <Text style={styles.priceSeparator}>-</Text>
-          <TextInput
-            style={styles.priceInput as TextStyle}
-            placeholder="Max"
-            placeholderTextColor="#CCCCCC"
-            value={maxPrice}
-            onChangeText={setMaxPrice}
-            keyboardType="numeric"
-          />
-        </View>
-      </View>
-      <CategoryList selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
-      {filteredServices.length > 0 ? (
-        <FlatList
-          data={displayedServices}
-          renderItem={renderServiceItem}
-          keyExtractor={(item) => item.id.toString()}
-          style={styles.serviceList}
-          contentContainerStyle={styles.serviceListContent}
-          onEndReached={loadMoreServices}
-          onEndReachedThreshold={0.1}
+        )}
+
+        <FAB
+          style={styles.fab}
+          icon="plus"
+          color={theme.colors.primary}
+          onPress={() => navigation.navigate('CreatePersonalServiceStack' as never)}
         />
-      ) : (
-        <Text style={{...styles.noServicesText, textAlign: 'center'}}>Aucun service disponible</Text>
-      )}
-      <FAB
-        style={{...styles.fab, position: 'absolute', margin: 10, right: 10, bottom: 10, backgroundColor: '#4A90E2'}}
-        icon="plus"
-        onPress={() => {navigation.navigate('CreatePersonalServiceStack' as never)}}
-      />
+      </MotiView>
     </LinearGradient>
   );
 };
@@ -159,88 +183,89 @@ const styles = {
   container: {
     flex: 1,
   },
+  content: {
+    flex: 1,
+    paddingTop: theme.spacing.xl,
+  },
+  searchContainer: {
+    margin: theme.spacing.md,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.xl,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.8)',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: theme.spacing.sm,
+    color: theme.colors.secondary,
+    fontSize: theme.typography.body.fontSize,
+  },
+  priceFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  priceInput: {
+    flex: 1,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.lg,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    color: theme.colors.secondary,
+    fontSize: theme.typography.body.fontSize,
+  },
+  priceSeparator: {
+    width: theme.spacing.md,
+    height: 1,
+    backgroundColor: theme.colors.accent,
+    marginHorizontal: theme.spacing.sm,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  errorContainer: {
+    margin: theme.spacing.md,
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.xl,
     alignItems: 'center',
   },
   errorText: {
-    fontSize: 18,
-    color: '#FF3B30',
-    marginBottom: 20,
+    fontSize: theme.typography.body.fontSize,
+    color: theme.colors.error,
+    marginBottom: theme.spacing.md,
+    textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#4A90E2',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
+    backgroundColor: theme.colors.accent,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.full,
   },
   retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
-  filterContainer: {
-    backgroundColor: '#3A7BD5',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#5A9AE4',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    marginBottom: 6,
-  },
-  searchIcon: {
-    marginRight: 6,
-  },
-  searchInput: {
-    flex: 1,
-    height: 32,
-    color: '#FFFFFF',
-    fontSize: 14,
-  },
-  priceFilter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  priceInput: {
-    backgroundColor: '#5A9AE4',
-    borderRadius: 8,
-    padding: 6,
-    width: '45%',
-    color: '#FFFFFF',
-    fontSize: 14,
-  },
-  priceSeparator: {
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  serviceList: {
-    flex: 1,
+    color: theme.colors.primary,
+    fontSize: theme.typography.body.fontSize,
+    fontWeight: '600',
   },
   serviceListContent: {
-    padding: 10,
-  },
-  noServicesText: {
-    fontSize: 18,
-    color: '#8E8E93',
-    textAlign: 'center',
-    marginTop: 20,
+    padding: theme.spacing.md,
+    paddingBottom: 100,
   },
   fab: {
     position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#4A90E2',
+    right: theme.spacing.lg,
+    bottom: theme.spacing.xl,
+    backgroundColor: theme.colors.accent,
   },
 };
 

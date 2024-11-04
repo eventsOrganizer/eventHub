@@ -1,21 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { theme } from '../../lib/theme';
+import { theme } from '../../../lib/theme';
 
-interface EventMarqueeProps {
-  events: Array<{ name: string }>;
+interface ServiceMarqueeProps {
+  services: Array<{ name: string }>;
 }
 
 const { width } = Dimensions.get('window');
 
-const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
+const ServiceMarquee: React.FC<ServiceMarqueeProps> = ({ services }) => {
   const scrollX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (!events.length) return;
-
-    const textWidth = events.reduce((acc, event) => acc + event.name.length * 16 + 300, 0);
+    const textWidth = services.reduce((acc, service) => acc + service.name.length * 16 + 300, 0);
     const duration = textWidth * 50;
 
     const animation = Animated.timing(scrollX, {
@@ -26,25 +24,18 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
     });
 
     const resetAnimation = Animated.timing(scrollX, {
-      toValue: width,
+      toValue: 0,
       duration: 0,
       useNativeDriver: true,
     });
 
-    Animated.loop(
-      Animated.sequence([
-        animation,
-        resetAnimation
-      ])
-    ).start();
+    Animated.loop(Animated.sequence([animation, resetAnimation])).start();
 
     return () => {
       animation.stop();
       resetAnimation.stop();
     };
-  }, [events]);
-
-  if (!events.length) return null;
+  }, [services]);
 
   return (
     <View style={styles.container}>
@@ -55,13 +46,13 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
               styles.textContainer, 
               { 
                 transform: [{ translateX: scrollX }],
-                width: events.reduce((acc, event) => acc + event.name.length * 16 + 300, 0),
+                width: services.reduce((acc, service) => acc + service.name.length * 16 + 30, 0) * 2,
               }
             ]}
           >
-            {events.map((event, index) => (
-              <View key={index} style={styles.eventContainer}>
-                <Text style={styles.text}>{event.name.toUpperCase()}</Text>
+            {[...services, ...services].map((service, index) => (
+              <View key={index} style={styles.serviceContainer}>
+                <Text style={styles.text}>{service.name.toUpperCase()}</Text>
                 <Text style={styles.bullet}>•</Text>
               </View>
             ))}
@@ -74,12 +65,12 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
 
 const styles = StyleSheet.create({
   container: {
-    height: 40,
-    marginVertical: 8,
+    height: 50,
     justifyContent: 'center',
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     backgroundColor: theme.colors.overlay,
+    marginBottom: theme.spacing.md,
   },
   blurContainer: {
     flex: 1,
@@ -87,17 +78,16 @@ const styles = StyleSheet.create({
   },
   marqueeContainer: {
     overflow: 'hidden',
-    width: width - 32, // Account for padding
+    width: width,
   },
   textContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 40,
   },
-  eventContainer: {
+  serviceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
+    marginRight: theme.spacing.md,
   },
   text: {
     color: theme.colors.secondary,
@@ -113,4 +103,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EventMarquee;
+export default ServiceMarquee;

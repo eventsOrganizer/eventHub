@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, ImageBackground, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Heart, ShoppingCart, Calendar, Star, DollarSign } from 'lucide-react-native';
+import { Feather } from '@expo/vector-icons';
 import { Material } from '../../navigation/types';
+import { theme } from '../../../lib/theme';
+import { MotiView } from 'moti';
+import tw from 'twrnc';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,210 +33,113 @@ const MaterialCard: React.FC<MaterialCardProps> = ({
     : 'https://via.placeholder.com/150';
 
   const isRental = material.sell_or_rent === 'rent';
-  const actionButtonColor = isRental ? '#4A90E2' : '#7E57C2';
 
   return (
-    <Animated.View
-      entering={FadeInDown.delay(index * 100).springify()}
-      style={styles.cardContainer}
+    <MotiView
+      from={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: 'spring', damping: 15 }}
+      style={[
+        tw`overflow-hidden rounded-2xl`,
+        {
+          width: width * 0.45,
+          height: width * 0.6,
+          margin: theme.spacing.sm,
+        }
+      ]}
     >
-      <TouchableOpacity 
-        style={styles.cardFrame}
+      <TouchableOpacity
         onPress={onPress}
-        activeOpacity={0.9}
+        activeOpacity={0.95}
+        style={tw`flex-1`}
       >
-        <Image 
-          source={{ uri: imageUrl }} 
-          style={styles.cardImage}
-        />
-        
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.8)']}
-          style={styles.imageOverlay}
-        />
-
-        <BlurView intensity={Platform.OS === 'ios' ? 60 : 100} style={styles.topBar}>
-          <View style={[styles.badge, { backgroundColor: actionButtonColor }]}>
-            {isRental ? (
-              <Calendar size={14} color="white" />
-            ) : (
-              <ShoppingCart size={14} color={actionButtonColor} />
-            )}
-            <Text style={styles.topBarText}>
-              {isRental ? 'RENT' : 'SALE'}
-            </Text>
-          </View>
-        </BlurView>
-
-        <View style={styles.cardContent}>
-          <Text style={styles.cardName} numberOfLines={2}>
-            {material.name}
-          </Text>
-
-          <View style={styles.cardInfoRow}>
-            <View style={styles.priceContainer}>
-              <DollarSign size={14} color={actionButtonColor} />
-              <Text style={[styles.priceText, { color: actionButtonColor }]}>
-                {isRental ? `${material.price_per_hour}/hr` : material.price}
-              </Text>
-            </View>
-
-            <View style={styles.ratingContainer}>
-              <Star size={12} color="#FFD700" fill="#FFD700" />
-              <Text style={styles.ratingText}>
-                {material.average_rating?.toFixed(1) || 'N/A'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.actionButton, styles.wishlistButton]}
-          onPress={() => onToggleWishlist(material.id)}
+        <ImageBackground
+          source={{ uri: imageUrl }}
+          style={tw`flex-1`}
+          imageStyle={tw`rounded-2xl`}
         >
-          <Heart
-            size={18}
-            color={isWishlisted ? '#FF6B6B' : '#ffffff'}
-            fill={isWishlisted ? '#FF6B6B' : 'none'}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionButton, styles.basketButton, { backgroundColor: actionButtonColor }]}
-          onPress={() => onAddToBasket(material)}
-        >
-          {isRental ? (
-            <Calendar size={18} color="#ffffff" />
-          ) : (
-            <ShoppingCart size={18} color="#ffffff" />
-          )}
-        </TouchableOpacity>
+          <BlurView
+            intensity={20}
+            tint="dark"
+            style={tw`flex-1 justify-between`}
+          >
+            <View style={tw`flex-row justify-between items-start p-3`}>
+              <View style={[
+                tw`px-2 py-1 rounded-full`,
+                { backgroundColor: isRental ? `${theme.colors.accent}20` : `${theme.colors.secondary}20` }
+              ]}>
+                <Text style={[
+                  tw`text-xs font-medium`,
+                  { color: isRental ? theme.colors.accent : theme.colors.secondary }
+                ]}>
+                  {isRental ? 'RENT' : 'SALE'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  tw`w-8 h-8 rounded-full items-center justify-center`,
+                  { backgroundColor: `${theme.colors.primary}20` }
+                ]}
+                onPress={() => onToggleWishlist(material.id)}
+              >
+                <Feather
+                  name="heart"
+                  size={16}
+                  color={isWishlisted ? theme.colors.error : theme.colors.primary}
+                  style={isWishlisted ? tw`fill-current` : {}}
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={tw`p-3 space-y-2`}>
+              <Text style={[
+                tw`text-base font-bold`,
+                { color: theme.colors.primary }
+              ]}>
+                {material.name}
+              </Text>
+              <View style={tw`flex-row justify-between items-center`}>
+                <Text style={[
+                  tw`text-sm font-semibold`,
+                  { color: isRental ? theme.colors.accent : theme.colors.secondary }
+                ]}>
+                  ${isRental ? `${material.price_per_hour}/hr` : material.price}
+                </Text>
+                {material.average_rating && (
+                  <View style={tw`flex-row items-center`}>
+                    <Feather name="star" size={12} color={theme.colors.warning} />
+                    <Text style={[tw`ml-1`, { color: theme.colors.primary }]}>
+                      {material.average_rating.toFixed(1)}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </BlurView>
+        </ImageBackground>
       </TouchableOpacity>
-    </Animated.View>
+      <TouchableOpacity
+        style={[
+          tw`absolute bottom-3 right-3 w-8 h-8 rounded-full items-center justify-center`,
+          { backgroundColor: isRental ? theme.colors.accent : theme.colors.secondary }
+        ]}
+        onPress={() => onAddToBasket(material)}
+      >
+        <Feather
+          name={isRental ? 'calendar' : 'shopping-cart'}
+          size={16}
+          color={theme.colors.primary}
+        />
+      </TouchableOpacity>
+    </MotiView>
   );
 };
 
 const styles = StyleSheet.create({
-  cardContainer: {
-    width: width * 0.45,
-    height: height * 0.32,
-    margin: 8,
-    borderRadius: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
-  },
-  cardFrame: {
-    flex: 1,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  imageOverlay: {
+  suggestButtonContainer: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '60%',
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 4,
-  },
-  topBar: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  topBarText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-    marginLeft: 4,
-  },
-  cardContent: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 12,
-  },
-  cardName: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  cardInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  priceText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginLeft: 4,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginLeft: 4,
-  },
-  actionButton: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    right: 12,
-  },
-  wishlistButton: {
-    top: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  basketButton: {
-    top: 60,
+    top: theme.spacing.sm,
+    right: theme.spacing.sm,
+    zIndex: 1,
   },
 });
 

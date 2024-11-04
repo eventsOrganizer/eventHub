@@ -1,6 +1,9 @@
 import React from 'react';
-import { ScrollView, TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../../lib/theme';
+import { MotiView } from 'moti';
 
 const categories = [
   { name: 'All', icon: 'grid-outline' },
@@ -18,60 +21,77 @@ type CategoryListProps = {
 
 const CategoryList: React.FC<CategoryListProps> = ({ selectedCategory, onSelectCategory }) => {
   return (
-    <View style={styles.container}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
+    <BlurView intensity={90} tint="light" style={styles.container}>
+      <View style={styles.categoriesContainer}>
         {categories.map((category, index) => (
-          <TouchableOpacity
+          <MotiView
             key={index}
-            style={[
-              styles.categoryItem,
-              selectedCategory === category.name && styles.selectedCategory
-            ]}
-            onPress={() => onSelectCategory(category.name === 'All' ? null : category.name)}
+            from={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 100 }}
           >
-            <Ionicons 
-              name={category.icon as keyof typeof Ionicons.glyphMap} 
-              size={20}
-              color={selectedCategory === category.name ? "white" : "black"} 
-            />
-            <Text style={[
-              styles.categoryName,
-              selectedCategory === category.name && styles.selectedCategoryText
-            ]}>{category.name}</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.categoryItem,
+                selectedCategory === category.name && styles.selectedCategory
+              ]}
+              onPress={() => onSelectCategory(category.name === 'All' ? null : category.name)}
+            >
+              <Ionicons 
+                name={category.icon as keyof typeof Ionicons.glyphMap} 
+                size={24}
+                color={selectedCategory === category.name ? theme.colors.accent : theme.colors.secondary} 
+              />
+              <Text style={[
+                styles.categoryName,
+                selectedCategory === category.name && styles.selectedCategoryText
+              ]}>
+                {category.name}
+              </Text>
+            </TouchableOpacity>
+          </MotiView>
         ))}
-      </ScrollView>
-    </View>
+      </View>
+    </BlurView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    height: 60,
-    marginBottom: 8,
+    marginHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.xl,
+    overflow: 'hidden',
+    marginBottom: theme.spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.8)',
   },
-  categoriesScroll: {
-    paddingLeft: 8,
+  categoriesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
   },
   categoryItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
-    padding: 4,
-    borderRadius: 16,
-    width: 70,
+    width: 60,
     height: 60,
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: 'rgba(255,255,255,0.9)',
   },
   selectedCategory: {
-    backgroundColor: 'black',
+    backgroundColor: theme.colors.overlay,
+    transform: [{ scale: 1.05 }],
   },
   categoryName: {
-    marginTop: 2,
+    marginTop: theme.spacing.xs,
     fontSize: 10,
+    color: theme.colors.secondary,
     textAlign: 'center',
   },
   selectedCategoryText: {
-    color: 'white',
+    color: theme.colors.accent,
+    fontWeight: '600',
   },
 });
 

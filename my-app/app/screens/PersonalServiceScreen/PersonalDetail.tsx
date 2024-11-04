@@ -13,6 +13,11 @@ import { useToast } from '../../hooks/useToast';
 import PersonalInfo from '../../components/PersonalServiceComponents/PersonalInfo';
 import ServiceDetails from './components/ServiceDetails';
 import LocationMap from './components/LocationMap';
+import { theme } from '../../../lib/theme';
+import { MotiView } from 'moti';
+import ImageGallery from '../../components/PersonalServiceComponents/ImageGallery';
+import { BlurView } from 'expo-blur';
+import { ActivityIndicator } from 'react-native';
 
 interface ServiceWithLocation extends Service {
   location?: {
@@ -286,32 +291,13 @@ const PersonalDetail: React.FC = () => {
   const renderItem = () => (
     <ScrollView style={styles.content}>
       {personalData && (
-        <>
-          <View style={styles.card}>
-            <View style={styles.imageContainer}>
-              <ScrollView 
-                horizontal 
-                pagingEnabled 
-                showsHorizontalScrollIndicator={false}
-                decelerationRate="fast"
-                snapToInterval={width}
-              >
-                {images.length > 0 ? (
-                  images.map((imageUrl, index) => (
-                    <Image 
-                      key={index} 
-                      source={{ uri: imageUrl }} 
-                      style={styles.image} 
-                      resizeMode="cover"
-                    />
-                  ))
-                ) : (
-                  <View style={styles.noImageContainer}>
-                    <Text style={styles.noImageText}>Aucune image disponible</Text>
-                  </View>
-                )}
-              </ScrollView>
-            </View>
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 500 }}
+        >
+          <ImageGallery images={images} />
+          <BlurView intensity={80} tint="light" style={styles.card}>
             <PersonalInfo 
               data={personalData} 
               onLike={handleLike}
@@ -333,32 +319,28 @@ const PersonalDetail: React.FC = () => {
                   />
                 ) : (
                   <Text style={styles.noLocationText}>
-                    Données de localisation non disponibles
+                    Location data not available
                   </Text>
                 )}
               </View>
             )}
-          </View>
-          <View style={styles.card}>
+          </BlurView>
+          <BlurView intensity={80} tint="light" style={styles.card}>
             <ServiceDetails 
               personalData={personalData}
               onReviewPress={navigateToReviewScreen}
               onCommentPress={navigateToCommentScreen}
               onBookPress={navigateToBookingScreen}
             />
-          </View>
-        </>
+          </BlurView>
+        </MotiView>
       )}
     </ScrollView>
   );
-  console.log('Rendering images, count:', images.length);
-  images.forEach((image, index) => {
-    console.log(`Image ${index + 1} URL:`, image);
-  });
 
   return (
     <LinearGradient
-      colors={['#E6F2FF', '#C2E0FF', '#99CCFF', '#66B2FF']}
+      colors={[theme.colors.gradientStart, theme.colors.gradientMiddle, theme.colors.gradientEnd]}
       style={styles.container}
     >
       <KeyboardAvoidingView 
@@ -368,7 +350,7 @@ const PersonalDetail: React.FC = () => {
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <Text>Chargement...</Text>
+            <ActivityIndicator size="large" color={theme.colors.accent} />
           </View>
         ) : (
           <FlatList
@@ -387,42 +369,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 16,
+    padding: theme.spacing.md,
   },
   card: {
-    backgroundColor: '#4A90E2',
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: theme.borderRadius.lg,
+    marginBottom: theme.spacing.md,
     overflow: 'hidden',
-  },
-  imageContainer: {
-    height: IMAGE_HEIGHT,
-    marginBottom: 16,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  image: {
-    width: width,
-    height: IMAGE_HEIGHT,
-    borderRadius: 10,
-  },
-  noImageContainer: {
-    width: width,
-    height: IMAGE_HEIGHT,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-  },
-  noImageText: {
-    fontSize: 16,
-    color: '#666',
+    backgroundColor: theme.colors.personalDetailBg,
   },
   mapContainer: {
-    height: 300,
-    marginTop: 10,
-    borderRadius: 8,
+    height: theme.layout.personalDetail.mapHeight,
+    marginTop: theme.spacing.sm,
+    borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
   },
   loadingContainer: {
@@ -432,9 +390,9 @@ const styles = StyleSheet.create({
   },
   noLocationText: {
     textAlign: 'center',
-    color: '#666',
-    padding: 16,
-    fontSize: 14,
+    color: theme.colors.cardDescription,
+    padding: theme.spacing.md,
+    ...theme.typography.body,
   },
 });
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, Animated } from 'react-native';
-import { Provider } from 'react-native-paper';
+import { View, StyleSheet, FlatList, RefreshControl, Text } from 'react-native';
+import { Provider, FAB } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,10 +12,16 @@ import { BottomActions } from '../../components/MaterialService/BottomActions';
 import { useToast } from "../../hooks/use-toast";
 import { themeColors } from '../../utils/themeColors';
 import { useBasket } from '../../components/basket/BasketContext';
-
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, { FadeInDown, Layout, useSharedValue, interpolate, useAnimatedScrollHandler, useAnimatedStyle } from 'react-native-reanimated';
+import { StatusBar } from 'expo-status-bar';
+import { theme } from '../../../lib/theme';
 type MaterialsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MaterialScreen'>;
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
+// Add these imports
+
 
 const MaterialsScreen = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -32,12 +38,7 @@ const MaterialsScreen = () => {
   const { toast } = useToast();
   const { basketItems, addToBasket } = useBasket();
 
-  const scrollY = new Animated.Value(0);
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [1, 0.9],
-    extrapolate: 'clamp',
-  });
+  const scrollY = useSharedValue(0);
 
   useEffect(() => {
     fetchMaterials();
@@ -112,41 +113,53 @@ const MaterialsScreen = () => {
     setSnackbarVisible(true);
   };
 
-  const renderMaterialCard = useCallback(({ item }: { item: Material }) => (
-    <MaterialCard
-      material={item}
-      onAddToBasket={addToBasketHandler}
-      onToggleWishlist={toggleWishlist}
-      isWishlisted={wishlist.includes(item.id)}
-      onPress={() => navigation.navigate('MaterialDetail', { material: item })}
-    />
+  const renderMaterialCard = useCallback(({ item, index }: { item: Material; index: number }) => (
+    <Animated.View
+      entering={FadeInDown.delay(index * 100)}
+      layout={Layout.springify()}
+    >
+      <MaterialCard
+        material={item}
+        onAddToBasket={addToBasketHandler}
+        onToggleWishlist={toggleWishlist}
+        isWishlisted={wishlist.includes(item.id)}
+        onPress={() => navigation.navigate('MaterialDetail', { material: item })}
+      />
+    </Animated.View>
   ), [wishlist, navigation, addToBasketHandler, toggleWishlist]);
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    { useNativeDriver: true }
-  );
+  const handleScroll = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+  });
 
   return (
     <Provider>
+      <StatusBar style="dark" />
       <View style={styles.container}>
         <LinearGradient
-          colors={themeColors.rent.background}
+          colors={[theme.colors.gradientStart, theme.colors.gradientMiddle, theme.colors.gradientEnd]}
           style={StyleSheet.absoluteFill}
         />
-        <AnimatedHeader 
-          headerOpacity={headerOpacity}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          basketCount={basketItems.length}
-          onBasketPress={navigateToBasket}
-          selectedSubcategory={selectedSubcategory}
-          onSelectSubcategory={setSelectedSubcategory}
-          minPrice={minPrice}
-          maxPrice={maxPrice}
-          setMinPrice={setMinPrice}
-          setMaxPrice={setMaxPrice}
-        />
+        
+        <Animated.View 
+          entering={FadeInDown}
+          style={[styles.headerContainer]}
+        >
+          <AnimatedHeader 
+            scrollY={scrollY}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            basketCount={basketItems.length}
+            onBasketPress={navigateToBasket}
+            selectedSubcategory={selectedSubcategory}
+            onSelectSubcategory={setSelectedSubcategory}
+            minPrice={minPrice}
+            maxPrice={maxPrice}
+            setMinPrice={setMinPrice}
+            setMaxPrice={setMaxPrice}
+          />
+        </Animated.View>
+
         <AnimatedFlatList
           data={filteredMaterials}
           renderItem={renderMaterialCard}
@@ -157,14 +170,35 @@ const MaterialsScreen = () => {
             <RefreshControl 
               refreshing={refreshing} 
               onRefresh={fetchMaterials}
-              tintColor={themeColors.rent.primary}
-              colors={[themeColors.rent.primary]}
+              tintColor={theme.colors.accent}
+              colors={[theme.colors.accent]}
             />
           }
           onScroll={handleScroll}
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <MaterialCommunityIcons 
+                name="package-variant" 
+                size={48} 
+                color={theme.colors.secondary} 
+              />
+              <Text style={styles.emptyText}>No materials found</Text>
+            </View>
+          )}
+          layoutAnimation={Layout.springify()}
         />
+
+        <FAB
+          style={styles.fab}
+          icon="plus"
+          color={theme.colors.primary}
+          onPress={navigateToOnboarding}
+          animated
+        />
+
         <BottomActions 
           onAddNew={navigateToOnboarding}
           snackbarVisible={snackbarVisible}
@@ -183,6 +217,29 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 8,
     paddingBottom: 80,
+  },
+  headerContainer: {
+    zIndex: 1,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 80,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    marginTop: 8,
+    fontSize: 16,
+    color: theme.colors.secondary,
+  },
+  separator: {
+    height: 8,
   },
 });
 

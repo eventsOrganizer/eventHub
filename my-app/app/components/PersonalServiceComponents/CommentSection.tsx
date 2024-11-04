@@ -13,6 +13,7 @@ import { supabase } from '../../services/supabaseClient';
 import { useToast } from '../../hooks/useToast';
 import CommentItem from './CommentItem';
 import CommentInput from './CommentInput';
+import { theme } from '../../../lib/theme';
 interface Comment {
   id: number;
   details: string;
@@ -135,37 +136,46 @@ const CommentSection: React.FC<CommentSectionProps> = ({ personalId, userId }) =
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.gradientStart,
   },
   inner: {
     flex: 1,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    ...theme.typography.title,
+    color: theme.colors.personalDetailTitle,
+    marginBottom: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.md,
   },
   commentList: {
     flexGrow: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: theme.spacing.md,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: theme.spacing.xl,
   },
   emptyText: {
-    color: '#6b7280',
+    ...theme.typography.body,
+    color: theme.colors.cardDescription,
     textAlign: 'center',
   },
   inputWrapper: {
-    padding: 16,
-    backgroundColor: 'white',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.personalDetailBg,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: theme.colors.personalDetailBorder,
+    shadowColor: theme.colors.personalDetailShadow,
+    shadowOffset: {
+      width: 0,
+      height: -3,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });
 

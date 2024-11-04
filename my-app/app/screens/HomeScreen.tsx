@@ -13,6 +13,8 @@ import { supabase } from '../services/supabaseClient';
 import { HomeScreenProps, HomeScreenSection } from '../navigation/types';
 import { theme } from '../../lib/theme';
 import Banner from '../components/event/Banner';
+import ServiceMarquee from '../components/service/ServiceMarquee';
+
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [events, setEvents] = useState<any[]>([]);
@@ -196,36 +198,21 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <View style={tw`flex-1`}>
-          <View style={tw`absolute top-0 left-0 right-0 z-50`}>
-            <HomeHeader
-              selectedFilter={selectedFilter}
-              setSelectedFilter={setSelectedFilter}
-              onSearch={handleSearch}
-            />
-          </View>
+         <View style={tw`flex-1`}>
+        <View style={tw`absolute top-0 left-0 right-0 z-50`}>
+          <HomeHeader
+            selectedFilter={selectedFilter}
+            setSelectedFilter={setSelectedFilter}
+            onSearch={handleSearch}
+          />
+        </View>
 
-          <View style={tw`absolute top-48 left-0 right-0 z-40 bg-transparent`}>
-            <MotiView
-              from={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ 
-                type: 'timing',
-                duration: 1000,
-                delay: 0 
-              }}
-              style={tw`shadow-lg rounded-${theme.borderRadius.lg} overflow-hidden mb-${theme.spacing.md} mx-4`}
-            >
-              <EventMarquee events={events?.slice(0, 10) || []} />
-            </MotiView>
-
-            <View style={tw`bg-[${theme.colors.gradientStart}]`}>
-              <ServiceIcons navigation={navigation} />
-            </View>
-          </View>
-
+        <View style={[tw`absolute top-32 left-0 right-0 z-40 bg-transparent`, { paddingHorizontal: theme.spacing.md }]}>
+          <EventMarquee events={events?.slice(0, 10) || []} />
+          <ServiceIcons navigation={navigation} />
+        </View>
           <ScrollView
-            style={tw`flex-1 mt-[360px]`}
+            style={[tw`flex-1`, { marginTop: 280 }]}
             contentContainerStyle={tw`pb-32`}
             refreshControl={
               <RefreshControl 
@@ -237,7 +224,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             }
             showsVerticalScrollIndicator={false}
           >
-            <View style={tw`space-y-${theme.spacing.lg} px-4`}>
+            <View style={[tw`space-y-4 px-4`]}>
               <Banner title="Events" />
               <EventSection 
                 title="YOUR EVENTS" 
@@ -256,10 +243,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               />
 
               <Banner title="Services" />
+              <ServiceMarquee services={staffServices?.slice(0, 10) || []} />
               <ServicesSection sections={serviceSections} />
 
               <TouchableOpacity
-                style={tw`bg-[${theme.colors.accent}] py-3 px-6 rounded-full my-4`}
+                style={[
+                  tw`py-3 px-6 rounded-full my-4`,
+                  { backgroundColor: theme.colors.accent }
+                ]}
                 onPress={() => navigation.navigate('VideoRooms')}
               >
                 <Text style={tw`text-white text-center font-semibold`}>

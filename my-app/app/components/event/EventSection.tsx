@@ -1,14 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Dimensions, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { MotiView } from 'moti';
 import EventCard from './EventCard';
 import YourEventCard from './YourEventCard';
 import JoinEventButton from './JoinEventButton';
 import { theme } from '../../../lib/theme';
 import tw from 'twrnc';
-
-const { height, width } = Dimensions.get('window');
 
 interface EventSectionProps {
   title: string;
@@ -26,66 +25,55 @@ const EventSection: React.FC<EventSectionProps> = ({
   isTopEvents 
 }) => {
   const renderEventCard = ({ item }: { item: any }) => (
-    isTopEvents ? (
-      <EventCard 
-        key={item.id}
-        event={item}
-        onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
-      >
-        <JoinEventButton
-          eventId={item.id}
-          privacy={item.privacy}
-          organizerId={item.user_id}
-          onJoinSuccess={() => {}}
-          onLeaveSuccess={() => {}}
-        />
-      </EventCard>
-    ) : (
-      <YourEventCard 
-        key={item.id}
-        event={item}
-        onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
-      >
-        <JoinEventButton
-          eventId={item.id}
-          privacy={item.privacy}
-          organizerId={item.user_id}
-          onJoinSuccess={() => {}}
-          onLeaveSuccess={() => {}}
-        />
-      </YourEventCard>
-    )
+    <MotiView
+      from={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: 'spring', damping: 15 }}
+    >
+      {isTopEvents ? (
+        <EventCard 
+          event={item}
+          onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
+        >
+          <JoinEventButton
+            eventId={item.id}
+            privacy={item.privacy}
+            organizerId={item.user_id}
+            onJoinSuccess={() => {}}
+            onLeaveSuccess={() => {}}
+          />
+        </EventCard>
+      ) : (
+        <YourEventCard 
+          event={item}
+          onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
+        >
+          <JoinEventButton
+            eventId={item.id}
+            privacy={item.privacy}
+            organizerId={item.user_id}
+            onJoinSuccess={() => {}}
+            onLeaveSuccess={() => {}}
+          />
+        </YourEventCard>
+      )}
+    </MotiView>
   );
 
-  // Calculate dynamic height based on screen dimensions and event type
-  const containerHeight = isTopEvents ? height * 0.35 : height * 0.6;
-
   return (
-    <View style={[
-      tw`mb-6 rounded-3xl overflow-hidden`,
-      { height: containerHeight }
-    ]}>
-      <BlurView 
-        intensity={60} 
-        tint="light" 
-        style={[
-          tw`flex-1 rounded-3xl`,
-          { backgroundColor: theme.colors.cardBg }
-        ]}
-      >
+    <View style={tw`mb-6 rounded-3xl overflow-hidden bg-white/80`}>
+      <BlurView intensity={60} tint="light" style={tw`rounded-3xl`}>
         <View style={tw`flex-1`}>
-          {/* Header Section */}
           <View style={[
             tw`px-6 py-4`,
             {
-              backgroundColor: theme.colors.overlay,
               borderBottomWidth: 1,
               borderBottomColor: theme.colors.eventBorder,
             }
           ]}>
             <View style={tw`flex-row justify-between items-center`}>
               <Text style={[
-                tw`text-xl font-bold`,
+                theme.typography.title,
                 { color: theme.colors.cardTitle }
               ]}>
                 {title}
@@ -112,18 +100,17 @@ const EventSection: React.FC<EventSectionProps> = ({
             </View>
           </View>
 
-          {/* Events List */}
           <FlatList
             data={events}
             renderItem={renderEventCard}
             keyExtractor={(item) => item.id.toString()}
             horizontal={isTopEvents}
             showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={true}
+            showsVerticalScrollIndicator={false}
             contentContainerStyle={[
               tw`p-4`,
               isTopEvents ? {
-                gap: theme.spacing.md,
+                paddingRight: theme.spacing.lg
               } : {
                 gap: theme.spacing.md,
                 paddingBottom: theme.spacing.xl,

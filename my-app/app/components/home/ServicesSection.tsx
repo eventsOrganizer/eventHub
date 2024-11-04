@@ -1,11 +1,14 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { MotiView } from 'moti';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { HomeScreenSection } from '../../navigation/types';
 import { theme } from '../../../lib/theme';
+import StaffServiceCard from '../PersonalServiceComponents/StaffServiceCard';
+import LocalServiceCard from '../LocalService/LocalServiceCard';
+import MaterialCard from '../MaterialService/MaterialCard';
 
 interface ServicesSectionProps {
   sections: HomeScreenSection[];
@@ -18,12 +21,25 @@ const ServicesSection: React.FC<ServicesSectionProps> = ({ sections = [] }) => {
     return null;
   }
 
+  const renderServiceCard = (section: HomeScreenSection, item: any) => {
+    switch (section.type) {
+      case 'staff':
+        return <StaffServiceCard key={item.id} service={item} onPress={() => section.onItemPress(item)} />;
+      case 'local':
+        return <LocalServiceCard key={item.id} item={item} onPress={() => section.onItemPress(item)} />;
+      case 'material':
+        return <MaterialCard key={item.id} material={item} onPress={() => section.onItemPress(item)} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <MotiView
       from={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ type: 'timing', duration: 800 }}
-      style={tw`mt-2 mx-2`} // Reduced top margin to bring content closer
+      style={tw`mt-2 mx-2`}
     >
       <BlurView
         intensity={80}
@@ -109,49 +125,20 @@ const ServicesSection: React.FC<ServicesSectionProps> = ({ sections = [] }) => {
                       </TouchableOpacity>
                     </View>
 
-                    <View style={tw`flex-row flex-wrap justify-between`}>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={[
+                        tw`gap-3`,
+                        { paddingHorizontal: theme.spacing.sm }
+                      ]}
+                    >
                       {section.data.map((item, itemIndex) => (
-                        <TouchableOpacity
-                          key={itemIndex}
-                          onPress={() => section.onItemPress(item)}
-                          style={[
-                            tw`mb-3`,
-                            {
-                              width: (width - 80) / 2,
-                              backgroundColor: theme.colors.eventBackground,
-                              borderRadius: theme.borderRadius.md,
-                              padding: theme.spacing.sm,
-                              shadowColor: theme.colors.eventShadow,
-                              shadowOffset: { width: 0, height: 2 },
-                              shadowOpacity: 0.1,
-                              shadowRadius: 4,
-                              elevation: 2,
-                            }
-                          ]}
-                        >
-                          <Text 
-                            numberOfLines={1} 
-                            style={[
-                              tw`font-medium mb-1`,
-                              { color: theme.colors.eventTitle }
-                            ]}
-                          >
-                            {item.name || item.title}
-                          </Text>
-                          {item.description && (
-                            <Text 
-                              numberOfLines={2}
-                              style={[
-                                tw`text-xs`,
-                                { color: theme.colors.eventText }
-                              ]}
-                            >
-                              {item.description}
-                            </Text>
-                          )}
-                        </TouchableOpacity>
+                        <View key={itemIndex} style={tw`w-40`}>
+                          {renderServiceCard(section, item)}
+                        </View>
                       ))}
-                    </View>
+                    </ScrollView>
                   </View>
                 </View>
               </MotiView>

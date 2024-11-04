@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
+import { theme } from '../../../lib/theme';
 
 interface CommentInputProps {
   personalId: number;
@@ -95,29 +96,39 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 8,
-    marginRight: 8,
+    borderColor: theme.colors.personalDetailBorder,
+    borderRadius: theme.borderRadius.sm,
+    padding: theme.spacing.sm,
     maxHeight: 100,
+    backgroundColor: theme.colors.gradientEnd,
+    ...theme.typography.body,
+    color: theme.colors.personalDetailText,
   },
   addButton: {
-    backgroundColor: '#3b82f6',
-    borderRadius: 8,
-    padding: 12,
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.borderRadius.sm,
+    padding: theme.spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: 80,
+    shadowColor: theme.colors.personalDetailShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   disabledButton: {
-    backgroundColor: '#9ca3af',
+    backgroundColor: theme.colors.cardDescription,
+    opacity: 0.7,
   },
   addButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    ...theme.typography.subtitle,
+    color: theme.colors.primary,
   },
 });
 
