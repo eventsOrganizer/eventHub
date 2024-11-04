@@ -319,9 +319,14 @@ export default function EventsPage(): React.JSX.Element {
           <Typography variant="h4">Events</Typography>
         </Stack>
         <div>
-          <Button startIcon={<PlusIcon fontSize="var(--icon-fontSize-md)" />} variant="contained" onClick={handleOpen}>
-            Add
-          </Button>
+        <Button variant="contained" onClick={handleOpenModal}>
+        Add Category
+      </Button>
+      <AddCategoryModal
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        onCategoryAdded={handleCategoryAdded}
+      />
         </div>
       </Stack>
 
@@ -440,14 +445,7 @@ export default function EventsPage(): React.JSX.Element {
         </div>
       </Modal>
 
-      <Button variant="contained" onClick={handleOpenModal}>
-        Add Category
-      </Button>
-      <AddCategoryModal
-        open={isModalOpen}
-        onClose={handleCloseModal}
-        onCategoryAdded={handleCategoryAdded}
-      />
+      
     </Stack>
   );
 }
