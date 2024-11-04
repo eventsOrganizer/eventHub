@@ -19,10 +19,12 @@ export function AuthGuard({ children }: AuthGuardProps): React.JSX.Element | nul
 
   const checkPermissions = async (): Promise<void> => {
     if (isLoading) {
+      console.log('[AuthGuard]: Still loading user data');
       return;
     }
 
     if (error) {
+      console.log('[AuthGuard]: Error fetching user data:', error);
       setIsChecking(false);
       return;
     }
@@ -33,6 +35,7 @@ export function AuthGuard({ children }: AuthGuardProps): React.JSX.Element | nul
       return;
     }
 
+    console.log('[AuthGuard]: User is authenticated');
     setIsChecking(false);
   };
 
