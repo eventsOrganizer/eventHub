@@ -17,7 +17,7 @@ interface Service {
   details: string;
   name: string;
   media: { url: string }[];
-  category: { name: string };
+  subcategory: { name: string }; // Change to subcategory
 }
 
 export default function MaterialServiceDetailsPage(): React.JSX.Element {
@@ -29,14 +29,14 @@ export default function MaterialServiceDetailsPage(): React.JSX.Element {
   useEffect(() => {
     if (serviceId) {
       supabase
-        .from('service')
-        .select(`id, type, privacy, details, name, media:media(url), category:category(name)`)
+        .from('material')
+        .select(`id, type, privacy, details, name, media:media(url), subcategory:subcategory_id(name)`)
         .eq('id', serviceId)
         .then(({ data, error }) => {
           if (error) {
-            console.error('Error fetching service details:', error);
+            console.error('Error fetching material details:', error);
           } else {
-            console.log('Fetched service data:', data[0]);
+            console.log('Fetched material data:', data[0]);
             setService(data[0]);
           }
         });

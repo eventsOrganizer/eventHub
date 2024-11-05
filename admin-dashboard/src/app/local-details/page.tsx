@@ -17,7 +17,7 @@ interface Service {
   details: string;
   name: string;
   media: { url: string }[];
-  category: { name: string }; // Assuming category is an object with a name property
+  subcategory: { name: string }; // Assuming subcategory is an object with a name property
 }
 
 export default function ServiceDetailsPage(): React.JSX.Element {
@@ -29,14 +29,25 @@ export default function ServiceDetailsPage(): React.JSX.Element {
   useEffect(() => {
     if (serviceId) {
       supabase
-        .from('service')
-        .select(`id, type, privacy, details, name, media:media(url), category:category(name)`)
+        .from('local')
+        .select(`
+          id,
+          name,
+          details,
+          priceperhour,
+          media:media(url),
+          subcategory:subcategory_id(name),
+          user:user_id(firstname, lastname),
+          startdate,
+          enddate,
+          disabled
+        `)
         .eq('id', serviceId)
         .then(({ data, error }) => {
           if (error) {
-            console.error('Error fetching service details:', error);
+            console.error('Error fetching local details:', error);
           } else {
-            console.log('Fetched service data:', data[0]); // Log the fetched service data
+            console.log('Fetched local data:', data[0]); // Log the fetched local data
             setService(data[0]);
           }
         });

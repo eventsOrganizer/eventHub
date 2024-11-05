@@ -89,9 +89,7 @@ export function LocalTable({
               </TableCell>
               <TableCell>Image</TableCell>
               <TableCell>Name</TableCell>
-              
               <TableCell>Price</TableCell>
-             
               <TableCell>Subcategory</TableCell>
               <TableCell>Owner</TableCell>
               <TableCell>ID</TableCell>
@@ -149,9 +147,7 @@ export function LocalTable({
                     )}
                   </TableCell>
                   <TableCell>{row.name}</TableCell>
-         
                   <TableCell>{row.price}</TableCell>
-              
                   <TableCell>{row.subcategoryName}</TableCell>
                   <TableCell>{row.owner}</TableCell>
                   <TableCell>{row.id}</TableCell>
