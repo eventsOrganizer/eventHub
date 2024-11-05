@@ -161,6 +161,30 @@ const UserProfileScreen: React.FC = () => {
             <View style={tw`flex-row justify-between`}>
               <ActionButton onPress={() => navigation.navigate('TicketScanning')} iconName="qr-code-outline" text="Scan Tickets" />
             </View>
+
+                           {/* Social and Interests Section */}
+            <View style={tw`flex-row justify-between mt-4`}>
+              <TouchableOpacity
+                style={tw`flex-1 flex-row items-center justify-center bg-[#003791] rounded-3xl p-4 shadow-lg overflow-hidden mr-2`}
+                onPress={() => navigation.navigate('Social')}
+              >
+                <Ionicons name="people" size={24} color="white" />
+                <Text style={tw`text-white font-semibold ml-3`}>Social Hub</Text>
+                {unreadReceivedRequestsCount > 0 && (
+                  <View style={tw`bg-red-500 rounded-full w-5 h-5 justify-center items-center ml-2`}>
+                    <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={tw`flex-1 flex-row items-center justify-center bg-[#003791] rounded-3xl p-4 shadow-lg overflow-hidden ml-2`}
+                onPress={() => navigation.navigate('InterestsList', { userId })}
+              >
+                <Ionicons name="heart" size={24} color="white" />
+                <Text style={tw`text-white font-semibold ml-3`}>Interests</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </BlurView>
   
@@ -252,49 +276,6 @@ const UserProfileScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
-  
-        {/* Social Section */}
-        <View style={tw`mx-4 mt-6`}>
-          <Text style={tw`text-white text-xl font-bold mb-4`}>Social</Text>
-          <TouchableOpacity
-            style={tw`bg-[#003791] rounded-3xl p-4 shadow-lg overflow-hidden`}
-            onPress={() => navigation.navigate('Social')}
-          >
-            <BlurView intensity={40} tint="dark" style={tw`p-4 rounded-2xl`}>
-              <View style={tw`flex-row items-center justify-between`}>
-                <View style={tw`flex-row items-center`}>
-                  <Ionicons name="people" size={24} color="white" />
-                  <Text style={tw`text-white font-semibold ml-3`}>Social Hub</Text>
-                </View>
-                <View style={tw`flex-row items-center`}>
-                  {unreadReceivedRequestsCount > 0 && (
-                    <View style={tw`bg-red-500 rounded-full w-5 h-5 justify-center items-center mr-2`}>
-                      <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
-                    </View>
-                  )}
-                  <Ionicons name="chevron-forward" size={24} color="white" />
-                </View>
-              </View>
-            </BlurView>
-          </TouchableOpacity>
-        </View>
-  
-        {/* Interests Section */}
-        <View style={tw`mx-4 mt-6 mb-4`}>
-          <Text style={tw`text-white text-xl font-bold mb-4`}>Interests</Text>
-          <TouchableOpacity
-            style={tw`bg-white/20 rounded-xl p-4`}
-            onPress={() => navigation.navigate('InterestsList', { userId })}
-          >
-            <View style={tw`flex-row items-center justify-between`}>
-              <View style={tw`flex-row items-center`}>
-                <Ionicons name="heart" size={24} color="white" />
-                <Text style={tw`text-white font-semibold ml-3`}>Manage Your Interests</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={24} color="white" />
-            </View>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </LinearGradient>

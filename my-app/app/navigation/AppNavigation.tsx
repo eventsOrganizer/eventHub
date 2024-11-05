@@ -27,6 +27,8 @@ import EventSerialsList from '../components/event/Ticketing/EventSerialsList';  
 import GuestManagementScreen from '../screens/GuestManagementScreen';
 
 import CreateServiceScreen from '../screens/CreateServiceScreen';
+import FollowersComponent from '../components/event/profile/FollowersComponent';
+import FollowingComponent from '../components/event/profile/FollowingComponent';
 
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ServiceSelection from '../screens/ServiceSelection';
@@ -96,6 +98,8 @@ import EditEventScreen from '../components/event/profile/EditEventScreen';
 import EventsManagementScreen from '../components/event/profile/EventManagementScreen';
 import Social from '../components/event/profile/Social';
 import InterestsList from '../components/event/profile/InterestsList';
+import EventPaymentScreen from '../components/event/Ticketing/EventPaymentScreen';
+import EventPaymentSuccessScreen from '../components/event/Ticketing/EventPaymentSuccessScreen';
 
 type RootStackParamList = {
   Onboarding: undefined;
@@ -202,6 +206,10 @@ type EventSetupOptionsScreenProps = {
   AllEvents: { section: string };
   InterestsList: undefined;
   Social: undefined;
+  FollowersComponent: undefined;
+  FollowingComponent: undefined;
+  EventPaymentScreen: undefined;
+  EventPaymentSuccessScreen: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -296,6 +304,7 @@ const AppNavigation: React.FC = () => {
     component={PersonalDetail} 
     options={{ headerShown: true }} 
   />
+
 
   <Stack.Screen 
     name="EventDetails" 
@@ -629,6 +638,31 @@ const AppNavigation: React.FC = () => {
       },
     }}
   />
+
+  <Stack.Screen
+    name="EventPaymentSuccess"
+    component={EventPaymentSuccessScreen}
+    options={{ headerShown: false }}
+  />
+
+
+<Stack.Screen 
+        name="Followers" 
+        component={FollowersComponent}
+        options={{ title: 'Followers' }}
+      />
+      <Stack.Screen 
+        name="Following" 
+        component={FollowingComponent}
+        options={{ title: 'Following' }}
+      />
+
+      <Stack.Screen
+        name="EventPaymentScreen"
+        component={EventPaymentScreen}
+      />
+
+
 </Stack.Navigator> 
 
   )
