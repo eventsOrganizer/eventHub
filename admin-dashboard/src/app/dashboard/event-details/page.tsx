@@ -30,7 +30,16 @@ export default function EventDetailsPage(): React.JSX.Element {
     if (eventId) {
       supabase
         .from('event')
-        .select(`id, type, privacy, details, name, media:media(url), subcategory:subcategory(name)`)
+        .select(`
+          id, 
+          type, 
+          privacy, 
+          details, 
+          name, 
+          media:media(url), 
+          subcategory:subcategory(name),
+          user:user!event_user_id_fkey(firstname, lastname, email)
+        `)
         .eq('id', eventId)
         .then(({ data, error }) => {
           if (error) {
@@ -42,7 +51,6 @@ export default function EventDetailsPage(): React.JSX.Element {
         });
     }
   }, [eventId]);
-
   if (!event) {
     return <Typography>Loading...</Typography>;
   }
