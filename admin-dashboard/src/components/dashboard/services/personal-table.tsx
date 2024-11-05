@@ -6,6 +6,7 @@ import Checkbox from '@mui/material/Checkbox';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
+import Button from '@mui/material/Button';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
@@ -13,6 +14,7 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import { useSelection } from '../../../hooks/use-selection';
+import { useRouter } from 'next/navigation';
 
 interface PersonalService {
   id: string;
@@ -64,6 +66,8 @@ export function PersonalTable({
     }
   };
 
+  const router = useRouter();
+
   return (
     <Card>
       <Box sx={{ overflowX: 'auto' }}>
@@ -89,6 +93,7 @@ export function PersonalTable({
               <TableCell>Subcategory</TableCell>
               <TableCell>Owner</TableCell>
               <TableCell>ID</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -146,6 +151,17 @@ export function PersonalTable({
                   <TableCell>{row.subcategoryName}</TableCell>
                   <TableCell>{row.owner}</TableCell>
                   <TableCell>{row.id}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/personal-details?id=${row.id}`);
+                      }}
+                    >
+                      View Details
+                    </Button>
+                  </TableCell>
                 </TableRow>
               );
             })}

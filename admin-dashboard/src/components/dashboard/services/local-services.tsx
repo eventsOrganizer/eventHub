@@ -114,69 +114,6 @@ export default function LocalServices(): React.JSX.Element {
     }
   };
 
-  const handleAddSubcategory = async () => {
-    const { error } = await supabase
-      .from('subcategory')
-      .insert([{ name: newSubcategoryName, category_id: 42 }]);
-
-    if (error) {
-      console.error('Error adding subcategory:', error);
-    } else {
-      setSnackbarMessage('Subcategory added successfully!');
-      setSnackbarOpen(true);
-      setOpen(false);
-      setNewSubcategoryName('');
-      fetchSubcategories();
-    }
-  };
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-    setPage(0);
-  };
-
-  const handleEnable = async () => {
-    const toEnable = Array.from(selected).filter(id => {
-      const service = localServices.find(s => s.id === id);
-      return service && service.disabled;
-    });
-
-    if (toEnable.length > 0) {
-      await Promise.all(toEnable.map(async (id) => {
-        const { error } = await supabase
-          .from('local')
-          .update({ disabled: false })
-          .eq('id', id);
-
-        if (error) {
-          console.error('Error enabling service:', error);
-        }
-      }));
-      fetchLocalServices();
-    }
-  };
-
-  const handleDisable = async () => {
-    const toDisable = Array.from(selected).filter(id => {
-      const service = localServices.find(s => s.id === id);
-      return service && !service.disabled;
-    });
-
-    if (toDisable.length > 0) {
-      await Promise.all(toDisable.map(async (id) => {
-        const { error } = await supabase
-          .from('local')
-          .update({ disabled: true })
-          .eq('id', id);
-
-        if (error) {
-          console.error('Error disabling service:', error);
-        }
-      }));
-      fetchLocalServices();
-    }
-  };
-
   const handleDelete = async () => {
     const toDelete = Array.from(selected).filter(id => {
       const service = localServices.find(s => s.id === id);
@@ -227,85 +164,36 @@ export default function LocalServices(): React.JSX.Element {
     return matchesSubcategory && matchesSearch && matchesStatus && matchesPrice;
   });
 
-  const sortedServices = [...filteredServices].sort((a, b) => {
-    if (sortOrder === 'cheapest') return a.price - b.price;
-    if (sortOrder === 'expensive') return b.price - a.price;
-    return 0;
-  });
-
-  const paginatedServices = applyPagination(sortedServices, page, rowsPerPage);
-
-  const isEnableDisabled = !Array.from(selected).some(id => {
-    const service = localServices.find(s => s.id === id);
-    return service && service.disabled;
-  });
-
-  const isDisableEnabled = !Array.from(selected).some(id => {
-    const service = localServices.find(s => s.id === id);
-    return service && !service.disabled;
-  });
-
-  const isDeleteEnabled = selected.size > 0;
-
   return (
     <Stack spacing={3}>
       <Typography variant="h4">Local Services</Typography>
-      <Button
-        variant="contained"
-        color="primary"
-        size="small"
-        style={{ alignSelf: 'flex-end' }}
-        onClick={() => setOpen(true)}
-      >
-        Add New Subcategory
-      </Button>
       <LocalFilter
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        isEnableDisabled={isEnableDisabled}
-        isDisableEnabled={isDisableEnabled}
-        isDeleteEnabled={isDeleteEnabled}
-        onEnable={handleEnable}
-        onDisable={handleDisable}
-        onDelete={handleDelete}
-        statusFilter={statusFilter}
-        onStatusFilterChange={(e) => setStatusFilter(e.target.value as string)}
-        subcategoryFilter={subcategoryFilter}
-        onSubcategoryFilterChange={(e) => setSubcategoryFilter(e.target.value as string)}
-        onPriceFilter={handlePriceFilter}
         subcategories={subcategories}
+        onFilterChange={(subcategory, status) => {
+          setSubcategoryFilter(subcategory);
+          setStatusFilter(status);
+        }}
+        onSearchChange={setSearchQuery}
+        onPriceFilter={handlePriceFilter}
       />
       <LocalTable
         count={filteredServices.length}
+        rows={filteredServices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
         page={page}
-        rows={paginatedServices}    
         rowsPerPage={rowsPerPage}
         onPageChange={handlePageChange}
         onRowsPerPageChange={handleRowsPerPageChange}
         onSelectionChange={handleSelectionChange}
       />
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <div style={{ padding: '20px', background: 'white', borderRadius: '8px', margin: 'auto', maxWidth: '500px', top: '20%', position: 'absolute', left: '50%', transform: 'translate(-50%, -20%)' }}>
-          <Typography variant="h6">Add New Subcategory</Typography>
-          <TextField
-            label="Subcategory Name"
-            fullWidth
-            margin="normal"
-            value={newSubcategoryName}
-            onChange={(e) => setNewSubcategoryName(e.target.value)}
-          />
-          <Button onClick={handleAddSubcategory} variant="contained" color="primary" style={{ marginTop: '10px' }}>Submit</Button>
-        </div>
-      </Modal>
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      <Button variant="contained" color="primary" onClick={handleDelete} disabled={selected.size === 0}>
+        Delete Selected
+      </Button>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+      />
     </Stack>
   );
-}
-
-function applyPagination(rows: LocalService[], page: number, rowsPerPage: number): LocalService[] {
-  return rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 }
