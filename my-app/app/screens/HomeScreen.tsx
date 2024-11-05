@@ -136,7 +136,7 @@ const HomeScreen: React.FC = () => {
                 title="EVENTS FOR YOU" 
                 events={data.interestEvents} 
                 navigation={navigation} 
-                onSeeAll={() => navigation.navigate('AllEvents', { filter: 'interests' })} 
+                onSeeAll={() => navigation.navigate('AllEvents', { section: 'EVENTS_FOR_YOU' })}  
                 isTopEvents={true} 
               />
             )}
@@ -144,14 +144,14 @@ const HomeScreen: React.FC = () => {
               title="YOUR EVENTS" 
               events={data.filteredEvents} 
               navigation={navigation} 
-              onSeeAll={() => navigation.navigate('AllEvents')} 
+              onSeeAll={() => navigation.navigate('AllEvents', { section: 'YOUR_EVENTS' })} 
               isTopEvents={false} 
             />
             <EventSection 
               title="HOT EVENTS" 
               events={data.topEvents} 
               navigation={navigation} 
-              onSeeAll={() => navigation.navigate('AllEvents')} 
+              onSeeAll={() => navigation.navigate('AllEvents', { section: 'HOT_EVENTS' })} 
               isTopEvents={true} 
             />
           </View>

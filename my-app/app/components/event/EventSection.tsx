@@ -6,6 +6,8 @@ import EventCard from './EventCard';
 import YourEventCard from './YourEventCard';
 import JoinEventButton from './JoinEventButton';
 import tw from 'twrnc';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/types';
 
 const { height } = Dimensions.get('window');
 
@@ -26,14 +28,18 @@ interface Event {
   media?: { url: string }[];
 }
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 interface EventSectionProps {
   title: string;
   events: Event[];
-  navigation: any;
-  onSeeAll: () => void;
+  navigation: NavigationProp;
+  onSeeAll?: () => void;
   isTopEvents: boolean;
   isLoading?: boolean;
   isForYou?: boolean;
+  isSeeAllPage?: boolean;
+  searchTerm?: string;
 }
 
 const EventSection: React.FC<EventSectionProps> = ({ 
@@ -43,7 +49,9 @@ const EventSection: React.FC<EventSectionProps> = ({
   onSeeAll, 
   isTopEvents,
   isLoading = false,
-  isForYou = false
+  isForYou = false,
+  isSeeAllPage = false,
+  searchTerm = ''
 }) => {
   if (isLoading) {
     return (
@@ -54,8 +62,20 @@ const EventSection: React.FC<EventSectionProps> = ({
   }
 
   if (!events?.length) {
-    return null;
+    return (
+      <View style={tw`h-40 justify-center items-center bg-gray-900/50 rounded-3xl mb-6`}>
+        <Text style={tw`text-white text-lg`}>No events found</Text>
+      </View>
+    );
   }
+
+  // Filter events if searchTerm is provided
+  const filteredEvents = searchTerm 
+    ? events.filter(event => 
+        event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.description.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : events;
 
   const renderEventCard = ({ item }: { item: Event }) => {
     const CardComponent = isTopEvents || isForYou ? EventCard : YourEventCard;
@@ -80,7 +100,10 @@ const EventSection: React.FC<EventSectionProps> = ({
   return (
     <View style={[
       tw`mb-6 rounded-3xl overflow-hidden`, 
-      { height: isTopEvents || isForYou ? 'auto' : height * 0.8 }
+      { 
+        height: isSeeAllPage ? 'auto' : (isTopEvents || isForYou ? 'auto' : height * 0.8),
+        flex: isSeeAllPage ? 1 : undefined
+      }
     ]}>
       <BlurView 
         intensity={80} 
@@ -88,24 +111,33 @@ const EventSection: React.FC<EventSectionProps> = ({
         style={tw`flex-1 rounded-3xl ${isForYou ? 'bg-purple-900/20' : ''}`}
       >
         <View style={tw`p-4`}>
-          <View style={tw`flex-row justify-between items-center mb-4 border-b border-white/30 pb-2`}>
-            <Text style={tw`text-2xl font-bold text-white`}>{title}</Text>
-            <TouchableOpacity 
-              onPress={onSeeAll} 
-              style={tw`flex-row items-center bg-white/20 py-2 px-3 rounded-full`}
-            >
-              <Text style={tw`text-white text-sm font-medium mr-1`}>See All</Text>
-              <Ionicons name="arrow-forward" size={16} color="#fff" />
-            </TouchableOpacity>
-          </View>
+          {!isSeeAllPage && (
+            <View style={tw`flex-row justify-between items-center mb-4 border-b border-white/30 pb-2`}>
+              <Text style={tw`text-2xl font-bold text-white`}>{title}</Text>
+              {onSeeAll && (
+                <TouchableOpacity 
+                  onPress={onSeeAll} 
+                  style={tw`flex-row items-center bg-white/20 py-2 px-3 rounded-full`}
+                >
+                  <Text style={tw`text-white text-sm font-medium mr-1`}>See All</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#fff" />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
           <FlatList
-            data={events}
+            data={filteredEvents}
             renderItem={renderEventCard}
             keyExtractor={(item) => item.id.toString()}
-            horizontal={isTopEvents || isForYou}
+            horizontal={!isSeeAllPage && (isTopEvents || isForYou)}
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={isTopEvents || isForYou ? tw`pb-2` : tw`pb-4`}
+            numColumns={isSeeAllPage ? 1 : undefined}
+            contentContainerStyle={
+              isSeeAllPage 
+                ? tw`pb-20` 
+                : (isTopEvents || isForYou ? tw`pb-2` : tw`pb-4`)
+            }
           />
         </View>
       </BlurView>

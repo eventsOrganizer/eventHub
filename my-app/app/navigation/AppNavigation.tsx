@@ -55,7 +55,7 @@ import LocalCommentSection from '../components/LocalService/LocalCommentSection'
 import ReviewScreen from '../screens/MaterialServiceScreens/ReviewScreen';
 // Inside your Stack.Navigator component, add this new Screen
 import CommentScreen from '../screens/MaterialServiceScreens/CommentScreen';
-
+import AdvancedSearchScreen from '../screens/AdvancedSearchScreen';
 
 import CreateLocalServiceStep1 from '../components/LocalServiceCreation/CreateLocalServiceStep1';
 import CreateLocalServiceStep2 from '../components/LocalServiceCreation/CreateLocalServiceStep2';
@@ -89,13 +89,13 @@ import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
 import ServicesDetails from '../services/servicesDetailsInUserProfile/ServicesDetails';
 import LocalCommentsScreen from '../screens/LocalServiceScreens/LocalCommentsScreen';
-
+import AllEvents from '../screens/AllEvents';
 // import * as PaymentScreen from '../screens/PaymentScreen';
 import ManageYourEvents from '../components/event/profile/ManageYourEvents';
 import EditEventScreen from '../components/event/profile/EditEventScreen';
 import EventsManagementScreen from '../components/event/profile/EventManagementScreen';
-
-
+import Social from '../components/event/profile/Social';
+import InterestsList from '../components/event/profile/InterestsList';
 
 type RootStackParamList = {
   Onboarding: undefined;
@@ -198,7 +198,10 @@ type EventSetupOptionsScreenProps = {
   EventsManagement: undefined;
   ReceivedEventRequests: undefined;
   SentEventRequests: undefined; 
-
+  AdvancedSearchScreen: undefined;
+  AllEvents: { section: string };
+  InterestsList: undefined;
+  Social: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -222,6 +225,12 @@ const AppNavigation: React.FC = () => {
         initialParams={{ onComplete: handleOnComplete }}
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen
+        name="Social"
+        component={Social}
+        options={{ headerShown: false }}
+      />
     
   <Stack.Screen 
     name="Home" 
@@ -237,6 +246,12 @@ const AppNavigation: React.FC = () => {
   <Stack.Screen 
     name="Map" 
     component={MapScreen} 
+    options={{ headerShown: true }} 
+  />
+
+  <Stack.Screen 
+    name="InterestsList" 
+    component={InterestsList} 
     options={{ headerShown: true }} 
   />
 
@@ -318,6 +333,13 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true, title: 'Create Local Service - Step 1' }} 
   />
 
+
+  <Stack.Screen 
+    name="AllEvents" 
+    component={AllEvents} 
+    options={{ headerShown: true, title: 'All Events' }} 
+  />
+
   <Stack.Screen 
     name="CreateLocalServiceStep2" 
     component={CreateLocalServiceStep2} 
@@ -351,6 +373,11 @@ const AppNavigation: React.FC = () => {
     name="LocalsScreen"
     component={LocalsScreen}
     options={{ title: 'Local Services' }}
+  />
+  <Stack.Screen
+    name="AdvancedSearchScreen"
+    component={AdvancedSearchScreen}
+    options={{ headerShown: true, title: 'Advanced Search' }}
   />
 
 <Stack.Screen
@@ -527,7 +554,8 @@ const AppNavigation: React.FC = () => {
     name="MapScreen" 
     component={MapScreen} 
   />
-    
+  
+
 
   
 
@@ -567,6 +595,9 @@ const AppNavigation: React.FC = () => {
     headerShown: true,
   }}
 />
+
+
+
 <Stack.Screen 
     name="ReceivedEventRequests" 
     component={ReceivedEventRequests}
