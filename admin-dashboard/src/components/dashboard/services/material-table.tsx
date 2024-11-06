@@ -8,11 +8,13 @@ import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
+import Button from '@mui/material/Button';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 import { useSelection } from '../../../hooks/use-selection';
+import { useRouter } from 'next/navigation';
 
 interface Material {
   id: string;
@@ -54,8 +56,8 @@ export function MaterialTable({
     onSelectionChange(selected);
   }, [selected, onSelectionChange]);
 
-  const selectedSome = (selected?.size ?? 0) > 0 && (selected?.size ?? 0) < rows.length;
   const selectedAll = rows.length > 0 && selected?.size === rows.length;
+  const selectedSome = (selected?.size ?? 0) > 0 && (selected?.size ?? 0) < rows.length;
 
   const handleRowClick = (id: string) => {
     if (selected?.has(id)) {
@@ -64,6 +66,8 @@ export function MaterialTable({
       selectOne(id);
     }
   };
+
+  const router = useRouter();
 
   return (
     <Card>
@@ -91,80 +95,50 @@ export function MaterialTable({
               <TableCell>Price per Hour</TableCell>
               <TableCell>Subcategory</TableCell>
               <TableCell>ID</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row) => {
-              const isSelected = selected?.has(row.id);
-              const isDisabled = row.disabled;
-
-              return (
-                <TableRow
-                  hover
-                  key={row.id}
-                  selected={isSelected}
-                  onClick={() => handleRowClick(row.id)}
-                  sx={{
-                    cursor: 'pointer',
-                    backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.1)' : 'inherit',
-                    opacity: isDisabled ? 0.5 : 1,
-                    '&:hover': {
-                      backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.04)',
-                    },
-                    '&.Mui-selected': {
-                      backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.08)',
-                      '&:hover': {
-                        backgroundColor: isDisabled ? 'rgba(255, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.12)',
-                      },
-                    },
-                  }}
-                >
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={isSelected}
-                      onChange={(event) => {
-                        event.stopPropagation();
-                        if (event.target.checked) {
-                          selectOne(row.id);
-                        } else {
-                          deselectOne(row.id);
-                        }
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {row.image ? (
-                      <Avatar
-                        src={row.image}
-                        alt={row.name}
-                        sx={{ width: 56, height: 56, borderRadius: '8px' }}
-                      />
-                    ) : (
-                      'N/A'
-                    )}
-                  </TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.sell_or_rent}</TableCell>
-                  <TableCell>{row.price}</TableCell>
-                  <TableCell>{row.price_per_hour}</TableCell>
-                  <TableCell>{row.subcategoryName}</TableCell>
-                  <TableCell>{row.id}</TableCell>
-                </TableRow>
-              );
-            })}
+            {rows.map((material) => (
+              <TableRow
+                hover
+                key={material.id}
+                selected={selected?.has(material.id)}
+                onClick={() => handleRowClick(material.id)}
+              >
+                <TableCell padding="checkbox">
+                  <Checkbox checked={selected?.has(material.id)} />
+                </TableCell>
+                <TableCell>
+                  <Avatar src={material.image} alt={material.name} />
+                </TableCell>
+                <TableCell>{material.name}</TableCell>
+                <TableCell>{material.sell_or_rent}</TableCell>
+                <TableCell>{material.price}</TableCell>
+                <TableCell>{material.price_per_hour}</TableCell>
+                <TableCell>{material.subcategoryName}</TableCell>
+                <TableCell>{material.id}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => router.push(`/material-details?id=${material.id}`)}
+                  >
+                    View Details
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </Box>
-      <Divider />
       <TablePagination
         component="div"
         count={count}
         page={page}
-        rowsPerPage={rowsPerPage}
         onPageChange={onPageChange}
+        rowsPerPage={rowsPerPage}
         onRowsPerPageChange={onRowsPerPageChange}
-        rowsPerPageOptions={[5, 10, 25]}
-        labelRowsPerPage="Rows per page"
       />
     </Card>
   );
