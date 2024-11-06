@@ -188,6 +188,20 @@ export type RootStackParamList = {
       interval: number;
     };
   };
+  EventPaymentScreen: {
+    amount: number;
+    eventId: number;
+    ticketId: number;
+    userId: string;
+    eventType: 'online' | 'indoor' | 'outdoor';
+  };
+  EventPaymentSuccess: {
+    ticketId: number;
+    eventId: number;
+    serviceType: string;
+    paymentIntentId: string;
+    amount: number;
+  };
 }
 
 export interface Media {

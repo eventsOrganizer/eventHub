@@ -7,10 +7,10 @@ import { UserProvider } from './app/UserContext';
 import { BasketProvider } from './app/components/basket/BasketContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'react-native';
-// import Background from './app/components/Background' DONT DELETE THIS  !!!!!!!!!!! ;
 import { StripeProvider } from '@stripe/stripe-react-native';
 import Constants from 'expo-constants';
-
+import { HeartbeatProvider } from './app/components/HeartbeatProvider';
+  
 const App = () => {
   const stripePublishableKey = Constants.expoConfig?.extra?.STRIPE_PUBLISHABLE_KEY;
 
@@ -22,16 +22,15 @@ const App = () => {
     <BasketProvider>
       <SafeAreaProvider>
         <StatusBar barStyle="light-content" />
-        {/* <Background /> DONT DELETE THIS  !!!!!!!!!!! */}
-        <StripeProvider
-          publishableKey={stripePublishableKey || ''}
-        >
+        <StripeProvider publishableKey={stripePublishableKey || ''}>
           <UserProvider>
-            <Provider store={store}>
-              <NavigationContainer>
-                <AppNavigator />
-              </NavigationContainer>
-            </Provider>
+            <HeartbeatProvider>
+              <Provider store={store}>
+                <NavigationContainer>
+                  <AppNavigator />
+                </NavigationContainer>
+              </Provider>
+            </HeartbeatProvider>
           </UserProvider>
         </StripeProvider>
       </SafeAreaProvider>

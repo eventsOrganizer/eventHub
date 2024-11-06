@@ -14,6 +14,8 @@ import ServiceCalendar from '../components/reuseableForCreationService/ServiceCa
 import tw from 'twrnc';
 import { createUpdate } from '../components/event/profile/notification/CreateUpdate';
 import { BlurView } from 'expo-blur';
+import { createEventNotificationSystem } from '../services/eventNotificationService';
+
 
 const EventCreationScreen: React.FC = () => {
   const { userId } = useUser();
@@ -43,6 +45,9 @@ ticketQuantity: '',
   const [showMap, setShowMap] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { handleEventCreationNotification } = createEventNotificationSystem();
+
+  const navigation = useNavigation();
   useEffect(() => {
     fetchCategories();
     console.log('Component mounted');
@@ -130,6 +135,14 @@ ticketQuantity: '',
 
       if (eventError) throw eventError;
 
+      const { data: followers, error: followerError } = await supabase
+      .from('follower')
+      .select('follower_id')
+      .eq('following_id', userId);
+
+    if (followerError) throw followerError;
+
+
       console.log('Event created:', newEvent);
       const eventId = newEvent.id;
 
@@ -152,9 +165,18 @@ ticketQuantity: '',
           url: eventData.imageUrl,
           type: 'image',
         }),
+
+        
+      
         createUpdate(userId, 'event', eventId)
       ]);
-
+      try {
+        console.log('Calling handleEventCreationNotification with:', { eventId, userId });
+        const result = await handleEventCreationNotification(eventId, userId);
+        console.log('Event creation notification result:', result);
+      } catch (error) {
+        console.error('Error in handleEventCreationNotification:', error);
+      }
       if (eventData.accessType === 'paid') {
       console.log('Creating tickets for paid event');
       const { error: ticketError } = await supabase.from('ticket').insert({
@@ -271,57 +293,204 @@ ticketQuantity: '',
               )}
             </>
           );
-      case 3:
-        return (
-          <>
-            <Text style={tw`text-2xl font-bold mb-4 text-white`}>Date & Time</Text>
-            <TouchableOpacity
-              style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text>{eventData.date.toDateString()}</Text>
-            </TouchableOpacity>
-            <DateTimePickerModal
-              isVisible={showDatePicker}
-              mode="date"
-              onConfirm={(date) => {
-                handleInputChange('date', date);
-                setShowDatePicker(false);
-              }}
-              onCancel={() => setShowDatePicker(false)}
-            />
-            <TouchableOpacity
-              style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
-              onPress={() => setShowStartTimePicker(true)}
-            >
-              <Text>{eventData.startTime.toLocaleTimeString()}</Text>
-            </TouchableOpacity>
-            <DateTimePickerModal
-              isVisible={showStartTimePicker}
-              mode="time"
-              onConfirm={(time) => {
-                handleInputChange('startTime', time);
-                setShowStartTimePicker(false);
-              }}
-              onCancel={() => setShowStartTimePicker(false)}
-            />
-            <TouchableOpacity
-              style={tw`bg-white border border-gray-300 rounded-lg p-3 mb-4`}
-              onPress={() => setShowEndTimePicker(true)}
-            >
-              <Text>{eventData.endTime.toLocaleTimeString()}</Text>
-            </TouchableOpacity>
-            <DateTimePickerModal
-              isVisible={showEndTimePicker}
-              mode="time"
-              onConfirm={(time) => {
-                handleInputChange('endTime', time);
-                setShowEndTimePicker(false);
-              }}
-              onCancel={() => setShowEndTimePicker(false)}
-            />
-          </>
-        );
+          case 3:
+            return (
+              <View style={tw`flex-1 w-full`}>
+                <Text style={tw`text-2xl font-bold mb-4 text-white`}>Date & Time</Text>
+                
+                {/* Date Selection */}
+                <View style={tw`bg-white rounded-lg mb-6 overflow-hidden`}>
+                  <Calendar
+                    onDayPress={(day) => {
+                      const selectedDate = new Date(day.timestamp);
+                      handleInputChange('date', selectedDate);
+                    }}
+                    markedDates={{
+                      [eventData.date.toISOString().split('T')[0]]: {
+                        selected: true,
+                        selectedColor: '#4F46E5'
+                      }
+                    }}
+                    theme={{
+                      backgroundColor: '#ffffff',
+                      calendarBackground: '#ffffff',
+                      selectedDayBackgroundColor: '#4F46E5',
+                      selectedDayTextColor: '#ffffff',
+                      todayTextColor: '#4F46E5',
+                      dayTextColor: '#2d3748',
+                      textDisabledColor: '#a0aec0',
+                      arrowColor: '#4F46E5'
+                    }}
+                    minDate={new Date().toISOString().split('T')[0]}
+                  />
+                </View>
+          
+                {/* Time Selection */}
+                <View style={tw`flex-row justify-between mb-6`}>
+                  {/* Start Time */}
+                  <View style={tw`flex-1 mr-2`}>
+                    <Text style={tw`text-white mb-2`}>Start Time</Text>
+                    <TouchableOpacity
+                      style={tw`bg-white p-4 rounded-lg`}
+                      onPress={() => setShowStartTimePicker(true)}
+                    >
+                      <Text style={tw`text-center text-gray-800`}>
+                        {eventData.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+          
+                  {/* End Time */}
+                  <View style={tw`flex-1 ml-2`}>
+                    <Text style={tw`text-white mb-2`}>End Time</Text>
+                    <TouchableOpacity
+                      style={tw`bg-white p-4 rounded-lg`}
+                      onPress={() => setShowEndTimePicker(true)}
+                    >
+                      <Text style={tw`text-center text-gray-800`}>
+                        {eventData.endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+          
+                {/* Custom Time Picker Modal - Start Time */}
+                <Modal
+                  visible={showStartTimePicker}
+                  transparent
+                  animationType="slide"
+                >
+                  <View style={tw`flex-1 justify-end bg-black/50`}>
+                    <View style={tw`bg-white rounded-t-3xl p-4`}>
+                      <Text style={tw`text-xl font-bold text-center mb-4`}>Select Start Time</Text>
+                      <View style={tw`flex-row justify-center items-center h-40`}>
+                        <View style={tw`w-20 border-r border-gray-200`}>
+                          <ScrollView>
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <TouchableOpacity
+                                key={i}
+                                style={tw`p-3 ${i === eventData.startTime.getHours() ? 'bg-blue-500' : ''}`}
+                                onPress={() => {
+                                  const newTime = new Date(eventData.startTime);
+                                  newTime.setHours(i);
+                                  handleInputChange('startTime', newTime);
+                                }}
+                              >
+                                <Text style={tw`text-center ${i === eventData.startTime.getHours() ? 'text-white' : 'text-black'}`}>
+                                  {i.toString().padStart(2, '0')}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                          </ScrollView>
+                        </View>
+                        <Text style={tw`mx-2 text-xl`}>:</Text>
+                        <View style={tw`w-20 border-l border-gray-200`}>
+                          <ScrollView>
+                            {[0, 15, 30, 45].map((minute) => (
+                              <TouchableOpacity
+                                key={minute}
+                                style={tw`p-3 ${minute === eventData.startTime.getMinutes() ? 'bg-blue-500' : ''}`}
+                                onPress={() => {
+                                  const newTime = new Date(eventData.startTime);
+                                  newTime.setMinutes(minute);
+                                  handleInputChange('startTime', newTime);
+                                }}
+                              >
+                                <Text style={tw`text-center ${minute === eventData.startTime.getMinutes() ? 'text-white' : 'text-black'}`}>
+                                  {minute.toString().padStart(2, '0')}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      </View>
+                      <View style={tw`flex-row justify-end mt-4`}>
+                        <TouchableOpacity
+                          style={tw`bg-gray-200 p-3 rounded-xl mr-2 flex-1`}
+                          onPress={() => setShowStartTimePicker(false)}
+                        >
+                          <Text style={tw`text-center font-semibold`}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={tw`bg-blue-500 p-3 rounded-xl flex-1`}
+                          onPress={() => setShowStartTimePicker(false)}
+                        >
+                          <Text style={tw`text-white text-center font-semibold`}>Confirm</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+          
+                {/* Custom Time Picker Modal - End Time */}
+                <Modal
+                  visible={showEndTimePicker}
+                  transparent
+                  animationType="slide"
+                >
+                  <View style={tw`flex-1 justify-end bg-black/50`}>
+                    <View style={tw`bg-white rounded-t-3xl p-4`}>
+                      <Text style={tw`text-xl font-bold text-center mb-4`}>Select End Time</Text>
+                      <View style={tw`flex-row justify-center items-center h-40`}>
+                        <View style={tw`w-20 border-r border-gray-200`}>
+                          <ScrollView>
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <TouchableOpacity
+                                key={i}
+                                style={tw`p-3 ${i === eventData.endTime.getHours() ? 'bg-blue-500' : ''}`}
+                                onPress={() => {
+                                  const newTime = new Date(eventData.endTime);
+                                  newTime.setHours(i);
+                                  handleInputChange('endTime', newTime);
+                                }}
+                              >
+                                <Text style={tw`text-center ${i === eventData.endTime.getHours() ? 'text-white' : 'text-black'}`}>
+                                  {i.toString().padStart(2, '0')}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                          </ScrollView>
+                        </View>
+                        <Text style={tw`mx-2 text-xl`}>:</Text>
+                        <View style={tw`w-20 border-l border-gray-200`}>
+                          <ScrollView>
+                            {[0, 15, 30, 45].map((minute) => (
+                              <TouchableOpacity
+                                key={minute}
+                                style={tw`p-3 ${minute === eventData.endTime.getMinutes() ? 'bg-blue-500' : ''}`}
+                                onPress={() => {
+                                  const newTime = new Date(eventData.endTime);
+                                  newTime.setMinutes(minute);
+                                  handleInputChange('endTime', newTime);
+                                }}
+                              >
+                                <Text style={tw`text-center ${minute === eventData.endTime.getMinutes() ? 'text-white' : 'text-black'}`}>
+                                  {minute.toString().padStart(2, '0')}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      </View>
+                      <View style={tw`flex-row justify-end mt-4`}>
+                        <TouchableOpacity
+                          style={tw`bg-gray-200 p-3 rounded-xl mr-2 flex-1`}
+                          onPress={() => setShowEndTimePicker(false)}
+                        >
+                          <Text style={tw`text-center font-semibold`}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={tw`bg-blue-500 p-3 rounded-xl flex-1`}
+                          onPress={() => setShowEndTimePicker(false)}
+                        >
+                          <Text style={tw`text-white text-center font-semibold`}>Confirm</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+              </View>
+            );
       case 4:
         return (
           <>

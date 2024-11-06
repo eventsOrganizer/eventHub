@@ -7,7 +7,9 @@ import tw from 'twrnc';
 import { LinearGradient } from 'expo-linear-gradient';
 import CloudinaryUpload from '../CloudinaryUpload';
 import { createEventNotificationSystem } from '../../../services/eventNotificationService';
-
+import TicketPaymentModal from './TicketPaymentModal';
+import TicketPaymentStatus from './TicketPaymentStatus';
+import { useNavigation } from '@react-navigation/native';
 interface BuyTicketProps {
   eventId: number;
   eventType: 'online' | 'indoor' | 'outdoor';
@@ -22,27 +24,63 @@ const BuyTicket: React.FC<BuyTicketProps> = ({ eventId, eventType }) => {
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const { userId } = useUser();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPaymentStatus, setShowPaymentStatus] = useState<'pending' | 'completed' | 'failed' | null>(null);
+  const [ticketPrice, setTicketPrice] = useState<number>(0);
+  
+  const [eventDetails, setEventDetails] = useState({
+    name: '',
+    date: '',
+    time: ''
+  });
 
+  const navigation = useNavigation();
   useEffect(() => {
     checkTicketAvailability();
   }, [eventId]);
 
+  useEffect(() => {
+    const fetchTicketDetails = async () => {
+      if (!ticketId) return;
+      
+      const { data: ticketData, error } = await supabase
+        .from('ticket')
+        .select('price, event!inner(name, date, time)')
+        .eq('id', ticketId)
+        .single();
+  
+      console.log('Ticket data received:', ticketData);
+      if (ticketData) {
+        setTicketPrice(parseFloat(ticketData.price));  // Parse price as float
+        setEventDetails({
+          name: ticketData.event.name,
+          date: ticketData.event.date,
+          time: ticketData.event.time
+        });
+      }
+    };
+  
+    fetchTicketDetails();
+  }, [ticketId]);
+
   const checkTicketAvailability = async () => {
     const { data, error } = await supabase
       .from('ticket')
-      .select('id, quantity')
+      .select('id, quantity, price')
       .eq('event_id', eventId)
       .single();
-
+  
     if (error) {
       console.error('Error checking ticket availability:', error);
       return;
     }
-
-    if (data && data.quantity > 0) {
+  
+    if (data && parseInt(data.quantity) > 0) {  // Parse quantity as integer
       setTicketAvailable(true);
-      setTicketQuantity(data.quantity);
+      setTicketQuantity(parseInt(data.quantity));
       setTicketId(data.id);
+      setTicketPrice(parseFloat(data.price));  // Parse price as float
+      console.log('Setting initial ticket price to:', parseFloat(data.price));
     }
   };
   const handleImageUploaded = async (urls: string[]) => {
@@ -105,9 +143,38 @@ const BuyTicket: React.FC<BuyTicketProps> = ({ eventId, eventType }) => {
   }
 };
  
-  const handleBuyTicket = () => {
-    setShowImageUpload(true);
-  };
+// In BuyTicket.tsx, modify handleBuyTicket:
+const handleBuyTicket = () => {
+  if (ticketPrice <= 0) {
+    Alert.alert('Error', 'Invalid ticket price');
+    return;
+  }
+
+  navigation.navigate('EventPaymentScreen', {
+    amount: ticketPrice,
+    eventId,
+    ticketId,
+    userId,
+    eventType
+  });
+};
+
+const handlePaymentConfirm = () => {
+  setShowPaymentModal(false);
+  navigation.navigate('EventPaymentScreen', {
+    amount: ticketPrice,
+    eventId,
+    ticketId,
+    userId,
+    eventType
+  });
+};
+
+const handlePaymentCancel = () => {
+  setShowPaymentModal(false);
+  setShowPaymentStatus(null);
+};
+
 
   return (
     <>
@@ -133,13 +200,28 @@ const BuyTicket: React.FC<BuyTicketProps> = ({ eventId, eventType }) => {
           </TouchableOpacity>
         )}
       </View>
+      <TicketPaymentModal
+        visible={showPaymentModal}
+        onClose={handlePaymentCancel}
+        onConfirm={handlePaymentConfirm}
+        eventName={eventDetails.name}
+        eventDate={eventDetails.date}
+        eventTime={eventDetails.time}
+  ticketPrice={ticketPrice}
+/>
 
+{showPaymentStatus && (
+  <TicketPaymentStatus
+    paymentStatus={showPaymentStatus}
+    amount={ticketPrice}
+  />
+)}
       <Modal
-        visible={showImageUpload}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowImageUpload(false)}
-      >
+  visible={showImageUpload && showPaymentStatus === 'completed'}
+  animationType="slide"
+  transparent={true}
+  onRequestClose={() => setShowImageUpload(false)}
+>
         <View style={tw`flex-1 justify-center items-center bg-black/50`}>
           <View style={tw`bg-white rounded-xl w-5/6 p-4`}>
             <Text style={tw`text-xl font-bold mb-4`}>Upload Your Photo</Text>
