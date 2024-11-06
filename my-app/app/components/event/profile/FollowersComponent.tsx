@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../services/supabaseClient';
 import UserAvatar from '../UserAvatar';
 import { useUser } from '../../../UserContext';
+import tw from 'twrnc';
 
 interface Follower {
   id: string;
@@ -10,21 +14,35 @@ interface Follower {
   lastname: string;
 }
 
-const FollowersComponent: React.FC = () => {
+interface Props {
+  route?: {
+    params?: {
+      userId?: string;
+      isOwnProfile?: boolean;
+    }
+  }
+}
+
+const FollowersComponent: React.FC<Props> = ({ route }) => {
   const [followers, setFollowers] = useState<Follower[]>([]);
-  const { userId } = useUser();
+  const { userId: currentUserId } = useUser();
+  
+  // If we're coming from route params (organizer profile), use that userId
+  // Otherwise, use the currentUserId (user profile)
+  const targetUserId = route?.params?.userId || currentUserId;
+  const isOwnProfile = route?.params?.isOwnProfile ?? true;
 
   useEffect(() => {
     fetchFollowers();
-  }, [userId]);
+  }, [targetUserId]);
 
   const fetchFollowers = async () => {
-    if (!userId) return;
+    if (!targetUserId) return;
 
     const { data, error } = await supabase
       .from('follower')
       .select('follower_id')
-      .eq('following_id', userId);
+      .eq('following_id', targetUserId);
 
     if (error) {
       console.error('Error fetching followers:', error);
@@ -40,7 +58,7 @@ const FollowersComponent: React.FC = () => {
     if (followersError) {
       console.error('Error fetching followers data:', followersError);
     } else {
-      setFollowers(followersData as Follower[]);
+      setFollowers(followersData || []);
     }
   };
 
@@ -48,7 +66,7 @@ const FollowersComponent: React.FC = () => {
     const { error } = await supabase
       .from('follower')
       .delete()
-      .match({ follower_id: followerId, following_id: userId });
+      .match({ follower_id: followerId, following_id: targetUserId });
 
     if (error) {
       console.error('Error removing follower:', error);
@@ -57,47 +75,119 @@ const FollowersComponent: React.FC = () => {
     }
   };
 
+  const renderItem = ({ item }: { item: Follower }) => (
+    <BlurView intensity={30} tint="dark" style={styles.followerItem}>
+      <TouchableOpacity style={styles.userContainer}>
+        <UserAvatar userId={item.id} size={60} />
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{`${item.firstname} ${item.lastname}`}</Text>
+          <Text style={styles.userSubtext}>
+            {isOwnProfile ? 'Follows you' : `Follows ${item.firstname}`}
+          </Text>
+        </View>
+      </TouchableOpacity>
+      {isOwnProfile && (
+        <TouchableOpacity 
+          style={styles.removeButton}
+          onPress={() => removeFollower(item.id)}
+        >
+          <Ionicons name="close-circle" size={20} color="#FF3B30" />
+          <Text style={styles.removeText}>Remove</Text>
+        </TouchableOpacity>
+      )}
+    </BlurView>
+  );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Followers</Text>
-      <FlatList
-        data={followers}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.followerItem}>
-            <UserAvatar userId={item.id} size={50} />
-            <Text style={styles.followerName}>{`${item.firstname} ${item.lastname}`}</Text>
-            <TouchableOpacity onPress={() => removeFollower(item.id)}>
-              <Text style={styles.removeButton}>Remove</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
-    </View>
+    <SafeAreaView style={styles.container}>
+      <LinearGradient
+        colors={['#003791', '#0054A8', '#0072CE']}
+        style={styles.gradient}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Followers</Text>
+          <View style={styles.headerLine} />
+        </View>
+
+        <FlatList
+          data={followers}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      </LinearGradient>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    backgroundColor: '#003791',
+  },
+  gradient: {
+    flex: 1,
+  },
+  header: {
+    padding: 20,
+    paddingBottom: 10,
   },
   title: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 10,
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  headerLine: {
+    height: 2,
+    width: 40,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 2,
+  },
+  listContainer: {
+    padding: 15,
   },
   followerItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginBottom: 12,
+    borderRadius: 15,
+    padding: 12,
+    overflow: 'hidden',
   },
-  followerName: {
-    marginLeft: 10,
+  userContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
+  userInfo: {
+    marginLeft: 15,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  userSubtext: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
   removeButton: {
-    color: 'red',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,59,48,0.15)',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  removeText: {
+    color: '#FF3B30',
+    marginLeft: 5,
+    fontWeight: '500',
   },
 });
 

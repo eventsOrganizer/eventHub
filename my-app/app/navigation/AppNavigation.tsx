@@ -27,6 +27,8 @@ import EventSerialsList from '../components/event/Ticketing/EventSerialsList';  
 import GuestManagementScreen from '../screens/GuestManagementScreen';
 
 import CreateServiceScreen from '../screens/CreateServiceScreen';
+import FollowersComponent from '../components/event/profile/FollowersComponent';
+import FollowingComponent from '../components/event/profile/FollowingComponent';
 
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ServiceSelection from '../screens/ServiceSelection';
@@ -96,6 +98,11 @@ import EditEventScreen from '../components/event/profile/EditEventScreen';
 import EventsManagementScreen from '../components/event/profile/EventManagementScreen';
 import Social from '../components/event/profile/Social';
 import InterestsList from '../components/event/profile/InterestsList';
+import EventPaymentScreen from '../components/event/Ticketing/EventPaymentScreen';
+import EventPaymentSuccessScreen from '../components/event/Ticketing/EventPaymentSuccessScreen';
+import MyOrders from '../components/event/profile/order/MyOrders';
+
+
 
 type RootStackParamList = {
   Onboarding: undefined;
@@ -202,6 +209,11 @@ type EventSetupOptionsScreenProps = {
   AllEvents: { section: string };
   InterestsList: undefined;
   Social: undefined;
+  FollowersComponent: undefined;
+  FollowingComponent: undefined;
+  EventPaymentScreen: undefined;
+  EventPaymentSuccessScreen: undefined;
+  MyOrders: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -297,6 +309,7 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true }} 
   />
 
+
   <Stack.Screen 
     name="EventDetails" 
     component={EventDetailsScreen} 
@@ -339,6 +352,15 @@ const AppNavigation: React.FC = () => {
     component={AllEvents} 
     options={{ headerShown: true, title: 'All Events' }} 
   />
+
+<Stack.Screen 
+        name="MyOrders" 
+        component={MyOrders}
+        options={{
+          title: 'My Orders',
+          headerShown: true,
+        }}
+      />
 
   <Stack.Screen 
     name="CreateLocalServiceStep2" 
@@ -629,6 +651,31 @@ const AppNavigation: React.FC = () => {
       },
     }}
   />
+
+  <Stack.Screen
+    name="EventPaymentSuccess"
+    component={EventPaymentSuccessScreen}
+    options={{ headerShown: false }}
+  />
+
+
+<Stack.Screen 
+        name="Followers" 
+        component={FollowersComponent}
+        options={{ title: 'Followers' }}
+      />
+      <Stack.Screen 
+        name="Following" 
+        component={FollowingComponent}
+        options={{ title: 'Following' }}
+      />
+
+      <Stack.Screen
+        name="EventPaymentScreen"
+        component={EventPaymentScreen}
+      />
+
+
 </Stack.Navigator> 
 
   )

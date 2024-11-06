@@ -10,7 +10,8 @@ import { StatusBar } from 'react-native';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import Constants from 'expo-constants';
 import { generateData, resetDatabase } from './app/fake_data';
-
+import { HeartbeatProvider } from './app/components/HeartbeatProvider';
+  
 const App = () => {
   const stripePublishableKey = Constants.expoConfig?.extra?.STRIPE_PUBLISHABLE_KEY;
 
@@ -42,11 +43,13 @@ const App = () => {
         <StatusBar barStyle="light-content" />
         <StripeProvider publishableKey={stripePublishableKey || ''}>
           <UserProvider>
-            <Provider store={store}>
-              <NavigationContainer>
-                <AppNavigator />
-              </NavigationContainer>
-            </Provider>
+            <HeartbeatProvider>
+              <Provider store={store}>
+                <NavigationContainer>
+                  <AppNavigator />
+                </NavigationContainer>
+              </Provider>
+            </HeartbeatProvider>
           </UserProvider>
         </StripeProvider>
       </SafeAreaProvider>
