@@ -10,7 +10,7 @@ import FollowButton from '../../components/event/profile/FollowButton';
 import FriendsInCommon from '../../components/event/profile/organizer/FriendsInCommon';
 import OrganizerInterests from '../../components/event/profile/organizer/OrganizerInterests';
 import tw from 'twrnc';
-
+import FollowerStats from './profile/organizer/FollowerStats';
 
 interface OrganizerProfile {
   id: string;
@@ -124,26 +124,37 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
   const fetchOrganizerEvents = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      console.log('Fetching events created by organizer:', organizerId);
+      const { data: events, error } = await supabase
         .from('event')
         .select(`
-          *,
-          subcategory (name, category (name)),
+          id,
+          name,
+          details,
+          subcategory (
+            name,
+            category (
+              name
+            )
+          ),
           media (url),
           availability (date, start, end, daysofweek)
         `)
         .eq('user_id', organizerId);
-
-      if (error) throw error;
-
-      setEvents(data.filter(event => event.availability && event.availability.length > 0));
+  
+      if (error) {
+        console.error('Error in fetchOrganizerEvents:', error);
+        throw error;
+      }
+  
+      console.log('Events data:', events);
+      setEvents(events || []);
     } catch (error) {
       console.error('Error fetching organizer events:', error);
     } finally {
       setLoading(false);
     }
   };
-
   const fetchOrganizerServices = async () => {
     setLoading(true);
     try {
@@ -261,6 +272,7 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
           </View>
         </View>
 
+        <FollowerStats organizerId={organizerId} />
         <FriendsInCommon currentUserId={currentUserId!} organizerId={organizerId} />
         <OrganizerInterests organizerId={organizerId} />
 

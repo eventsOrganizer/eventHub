@@ -14,21 +14,35 @@ interface Following {
   lastname: string;
 }
 
-const FollowingComponent: React.FC = () => {
+interface Props {
+  route?: {
+    params?: {
+      userId?: string;
+      isOwnProfile?: boolean;
+    }
+  }
+}
+
+const FollowingComponent: React.FC<Props> = ({ route }) => {
   const [following, setFollowing] = useState<Following[]>([]);
-  const { userId } = useUser();
+  const { userId: currentUserId } = useUser();
+  
+  // If we're coming from route params (organizer profile), use that userId
+  // Otherwise, use the currentUserId (user profile)
+  const targetUserId = route?.params?.userId || currentUserId;
+  const isOwnProfile = route?.params?.isOwnProfile ?? true;
 
   useEffect(() => {
     fetchFollowing();
-  }, [userId]);
+  }, [targetUserId]);
 
   const fetchFollowing = async () => {
-    if (!userId) return;
+    if (!targetUserId) return;
 
     const { data, error } = await supabase
       .from('follower')
       .select('following_id')
-      .eq('follower_id', userId);
+      .eq('follower_id', targetUserId);
 
     if (error) {
       console.error('Error fetching following:', error);
@@ -44,7 +58,7 @@ const FollowingComponent: React.FC = () => {
     if (followingError) {
       console.error('Error fetching following data:', followingError);
     } else {
-      setFollowing(followingData as Following[]);
+      setFollowing(followingData || []);
     }
   };
 
@@ -52,7 +66,7 @@ const FollowingComponent: React.FC = () => {
     const { error } = await supabase
       .from('follower')
       .delete()
-      .match({ follower_id: userId, following_id: followingId });
+      .match({ follower_id: targetUserId, following_id: followingId });
 
     if (error) {
       console.error('Error unfollowing:', error);
@@ -67,16 +81,20 @@ const FollowingComponent: React.FC = () => {
         <UserAvatar userId={item.id} size={60} />
         <View style={styles.userInfo}>
           <Text style={styles.userName}>{`${item.firstname} ${item.lastname}`}</Text>
-          <Text style={styles.userSubtext}>Following</Text>
+          <Text style={styles.userSubtext}>
+            {isOwnProfile ? 'Following' : `${item.firstname} is followed by them`}
+          </Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.unfollowButton}
-        onPress={() => unfollow(item.id)}
-      >
-        <Ionicons name="person-remove" size={20} color="#FF3B30" />
-        <Text style={styles.unfollowText}>Unfollow</Text>
-      </TouchableOpacity>
+      {isOwnProfile && (
+        <TouchableOpacity 
+          style={styles.unfollowButton}
+          onPress={() => unfollow(item.id)}
+        >
+          <Ionicons name="person-remove" size={20} color="#FF3B30" />
+          <Text style={styles.unfollowText}>Unfollow</Text>
+        </TouchableOpacity>
+      )}
     </BlurView>
   );
 

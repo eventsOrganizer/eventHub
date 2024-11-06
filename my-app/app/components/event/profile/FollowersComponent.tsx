@@ -14,21 +14,35 @@ interface Follower {
   lastname: string;
 }
 
-const FollowersComponent: React.FC = () => {
+interface Props {
+  route?: {
+    params?: {
+      userId?: string;
+      isOwnProfile?: boolean;
+    }
+  }
+}
+
+const FollowersComponent: React.FC<Props> = ({ route }) => {
   const [followers, setFollowers] = useState<Follower[]>([]);
-  const { userId } = useUser();
+  const { userId: currentUserId } = useUser();
+  
+  // If we're coming from route params (organizer profile), use that userId
+  // Otherwise, use the currentUserId (user profile)
+  const targetUserId = route?.params?.userId || currentUserId;
+  const isOwnProfile = route?.params?.isOwnProfile ?? true;
 
   useEffect(() => {
     fetchFollowers();
-  }, [userId]);
+  }, [targetUserId]);
 
   const fetchFollowers = async () => {
-    if (!userId) return;
+    if (!targetUserId) return;
 
     const { data, error } = await supabase
       .from('follower')
       .select('follower_id')
-      .eq('following_id', userId);
+      .eq('following_id', targetUserId);
 
     if (error) {
       console.error('Error fetching followers:', error);
@@ -44,7 +58,7 @@ const FollowersComponent: React.FC = () => {
     if (followersError) {
       console.error('Error fetching followers data:', followersError);
     } else {
-      setFollowers(followersData as Follower[]);
+      setFollowers(followersData || []);
     }
   };
 
@@ -52,7 +66,7 @@ const FollowersComponent: React.FC = () => {
     const { error } = await supabase
       .from('follower')
       .delete()
-      .match({ follower_id: followerId, following_id: userId });
+      .match({ follower_id: followerId, following_id: targetUserId });
 
     if (error) {
       console.error('Error removing follower:', error);
@@ -67,16 +81,20 @@ const FollowersComponent: React.FC = () => {
         <UserAvatar userId={item.id} size={60} />
         <View style={styles.userInfo}>
           <Text style={styles.userName}>{`${item.firstname} ${item.lastname}`}</Text>
-          <Text style={styles.userSubtext}>Follows you</Text>
+          <Text style={styles.userSubtext}>
+            {isOwnProfile ? 'Follows you' : `Follows ${item.firstname}`}
+          </Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity 
-        style={styles.removeButton}
-        onPress={() => removeFollower(item.id)}
-      >
-        <Ionicons name="close-circle" size={20} color="#FF3B30" />
-        <Text style={styles.removeText}>Remove</Text>
-      </TouchableOpacity>
+      {isOwnProfile && (
+        <TouchableOpacity 
+          style={styles.removeButton}
+          onPress={() => removeFollower(item.id)}
+        >
+          <Ionicons name="close-circle" size={20} color="#FF3B30" />
+          <Text style={styles.removeText}>Remove</Text>
+        </TouchableOpacity>
+      )}
     </BlurView>
   );
 

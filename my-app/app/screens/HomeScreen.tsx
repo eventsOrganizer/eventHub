@@ -42,11 +42,11 @@ const HomeScreen: React.FC = () => {
     try {
       setLoading(true);
       const [events, topEvents, locals, staff, materials] = await Promise.all([
-        supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`),
-        supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).limit(10),
-        supabase.from('local').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`),
-        supabase.from('personal').select('*, subcategory (id,name,category(id,name)), media (url)').limit(5),
-        supabase.from('material').select('*, subcategory (id, name, category (id, name)), media (url)').limit(5)
+        // supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`),
+        // supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).limit(10),
+        // supabase.from('local').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`),
+        // supabase.from('personal').select('*, subcategory (id,name,category(id,name)), media (url)').limit(5),
+        // supabase.from('material').select('*, subcategory (id, name, category (id, name)), media (url)').limit(5)
       ]);
 
       console.log('Fetching interest events for userId:', userId);
