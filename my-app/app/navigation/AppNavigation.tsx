@@ -100,6 +100,9 @@ import Social from '../components/event/profile/Social';
 import InterestsList from '../components/event/profile/InterestsList';
 import EventPaymentScreen from '../components/event/Ticketing/EventPaymentScreen';
 import EventPaymentSuccessScreen from '../components/event/Ticketing/EventPaymentSuccessScreen';
+import MyOrders from '../components/event/profile/order/MyOrders';
+
+
 
 type RootStackParamList = {
   Onboarding: undefined;
@@ -210,6 +213,7 @@ type EventSetupOptionsScreenProps = {
   FollowingComponent: undefined;
   EventPaymentScreen: undefined;
   EventPaymentSuccessScreen: undefined;
+  MyOrders: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -348,6 +352,15 @@ const AppNavigation: React.FC = () => {
     component={AllEvents} 
     options={{ headerShown: true, title: 'All Events' }} 
   />
+
+<Stack.Screen 
+        name="MyOrders" 
+        component={MyOrders}
+        options={{
+          title: 'My Orders',
+          headerShown: true,
+        }}
+      />
 
   <Stack.Screen 
     name="CreateLocalServiceStep2" 

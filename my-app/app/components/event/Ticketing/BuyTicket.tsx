@@ -27,6 +27,7 @@ const BuyTicket: React.FC<BuyTicketProps> = ({ eventId, eventType }) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showPaymentStatus, setShowPaymentStatus] = useState<'pending' | 'completed' | 'failed' | null>(null);
   const [ticketPrice, setTicketPrice] = useState<number>(0);
+  
   const [eventDetails, setEventDetails] = useState({
     name: '',
     date: '',

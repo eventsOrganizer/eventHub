@@ -14,6 +14,8 @@ import ServiceCalendar from '../components/reuseableForCreationService/ServiceCa
 import tw from 'twrnc';
 import { createUpdate } from '../components/event/profile/notification/CreateUpdate';
 import { BlurView } from 'expo-blur';
+import { createEventNotificationSystem } from '../services/eventNotificationService';
+
 
 const EventCreationScreen: React.FC = () => {
   const { userId } = useUser();
@@ -43,6 +45,9 @@ ticketQuantity: '',
   const [showMap, setShowMap] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { handleEventCreationNotification } = createEventNotificationSystem();
+
+  const navigation = useNavigation();
   useEffect(() => {
     fetchCategories();
     console.log('Component mounted');
@@ -130,6 +135,14 @@ ticketQuantity: '',
 
       if (eventError) throw eventError;
 
+      const { data: followers, error: followerError } = await supabase
+      .from('follower')
+      .select('follower_id')
+      .eq('following_id', userId);
+
+    if (followerError) throw followerError;
+
+
       console.log('Event created:', newEvent);
       const eventId = newEvent.id;
 
@@ -152,9 +165,18 @@ ticketQuantity: '',
           url: eventData.imageUrl,
           type: 'image',
         }),
+
+        
+      
         createUpdate(userId, 'event', eventId)
       ]);
-
+      try {
+        console.log('Calling handleEventCreationNotification with:', { eventId, userId });
+        const result = await handleEventCreationNotification(eventId, userId);
+        console.log('Event creation notification result:', result);
+      } catch (error) {
+        console.error('Error in handleEventCreationNotification:', error);
+      }
       if (eventData.accessType === 'paid') {
       console.log('Creating tickets for paid event');
       const { error: ticketError } = await supabase.from('ticket').insert({

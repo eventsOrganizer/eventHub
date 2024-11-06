@@ -4,7 +4,7 @@ import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { supabase } from '../../../services/supabaseClient';
 import tw from 'twrnc';
 import CloudinaryUpload from '../CloudinaryUpload';
-
+import { createEventNotificationSystem } from '../../../services/eventNotificationService';
 type EventPaymentSuccessParams = {
   ticketId: number;
   eventId: number;
@@ -26,7 +26,7 @@ const EventPaymentSuccessScreen = () => {
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showImageUpload, setShowImageUpload] = useState(false);
-  
+  const { handleTicketPurchaseNotification } = createEventNotificationSystem();
   const { ticketId, eventId, paymentIntentId, amount, userId, eventType } = route.params;
   const handleImageUploaded = async (urls: string[]) => {
     if (urls.length > 0) {
@@ -73,8 +73,9 @@ const EventPaymentSuccessScreen = () => {
     payment_id: paymentIntentId,
     type: eventType === 'online' ? 'online' : 'physical',
     token: generatedToken,
-    payedamount: amount,  // Add this line
-    totalprice: amount    // Add this line
+    payedamount: amount,
+    totalprice: amount,
+    created_at: new Date().toISOString()
   })
   .select()
   .single();
@@ -87,7 +88,9 @@ const EventPaymentSuccessScreen = () => {
           .eq('id', ticketId);
     
         if (ticketError) throw ticketError;
-    
+        console.log('Creating notification for order:', orderData.id);
+    await handleTicketPurchaseNotification(orderData.id);
+    console.log('Notification sent successfully');
         setIsProcessing(false);
         setShowImageUpload(true);
     

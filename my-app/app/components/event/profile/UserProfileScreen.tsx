@@ -186,6 +186,17 @@ const UserProfileScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Add My Orders button */}
+<View style={tw`mt-4`}>
+  <TouchableOpacity
+    style={tw`flex-row items-center justify-center bg-[#003791] rounded-3xl p-4 shadow-lg overflow-hidden`}
+    onPress={() => navigation.navigate('MyOrders')}
+  >
+    <Ionicons name="receipt-outline" size={24} color="white" />
+    <Text style={tw`text-white font-semibold ml-3`}>My Orders</Text>
+  </TouchableOpacity>
+</View>
         </BlurView>
   
         {/* Services Section */}
@@ -273,6 +284,8 @@ const UserProfileScreen: React.FC = () => {
                     <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
                   </View>
                 )}
+
+                
               </TouchableOpacity>
             </View>
           </View>
