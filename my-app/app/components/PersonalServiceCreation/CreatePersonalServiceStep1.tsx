@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -9,16 +9,14 @@ import CategorySelector from '../reuseableForCreationService/CategorySelector';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
 import { Icon } from 'react-native-elements';
 import ProgressBar from '../reuseableForCreationService/ProgressBar';
+import { supabase } from '../../services/supabaseClient';
 
 type CreatePersonalServiceStep1NavigationProp = StackNavigationProp<RootStackParamList, 'CreatePersonalServiceStep1'>;
 
-const subcategories = [
-  { id: 153, name: 'Security' },
-  { id: 154, name: 'Waiter' },
-  { id: 155, name: 'Cooker' },
-  { id: 183, name: 'Music team leader' },
-  { id: 182, name: 'Cleaning' }
-];
+interface Subcategory {
+  id: number;
+  name: string;
+}
 
 interface CategoryIconProps {
   name: string;
@@ -29,7 +27,7 @@ interface CategoryIconProps {
 const CategoryIcon: React.FC<CategoryIconProps> = ({ name, onPress, isSelected }) => (
   <TouchableOpacity onPress={onPress} style={[styles.iconContainer, isSelected && styles.selectedIcon]}>
     <Icon
-      name={name}
+      name={getIconName(name)}
       type="material-community"
       size={40}
       color={isSelected ? '#ffffff' : '#ffffff'}
@@ -37,11 +35,43 @@ const CategoryIcon: React.FC<CategoryIconProps> = ({ name, onPress, isSelected }
   </TouchableOpacity>
 );
 
+const getIconName = (subcategoryName: string): string => {
+  const iconMap: { [key: string]: string } = {
+    'Security': 'shield-account',
+    'Waiter': 'food-fork-drink',
+    'Cooker': 'chef-hat',
+    'Music team leader': 'music',
+    'Cleaning': 'broom'
+  };
+  return iconMap[subcategoryName] || 'help-circle';
+};
+
 const CreatePersonalServiceStep1: React.FC = () => {
   const [serviceName, setServiceName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<{ id: number; name: string } | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Subcategory | null>(null);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const navigation = useNavigation<CreatePersonalServiceStep1NavigationProp>();
+
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('subcategory')
+          .select('id, name, category!inner(*)')
+          .eq('category.name', 'Crew')
+          .eq('category.type', 'service');
+
+        if (error) throw error;
+        if (data) setSubcategories(data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des sous-catégories:', error);
+        Alert.alert('Error', 'Failed to load subcategories');
+      }
+    };
+
+    fetchSubcategories();
+  }, []);
 
   const handleNext = () => {
     if (serviceName && description && selectedCategory) {
@@ -58,33 +88,17 @@ const CreatePersonalServiceStep1: React.FC = () => {
 
   const renderCategoryIcons = () => (
     <View style={styles.categoryContainer}>
-      <CategoryIcon
-        name="shield-account"
-        onPress={() => setSelectedCategory(subcategories.find(cat => cat.name === 'Security') || null)}
-        isSelected={selectedCategory?.name === 'Security'}
-      />
-      <CategoryIcon
-        name="food-fork-drink"
-        onPress={() => setSelectedCategory(subcategories.find(cat => cat.name === 'Waiter') || null)}
-        isSelected={selectedCategory?.name === 'Waiter'}
-      />
-      <CategoryIcon
-        name="chef-hat"
-        onPress={() => setSelectedCategory(subcategories.find(cat => cat.name === 'Cooker') || null)}
-        isSelected={selectedCategory?.name === 'Cooker'}
-      />
-      <CategoryIcon
-        name="music"
-        onPress={() => setSelectedCategory(subcategories.find(cat => cat.name === 'Music team leader') || null)}
-        isSelected={selectedCategory?.name === 'Music team leader'}
-      />
-      <CategoryIcon
-        name="broom"
-        onPress={() => setSelectedCategory(subcategories.find(cat => cat.name === 'Cleaning') || null)}
-        isSelected={selectedCategory?.name === 'Cleaning'}
-      />
+      {subcategories.map((subcat) => (
+        <CategoryIcon
+          key={subcat.id}
+          name={subcat.name}
+          onPress={() => setSelectedCategory(subcat)}
+          isSelected={selectedCategory?.id === subcat.id}
+        />
+      ))}
     </View>
   );
+
 
   return (
     <ScrollView style={styles.container}>

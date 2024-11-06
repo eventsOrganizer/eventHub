@@ -1,26 +1,14 @@
 import { supabase } from "../../services/supabaseClient";
 import { faker } from "@faker-js/faker";
-import { generateTimeSlot, generateDateRange } from "../utils/helpers";
+import { generateTimeSlot } from "../utils/helpers";
 
-const getIntervalDates = (date: Date, intervalType: 'weekly' | 'monthly' | 'yearly') => {
+const getMonthlyInterval = (date: Date) => {
   const startDate = new Date(date);
-  const endDate = new Date(date);
+  startDate.setDate(1);
   
-  switch (intervalType) {
-    case 'weekly':
-      startDate.setDate(date.getDate() - date.getDay());
-      endDate.setDate(startDate.getDate() + 6);
-      break;
-    case 'monthly':
-      startDate.setDate(1);
-      endDate.setMonth(startDate.getMonth() + 1);
-      endDate.setDate(0);
-      break;
-    case 'yearly':
-      startDate.setMonth(0, 1);
-      endDate.setMonth(11, 31);
-      break;
-  }
+  const endDate = new Date(date);
+  endDate.setMonth(endDate.getMonth() + 1);
+  endDate.setDate(0);
   
   return {
     startdate: startDate.toISOString().split('T')[0],
@@ -35,26 +23,33 @@ const getDayOfWeek = (date: Date): string => {
 
 export const generateAvailabilities = async () => {
   try {
-    const availabilities = [];
-    const [{ data: personals }, { data: locals }, { data: materials }] = await Promise.all([
+    const [
+      { data: personals }, 
+      { data: locals }, 
+      { data: materials },
+      { data: events }
+    ] = await Promise.all([
       supabase.from('personal').select('id'),
       supabase.from('local').select('id'),
-      supabase.from('material').select('id')
+      supabase.from('material').select('id'),
+      supabase.from('event').select('id')
     ]);
 
-    // Générer des exceptions et réservations pour les 30 prochains jours
     const exceptions: any[] = [];
-    const numberOfDays = 30;
     
-    for (let i = 1; i <= numberOfDays; i++) {
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + i);
-      const formattedDate = futureDate.toISOString().split('T')[0];
-      const intervalType = faker.helpers.arrayElement(['weekly', 'monthly', 'yearly']) as 'weekly' | 'monthly' | 'yearly';
-      const { startdate, enddate } = getIntervalDates(futureDate, intervalType);
-      const dayOfWeek = getDayOfWeek(futureDate);
+    // Générer des disponibilités pour les services à partir de décembre 2024
+    const startDate = new Date('2024-12-01');
+    const numberOfMonths = 12;
+    
+    for (let i = 0; i < numberOfMonths; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setMonth(startDate.getMonth() + i);
+      
+      const formattedDate = currentDate.toISOString().split('T')[0];
+      const { startdate, enddate } = getMonthlyInterval(currentDate);
+      const dayOfWeek = getDayOfWeek(currentDate);
 
-      const generateException = (serviceId: number, serviceType: string) => {
+      const generateServiceAvailability = (serviceId: number, serviceType: string) => {
         if (faker.datatype.boolean(0.2)) {
           const { start, end } = generateTimeSlot();
           return {
@@ -72,12 +67,30 @@ export const generateAvailabilities = async () => {
       };
 
       [
-        ...personals?.map(p => generateException(p.id, 'personal')) || [],
-        ...locals?.map(l => generateException(l.id, 'local')) || [],
-        ...materials?.map(m => generateException(m.id, 'material')) || []
+        ...personals?.map(p => generateServiceAvailability(p.id, 'personal')) || [],
+        ...locals?.map(l => generateServiceAvailability(l.id, 'local')) || [],
+        ...materials?.map(m => generateServiceAvailability(m.id, 'material')) || []
       ]
         .filter(Boolean)
         .forEach(exception => exceptions.push(exception));
+    }
+
+    // Générer des disponibilités pour les événements
+    if (events) {
+      for (const event of events) {
+        const eventDate = new Date();
+        eventDate.setDate(eventDate.getDate() + faker.number.int({ min: 1, max: 30 }));
+        const { start, end } = generateTimeSlot();
+        
+        exceptions.push({
+          event_id: event.id,
+          date: eventDate.toISOString().split('T')[0],
+          start,
+          end,
+          daysofweek: getDayOfWeek(eventDate),
+          statusday: 'available'
+        });
+      }
     }
 
     const { error } = await supabase.from('availability').insert(exceptions);
