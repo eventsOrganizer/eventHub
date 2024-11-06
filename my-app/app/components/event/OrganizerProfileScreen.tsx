@@ -7,6 +7,10 @@ import { useUser } from '../../UserContext';
 import { useNavigation, NavigationProp, ParamListBase } from '@react-navigation/native';
 import FriendButton from '../../components/event/profile/FriendButton';
 import FollowButton from '../../components/event/profile/FollowButton';
+import FriendsInCommon from '../../components/event/profile/organizer/FriendsInCommon';
+import OrganizerInterests from '../../components/event/profile/organizer/OrganizerInterests';
+import tw from 'twrnc';
+
 
 interface OrganizerProfile {
   id: string;
@@ -174,17 +178,18 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
 
   const renderItem = ({ item }: { item: Event | Service }) => {
     if ('availability' in item) {
-      // It's an Event
       return (
-        <TouchableOpacity onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} style={styles.itemContainer}>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} 
+          style={tw`mb-4`}
+        >
           <YourEventCard event={item} onPress={() => navigation.navigate('EventDetails', { eventId: item.id })} />
         </TouchableOpacity>
       );
     } else {
-      // It's a Service
       return (
         <TouchableOpacity 
-          style={styles.serviceItem}
+          style={tw`flex-row bg-white rounded-xl mb-4 overflow-hidden`}
           onPress={() => navigation.navigate(
             item.serviceType === 'Personal' ? 'PersonalDetail' :
             item.serviceType === 'Local' ? 'LocalServiceDetails' :
@@ -192,12 +197,15 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
             { serviceId: item.id }
           )}
         >
-          <Image source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} style={styles.serviceImage} />
-          <View style={styles.serviceInfo}>
-            <Text style={styles.serviceName}>{item.name}</Text>
-            <Text style={styles.serviceType}>{item.type.name}</Text>
-            <Text style={styles.servicePrice}>${item.priceperhour}/hour</Text>
-            <Text style={styles.serviceDetails} numberOfLines={2}>{item.details}</Text>
+          <Image 
+            source={{ uri: item.imageUrl || 'https://via.placeholder.com/150' }} 
+            style={tw`w-25 h-25`} 
+          />
+          <View style={tw`flex-1 p-3`}>
+            <Text style={tw`text-lg font-bold mb-1`}>{item.name}</Text>
+            <Text style={tw`text-gray-600 mb-1`}>{item.type.name}</Text>
+            <Text style={tw`text-green-500 mb-1`}>${item.priceperhour}/hour</Text>
+            <Text style={tw`text-gray-800`} numberOfLines={2}>{item.details}</Text>
           </View>
         </TouchableOpacity>
       );
@@ -206,212 +214,90 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
 
   if (!organizer) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={tw`flex-1 justify-center items-center bg-gray-900`}>
         <ActivityIndicator size="large" color="#FFA500" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.coverPhoto}>
+    <ScrollView style={tw`flex-1 bg-gray-900`}>
+      <View style={tw`h-40`}>
         <LinearGradient
           colors={['#FFA500', '#FFD700']}
-          style={styles.gradient}
+          style={tw`flex-1`}
         />
       </View>
-      <View style={styles.profileSection}>
-        <Image 
-          source={{ uri: organizer.avatar_url }} 
-          style={styles.avatar} 
-        />
-        <View style={styles.profileInfo}>
-          <Text style={styles.name}>{organizer.full_name}</Text>
-          <Text style={styles.email}>{organizer.email}</Text>
-          <Text style={styles.bio}>{organizer.bio || 'No bio available'}</Text>
-          {currentUserId ? (
-            currentUserId !== organizerId ? (
-              <>
-                <TouchableOpacity
-                  style={styles.chatButton}
-                  onPress={() => navigation.navigate('ChatRoom', { userId: currentUserId, organizerId })}
-                >
-                  <Text style={styles.chatButtonText}>Chat with Organizer</Text>
-                </TouchableOpacity>
-                <FriendButton targetUserId={organizerId} />
-                <FollowButton targetUserId={organizerId} />
-              </>
+      
+      <View style={tw`bg-gray-800 -mt-12 rounded-t-3xl p-5`}>
+        <View style={tw`flex-row`}>
+          <Image 
+            source={{ uri: organizer.avatar_url }} 
+            style={tw`w-30 h-48 rounded-xl mr-4`} 
+          />
+          <View style={tw`flex-1`}>
+            <Text style={tw`text-2xl font-bold text-white mb-1`}>{organizer.full_name}</Text>
+            <Text style={tw`text-gray-400 mb-2`}>{organizer.email}</Text>
+            <Text style={tw`text-white/80 mb-4`}>{organizer.bio || 'No bio available'}</Text>
+            
+            {currentUserId ? (
+              currentUserId !== organizerId ? (
+                <View style={tw`gap-2`}>
+                  <TouchableOpacity
+                    style={tw`bg-orange-500 p-3 rounded-lg`}
+                    onPress={() => navigation.navigate('ChatRoom', { userId: currentUserId, organizerId })}
+                  >
+                    <Text style={tw`text-white font-bold text-center`}>Chat with Organizer</Text>
+                  </TouchableOpacity>
+                  <FriendButton targetUserId={organizerId} />
+                  <FollowButton targetUserId={organizerId} />
+                </View>
+              ) : (
+                <Text style={tw`text-gray-400`}>This is your profile</Text>
+              )
             ) : (
-              <Text style={styles.loginPrompt}>This is your profile</Text>
-            )
-          ) : (
-            <Text style={styles.loginPrompt}>Log in to interact with the organizer</Text>
-          )}
+              <Text style={tw`text-gray-400`}>Log in to interact with the organizer</Text>
+            )}
+          </View>
         </View>
+
+        <FriendsInCommon currentUserId={currentUserId!} organizerId={organizerId} />
+        <OrganizerInterests organizerId={organizerId} />
+
+        <View style={tw`flex-row justify-around mt-6 border-b border-gray-700 pb-2`}>
+          <TouchableOpacity
+            style={tw`px-5 py-2 ${showEvents ? 'border-b-2 border-orange-500' : ''}`}
+            onPress={() => setShowEvents(true)}
+          >
+            <Text style={tw`${showEvents ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>Events</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={tw`px-5 py-2 ${!showEvents ? 'border-b-2 border-orange-500' : ''}`}
+            onPress={() => setShowEvents(false)}
+          >
+            <Text style={tw`${!showEvents ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>Services</Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#FFA500" style={tw`py-8`} />
+        ) : (
+          <View style={tw`py-4`}>
+            <FlatList
+              data={showEvents ? events : services}
+              renderItem={renderItem}
+              keyExtractor={(item) => `${showEvents ? 'event' : 'service'}-${item.id}`}
+              ListEmptyComponent={
+                <Text style={tw`text-center text-gray-400 mt-4`}>
+                  {showEvents ? 'No events found' : 'No services found'}
+                </Text>
+              }
+            />
+          </View>
+        )}
       </View>
-      <View style={styles.toggleContainer}>
-        <TouchableOpacity
-          style={[styles.toggleButton, showEvents && styles.activeToggle]}
-          onPress={() => setShowEvents(true)}
-        >
-          <Text style={[styles.toggleText, showEvents && styles.activeToggleText]}>Events</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.toggleButton, !showEvents && styles.activeToggle]}
-          onPress={() => setShowEvents(false)}
-        >
-          <Text style={[styles.toggleText, !showEvents && styles.activeToggleText]}>Services</Text>
-        </TouchableOpacity>
-      </View>
-      {loading ? (
-        <ActivityIndicator size="large" color="#FFA500" />
-      ) : (
-        <FlatList
-          data={showEvents ? events : services}
-          renderItem={renderItem}
-          keyExtractor={(item) => `${showEvents ? 'event' : 'service'}-${item.id}`}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={<Text style={styles.emptyText}>{showEvents ? 'No events found' : 'No services found'}</Text>}
-        />
-      )}
-    </View>
+    </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  coverPhoto: {
-    height: 150,
-  },
-  gradient: {
-    flex: 1,
-  },
-  profileSection: {
-    flexDirection: 'row',
-    padding: 20,
-    backgroundColor: '#fff',
-    marginTop: -50,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  avatar: {
-    width: 120,
-    height: 192,
-    borderRadius: 10,
-    marginRight: 20,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  email: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 10,
-  },
-  bio: {
-    fontSize: 14,
-    color: '#333',
-  },
-  chatButton: {
-    backgroundColor: '#FFA500',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  chatButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  loginPrompt: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 10,
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  toggleButton: {
-    paddingVertical: 5,
-    paddingHorizontal: 20,
-  },
-  toggleText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  activeToggle: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#FFA500',
-  },
-  activeToggleText: {
-    color: '#FFA500',
-    fontWeight: 'bold',
-  },
-  listContent: {
-    padding: 15,
-  },
-  itemContainer: {
-    marginBottom: 15,
-  },
-  serviceItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    marginBottom: 15,
-    overflow: 'hidden',
-  },
-  serviceImage: {
-    width: 100,
-    height: 100,
-  },
-  serviceInfo: {
-    flex: 1,
-    padding: 10,
-  },
-  serviceName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  serviceType: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  servicePrice: {
-    fontSize: 16,
-    color: '#4CAF50',
-    marginBottom: 5,
-  },
-  serviceDetails: {
-    fontSize: 14,
-    color: '#333',
-  },
-  emptyText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#666',
-    marginTop: 20,
-  },
-});
 
 export default OrganizerProfileScreen;

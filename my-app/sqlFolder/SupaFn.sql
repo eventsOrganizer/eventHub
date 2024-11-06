@@ -105,6 +105,124 @@ $$ LANGUAGE plpgsql;
 
 
 
+/////////////////////////
+
+
+
+
+
+
+-- Function to count unseen requests by type
+create or replace function count_unseen_requests(
+  p_user_id uuid,
+  p_request_type text
+) returns integer as $$
+declare
+  unseen_count integer;
+begin
+  case p_request_type
+    -- Sent event requests (only count non-pending and unseen by sender)
+    when 'sent_events' then
+      select count(*)
+      into unseen_count
+      from request r
+      where r.user_id = p_user_id 
+      and r.event_id is not null 
+      and not r.seen_by_sender
+      and r.status != 'pending';
+    
+    -- Received event requests (count unseen by receiver)
+    when 'received_events' then
+      select count(*)
+      into unseen_count
+      from request r
+      join event e on r.event_id = e.id
+      where e.user_id = p_user_id 
+      and not r.seen_by_receiver;
+    
+    -- Sent service requests (only count non-pending and unseen by sender)
+    when 'sent_services' then
+      select count(*)
+      into unseen_count
+      from request r
+      where r.user_id = p_user_id 
+      and (r.material_id is not null 
+           or r.local_id is not null 
+           or r.personal_id is not null)
+      and not r.seen_by_sender
+      and r.status != 'pending';
+    
+    -- Received service requests (count unseen by receiver)
+    when 'received_services' then
+      select count(*)
+      into unseen_count
+      from request r
+      left join material m on r.material_id = m.id
+      left join local l on r.local_id = l.id
+      left join personal p on r.personal_id = p.id
+      where (m.user_id = p_user_id 
+             or l.user_id = p_user_id 
+             or p.user_id = p_user_id)
+      and not r.seen_by_receiver;
+    
+    else
+      unseen_count := 0;
+  end case;
+  
+  return unseen_count;
+end;
+$$ language plpgsql;
+
+-- Function to mark requests as seen by type
+create or replace function mark_requests_as_seen(
+  p_user_id uuid,
+  p_request_type text
+) returns void as $$
+begin
+  case p_request_type
+    -- Mark sent requests as seen by sender
+    when 'sent_events' then
+      update request
+      set seen_by_sender = true
+      where user_id = p_user_id 
+      and event_id is not null
+      and status != 'pending';
+    
+    when 'sent_services' then
+      update request
+      set seen_by_sender = true
+      where user_id = p_user_id 
+      and (material_id is not null 
+           or local_id is not null 
+           or personal_id is not null)
+      and status != 'pending';
+    
+    -- Mark received requests as seen by receiver
+    when 'received_events' then
+      update request r
+      set seen_by_receiver = true
+      from event e
+      where r.event_id = e.id
+      and e.user_id = p_user_id;
+    
+    when 'received_services' then
+      update request r
+      set seen_by_receiver = true
+      where exists (
+        select 1 from material m where r.material_id = m.id and m.user_id = p_user_id
+      )
+      or exists (
+        select 1 from local l where r.local_id = l.id and l.user_id = p_user_id
+      )
+      or exists (
+        select 1 from personal p where r.personal_id = p.id and p.user_id = p_user_id
+      );
+  end case;
+end;
+$$ language plpgsql;
+
+
+
 
 
 
