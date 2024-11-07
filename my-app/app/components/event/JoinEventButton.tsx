@@ -1,9 +1,12 @@
 import React from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet,Alert, TouchableOpacity } from 'react-native';
 import { useUser } from '../../UserContext';
+import { useState, useEffect } from 'react';
 import { theme } from '../../../lib/theme';
+import { supabase } from '../../../lib/supabase';
 import { ButtonWrapper } from './buttons/ButtonWrapper';
 import { useJoinEvent } from './buttons/useJoinEvent';
+import { createEventNotificationSystem } from '../../services/eventNotificationService';
 
 interface JoinEventButtonProps {
   eventId: number;
@@ -13,6 +16,7 @@ interface JoinEventButtonProps {
   onLeaveSuccess: () => void;
 }
 
+
 const JoinEventButton: React.FC<JoinEventButtonProps> = ({ 
   eventId, 
   privacy, 
@@ -21,14 +25,160 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({
   onLeaveSuccess 
 }) => {
   const { userId } = useUser();
-  const { isJoined, isPending, handleJoin, handleLeave } = useJoinEvent({
-    eventId,
-    privacy,
-    userId,
-    organizerId,
-    onJoinSuccess,
-    onLeaveSuccess,
-  });
+  const [isJoined, setIsJoined] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const { handleNewEventJoinRequest } = createEventNotificationSystem();
+
+  useEffect(() => {
+    checkJoinStatus();
+  }, []);
+
+  const checkJoinStatus = async () => {
+    if (!userId) return;
+  
+    try {
+      // First check if user is already joined
+      const { data: joinData, error: joinError } = await supabase
+        .from('event_has_user')
+        .select()
+        .eq('user_id', userId)
+        .eq('event_id', eventId)
+        .single();
+  
+      if (joinError && joinError.code !== 'PGRST116') throw joinError;
+  
+      if (joinData) {
+        setIsJoined(true);
+        return;
+      }
+  
+      // Then check for pending requests
+      const { data: requestData, error: requestError } = await supabase
+        .from('request')
+        .select()
+        .eq('user_id', userId)
+        .eq('event_id', eventId)
+        .eq('status', 'pending')
+        .single();
+  
+      if (requestError && requestError.code !== 'PGRST116') throw requestError;
+  
+      setIsPending(!!requestData);
+    } catch (error) {
+      console.error('Error checking join status:', error);
+    }
+  };
+
+
+
+  const handleCancelRequest = async () => {
+    try {
+      const { error } = await supabase
+        .from('request')
+        .delete()
+        .eq('user_id', userId)
+        .eq('event_id', eventId)
+        .eq('status', 'pending');
+  
+      if (error) throw error;
+      setIsPending(false);
+      Alert.alert('Success', 'Request cancelled successfully');
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      Alert.alert('Error', 'Failed to cancel request');
+    }
+  };
+
+
+  const handleJoin = async () => {
+    if (!userId) return;
+
+    if (userId === organizerId) {
+      setIsJoined(true);
+      return;
+    }
+    
+    if (!privacy) {
+      const { data, error } = await supabase
+        .from('event_has_user')
+        .insert({ user_id: userId, event_id: eventId });
+
+      if (!error) {
+        setIsJoined(true);
+        onJoinSuccess();
+      } else {
+        console.error('Error joining event:', error);
+        Alert.alert('Error', 'Failed to join the event. Please try again.');
+      }
+    } else {
+      try {
+        console.log('Creating join request...');
+        const { data: requestData, error } = await supabase
+          .from('request')
+          .insert({
+            user_id: userId,
+            event_id: eventId,
+            status: 'pending',
+            personal_id: null,
+            local_id: null,
+            material_id: null,
+            is_read: false,
+            is_action_read: false
+          })
+          .select()
+          .single();
+  
+        if (error) throw error;
+        if (!requestData) throw new Error('No request data returned');
+  
+        console.log('Request created:', requestData);
+        console.log('Sending notification to owner:', organizerId);
+        
+        // Send notification to event owner
+        await handleNewEventJoinRequest(requestData.id);
+        
+        setIsPending(true);
+        Alert.alert('Success', 'Your request to join this event has been sent to the organizer.');
+      } catch (error) {
+        console.error('Error sending join request:', error);
+        Alert.alert('Error', 'Failed to send join request. Please try again.');
+      }
+    }
+  };
+
+
+  
+
+  const handleLeave = async () => {
+    Alert.alert(
+      "Leave Event",
+      "Are you sure you want to leave this event?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "OK",
+          onPress: async () => {
+            const { error } = await supabase
+              .from('event_has_user')
+              .delete()
+              .eq('user_id', userId)
+              .eq('event_id', eventId);
+
+            if (!error) {
+              setIsJoined(false);
+              onLeaveSuccess();
+            } else {
+              console.error('Error leaving event:', error);
+              Alert.alert('Error', 'Failed to leave the event. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   if (isJoined) {
     return (
@@ -40,9 +190,12 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({
 
   if (isPending) {
     return (
-      <ButtonWrapper style={styles.pendingButton} disabled>
-        <Text style={styles.buttonText}>Request Pending</Text>
-      </ButtonWrapper>
+      <TouchableOpacity 
+        style={styles.pendingButton} 
+        onPress={handleCancelRequest}
+      >
+        <Text style={styles.buttonText}>Request Pending (Tap to Cancel)</Text>
+      </TouchableOpacity>
     );
   }
 
@@ -57,24 +210,31 @@ const JoinEventButton: React.FC<JoinEventButtonProps> = ({
 
 const styles = StyleSheet.create({
   joinButton: {
-    backgroundColor: theme.colors.accent,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(76, 175, 80, 0.8)',
+    padding: 4,
+    borderRadius: 8,
+    alignItems: 'center',
+    minWidth: 80,
   },
   joinedButton: {
-    backgroundColor: theme.colors.secondary,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(158, 158, 158, 0.8)',
+    padding: 4,
+    borderRadius: 8,
+    alignItems: 'center',
+    minWidth: 80,
   },
   pendingButton: {
-    backgroundColor: theme.colors.accent,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 160, 0, 0.8)',
+    padding: 4,
+    borderRadius: 8,
+    alignItems: 'center',
+    minWidth: 80,
   },
   buttonText: {
     color: theme.colors.primary,
     ...theme.typography.body,
     fontWeight: 'bold',
+    fontSize: 10,
   },
 });
 

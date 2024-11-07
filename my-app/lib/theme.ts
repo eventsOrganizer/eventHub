@@ -1,35 +1,29 @@
 export const theme = {
   colors: {
     // Primary colors
-    primary: '#EDF2F4',
-    secondary: '#1C5588',
-    accent: '#00BDC8',
-    success: '#7ACFB0',
-    warning: '#FBCE9E',
-    error: '#F88F52',
-    // Gradients and variations
-    gradientStart: '#EDF2F4',
-    gradientMiddle: '#F4F7F9',
-    gradientEnd: '#FFFFFF',
+    primary: '#1B365D',    // Navy blue
+    secondary: '#219EBC',  // Teal
+    accent: '#8ECAE6',     // Light blue
+    highlight: '#FFB703',  // Yellow
+    
+    // UI variations
+    background: '#FFFFFF',
+    foreground: '#1B365D',
+    
     // Component specific
     cardBg: 'rgba(255, 255, 255, 0.95)',
-    cardTitle: '#1C5588',
-    cardDescription: '#666666',
-    shadow: 'rgba(28, 85, 136, 0.08)',
-    overlay: 'rgba(0, 189, 200, 0.05)',
+    cardTitle: '#1B365D',
+    cardDescription: '#4A5568',
+    shadow: 'rgba(27, 54, 93, 0.1)',
+    overlay: 'rgba(33, 158, 188, 0.05)',
+    
     // Event specific
-    eventTitle: '#1C5588',
+    eventTitle: '#1B365D',
     eventText: '#4A5568',
-    eventIcon: '#1C5588',
-    eventBorder: 'rgba(28, 85, 136, 0.2)',
-    eventShadow: 'rgba(28, 85, 136, 0.15)',
+    eventIcon: '#219EBC',
+    eventBorder: 'rgba(27, 54, 93, 0.2)',
+    eventShadow: 'rgba(27, 54, 93, 0.15)',
     eventBackground: '#FFFFFF',
-    personalDetailBg: 'rgba(255, 255, 255, 0.95)',
-    personalDetailTitle: '#1C5588',
-    personalDetailText: '#4A5568',
-    personalDetailIcon: '#1C5588',
-    personalDetailBorder: 'rgba(28, 85, 136, 0.2)',
-    personalDetailShadow: 'rgba(28, 85, 136, 0.15)',
   },
   spacing: {
     xs: 4,

@@ -4,18 +4,19 @@ import { Calendar } from 'react-native-calendars';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Picker } from '@react-native-picker/picker';
 import { supabase } from '../services/supabaseClient';
+import * as ImagePicker from 'expo-image-picker';
 import { useUser } from '../UserContext';
 import CloudinaryUpload from '../components/event/CloudinaryUpload';
 import MapScreen from './MapScreen';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
+import ServiceCalendar from '../components/reuseableForCreationService/ServiceCalendar';
 import tw from 'twrnc';
 import { createUpdate } from '../components/event/profile/notification/CreateUpdate';
+import { BlurView } from 'expo-blur';
 
 const EventCreationScreen: React.FC = () => {
   const { userId } = useUser();
-  const navigation = useNavigation();
   const [currentStep, setCurrentStep] = useState(1);
   const [eventData, setEventData] = useState({
     name: '',
@@ -33,6 +34,7 @@ const EventCreationScreen: React.FC = () => {
   ticketPrice: '',
 ticketQuantity: '',
   });
+  const [exceptionDates, setExceptionDates] = useState<Date[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);

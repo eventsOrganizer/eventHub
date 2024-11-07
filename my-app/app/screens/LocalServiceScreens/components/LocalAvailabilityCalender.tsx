@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ViewStyle, Alert } from 'react-native';
-import { format, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, isBefore, isAfter } from 'date-fns';
+import { format, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, isBefore, isAfter, isWithinInterval, parse } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { supabase } from '../../../services/supabaseClient';
 
@@ -91,10 +91,27 @@ const LocalAvailabilityCalendar: React.FC<LocalAvailabilityCalendarProps> = ({
 
   const getDateStatus = (date: Date): DateStatus => {
     const dateString = format(date, 'yyyy-MM-dd');
+
+    // Vérifier si la date est hors plage
     if (isBefore(date, new Date(startDate)) || isAfter(date, new Date(endDate))) {
       return 'disabled';
     }
-    return dateStatuses[dateString] || 'available';
+
+    // Vérifier le statut dans dateStatuses
+    if (dateStatuses[dateString]) {
+      return dateStatuses[dateString];
+    }
+    // Vérifier si la date est une exception
+    if (availability.some((a: { date: string; statusday: DateStatus }) => a.date === dateString && a.statusday === 'exception')) {
+      return 'exception';
+    }
+    // Vérifier les disponibilités normales
+    const dateAvailability = availability.find((a: { date: string; statusday: DateStatus }) => a.date === dateString);
+    if (dateAvailability) {
+      return dateAvailability.statusday;
+    }
+
+    return 'available';
   };
 
   const getDateStyle = (status: DateStatus, date: Date): ViewStyle => {
@@ -150,25 +167,35 @@ const LocalAvailabilityCalendar: React.FC<LocalAvailabilityCalendarProps> = ({
 
   const renderCalendarDays = () => {
     const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
+    const monthEnd = endOfMonth(monthStart);
     const startDate = startOfWeek(monthStart);
     const endDate = endOfWeek(monthEnd);
 
+    const dateFormat = "d";
     const days = eachDayOfInterval({ start: startDate, end: endDate });
 
     return (
       <View style={styles.calendarGrid}>
-        {days.map((date) => {
-          const status = getDateStatus(date);
+        {days.map((day, idx) => {
+          const dateString = format(day, 'yyyy-MM-dd');
+          const status = getDateStatus(day);
+          const dateStyles = getDateStyle(status, day);
+
           return (
             <TouchableOpacity
-              key={date.toISOString()}
-              style={getDateStyle(status, date)}
-              onPress={() => handleDatePress(date)}
-              disabled={status === 'disabled'}
+              key={idx}
+              style={dateStyles}
+              onPress={() => {
+                if (status !== 'disabled') {
+                  onSelectDate(dateString);
+                }
+              }}
             >
-              <Text style={[styles.dateText, status === 'disabled' && styles.disabledDateText]}>
-                {format(date, 'd')}
+              <Text style={[
+                styles.dateText,
+                status === 'disabled' && styles.disabledDateText
+              ]}>
+                {format(day, dateFormat)}
               </Text>
             </TouchableOpacity>
           );

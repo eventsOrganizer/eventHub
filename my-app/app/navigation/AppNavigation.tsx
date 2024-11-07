@@ -25,9 +25,9 @@ import EventSerialsList from '../components/event/Ticketing/EventSerialsList';  
 
 
 import GuestManagementScreen from '../screens/GuestManagementScreen';
-import TeamCollaborationScreen from '../screens/TeamCollaborationScreen';
+
 import CreateServiceScreen from '../screens/CreateServiceScreen';
-import EventSetupOptionsScreen from '../screens/EvnetStupOptionScreen'
+
 import ChatRoomScreen from '../components/event/ChatRoomScreen';
 import ServiceSelection from '../screens/ServiceSelection';
 import VideoRoomsScreen from '../components/event/video/VideoRoomsScreen';
@@ -55,7 +55,7 @@ import LocalCommentSection from '../components/LocalService/LocalCommentSection'
 import ReviewScreen from '../screens/MaterialServiceScreens/ReviewScreen';
 // Inside your Stack.Navigator component, add this new Screen
 import CommentScreen from '../screens/MaterialServiceScreens/CommentScreen';
-
+import AdvancedSearchScreen from '../screens/AdvancedSearchScreen';
 
 import CreateLocalServiceStep1 from '../components/LocalServiceCreation/CreateLocalServiceStep1';
 import CreateLocalServiceStep2 from '../components/LocalServiceCreation/CreateLocalServiceStep2';
@@ -74,21 +74,37 @@ import MaterialsOnboardingScreen from '../screens/MaterialServiceScreens/Materia
 import SearchResultsScreen from '../screens/SearchResultsScreen';
 import LocalAddReviewScreen from '../screens/LocalServiceScreens/LocalAddReviewScreen';
 import LocalBookingScreen from '../screens/LocalServiceScreens/LocalBookingScreen';
+import ReceivedEventRequests from '../components/event/profile/ReceivedEventRequests';
+import SentEventRequests from '../components/event/profile/SentEventRequests';
 
 
 import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail';
-import PaymentActionScreen from '../payment/PaymentActionScreen';
 
-import NotificationsScreen from '../screens/NotificationsScreen';
+import PaymentScreen  from '../screens/PaymentScreen';
+import PaymentSuccessScreen from '../screens/payment/PaymentSuccessScreen';
+
+import NotificationsScreen from '../components/event/NotificationsScreen';
 import TicketScanningScreen from '../components/event/Ticketing/TicketScanningScreen';
 import EventSummaryScreen from '../screens/EventSummaryScreen';
 import CreatePersonalServiceStep4 from '../components/PersonalServiceCreation/CreatePersonalServiceStep4';
 import ServicesDetails from '../services/servicesDetailsInUserProfile/ServicesDetails';
 import LocalCommentsScreen from '../screens/LocalServiceScreens/LocalCommentsScreen';
+import AllEvents from '../screens/AllEvents';
+// import * as PaymentScreen from '../screens/PaymentScreen';
+import ManageYourEvents from '../components/event/profile/ManageYourEvents';
+import EditEventScreen from '../components/event/profile/EditEventScreen';
+import EventsManagementScreen from '../components/event/profile/EventManagementScreen';
+import Social from '../components/event/profile/Social';
+import InterestsList from '../components/event/profile/InterestsList';
 
 type RootStackParamList = {
   Onboarding: undefined;
   Interests: { onComplete: () => void };
+  PaymentScreen: {
+    amount: number;
+    localId: number;
+    userId: number;
+  };
   Profile: undefined;
   Home: undefined;
   Map: undefined;
@@ -137,6 +153,17 @@ type RootStackParamList = {
     serviceType: 'Personal' | 'Local' | 'Material';
   };
   LocalBookingScreen: undefined;
+  PaymentTest: undefined; // Add this line
+  LocalCommentsScreen: {
+    localId: number;
+  };
+  LocalBookingScreen: {
+    localId: number;
+    userId: string;
+  };
+  LocalAddReviewScreen: {
+    localId: number;
+  };
 };
 type EventSetupOptionsScreenProps = {
   route: RouteProp<RootStackParamList, 'EventSetupOptions'>;
@@ -156,7 +183,6 @@ type EventSetupOptionsScreenProps = {
   LocalsScreen: undefined;
   LocalServiceDetails: { localServiceId: number };
   UserProfile: undefined;
-  PaymentAction: { price: number; personalId: string };
   SearchResultsScreen: { initialSearchTerm: string };
   ServiceDetails: { serviceId: string };
   ServiceSelection: undefined;
@@ -167,11 +193,19 @@ type EventSetupOptionsScreenProps = {
   VideoCall: { roomUrl: string };
   TicketScanning: undefined;
   EventSerialsList: undefined;
- 
-
+  ManageYourEvents: undefined;
+  EditEventScreen: undefined;
+  EventsManagement: undefined;
+  ReceivedEventRequests: undefined;
+  SentEventRequests: undefined; 
+  AdvancedSearchScreen: undefined;
+  AllEvents: { section: string };
+  InterestsList: undefined;
+  Social: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
+
 
 const AppNavigation: React.FC = () => {
   const handleOnComplete = () => {
@@ -191,6 +225,12 @@ const AppNavigation: React.FC = () => {
         initialParams={{ onComplete: handleOnComplete }}
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen
+        name="Social"
+        component={Social}
+        options={{ headerShown: false }}
+      />
     
   <Stack.Screen 
     name="Home" 
@@ -206,6 +246,12 @@ const AppNavigation: React.FC = () => {
   <Stack.Screen 
     name="Map" 
     component={MapScreen} 
+    options={{ headerShown: true }} 
+  />
+
+  <Stack.Screen 
+    name="InterestsList" 
+    component={InterestsList} 
     options={{ headerShown: true }} 
   />
 
@@ -287,6 +333,13 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true, title: 'Create Local Service - Step 1' }} 
   />
 
+
+  <Stack.Screen 
+    name="AllEvents" 
+    component={AllEvents} 
+    options={{ headerShown: true, title: 'All Events' }} 
+  />
+
   <Stack.Screen 
     name="CreateLocalServiceStep2" 
     component={CreateLocalServiceStep2} 
@@ -320,6 +373,11 @@ const AppNavigation: React.FC = () => {
     name="LocalsScreen"
     component={LocalsScreen}
     options={{ title: 'Local Services' }}
+  />
+  <Stack.Screen
+    name="AdvancedSearchScreen"
+    component={AdvancedSearchScreen}
+    options={{ headerShown: true, title: 'Advanced Search' }}
   />
 
 <Stack.Screen
@@ -375,12 +433,16 @@ const AppNavigation: React.FC = () => {
     options={{ headerShown: true }} 
   />
 
-  {/* <Stack.Screen
-    name="PaymentAction"
-    component={PaymentActionScreen}
-    options={{ headerShown: true, title: 'Payment' }}
-    initialParams={{ price: 200, personalId: '1' }}
-  /> */}
+      <Stack.Screen 
+        name="PaymentScreen" 
+        component={PaymentScreen}
+        options={{ headerShown: true, title: 'Payment' }}
+      />
+      <Stack.Screen 
+        name="PaymentSuccess" 
+        component={PaymentSuccessScreen}
+        options={{ headerShown: false }}
+      />
 
   <Stack.Screen 
     name="EventCreation" 
@@ -493,6 +555,11 @@ const AppNavigation: React.FC = () => {
     component={MapScreen} 
   />
   
+
+
+  
+
+  
   <Stack.Screen 
     name="ServicesDetails" 
     component={ServicesDetails}
@@ -505,12 +572,67 @@ const AppNavigation: React.FC = () => {
     <Stack.Screen name="TicketScanning" component={TicketScanningScreen} />
     <Stack.Screen name="EventSerialsList" component={EventSerialsList} />
 <Stack.Screen name="LocalAddReviewScreen" component={LocalAddReviewScreen}/>
-<Stack.Screen name="LocalCommentsScreen" component={LocalCommentSection}/>
+<Stack.Screen name="LocalCommentsScreen" component={LocalCommentsScreen}/>
 <Stack.Screen name="LocalBookingScreen" component={LocalBookingScreen}/>
+<Stack.Screen 
+  name="ManageYourEvents" 
+  component={ManageYourEvents}
+  options={{ headerShown: false }}
+/>
+<Stack.Screen
+  name="EditEvent"
+  component={EditEventScreen}
+  options={{
+    headerShown: false,
+    presentation: 'modal',
+    animation: 'slide_from_bottom'
+  }}
+/><Stack.Screen 
+  name="EventsManagement" 
+  component={EventsManagementScreen}
+  options={{
+    title: 'Events Management',
+    headerShown: true,
+  }}
+/>
 
+
+
+<Stack.Screen 
+    name="ReceivedEventRequests" 
+    component={ReceivedEventRequests}
+    options={{
+      title: 'Received Requests',
+      headerShown: true,
+      headerStyle: {
+        backgroundColor: '#4B0082',
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    }}
+  />
+  
+  <Stack.Screen 
+    name="SentEventRequests" 
+    component={SentEventRequests}
+    options={{
+      title: 'Sent Requests',
+      headerShown: true,
+      headerStyle: {
+        backgroundColor: '#4B0082',
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontWeight: 'bold',
+      },
+    }}
+  />
 </Stack.Navigator> 
 
   )
 }
+
 
 export default AppNavigation;

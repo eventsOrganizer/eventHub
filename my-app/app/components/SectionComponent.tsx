@@ -6,8 +6,6 @@ import StaffServiceCard from './PersonalServiceComponents/StaffServiceCard';
 import EventCard from './event/EventCard';
 import LocalServiceCard from './LocalService/LocalServiceCard';
 import MaterialCard from './MaterialService/MaterialCard';
-import { theme } from '../../lib/theme';
-
 const { width } = Dimensions.get('window');
 
 interface SectionComponentProps {
@@ -31,11 +29,15 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
       case 'local':
         return <LocalServiceCard key={item.id} item={item} onPress={() => onItemPress(item)} />;
       case 'material':
+        // Ensure this is the correct component for "material"
         return <MaterialCard key={item.id} material={item} onPress={() => onItemPress(item)} />;
       default:
         return null;
     }
   };
+
+  // Debugging: Check if items are being rendered
+  // console.log('Rendering items for type:', type, 'Data:', data);
 
   const renderLocalServices = () => {
     const pages = [];
@@ -43,7 +45,7 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
       const pageData = data.slice(i, i + 4);
       pages.push(
         <View key={i} style={styles.localPage}>
-          {pageData.map((item) => (
+          {pageData.map((item, index) => (
             <View key={item.id} style={styles.localItem}>
               {renderItem(item)}
             </View>
@@ -66,14 +68,15 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
     <View style={styles.section}>
       <BlurView
         style={styles.blurBackground}
-        intensity={80}
-        tint="light"
+        blurType ="dark " 
+        blurAmount={10}
+        reducedTransparencyFallbackColor="rgba(0, 0, 0, 0.8)"
       >
         <View style={styles.headerContainer}>
           <Text style={styles.sectionTitle}>{title}</Text>
           <TouchableOpacity onPress={onSeeAll} style={styles.seeAllButton}>
             <Text style={styles.seeAllButtonText}>See All</Text>
-            <Ionicons name="chevron-forward" size={16} color={theme.colors.accent} />
+            <Ionicons name="chevron-forward" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
         <View style={styles.contentContainer}>
@@ -112,10 +115,9 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
 const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 15,
     overflow: 'hidden',
-    backgroundColor: theme.colors.cardBg,
-    shadowColor: theme.colors.shadow,
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   blurBackground: {
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 15,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -134,7 +136,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.overlay,
+    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
   },
   contentContainer: {
     paddingVertical: 15,
@@ -142,26 +144,25 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: theme.colors.cardTitle,
+    color: '#fff',
     letterSpacing: 0.5,
   },
   seeAllButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: `${theme.colors.accent}15`,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 20,
   },
   seeAllButtonText: {
-    color: theme.colors.accent,
+    color: '#fff',
     fontSize: 12,
     fontWeight: '500',
     marginRight: 4,
   },
   scrollViewContent: {
     paddingHorizontal: 10,
-    gap: 10,
   },
   localPage: {
     width: width - 30,
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   pageIndicator: {
-    color: theme.colors.cardTitle,
+    color: '#fff',
     fontSize: 12,
   },
 });

@@ -13,6 +13,7 @@ export type CreateLocalServiceStep5Params = {
   description: string;
   images: string[];
   price: string;
+  location: { latitude: number; longitude: number };
   availabilityFrom: string;
   availabilityTo: string;
   amenities: {
@@ -42,33 +43,55 @@ export interface PersonalData {
 }
 
 export type RootStackParamList = {
-  LocalBookingScreen: { localId: number; availabilityData: any };
+ 
   Home: undefined;
   PersonalsScreen: { category?: string };
   PersonalDetail: { personalId: number };
   LocalsScreen: { category?: string };
   LocalServiceDetails: { localId: number };
   CreateLocalServiceStep2: undefined;
-  CreateLocalServiceStep3: { 
-    serviceName: string; 
-    description: string; 
+  CreateLocalServiceStep3: {
+    serviceName: string;
+    description: string;
+    images: string[];
+    price: number;
+    subcategoryId: string;
+    subcategoryName: string;
   };
-  CreateLocalServiceStep4: { 
-    formData: { 
-      serviceName: string; 
-      description: string; 
-      images: string[]; 
-      price: string; 
-    }; 
+  CreateLocalServiceStep4: {
+    serviceName: string;
+    description: string;
+    images: string[];
+    price: number;
+    subcategoryId: string;
+    subcategoryName: string;
+    startDate: string;
+    endDate: string;
+    interval: string;
+    exceptionDates: string[];
   };
-  CreateLocalServiceStep5: CreateLocalServiceStep5Params;
-  AllEvents: undefined;
-  ServiceSelection: undefined;
-  EventCreation: undefined;
-  VideoRooms: undefined;
-  UserProfile: undefined;
-  ChatList: undefined;
-  SearchResultsScreen: { initialSearchTerm: string };
+  CreateLocalServiceStep5: {
+    serviceName: string;
+    description: string;
+    images: string[];
+    price: string;
+    subcategoryId: string;
+    subcategoryName: string;
+    startDate: string;
+    endDate: string;
+    interval: string;
+    exceptionDates: string[];
+    location: {
+      latitude: number;
+      longitude: number;
+    };
+    amenities: {
+      wifi: boolean;
+      parking: boolean;
+      aircon: boolean;
+    };
+  };
+
   CreatePersonalServiceStep1: undefined;
   CreatePersonalServiceStep2: {
     serviceName: string;
@@ -133,7 +156,44 @@ export type RootStackParamList = {
   MaterialScreen: { materials: Material[] };
   MaterialsOnboarding: undefined;
   MaterialDetail: { material: Material };
-};
+  PaymentScreen: {
+    amount: number;
+    totalPrice: number;
+    serviceId: number;
+    serviceType: 'personal' | 'local' | 'material';
+    userId: string;
+    requestId: number;
+    start: string;
+    end: string;
+  };
+  PaymentSuccess: {
+    requestId: number;
+    serviceId: number;
+    serviceType: 'personal' | 'local' | 'material';
+    paymentIntentId: string;
+    amount: number;
+    totalPrice: number;
+  };
+  YourRequests: {
+    mode: 'sent' | 'received';
+  };
+  LocalServiceDetailScreen: {
+    localId: number;
+  };
+  LocalCommentsScreen: {
+    localId: number;
+  };
+  LocalBookingScreen: {
+    localId: number;
+    userId: string;
+    availabilityData: {
+      startDate: string;
+      endDate: string;
+      availability: any[]; // ajustez le type selon vos besoins
+      interval: number;
+    };
+  };
+}
 
 export interface Media {
   url: string;
@@ -181,6 +241,27 @@ export interface HomeScreenProps {
   navigation: HomeScreenNavigationProp;
 }
 
+export interface HomeScreenSection {
+  title: string;
+  data: any[];
+  type: 'staff' | 'event' | 'local' | 'material';
+  onSeeAll: () => void;
+  onItemPress: (item: any) => void;
+}
+
+export interface HomeScreenProps {
+  navigation: HomeScreenNavigationProp;
+}
+
+export interface PaymentModalProps {
+  visible?: boolean;
+  onClose?: () => void;
+  amount: number; // Amount in cents
+  ticket_id?: string | undefined;
+  local_id?: number  | undefined;
+  personal_id?: number | undefined;
+  material_id?:  number | undefined;
+}
 export type CreateLocalServiceStep4NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateLocalServiceStep4'>;
 export type BookingScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'BookingScreen'>;
 export type CommentsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CommentsScreen'>;

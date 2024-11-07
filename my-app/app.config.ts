@@ -31,10 +31,19 @@ export default {
     // Web-specific configurations (if needed)
   },
   extra: {
-    SUPABASE_URL: process.env.SUPABASE_URL, // Load Supabase URL from .env
-    SUPABASE_API_KEY: process.env.SUPABASE_API_KEY, // Load Supabase Anon Key from .env
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_API_KEY: process.env.SUPABASE_API_KEY,
+    STRIPE_PUBLISHABLE_KEY: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    STRIPE_SECRET_KEY: process.env.REACT_NATIVE_STRIPE_SECRET_KEY
   },
   plugins: [
+     [
+        "@stripe/stripe-react-native",
+        {
+          
+          "enableGooglePay": true
+        }
+      ],
     [
       "expo-font",
       {

@@ -43,11 +43,11 @@ const ServicesSection: React.FC<ServicesSectionProps> = ({ sections = [] }) => {
     >
       <BlurView
         intensity={80}
-        tint="light"
+        tint="dark"
         style={[
           tw`rounded-2xl overflow-hidden`,
           {
-            backgroundColor: `${theme.colors.cardBg}95`,
+            backgroundColor: 'rgba(17, 24, 39, 0.8)', // Dark background matching EventSection
             borderWidth: 1,
             borderColor: theme.colors.accent,
           }

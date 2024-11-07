@@ -1,68 +1,131 @@
-import React, { useEffect } from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
-import { CardField, useStripe } from '@stripe/stripe-react-native';
+import React, { useState, useCallback } from 'react';
+import { View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+import { useStripePayment } from '../hooks/userStripePayment';
+import { useToast } from '../hooks/useToast';
+import PaymentForm from './payment/PaymentForm';
+import { verifyServiceExists, handlePaymentProcess } from '../services/paymentHandlerService';
+import { PaymentResult, ServiceType } from '../types/paymentTypes';
 
-const PaymentScreen = ({ route, navigation }) => {
-  const { clientSecret } = route.params; // Get the client secret from route params
-  const { confirmPayment } = useStripe();
+type PaymentScreenProps = NativeStackScreenProps<RootStackParamList, 'PaymentScreen'>;
 
-  const handlePayment = async () => {
-    const { error, paymentIntent } = await confirmPayment(clientSecret, {
-      type: 'Card', // You can set this based on your payment method
+const PaymentScreen: React.FC<PaymentScreenProps> = ({ route, navigation }) => {
+  const { initiatePayment, loading: stripeLoading } = useStripePayment();
+  const { toast } = useToast();
+  const [cardDetails, setCardDetails] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string>();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const { amount, totalPrice, serviceId, serviceType, requestId, userId } = route.params;
+
+  const handlePayment = async (): Promise<PaymentResult> => {
+    console.log('Starting payment process with:', {
+      amount,
+      totalPrice,
+      serviceId,
+      serviceType,
+      requestId,
+      userId
     });
 
-    if (error) {
-      console.log('Payment Confirmation Error:', error);
-      Alert.alert('Payment Error', error.message); // Show error alert
-    } else if (paymentIntent) {
-      console.log('Payment successful!', paymentIntent);
-      Alert.alert('Payment Success', 'Your payment was successful!'); // Show success alert
-      // Optionally navigate to a success screen
-      navigation.navigate('PaymentSuccess'); // Ensure you have a screen to navigate to
+    if (!userId || !serviceId || !serviceType || !requestId || !amount || !totalPrice) {
+      const missingParams = [];
+      if (!userId) missingParams.push('userId');
+      if (!serviceId) missingParams.push('serviceId');
+      if (!serviceType) missingParams.push('serviceType');
+      if (!requestId) missingParams.push('requestId');
+      if (!amount) missingParams.push('amount');
+      if (!totalPrice) missingParams.push('totalPrice');
+
+      const error = `Missing required parameters: ${missingParams.join(', ')}`;
+      console.error(error);
+      setErrorMessage(error);
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive",
+      });
+      return { success: false, error };
+    }
+
+    if (!cardDetails?.complete) {
+      console.log('Card details incomplete:', cardDetails);
+      setErrorMessage("Please enter valid card information");
+      return { success: false, error: "Invalid card information" };
+    }
+
+    setIsProcessing(true);
+    setErrorMessage(undefined);
+
+    try {
+      console.log('Verifying service existence...');
+      await verifyServiceExists(serviceId, serviceType);
+
+      console.log('Initiating payment with Stripe...');
+      const result = await initiatePayment(cardDetails, { email: 'test@example.com' }, {
+        amount,
+        serviceId,
+        serviceType,
+        userId,
+      });
+
+      console.log('Payment result:', result);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Payment failed');
+      }
+
+      console.log('Processing payment result...');
+      const paymentIntentId = await handlePaymentProcess(
+        result,
+        serviceId,
+        serviceType,
+        userId,
+        requestId,
+        amount,
+        totalPrice
+      );
+
+      console.log('Payment successful, navigating to success screen...');
+      navigation.navigate('PaymentSuccess', {
+        requestId,
+        serviceId,
+        serviceType,
+        paymentIntentId,
+        amount,
+        totalPrice
+      });
+
+      return { success: true, paymentIntentId };
+
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Payment failed. Please try again.";
+      console.error('Payment error details:', error);
+      setErrorMessage(errorMsg);
+      toast({
+        title: "Payment Error",
+        description: errorMsg,
+        variant: "destructive",
+      });
+      return { success: false, error: errorMsg };
+    } finally {
+      setIsProcessing(false);
+      console.log('Payment process completed');
     }
   };
 
-  useEffect(() => {
-    if (clientSecret) {
-      handlePayment();
-    }
-  }, [clientSecret]);
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Complete Your Payment</Text>
-      <CardField
-        postalCodeEnabled={false}
-        placeholder={{ number: '4242 4242 4242 4242' }}
-        cardStyle={{
-          borderColor: '#000000',
-          borderWidth: 1,
-          borderRadius: 8,
-        }}
-        style={{
-          width: '100%',
-          height: 50,
-          marginVertical: 30,
-        }}
+    <View style={{ flex: 1 }}>
+      <PaymentForm
+        isProcessing={isProcessing || stripeLoading}
+        onCardChange={setCardDetails}
+        onSubmit={handlePayment}
+        amount={amount}
+        errorMessage={errorMessage}
       />
-      <Button title="Pay" onPress={handlePayment} />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-});
 
 export default PaymentScreen;

@@ -6,18 +6,12 @@ import { supabase } from '../../../services/supabaseClient';
 import { useUser } from '../../../UserContext';
 import { useNavigation } from '@react-navigation/native';
 import EventRequestBadge from './EventRequestBadge';
-import UserEventsList from './UserEventList';
-import AttendedEventsList from './AttendedEventList';
-import FriendsList from './FriendsList';
-import InterestsList from './InterestsList';
-import Subscriptions from './Subscriptions';
 import FriendRequestBadge from './FriendRequestBadge';
 import InvitationButton from './InvitationButton';
 import NotificationComponent from './notification/NotificationComponent';
 import { BlurView } from 'expo-blur';
 import tw from 'twrnc';
 import { useRequestNotifications } from '../../../hooks/useRequestNotifications';
-import TicketManagement from '../Ticketing/TicketManagement';
 import { useNotifications } from '../../../hooks/useNotifications';
 import NotificationList from '../../Notifications/NotificationList';
 
@@ -36,13 +30,10 @@ const UserProfileScreen: React.FC = () => {
   const { userId } = useUser();
   const navigation = useNavigation<any>();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [activeTab, setActiveTab] = useState('events');
   const [loading, setLoading] = useState(true);
-  const [slideAnim] = useState(new Animated.Value(0));
-  const [activeEventList, setActiveEventList] = useState<'your' | 'attended'>('your');
   const [showNotifications, setShowNotifications] = useState(false);
   const { unreadReceivedRequestsCount, unreadSentActionsCount } = useRequestNotifications(userId);
-
+  const { unreadCount } = useNotifications(userId);
 
   const fetchData = useCallback(async () => {
     if (userId) {
@@ -53,16 +44,6 @@ const UserProfileScreen: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  useEffect(() => {
-    Animated.timing(slideAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  }, [activeTab]);
-
-  const { unreadCount } = useNotifications(userId);
 
   const fetchUserProfile = async () => {
     if (!userId) return;
@@ -96,52 +77,15 @@ const UserProfileScreen: React.FC = () => {
     }
   };
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'events':
-        return (
-          <View style={tw`space-y-6`}>
-            <View style={tw`flex-row justify-around mb-4`}>
-              <TouchableOpacity
-                style={tw`bg-[#B19CD9] py-2 px-4 rounded-lg ${activeEventList === 'your' ? 'opacity-100' : 'opacity-50'}`}
-                onPress={() => setActiveEventList('your')}
-              >
-                <Text style={tw`text-white font-bold`}>Your Events</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={tw`bg-[#B19CD9] py-2 px-4 rounded-lg ${activeEventList === 'attended' ? 'opacity-100' : 'opacity-50'}`}
-                onPress={() => setActiveEventList('attended')}
-              >
-                <Text style={tw`text-white font-bold`}>Attended Events</Text>
-              </TouchableOpacity>
-            </View>
-            {activeEventList === 'your' && <UserEventsList userId={userId as string} />}
-            {activeEventList === 'attended' && <AttendedEventsList userId={userId as string} />}
-          </View>
-        );
-      case 'friends':
-        return (
-          <ScrollView nestedScrollEnabled={true}>
-            <FriendsList userId={userId as string} />
-            <InterestsList userId={userId as string} />
-          </ScrollView>
-        );
-      case 'subscriptions':
-        return <Subscriptions />;
-      case 'services':
-        return <UserServicesList userId={userId as string} />;
-        case 'tickets':
-          return <TicketManagement />;
-      default:
-        return null;
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'services') {
-      navigation.navigate('UserServicesScreen' as never, { userId } as never);
-    }
-  }, [activeTab, navigation, userId]);
+  const ActionButton: React.FC<{ onPress: () => void; iconName: string; text: string }> = ({ onPress, iconName, text }) => (
+    <TouchableOpacity
+      style={tw`flex-1 flex-row items-center justify-center bg-white/20 py-3 px-2 rounded-lg shadow-md mx-1`}
+      onPress={onPress}
+    >
+      <Ionicons name={iconName as any} size={20} color="#FFFFFF" />
+      <Text style={tw`text-white text-xs font-semibold ml-2`}>{text}</Text>
+    </TouchableOpacity>
+  );
 
   if (loading) {
     return (
@@ -159,16 +103,6 @@ const UserProfileScreen: React.FC = () => {
     );
   }
 
-  const ActionButton: React.FC<{ onPress: () => void; iconName: string; text: string }> = ({ onPress, iconName, text }) => (
-    <TouchableOpacity
-      style={tw`flex-1 flex-row items-center justify-center bg-white/20 py-3 px-2 rounded-lg shadow-md mx-1`}
-      onPress={onPress}
-    >
-      <Ionicons name={iconName as any} size={20} color="#FFFFFF" />
-      <Text style={tw`text-white text-xs font-semibold ml-2`}>{text}</Text>
-    </TouchableOpacity>
-  );
-
   return (
     <LinearGradient
       colors={['#1E3A8A', '#3B82F6', '#93C5FD']}
@@ -179,6 +113,7 @@ const UserProfileScreen: React.FC = () => {
           <NotificationList userId={userId} />
         </View>
       )}
+      
       <ScrollView 
         style={tw`flex-1`}
         contentContainerStyle={tw`pb-10`}
@@ -199,7 +134,6 @@ const UserProfileScreen: React.FC = () => {
                     </View>
                   )}
                 </TouchableOpacity>
-                <EventRequestBadge />
                 <FriendRequestBadge />
                 <InvitationButton />
               </View>
@@ -215,81 +149,153 @@ const UserProfileScreen: React.FC = () => {
             </View>
             
             <View style={tw`flex-row justify-between mb-4`}>
-              <ActionButton onPress={() => navigation.navigate('EventCreation' as never)} iconName="add-circle-outline" text="New Event" />
-              <ActionButton onPress={() => navigation.navigate('ServiceSelection' as never)} iconName="briefcase-outline" text="New Service" />
+              <ActionButton onPress={() => navigation.navigate('EventCreation')} iconName="add-circle-outline" text="New Event" />
+              <ActionButton onPress={() => navigation.navigate('ServiceSelection')} iconName="briefcase-outline" text="New Service" />
             </View>
             
             <View style={tw`flex-row justify-between mb-4`}>
-              <ActionButton onPress={() => navigation.navigate('EditProfile' as never)} iconName="pencil" text="Edit Profile" />
-              <ActionButton onPress={() => navigation.navigate('ChatList' as never)} iconName="chatbubbles" text="Open Chat" />
+              <ActionButton onPress={() => navigation.navigate('EditProfile')} iconName="pencil" text="Edit Profile" />
+              <ActionButton onPress={() => navigation.navigate('ChatList')} iconName="chatbubbles" text="Open Chat" />
             </View>
-
+  
             <View style={tw`flex-row justify-between`}>
-              <ActionButton onPress={() => navigation.navigate('TicketScanning' as never)} iconName="qr-code-outline" text="Scan Tickets" />
+              <ActionButton onPress={() => navigation.navigate('TicketScanning')} iconName="qr-code-outline" text="Scan Tickets" />
             </View>
           </View>
         </BlurView>
-
-        <View style={tw`flex-row justify-center mt-6 mb-4`}>
-    <TouchableOpacity
-      style={tw`bg-white/20 py-2 px-3 rounded-lg shadow-md mx-1 max-w-[110]`}
-      onPress={() => navigation.navigate('UserServicesScreen' as never, { userId } as never)}
-    >
-      <Text style={tw`text-white font-semibold text-center text-sm`}>Services</Text>
-    </TouchableOpacity>
-    
-    <TouchableOpacity
-      style={tw`bg-white/20 py-2 px-3 rounded-lg shadow-md mx-1 max-w-[110] flex-row items-center`}
-      onPress={() => navigation.navigate('YourRequests', { userId, mode: 'sent' })}
-    >
-      <Text style={tw`text-white font-semibold text-center text-sm`}>Sent Requests</Text>
-      {unreadSentActionsCount > 0 && (
-        <View style={tw`ml-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
-          <Text style={tw`text-white text-xs`}>{unreadSentActionsCount}</Text>
+  
+        {/* Services Section */}
+        <View style={tw`mx-4 mt-6`}>
+          <Text style={tw`text-white text-xl font-bold mb-4`}>Services</Text>
+          <View style={tw`bg-white/20 rounded-xl p-4`}>
+            <TouchableOpacity
+              style={tw`flex-row items-center justify-between mb-4`}
+              onPress={() => navigation.navigate('UserServicesScreen', { userId })}
+            >
+              <View style={tw`flex-row items-center`}>
+                <Ionicons name="briefcase" size={24} color="white" />
+                <Text style={tw`text-white font-semibold ml-3`}>Manage Your Services</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="white" />
+            </TouchableOpacity>
+            
+            <View style={tw`flex-row justify-around items-center`}>
+              <TouchableOpacity
+                style={tw`items-center`}
+                onPress={() => navigation.navigate('YourRequests', { userId, mode: 'sent', type: 'service' })}
+              >
+                <Ionicons name="arrow-up-circle" size={32} color="white" />
+                {unreadSentActionsCount > 0 && (
+                  <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+                    <Text style={tw`text-white text-xs`}>{unreadSentActionsCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              
+              <Text style={tw`text-white text-sm mx-4`}>Requests</Text>
+              
+              <TouchableOpacity
+                style={tw`items-center`}
+                onPress={() => navigation.navigate('YourRequests', { userId, mode: 'received', type: 'service' })}
+              >
+                <Ionicons name="arrow-down-circle" size={32} color="white" />
+                {unreadReceivedRequestsCount > 0 && (
+                  <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+                    <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      )}
-    </TouchableOpacity>
-    
-    <TouchableOpacity
-      style={tw`bg-white/20 py-2 px-3 rounded-lg shadow-md mx-1 max-w-[110] flex-row items-center`}
-      onPress={() => navigation.navigate('YourRequests', { userId, mode: 'received' })}
-    >
-      <Text style={tw`text-white font-semibold text-center text-sm`}>Received Requests</Text>
-      {unreadReceivedRequestsCount > 0 && (
-        <View style={tw`ml-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
-          <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
+  
+        {/* Events Section */}
+        <View style={tw`mx-4 mt-6`}>
+          <Text style={tw`text-white text-xl font-bold mb-4`}>Events</Text>
+          <View style={tw`bg-white/20 rounded-xl p-4`}>
+            <TouchableOpacity
+              style={tw`flex-row items-center justify-between mb-4`}
+              onPress={() => navigation.navigate('EventsManagement', { userId })}
+            >
+              <View style={tw`flex-row items-center`}>
+                <Ionicons name="calendar" size={24} color="white" />
+                <Text style={tw`text-white font-semibold ml-3`}>Manage Your Events</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="white" />
+            </TouchableOpacity>
+            
+            <View style={tw`flex-row justify-around items-center`}>
+              <TouchableOpacity
+                style={tw`items-center`}
+                onPress={() => navigation.navigate('SentEventRequests')}
+              >
+                <Ionicons name="arrow-up-circle" size={32} color="white" />
+                {unreadSentActionsCount > 0 && (
+                  <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+                    <Text style={tw`text-white text-xs`}>{unreadSentActionsCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+  
+              <Text style={tw`text-white text-sm mx-4`}>Requests</Text>
+  
+              <TouchableOpacity
+                style={tw`items-center`}
+                onPress={() => navigation.navigate('ReceivedEventRequests')}
+              >
+                <Ionicons name="arrow-down-circle" size={32} color="white" />
+                {unreadReceivedRequestsCount > 0 && (
+                  <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+                    <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      )}
-    </TouchableOpacity>
+  
+        {/* Social Section */}
+        <View style={tw`mx-4 mt-6`}>
+          <Text style={tw`text-white text-xl font-bold mb-4`}>Social</Text>
+          <TouchableOpacity
+            style={tw`bg-[#003791] rounded-3xl p-4 shadow-lg overflow-hidden`}
+            onPress={() => navigation.navigate('Social')}
+          >
+            <BlurView intensity={40} tint="dark" style={tw`p-4 rounded-2xl`}>
+              <View style={tw`flex-row items-center justify-between`}>
+                <View style={tw`flex-row items-center`}>
+                  <Ionicons name="people" size={24} color="white" />
+                  <Text style={tw`text-white font-semibold ml-3`}>Social Hub</Text>
+                </View>
+                <View style={tw`flex-row items-center`}>
+                  {unreadReceivedRequestsCount > 0 && (
+                    <View style={tw`bg-red-500 rounded-full w-5 h-5 justify-center items-center mr-2`}>
+                      <Text style={tw`text-white text-xs`}>{unreadReceivedRequestsCount}</Text>
+                    </View>
+                  )}
+                  <Ionicons name="chevron-forward" size={24} color="white" />
+                </View>
+              </View>
+            </BlurView>
+          </TouchableOpacity>
         </View>
-
-        <View style={tw`flex-row justify-around mt-6 mb-2`}>
-  {['events', 'friends', 'subscriptions', 'albums', 'tickets'].map((tab) => (
-    <TouchableOpacity
-      key={tab}
-      onPress={() => setActiveTab(tab)}
-    >
-      <Text style={tw`text-${activeTab === tab ? 'white' : 'blue-200'} font-semibold capitalize text-lg`}>{tab}</Text>
-    </TouchableOpacity>
-  ))}
-</View>
-
-        <Animated.View
-          style={[
-            tw`mx-4 mt-2 p-6 rounded-3xl shadow-2xl bg-white/10`,
-            {
-              opacity: slideAnim,
-              transform: [{
-                translateY: slideAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [50, 0]
-                })
-              }]
-            }
-          ]}
-        >
-          {renderTabContent()}
-        </Animated.View>
+  
+        {/* Interests Section */}
+        <View style={tw`mx-4 mt-6 mb-4`}>
+          <Text style={tw`text-white text-xl font-bold mb-4`}>Interests</Text>
+          <TouchableOpacity
+            style={tw`bg-white/20 rounded-xl p-4`}
+            onPress={() => navigation.navigate('InterestsList', { userId })}
+          >
+            <View style={tw`flex-row items-center justify-between`}>
+              <View style={tw`flex-row items-center`}>
+                <Ionicons name="heart" size={24} color="white" />
+                <Text style={tw`text-white font-semibold ml-3`}>Manage Your Interests</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="white" />
+            </View>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </LinearGradient>
   );
