@@ -33,38 +33,27 @@ const Interests: React.FC<InterestsProps> = ({ navigation, route }) => {
   const [subcategories, setSubcategories] = useState<{ id: string; name: string; icon: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Console log when component mounts
-  useEffect(() => {
-    console.log('Interests Component Mounted');
-  }, []);
-
-  // Track local interests changes
-  useEffect(() => {
-    console.log('Local Selected Interests Updated:', localSelectedInterests);
-  }, [localSelectedInterests]);
-
   const screenWidth = Dimensions.get('window').width;
-  const itemsPerRow = 3; // Changed to 3 items per row for better visibility
-  const itemSize = (screenWidth - 48) / itemsPerRow;
+  const screenHeight = Dimensions.get('window').height;
+  const itemsPerRow = 3;
+  const itemSpacing = 12;
+  const horizontalPadding = 16;
+  const itemSize = (screenWidth - (horizontalPadding * 2) - (itemSpacing * (itemsPerRow - 1))) / itemsPerRow;
 
   useEffect(() => {
     fetchSubcategories();
   }, []);
 
   const fetchSubcategories = async () => {
-    console.log('Fetching Subcategories...');
     setLoading(true);
-    
     const { data, error } = await supabase
       .from('subcategory')
       .select('id, name')
       .order('name');
     
     if (error) {
-      console.error('Error fetching subcategories:', error);
       Alert.alert('Error', error.message);
     } else {
-      console.log('Subcategories fetched:', data);
       const subcatsWithIcons = (data || []).map(subcat => ({
         ...subcat,
         icon: getIconForSubcategory(subcat.name)
@@ -91,26 +80,20 @@ const Interests: React.FC<InterestsProps> = ({ navigation, route }) => {
   };
 
   const toggleInterest = (id: string) => {
-    console.log('Toggling interest:', id);
     setLocalSelectedInterests((prev) => {
-      const newInterests = prev.includes(id) 
+      return prev.includes(id) 
         ? prev.filter((interest) => interest !== id) 
         : [...prev, id];
-      console.log('New local interests:', newInterests);
-      return newInterests;
     });
   };
 
   const handleFinish = () => {
     if (localSelectedInterests.length === 0) {
-      console.log('No interests selected');
       Alert.alert('Select Interests', 'Please select at least one interest to continue.');
       return;
     }
     
-    console.log('Saving interests to context:', localSelectedInterests);
     setSelectedInterests(localSelectedInterests);
-    console.log('Navigation to Home...');
     onComplete();
     navigation.navigate('Home');
   };
@@ -118,8 +101,12 @@ const Interests: React.FC<InterestsProps> = ({ navigation, route }) => {
   const renderInterestItem = ({ item }: { item: { id: string; name: string; icon: string } }) => (
     <TouchableOpacity
       style={[
-        tw`m-2 rounded-2xl overflow-hidden`,
-        { width: itemSize, height: itemSize * 1.2 }, // Made items taller
+        tw`rounded-2xl overflow-hidden`,
+        {
+          width: itemSize,
+          height: itemSize,
+          marginBottom: itemSpacing,
+        }
       ]}
       onPress={() => toggleInterest(item.id)}
     >
@@ -128,25 +115,28 @@ const Interests: React.FC<InterestsProps> = ({ navigation, route }) => {
         colors={localSelectedInterests.includes(item.id)
           ? ['#4B0082', '#0066CC']
           : ['rgba(255,255,255,0.8)', 'rgba(255,255,255,0.5)']}
-        style={tw`flex-1 p-4 items-center justify-center`}
+        style={tw`flex-1 justify-center items-center p-2`}
       >
         <MaterialCommunityIcons
           name={item.icon}
-          size={36} // Increased icon size
+          size={28}
           color={localSelectedInterests.includes(item.id) ? 'white' : '#666'}
         />
         <Text
           style={[
-            tw`text-center text-base font-bold mt-3`, // Increased spacing
-            localSelectedInterests.includes(item.id) ? tw`text-white` : tw`text-gray-800`,
+            tw`text-center font-bold mt-2`,
+            {
+              fontSize: Math.min(itemSize * 0.12, 14),
+              color: localSelectedInterests.includes(item.id) ? 'white' : '#666'
+            }
           ]}
           numberOfLines={2}
         >
           {item.name}
         </Text>
         {localSelectedInterests.includes(item.id) && (
-          <View style={tw`absolute top-2 right-2 bg-white rounded-full p-1`}>
-            <Ionicons name="checkmark-circle" size={24} color="#4B0082" />
+          <View style={tw`absolute top-1 right-1 bg-white rounded-full p-1`}>
+            <Ionicons name="checkmark-circle" size={16} color="#4B0082" />
           </View>
         )}
       </LinearGradient>
@@ -164,21 +154,22 @@ const Interests: React.FC<InterestsProps> = ({ navigation, route }) => {
   return (
     <SafeAreaView style={tw`flex-1 bg-white`}>
       <StatusBar barStyle="dark-content" />
-      <View style={tw`flex-1 p-4`}>
-        <Text style={tw`text-4xl font-bold mb-3 text-gray-800`}>
+      <View style={tw`flex-1 px-4`}>
+        <Text style={[tw`font-bold text-gray-800 mb-2`, { fontSize: screenHeight * 0.035 }]}>
           What interests you?
         </Text>
-        <Text style={tw`text-xl mb-6 text-gray-600`}>
+        <Text style={[tw`text-gray-600 mb-4`, { fontSize: screenHeight * 0.02 }]}>
           Select your favorite topics to personalize your experience
         </Text>
         
         <FlatList
           data={subcategories}
-          keyExtractor={(item) => item.id}
           renderItem={renderInterestItem}
+          keyExtractor={(item) => item.id}
           numColumns={itemsPerRow}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={tw`pb-24`}
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
         />
         
         <View style={tw`absolute bottom-8 left-4 right-4`}>
@@ -193,7 +184,7 @@ const Interests: React.FC<InterestsProps> = ({ navigation, route }) => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
             >
-              <Text style={tw`text-white font-bold text-xl text-center`}>
+              <Text style={tw`text-white font-bold text-center text-lg`}>
                 Continue ({localSelectedInterests.length} selected)
               </Text>
             </LinearGradient>

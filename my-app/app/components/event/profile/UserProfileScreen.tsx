@@ -15,6 +15,7 @@ import { useRequestNotifications } from '../../../hooks/useRequestNotifications'
 import { useNotifications } from '../../../hooks/useNotifications';
 import NotificationList from '../../Notifications/NotificationList';
 import { useUnseenRequests } from './UseUnseenRequests';
+import LoadingScreen from '../../../components/LoadingScreen';
 
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -93,11 +94,7 @@ const receivedServiceRequests = useUnseenRequests(userId, 'received_services');
   );
 
   if (loading) {
-    return (
-      <View style={tw`flex-1 justify-center items-center bg-[#FF5F00]`}>
-        <ActivityIndicator size="large" color="#FFFFFF" />
-      </View>
-    );
+    return <LoadingScreen visible={true} />;
   }
 
   if (!userProfile || !userId) {

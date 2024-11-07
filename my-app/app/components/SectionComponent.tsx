@@ -6,6 +6,7 @@ import StaffServiceCard from './PersonalServiceComponents/StaffServiceCard';
 import EventCard from './event/EventCard';
 import LocalServiceCard from './LocalService/LocalServiceCard';
 import MaterialCard from './MaterialService/MaterialCard';
+import tw from 'twrnc';
 const { width } = Dimensions.get('window');
 
 interface SectionComponentProps {
@@ -73,10 +74,12 @@ const SectionComponent: React.FC<SectionComponentProps> = ({ title, data, onSeeA
         reducedTransparencyFallbackColor="rgba(0, 0, 0, 0.8)"
       >
         <View style={styles.headerContainer}>
-          <Text style={styles.sectionTitle}>{title}</Text>
+          <Text style={[tw`text-lg font-bold mb-2`, { color: '#0066CC' }]}>
+            {title}
+          </Text>
           <TouchableOpacity onPress={onSeeAll} style={styles.seeAllButton}>
             <Text style={styles.seeAllButtonText}>See All</Text>
-            <Ionicons name="chevron-forward" size={16} color="#fff" />
+            <Ionicons name="chevron-forward" size={16} color="#000000" />
           </TouchableOpacity>
         </View>
         <View style={styles.contentContainer}>
@@ -136,7 +139,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
+    borderBottomColor: '#BAE6FD',
   },
   contentContainer: {
     paddingVertical: 15,
@@ -156,7 +159,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   seeAllButtonText: {
-    color: '#fff',
+    color: '#000000',
     fontSize: 12,
     fontWeight: '500',
     marginRight: 4,

@@ -37,27 +37,21 @@ const PhotosSection: React.FC<{ eventId: number }> = ({ eventId }) => {
 
   if (photos.length === 0) {
     return (
-      <LinearGradient
-        colors={['#4B0082', '#0066CC']}
-        style={tw`p-4 rounded-xl mt-4 shadow-lg`}
-      >
-        <View style={tw`flex-row items-center mb-2`}>
-          <Ionicons name="images" size={24} color="white" />
-          <Text style={tw`text-lg font-bold text-white ml-2`}>Photos</Text>
+      <View style={tw`bg-white rounded-xl mt-4 shadow-sm border border-gray-100`}>
+        <View style={tw`flex-row items-center p-4`}>
+          <Ionicons name="images" size={24} color="#0066CC" />
+          <Text style={tw`text-lg font-bold text-gray-800 ml-2`}>Photos</Text>
         </View>
-        <Text style={tw`text-white/70 text-center py-4`}>No photos available</Text>
-      </LinearGradient>
+        <Text style={tw`text-gray-500 text-center py-4`}>No photos available</Text>
+      </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={['#4B0082', '#0066CC']}
-      style={tw`p-4 rounded-xl mt-4 shadow-lg`}
-    >
-      <View style={tw`flex-row items-center mb-4`}>
-        <Ionicons name="images" size={24} color="white" />
-        <Text style={tw`text-lg font-bold text-white ml-2`}>
+    <View style={tw`bg-white rounded-xl mt-4 shadow-sm border border-gray-100`}>
+      <View style={tw`flex-row items-center p-4`}>
+        <Ionicons name="images" size={24} color="#0066CC" />
+        <Text style={tw`text-lg font-bold text-gray-800 ml-2`}>
           Photos ({photos.length})
         </Text>
       </View>
@@ -65,13 +59,13 @@ const PhotosSection: React.FC<{ eventId: number }> = ({ eventId }) => {
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={tw`pb-2`}
+        contentContainerStyle={tw`px-4 pb-4`}
       >
         {photos.map((photo, index) => (
           <TouchableOpacity 
             key={photo.id}
             style={[
-              tw`mr-3 rounded-lg overflow-hidden shadow-lg`,
+              tw`mr-3 rounded-lg overflow-hidden shadow-sm border border-gray-100`,
               { width: photoSize, height: photoSize }
             ]}
           >
@@ -83,7 +77,7 @@ const PhotosSection: React.FC<{ eventId: number }> = ({ eventId }) => {
           </TouchableOpacity>
         ))}
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 };
 

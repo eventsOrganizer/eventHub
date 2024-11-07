@@ -10,16 +10,18 @@ interface FilterChipProps {
 
 const FilterChip: React.FC<FilterChipProps> = ({ label, selected, onPress }) => (
   <TouchableOpacity
-    style={[
-      tw`px-4 py-2 rounded-full mr-2`,
-      selected ? tw`bg-purple-500` : tw`bg-white/20`
-    ]}
+    style={tw`${
+      selected 
+        ? 'bg-blue-50 border-blue-100' 
+        : 'bg-gray-50 border-gray-100'
+    } px-4 py-2 rounded-xl mr-2 border`}
     onPress={onPress}
   >
-    <Text style={[
-      tw`text-sm`,
-      selected ? tw`text-white` : tw`text-white/70`
-    ]}>
+    <Text style={tw`${
+      selected 
+        ? 'text-blue-600' 
+        : 'text-gray-600'
+    } font-medium`}>
       {label}
     </Text>
   </TouchableOpacity>

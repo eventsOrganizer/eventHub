@@ -7,6 +7,13 @@ import tw from 'twrnc';
 
 interface Props {
   organizerId: string;
+  updateTrigger?: number;
+}
+
+
+
+interface Props {
+  organizerId: string;
 }
 
 const FollowerStats: React.FC<Props> = ({ organizerId }) => {
@@ -17,6 +24,28 @@ const FollowerStats: React.FC<Props> = ({ organizerId }) => {
 
   useEffect(() => {
     fetchFollowCounts();
+
+    // Subscribe to changes in the follower table
+    const subscription = supabase
+      .channel('follower-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'follower',
+          filter: `following_id=eq.${organizerId}`,
+        },
+        () => {
+          fetchFollowCounts(); // Refetch counts when changes occur
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [organizerId]);
 
   const fetchFollowCounts = async () => {
@@ -59,18 +88,20 @@ const FollowerStats: React.FC<Props> = ({ organizerId }) => {
         style={tw`items-center`} 
         onPress={handleFollowersPress}
       >
-        <Text style={tw`text-white text-xl font-bold`}>{followersCount}</Text>
-        <Text style={tw`text-gray-400 text-sm`}>Followers</Text>
+        <Text style={tw`text-black-500 text-xl font-bold`}>{followersCount}</Text>
+        <Text style={tw`text-black-500 text-sm`}>Followers</Text>
       </TouchableOpacity>
       <TouchableOpacity 
         style={tw`items-center`} 
         onPress={handleFollowingPress}
       >
-        <Text style={tw`text-white text-xl font-bold`}>{followingCount}</Text>
-        <Text style={tw`text-gray-400 text-sm`}>Following</Text>
+        <Text style={tw`text-black-500 text-xl font-bold`}>{followingCount}</Text>
+        <Text style={tw`text-black-500 text-sm`}>Following</Text>
       </TouchableOpacity>
     </View>
   );
 };
+
+export default FollowerStats;
 
 export default FollowerStats;

@@ -85,13 +85,10 @@ const CommentsSection: React.FC<{ eventId: number }> = ({ eventId }) => {
   };
 
   return (
-    <LinearGradient
-      colors={['#4B0082', '#0066CC']}
-      style={tw`p-4 rounded-xl mt-4 shadow-lg`}
-    >
-      <View style={tw`flex-row items-center mb-4`}>
-        <Ionicons name="chatbubbles" size={24} color="white" />
-        <Text style={tw`text-lg font-bold text-white ml-2`}>
+    <View style={tw`bg-white rounded-xl mt-4 shadow-sm border border-gray-100`}>
+      <View style={tw`flex-row items-center p-4 border-b border-gray-100`}>
+        <Ionicons name="chatbubbles" size={24} color="#0066CC" />
+        <Text style={tw`text-lg font-bold text-gray-800 ml-2`}>
           Comments ({comments.length})
         </Text>
       </View>
@@ -99,22 +96,22 @@ const CommentsSection: React.FC<{ eventId: number }> = ({ eventId }) => {
       <FlatList
         data={comments}
         renderItem={({ item }) => (
-          <View style={tw`mb-4`}>
+          <View style={tw`mb-4 px-4`}>
             <View style={tw`flex-row`}>
               <UserAvatar 
                 userId={item.user_id} 
                 size={40} 
-                style={tw`border-2 border-white shadow-lg`}
+                style={tw`border-2 border-gray-100 shadow-sm`}
               />
               <View style={tw`ml-3 flex-1`}>
-                <View style={tw`bg-white/20 p-3 rounded-lg`}>
-                  <Text style={tw`text-white`}>{item.details}</Text>
+                <View style={tw`bg-gray-50 p-3 rounded-lg border border-gray-100`}>
+                  <Text style={tw`text-gray-700`}>{item.details}</Text>
                 </View>
                 <TouchableOpacity 
                   onPress={() => setReplyingTo(item.id)}
                   style={tw`mt-1.5`}
                 >
-                  <Text style={tw`text-white/70 text-sm`}>Reply</Text>
+                  <Text style={tw`text-blue-500 text-sm`}>Reply</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -126,11 +123,11 @@ const CommentsSection: React.FC<{ eventId: number }> = ({ eventId }) => {
                     <UserAvatar 
                       userId={reply.user_id} 
                       size={32} 
-                      style={tw`border-2 border-white shadow-lg`}
+                      style={tw`border-2 border-gray-100 shadow-sm`}
                     />
                     <View style={tw`ml-2 flex-1`}>
-                      <View style={tw`bg-white/10 p-2.5 rounded-lg`}>
-                        <Text style={tw`text-white text-sm`}>{reply.details}</Text>
+                      <View style={tw`bg-gray-50 p-2.5 rounded-lg border border-gray-100`}>
+                        <Text style={tw`text-gray-600 text-sm`}>{reply.details}</Text>
                       </View>
                     </View>
                   </View>
@@ -143,24 +140,24 @@ const CommentsSection: React.FC<{ eventId: number }> = ({ eventId }) => {
         style={tw`max-h-80`}
       />
 
-      <View style={tw`flex-row items-center mt-4`}>
+      <View style={tw`flex-row items-center p-4 border-t border-gray-100`}>
         <TextInput
-          style={tw`flex-1 bg-white/20 px-4 py-3 rounded-lg text-white`}
+          style={tw`flex-1 bg-gray-50 px-4 py-3 rounded-lg text-gray-700 border border-gray-200`}
           placeholder={replyingTo ? "Write a reply..." : "Add a comment..."}
-          placeholderTextColor="rgba(255,255,255,0.6)"
+          placeholderTextColor="#9CA3AF"
           value={newComment}
           onChangeText={setNewComment}
         />
         <TouchableOpacity 
-          style={tw`ml-2 bg-white/20 px-4 py-3 rounded-lg`}
+          style={tw`ml-2 bg-blue-50 px-4 py-3 rounded-lg border border-blue-100`}
           onPress={handleSubmitComment}
         >
-          <Text style={tw`text-white font-medium`}>
+          <Text style={tw`text-blue-600 font-medium`}>
             {replyingTo ? "Reply" : "Send"}
           </Text>
         </TouchableOpacity>
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 

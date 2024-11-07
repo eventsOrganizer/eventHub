@@ -81,31 +81,23 @@ const EventReview: React.FC<EventReviewProps> = ({ eventId }) => {
         style={tw`px-0.5`}
       >
         <View style={tw`relative`}>
-          {/* Empty star with bright white contour */}
+          {/* Empty star with black contour */}
           <Star
             size={22}
-            color="white"
-            strokeWidth={1.2}
-            style={[
-              tw`opacity-90`,
-              { 
-                shadowColor: "white",
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.8,
-                shadowRadius: 2,
-              }
-            ]}
+            color="#333333"
+            strokeWidth={1.5}
+            style={tw`opacity-90`}
           />
-          {/* Yellow filled star overlay without white shadow */}
+          {/* Yellow filled star overlay */}
           <View style={[
             tw`absolute top-0 left-0 overflow-hidden`,
             { width: `${filled * 100}%` }
           ]}>
             <Star
               size={22}
-              color="#FFD700"
+              color="#333333"
               fill="#FFD700"
-              strokeWidth={1.2}
+              strokeWidth={1.5}
               style={tw`opacity-90`}
             />
           </View>
@@ -123,7 +115,7 @@ const EventReview: React.FC<EventReviewProps> = ({ eventId }) => {
         <View style={tw`flex-row`}>
           {[0, 1, 2, 3, 4].map((index) => renderStar(index))}
         </View>
-        <Text style={tw`text-sm text-white/80 ml-2`}>
+        <Text style={tw`text-sm text-gray-700 ml-2`}>
           {averageRating.toFixed(1)} ({totalReviews})
         </Text>
       </View>

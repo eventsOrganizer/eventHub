@@ -127,221 +127,208 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
     );
   }
 
-  return (
-    <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`flex-1`}>
+return (
+  <View style={tw`flex-1 bg-white`}>
     <ScrollView>
-      <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`px-6 pt-6 pb-4 w-full`}>
+      <LinearGradient 
+        colors={['#E8F0FE', '#F8FAFF']} 
+        style={tw`px-6 pt-6 pb-4 w-full shadow-sm border-b border-gray-100`}
+      >
         <View style={tw`flex-row justify-between items-center`}>
-          <Text style={tw`text-3xl font-bold text-white mb-2 shadow-lg flex-1`}>
+          <Text style={tw`text-3xl font-bold text-blue-800 mb-2 flex-1`}>
             {eventDetails.name}
           </Text>
           {eventDetails.user_id === userId && (
             <TouchableOpacity 
-              style={tw`ml-3 bg-white/20 p-2 rounded-full`}
+              style={tw`ml-3 bg-blue-50 p-2 rounded-full`}
               onPress={() => navigation.navigate('EditEvent', { eventId: eventDetails.id })}
             >
-              <Ionicons name="pencil" size={24} color="white" />
+              <Ionicons name="pencil" size={24} color="#0066CC" />
             </TouchableOpacity>
           )}
         </View>
       </LinearGradient>
-  
-        <View style={tw`flex-row justify-between items-center px-4 py-4 bg-[#0066CC]/90`}>
+
+      <View style={tw`flex-row justify-between items-center px-4 py-4 bg-gray-50`}>
+        <View style={tw`flex-row items-center`}>
+          <UserAvatar 
+            userId={eventDetails.user_id} 
+            size={60} 
+            style={tw`border-2 border-white shadow-md`}
+          />
+          <View style={tw`ml-3`}>
+            <Text style={tw`text-sm text-gray-500`}>Organized by</Text>
+            <Text style={tw`text-base font-bold text-gray-800`}>
+              {eventDetails.user?.email || 'Unknown'}
+            </Text>
+          </View>
+        </View>
+        <View style={tw`flex-1 ml-4`}>
+          <EventReview eventId={eventId} showOnlyInput={true} />
+        </View>
+      </View>
+
+      <View style={tw`relative w-full h-96`}>
+        <Image 
+          source={{ uri: eventDetails.media[0]?.url }} 
+          style={tw`w-full h-full`}
+          resizeMode="cover"
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(255,255,255,0.9)']}
+          style={tw`absolute bottom-0 w-full h-24`}
+        />
+        <View style={tw`absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg`}>
+          <EventLike eventId={eventId} />
+        </View>
+      </View>
+
+      <View style={tw`w-full -mt-2 px-4`}>
+        {eventDetails.user_id !== userId && (
+          <JoinEventButton
+            eventId={eventDetails.id}
+            privacy={eventDetails.privacy}
+            organizerId={eventDetails.user_id}
+            onJoinSuccess={handleJoinSuccess}
+            onLeaveSuccess={handleLeaveSuccess}
+          />
+        )}
+      </View>
+
+      <View style={tw`w-full px-4 pb-4`}>
+        <View style={tw`bg-white rounded-xl mt-4 shadow-sm border border-gray-100 p-4`}>
+          <View style={tw`flex-row items-center mb-3`}>
+            <Ionicons name="calendar" size={24} color="#0066CC" />
+            <Text style={tw`text-base text-gray-700 ml-3 font-medium`}>
+              {eventDetails.availability[0]?.date || 'N/A'} | {eventDetails.availability[0]?.start || 'N/A'}
+            </Text>
+          </View>
+          <View style={tw`flex-row items-center mb-3`}>
+            <Ionicons name="pricetag" size={24} color="#0066CC" />
+            <Text style={tw`text-base text-gray-700 ml-3 font-medium`}>
+              {eventDetails.subcategory.category.name} - {eventDetails.subcategory.name}
+            </Text>
+            <View style={tw`flex-1 items-end`}>
+              {eventDetails.ticket?.[0] ? (
+                <View style={tw`bg-blue-50 px-5 py-1 rounded-md border border-blue-100 flex-row items-center`}>
+                  <Text style={tw`text-base text-blue-600 font-bold`}>
+                    ${eventDetails.ticket[0].price}
+                  </Text>
+                  <Text style={tw`text-sm text-blue-400 ml-1`}>
+                    ({eventDetails.ticket[0].quantity})
+                  </Text>
+                </View>
+              ) : (
+                <View style={tw`bg-green-50 px-3 py-1 rounded-md border border-green-100`}>
+                  <Text style={tw`text-base text-green-600 font-bold`}>
+                    FREE
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
           <View style={tw`flex-row items-center`}>
-            <UserAvatar 
-              userId={eventDetails.user_id} 
-              size={60} 
-              style={tw`border-2 border-white shadow-lg`}
-            /> 
-            <View style={tw`ml-3`}>
-              <Text style={tw`text-sm text-white/90`}>Organized by</Text>
-              <Text style={tw`text-base font-bold text-white`}>
-                {eventDetails.user?.email || 'Unknown'}
-              </Text>
-            </View>
-          </View>
-          <View style={tw`flex-1 ml-4`}>
-            <EventReview eventId={eventId} showOnlyInput={true} />
+            <Ionicons name="business" size={24} color="#0066CC" />
+            <Text style={tw`text-base text-gray-700 ml-3 font-medium`}>
+              {eventDetails.type}
+            </Text>
           </View>
         </View>
-  
-        <View style={tw`relative w-full h-96`}>
-          <Image 
-            source={{ uri: eventDetails.media[0]?.url }} 
-            style={tw`w-full h-full`}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.7)']}
-            style={tw`absolute bottom-0 w-full h-24`}
-          />
-          <View style={tw`absolute top-4 right-4 bg-white/90 rounded-full p-2 shadow-lg`}>
-            <EventLike eventId={eventId} />
+
+        {eventDetails.type === 'online' && (
+          <View style={tw`mt-4`}>
+            <VideoRoomControl
+              eventId={eventDetails.id}
+              eventType={eventDetails.type}
+              organizerId={eventDetails.user_id}
+              isPrivate={eventDetails.privacy}
+            />
           </View>
-        </View>
-  
- 
-<View style={tw`w-full -mt-2 px-4`}>
-  {eventDetails.user_id !== userId && ( 
-    <JoinEventButton
-      eventId={eventDetails.id}
-      privacy={eventDetails.privacy}
-      organizerId={eventDetails.user_id}
-      onJoinSuccess={handleJoinSuccess}
-      onLeaveSuccess={handleLeaveSuccess}
-    />
-  )}
-</View>
-  
-        <View style={tw`w-full px-4 pb-4`}>
-          {/* Updated Info Container with Price */}
-          <LinearGradient
-            colors={['#4B0082', '#0066CC']}
-            style={tw`p-4 rounded-xl mt-4 shadow-lg`}
-          >
-            <View style={tw`flex-row items-center mb-3`}>
-              <Ionicons name="calendar" size={24} color="white" />
-              <Text style={tw`text-base text-white ml-3 font-medium`}>
-                {eventDetails.availability[0]?.date || 'N/A'} | {eventDetails.availability[0]?.start || 'N/A'}
-              </Text>
+        )}
+
+        {(hasTickets && (isMember || isOrganizer)) && (
+          <View style={tw`mt-4 bg-white rounded-xl shadow-sm border border-gray-100 p-4 h-30 relative`}>
+            <View style={tw`items-center`}>
+              <View style={tw`flex-row items-center`}>
+                <Ionicons name="ticket" size={24} color="#0066CC" />
+                <Text style={tw`text-lg font-bold text-gray-800 ml-2`}>
+                  {eventDetails.ticket?.[0]?.quantity || 0} Tickets Available
+                </Text>
+              </View>
             </View>
-            <View style={tw`flex-row items-center mb-3`}>
-  <Ionicons name="pricetag" size={24} color="white" />
-  <Text style={tw`text-base text-white ml-3 font-medium`}>
-    {eventDetails.subcategory.category.name} - {eventDetails.subcategory.name}
-  </Text>
-  <View style={tw`flex-1 items-end`}>
-    {eventDetails.ticket?.[0] ? (
-      <View style={tw`bg-white/10 px-5 py-0 rounded-md border border-white/20 flex-row items-center`}>
-        <Text style={tw`text-base text-white font-bold`}>
-          ${eventDetails.ticket[0].price}
-        </Text>
-        <Text style={tw`text-sm text-white/80 ml-1`}>
-          ({eventDetails.ticket[0].quantity})
-        </Text>
-      </View>
-    ) : (
-      <View style={tw`bg-green-500/20 px-2 py-0.5 rounded-md border border-green-500/30`}>
-        <Text style={tw`text-base text-green-400 font-bold`}>
-          FREE
-        </Text>
-      </View>
-    )}
-  </View>
-</View>
-            <View style={tw`flex-row items-center`}>
-              <Ionicons name="business" size={24} color="white" />
-              <Text style={tw`text-base text-white ml-3 font-medium`}>
-                {eventDetails.type}
-              </Text>
-            </View>
-          </LinearGradient>
-  
-          {eventDetails.type === 'online' && (
-            <View style={tw`mt-4`}>
-              <VideoRoomControl
+            <View style={tw`absolute bottom-4 left-22 right-22 flex-row items-center justify-center space-x-2`}>
+              <BuyTicket
                 eventId={eventDetails.id}
-                eventType={eventDetails.type}
-                organizerId={eventDetails.user_id}
-                isPrivate={eventDetails.privacy}
+                eventType={eventDetails.type as 'online' | 'indoor' | 'outdoor'}
+              />
+              <BuyForFriends
+                eventId={eventDetails.id}
+                eventType={eventDetails.type as 'online' | 'indoor' | 'outdoor'}
               />
             </View>
-          )}
-  
-          {(hasTickets && (isMember || isOrganizer)) && (
-            <View style={tw`mt-4`}>
-              <LinearGradient
-                colors={['#4B0082', '#0066CC']}
-                style={tw`p-4 rounded-xl shadow-lg h-30 relative`}
+          </View>
+        )}
+
+        <View style={tw`bg-white rounded-xl mt-4 shadow-sm border border-gray-100 overflow-hidden`}>
+          <View style={tw`flex-row h-52`}>
+            <View style={tw`p-4 flex-1`}>
+              <View style={tw`h-36`}>
+                <Text style={tw`text-lg font-bold text-gray-800 mb-1`}>Location</Text>
+                <Text 
+                  style={tw`text-base text-gray-600 mb-1`}
+                  numberOfLines={2}
+                  ellipsizeMode="tail"
+                >
+                  {address}
+                </Text>
+                <Text style={tw`text-lg font-bold text-gray-800 mb-1`}>Distance</Text>
+                <Text 
+                  style={tw`text-base text-gray-600`}
+                  numberOfLines={1}
+                >
+                  {distance ? `${distance.toFixed(2)} km` : 'Calculating...'}
+                </Text>
+              </View>
+              
+              <TouchableOpacity 
+                style={tw`bg-blue-50 p-2 rounded-lg items-center`}
+                onPress={openMap}
               >
-                <View style={tw`items-center`}>
-                  <View style={tw`flex-row items-center`}>
-                    <Ionicons name="ticket" size={24} color="white" />
-                    <Text style={tw`text-lg font-bold text-white ml-2`}>
-                      {eventDetails.ticket?.[0]?.quantity || 0} Tickets Available
-                    </Text>
-                  </View>
-                </View>
-                <View style={tw`absolute bottom-4 left-22 right-22 flex-row items-center justify-center space-x-2`}>
-                  <BuyTicket
-                    eventId={eventDetails.id}
-                    eventType={eventDetails.type as 'online' | 'indoor' | 'outdoor'}
-                  />
-                  <BuyForFriends
-                    eventId={eventDetails.id}
-                    eventType={eventDetails.type as 'online' | 'indoor' | 'outdoor'}
-                  />
-                </View>
-              </LinearGradient>
+                <Text style={tw`text-blue-600 font-bold`}>Open in Maps</Text>
+              </TouchableOpacity>
             </View>
-          )}
-  
-          
-  <LinearGradient
-  colors={['#4B0082', '#0066CC']}
-  style={tw`mt-4 rounded-xl overflow-hidden shadow-lg`}
->
-  <View style={tw`flex-row h-52`}>
-    <View style={tw`p-4 flex-1`}>
-      <View style={tw`h-36`}>
-        <Text style={tw`text-lg font-bold text-white mb-1`}>Location</Text>
-        <Text 
-          style={tw`text-base text-white/90 mb-1`}
-          numberOfLines={2}
-          ellipsizeMode="tail"
-        >
-          {address}
-        </Text>
-        <Text style={tw`text-lg font-bold text-white mb-1`}>Distance</Text>
-        <Text 
-          style={tw`text-base text-white/90`}
-          numberOfLines={1}
-        >
-          {distance ? `${distance.toFixed(2)} km` : 'Calculating...'}
-        </Text>
-      </View>
-      
-      <TouchableOpacity 
-        style={tw`bg-white/20 p-2 rounded-lg items-center`}
-        onPress={openMap}
-      >
-        <Text style={tw`text-white font-bold`}>Open in Maps</Text>
-      </TouchableOpacity>
-    </View>
-    <View style={tw`flex-1`}>
-      <EventMap
-        eventLatitude={eventDetails.location[0]?.latitude || 0}
-        eventLongitude={eventDetails.location[0]?.longitude || 0}
-        onDistanceCalculated={setDistance}
-        onAddressFound={setAddress}
-      />
-    </View>
-  </View>
-</LinearGradient>
-          <LinearGradient
-            colors={['#4B0082', '#0066CC']}
-            style={tw`p-4 mt-4 rounded-xl shadow-lg`}
-          >
-            <Text style={tw`text-lg font-bold text-white mb-2`}>About this Event</Text>
-            <Text style={tw`text-base text-white/90`}>
-              {eventDetails.details || 'No description available.'}
-            </Text>
-          </LinearGradient>
-  
-          <AttendeesSection
-            eventId={eventId}
-            refreshTrigger={attendeesRefreshTrigger}
-            isOrganizer={isOrganizer}
-            userId={userId}
-          />
-  
-          <PhotosSection eventId={eventId} />
-  
-          <CommentsSection eventId={eventId} />
+            <View style={tw`flex-1`}>
+              <EventMap
+                eventLatitude={eventDetails.location[0]?.latitude || 0}
+                eventLongitude={eventDetails.location[0]?.longitude || 0}
+                onDistanceCalculated={setDistance}
+                onAddressFound={setAddress}
+              />
+            </View>
+          </View>
         </View>
-      </ScrollView>
-    </LinearGradient>
-  );
+
+        <View style={tw`bg-white rounded-xl mt-4 shadow-sm border border-gray-100 p-4`}>
+          <Text style={tw`text-lg font-bold text-gray-800 mb-2`}>About this Event</Text>
+          <Text style={tw`text-base text-gray-600`}>
+            {eventDetails.details || 'No description available.'}
+          </Text>
+        </View>
+
+        <AttendeesSection
+          eventId={eventId}
+          refreshTrigger={attendeesRefreshTrigger}
+          isOrganizer={isOrganizer}
+          userId={userId}
+        />
+
+        <PhotosSection eventId={eventId} />
+
+        <CommentsSection eventId={eventId} />
+      </View>
+    </ScrollView>
+  </View>
+);
 };
 
 export default EventDetailsScreen;

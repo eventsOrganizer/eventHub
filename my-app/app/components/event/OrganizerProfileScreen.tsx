@@ -53,27 +53,54 @@ interface Service {
 
 
 
-const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string } } }> = ({ route }) => {
-  const { organizerId } = route.params;
+
+
+const OrganizerProfileScreen: React.FC<{ 
+  route: { 
+    params: { 
+      organizerId: string,
+      timestamp?: number 
+    } 
+  } 
+}> = ({ route }) => {
+  const { organizerId, timestamp } = route.params;
+
   const [organizer, setOrganizer] = useState<OrganizerProfile | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [showEvents, setShowEvents] = useState(true);
   const [loading, setLoading] = useState(false);
+
   const { userId: currentUserId } = useUser();
   const navigation = useNavigation<NavigationProp<ParamListBase>>();
+  const [x,setX]=useState(true)
+
+
 
   useEffect(() => {
+    setOrganizer(null);
+    setEvents([]);
+    setServices([]);
+    setShowEvents(true);
+    setLoading(false);
+    
     fetchOrganizerProfile();
-  }, []);
+    fetchOrganizerEvents(); // Fetch initial events
+  }, [organizerId]);
 
+
+
+
+  
   useEffect(() => {
-    if (showEvents) {
-      fetchOrganizerEvents();
-    } else {
-      fetchOrganizerServices();
+    if (organizerId) {
+      if (showEvents) {
+        fetchOrganizerEvents();
+      } else {
+        fetchOrganizerServices();
+      }
     }
-  }, [showEvents]);
+  }, [showEvents, organizerId]);
 
   const fetchOrganizerProfile = async () => {
     console.log('Fetching organizer profile for ID:', organizerId);
@@ -232,65 +259,75 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
   }
 
   return (
-    <ScrollView style={tw`flex-1 bg-gray-900`}>
+    <ScrollView style={tw`flex-1 bg-white`}>
       <View style={tw`h-40`}>
-        <LinearGradient
-          colors={['#FFA500', '#FFD700']}
-          style={tw`flex-1`}
-        />
+      <LinearGradient
+  colors={['#007bff', '#0056b3']}
+  style={tw`flex-1 justify-center items-center`}
+>
+  <Text style={tw`text-4xl font-bold text-white`}>{organizer.full_name}</Text>
+</LinearGradient>
       </View>
       
-      <View style={tw`bg-gray-800 -mt-12 rounded-t-3xl p-5`}>
+      <View style={tw`bg-white -mt-12 rounded-t-3xl p-5`}>
         <View style={tw`flex-row`}>
           <Image 
             source={{ uri: organizer.avatar_url }} 
             style={tw`w-30 h-48 rounded-xl mr-4`} 
           />
           <View style={tw`flex-1`}>
-            <Text style={tw`text-2xl font-bold text-white mb-1`}>{organizer.full_name}</Text>
-            <Text style={tw`text-gray-400 mb-2`}>{organizer.email}</Text>
-            <Text style={tw`text-white/80 mb-4`}>{organizer.bio || 'No bio available'}</Text>
+         
+            {/* <Text style={tw`text-gray-600 mb-2`}>{organizer.email}</Text> */}
+            <Text style={tw`text-blue-800/80 mb-4`}>{organizer.bio || 'No bio available'}</Text>
             
             {currentUserId ? (
               currentUserId !== organizerId ? (
                 <View style={tw`gap-2`}>
                   <TouchableOpacity
-                    style={tw`bg-orange-500 p-3 rounded-lg`}
+                    style={tw`bg-blue-800 p-3 rounded-lg`}
                     onPress={() => navigation.navigate('ChatRoom', { userId: currentUserId, organizerId })}
                   >
                     <Text style={tw`text-white font-bold text-center`}>Chat with Organizer</Text>
                   </TouchableOpacity>
                   <FriendButton targetUserId={organizerId} />
-                  <FollowButton targetUserId={organizerId} />
+                  <FollowButton 
+    targetUserId={organizerId} 
+                  
+                  />
                 </View>
               ) : (
-                <Text style={tw`text-gray-400`}>This is your profile</Text>
+                <Text style={tw`text-gray-600`}>This is your profile</Text>
               )
             ) : (
-              <Text style={tw`text-gray-400`}>Log in to interact with the organizer</Text>
+              <Text style={tw`text-gray-600`}>Log in to interact with the organizer</Text>
             )}
           </View>
         </View>
-
-        <FollowerStats organizerId={organizerId} />
-        <FriendsInCommon currentUserId={currentUserId!} organizerId={organizerId} />
+  
+        <FollowerStats 
+    organizerId={organizerId} 
+  
+  />
+      {currentUserId && currentUserId !== organizerId && (
+  <FriendsInCommon currentUserId={currentUserId} organizerId={organizerId} />
+)}
         <OrganizerInterests organizerId={organizerId} />
-
-        <View style={tw`flex-row justify-around mt-6 border-b border-gray-700 pb-2`}>
+  
+        <View style={tw`flex-row justify-around mt-6 border-b border-gray-200 pb-2`}>
           <TouchableOpacity
-            style={tw`px-5 py-2 ${showEvents ? 'border-b-2 border-orange-500' : ''}`}
+            style={tw`px-5 py-2 ${showEvents ? 'border-b-2 border-blue-500' : ''}`}
             onPress={() => setShowEvents(true)}
           >
-            <Text style={tw`${showEvents ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>Events</Text>
+            <Text style={tw`${showEvents ? 'text-blue-500 font-bold' : 'text-gray-600'}`}>Events</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={tw`px-5 py-2 ${!showEvents ? 'border-b-2 border-orange-500' : ''}`}
+            style={tw`px-5 py-2 ${!showEvents ? 'border-b-2 border-blue-500' : ''}`}
             onPress={() => setShowEvents(false)}
           >
-            <Text style={tw`${!showEvents ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>Services</Text>
+            <Text style={tw`${!showEvents ? 'text-blue-500 font-bold' : 'text-gray-600'}`}>Services</Text>
           </TouchableOpacity>
         </View>
-
+  
         {loading ? (
           <ActivityIndicator size="large" color="#FFA500" style={tw`py-8`} />
         ) : (
@@ -300,7 +337,7 @@ const OrganizerProfileScreen: React.FC<{ route: { params: { organizerId: string 
               renderItem={renderItem}
               keyExtractor={(item) => `${showEvents ? 'event' : 'service'}-${item.id}`}
               ListEmptyComponent={
-                <Text style={tw`text-center text-gray-400 mt-4`}>
+                <Text style={tw`text-center text-gray-600 mt-4`}>
                   {showEvents ? 'No events found' : 'No services found'}
                 </Text>
               }
