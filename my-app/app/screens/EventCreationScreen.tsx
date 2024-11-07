@@ -31,6 +31,7 @@ const EventCreationScreen: React.FC = () => {
     startTime: new Date(),
     endTime: new Date(),
     imageUrl: '',
+      serial: '',
     location: null as { latitude: number; longitude: number } | null,
     accessType: 'free' | 'paid',
   ticketPrice: '',
@@ -45,8 +46,17 @@ ticketQuantity: '',
   const [showMap, setShowMap] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { handleEventCreationNotification } = createEventNotificationSystem();
 
+  const { handleEventCreationNotification } = createEventNotificationSystem();
+  const generateEventSerial = () => {
+    const timestamp = Date.now().toString(36);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let randomStr = '';
+    for (let i = 0; i < 8; i++) {
+      randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `${timestamp}${randomStr}`.slice(0, 20);
+  };
   const navigation = useNavigation();
   useEffect(() => {
     fetchCategories();
@@ -119,6 +129,8 @@ ticketQuantity: '',
     setIsLoading(true);
 
     try {
+      const eventSerial = generateEventSerial();
+      console.log('Generated serial for event:', eventSerial);
       console.log('Inserting event into database');
       const { data: newEvent, error: eventError } = await supabase
         .from('event')
@@ -127,6 +139,7 @@ ticketQuantity: '',
           details: eventData.details,
           type: eventData.eventType,
           privacy: eventData.privacy,
+          serial: eventSerial,  // Add this line
           subcategory_id: eventData.selectedSubcategory,
           user_id: userId,
         })

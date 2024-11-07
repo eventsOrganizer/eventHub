@@ -42,11 +42,10 @@ const HomeScreen: React.FC = () => {
     try {
       setLoading(true);
       const [events, topEvents, locals, staff, materials] = await Promise.all([
-        supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).limit(5),
-        supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).limit(5),
-        supabase.from('local').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).limit(5),
-        supabase.from('personal').select('*, subcategory (id,name,category(id,name)), media (url)').limit(5),
-        supabase.from('material').select('*, subcategory (id, name, category (id, name)), media (url)').limit(5)
+        supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).order('id', { ascending: false }),
+        supabase.from('local').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).order('id', { ascending: false }),
+        supabase.from('personal').select('*, subcategory (id,name,category(id,name)), media (url)').order('id', { ascending: false }),
+        supabase.from('material').select('*, subcategory (id, name, category (id, name)), media (url)').order('id', { ascending: false }),
       ]);
 
       console.log('Fetching interest events for userId:', userId);
