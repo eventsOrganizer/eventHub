@@ -41,6 +41,8 @@ create table
     encrypted_password character varying(255) not null,
     details text null,
     bio text null,
+    disabled boolean not null default false,
+    role public.user_role not null default 'user'::user_role,
     constraint user_pkey primary key (id),
     constraint user_id_fkey foreign key (id) references auth.users (id)
   ) tablespace pg_default;
@@ -72,7 +74,10 @@ create table
     subcategory_id integer not null,
     name text null,
     group_id integer null,
+    serial character varying(20) null,
+    disabled boolean not null default false,
     constraint event_pkey primary key (id),
+    constraint event_serial_key unique (serial),
     constraint event_group_id_fkey foreign key (group_id) references "group" (id),
     constraint event_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id),
     constraint event_user_id_fkey foreign key (user_id) references "user" (id),
@@ -104,6 +109,7 @@ create table
     startdate date null,
     enddate date null,
     disabled boolean not null default false,
+    percentage double precision null,
     constraint local_pkey primary key (id),
     constraint local_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id),
     constraint local_user_id_fkey foreign key (user_id) references "user" (id)
@@ -123,13 +129,11 @@ create table
     startdate date null,
     enddate date null,
     statusday public.statusday null default 'available'::statusday,
-    request_id integer null,
     constraint availability_pkey primary key (id),
     constraint availability_event_id_fkey foreign key (event_id) references event (id) on delete cascade,
     constraint availability_local_id_fkey foreign key (local_id) references local (id) on delete cascade,
     constraint availability_personal_id_fkey foreign key (personal_id) references personal (id) on delete cascade,
     constraint fk_material foreign key (material_id) references material (id),
-    constraint availability_request_id_fkey foreign key (request_id) references request (id) on delete cascade,
     constraint availability_daysofweek_check check (
       (
         (daysofweek)::text = any (
@@ -149,22 +153,57 @@ create table
     )
   ) tablespace pg_default;
 
-CREATE TABLE chatroom (
-    id SERIAL PRIMARY KEY,
-    event_id INTEGER,
-    user1_id UUID,
-    user2_id UUID,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    type VARCHAR(7) CHECK (type IN ('private', 'public')),
-    FOREIGN KEY (event_id) REFERENCES event(id) ON DELETE CASCADE,
-    FOREIGN KEY (user1_id) REFERENCES "user"(id) ON DELETE CASCADE,
-    FOREIGN KEY (user2_id) REFERENCES "user"(id) ON DELETE CASCADE,
-    CONSTRAINT check_private_public 
-        CHECK (
-            (type = 'public' AND event_id IS NOT NULL AND user1_id IS NULL AND user2_id IS NULL) OR 
-            (type = 'private' AND event_id IS NULL AND user1_id IS NOT NULL AND user2_id IS NOT NULL)
+create table
+  public.chatroom (
+    id serial not null,
+    event_id integer null,
+    created_at timestamp without time zone null default current_timestamp,
+    type character varying(7) null,
+    user1_id uuid null,
+    user2_id uuid null,
+    constraint chatroom_pkey primary key (id),
+    constraint chatroom_event_id_fkey foreign key (event_id) references event (id) on delete cascade,
+    constraint fk_user1 foreign key (user1_id) references "user" (id) on delete cascade,
+    constraint fk_user2 foreign key (user2_id) references "user" (id) on delete cascade,
+    constraint chatroom_type_check check (
+      (
+        (
+          type
+        )::text = any (
+          (
+            array[
+              'private'::character varying,
+              'public'::character varying
+            ]
+          )::text[]
         )
-);
+      )
+    ),
+    constraint check_private_public check (
+      (
+        (
+          (
+            (
+              type
+            )::text = 'public'::text
+          )
+          and (event_id is not null)
+          and (user1_id is null)
+          and (user2_id is null)
+        )
+        or (
+          (
+            (
+              type
+            )::text = 'private'::text
+          )
+          and (event_id is null)
+          and (user1_id is not null)
+          and (user2_id is not null)
+        )
+      )
+    )
+  ) tablespace pg_default;
 
 
 create table
@@ -181,6 +220,7 @@ create table
     startdate date null,
     enddate date null,
     disabled boolean null,
+    percentage double precision null,
     constraint material_pkey primary key (id),
     constraint material_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id),
     constraint material_user_id_fkey foreign key (user_id) references "user" (id),
@@ -219,31 +259,49 @@ create table
   ) tablespace pg_default;
 
 
-CREATE TABLE event_has_user (
-    event_id INTEGER NOT NULL,
-    user_id UUID NOT NULL,
-    PRIMARY KEY (event_id, user_id),
-    FOREIGN KEY (event_id) REFERENCES event(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
-);
+create table
+  public.event_has_user (
+    event_id integer not null,
+    user_id uuid not null,
+    constraint event_has_user_pkey primary key (event_id, user_id),
+    constraint event_has_user_event_id_fkey foreign key (event_id) references event (id) on delete cascade,
+    constraint event_has_user_user_id_fkey foreign key (user_id) references "user" (id)
+  ) tablespace pg_default;
 
-CREATE TABLE friends (
-    user_id UUID NOT NULL,
-    friend_id UUID NOT NULL,
-    status VARCHAR(8) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
-    PRIMARY KEY (user_id, friend_id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE,
-    FOREIGN KEY (friend_id) REFERENCES "user"(id) ON DELETE CASCADE
-);
 
-CREATE TABLE interest (
-    id SERIAL PRIMARY KEY,
-    subcategory_id INTEGER NOT NULL,
-    user_id UUID NOT NULL,
+create table
+  public.friend (
+    user_id uuid not null,
+    friend_id uuid not null,
+    status character varying(8) null default 'pending'::character varying,
+    constraint friend_pkey primary key (user_id, friend_id),
+    constraint friends_friend_id_fkey foreign key (friend_id) references "user" (id) on delete cascade,
+    constraint friends_user_id_fkey foreign key (user_id) references "user" (id) on delete cascade,
+    constraint friends_status_check check (
+      (
+        (status)::text = any (
+          (
+            array[
+              'pending'::character varying,
+              'accepted'::character varying,
+              'rejected'::character varying
+            ]
+          )::text[]
+        )
+      )
+    )
+  ) tablespace pg_default;
 
-    FOREIGN KEY (subcategory_id) REFERENCES subcategory(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
-);
+
+create table
+  public.interest (
+    id serial not null,
+    subcategory_id integer not null,
+    user_id uuid not null,
+    constraint interest_pkey primary key (id),
+    constraint interest_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id),
+    constraint interest_user_id_fkey foreign key (user_id) references "user" (id)
+  ) tablespace pg_default;
 
 create table
   public.location (
@@ -262,6 +320,7 @@ create table
     constraint location_personal_id_fkey foreign key (personal_id) references personal (id) on delete cascade,
     constraint location_user_id_fkey foreign key (user_id) references "user" (id) on delete cascade
   ) tablespace pg_default;
+
 ////-////
 create table
   public.media (
@@ -274,13 +333,17 @@ create table
     url text null,
     type text null,
     album_id bigint null,
+    videoroom_id integer null,
+    order_id bigint null,
     constraint media_pkey primary key (id),
     constraint media_event_id_fkey foreign key (event_id) references event (id) on delete cascade,
     constraint media_local_id_fkey foreign key (local_id) references local (id) on delete cascade,
-    constraint fk_album foreign key (album_id) references album (id) on delete cascade,
+    constraint media_material_id_fkey foreign key (material_id) references material (id) on delete cascade,
+    constraint media_order_id_fkey foreign key (order_id) references "order" (id) on delete cascade,
     constraint media_personal_id_fkey foreign key (personal_id) references personal (id) on delete cascade,
     constraint media_user_id_fkey foreign key (user_id) references "user" (id) on delete cascade,
-    constraint media_material_id_fkey foreign key (material_id) references material (id) on delete cascade
+    constraint fk_album foreign key (album_id) references album (id) on delete cascade,
+    constraint media_videoroom_id_fkey foreign key (videoroom_id) references videoroom (id)
   ) tablespace pg_default;
 
 create table
@@ -294,23 +357,27 @@ create table
   ) tablespace pg_default;
 ////-////
 
-CREATE TABLE message (
-    id SERIAL PRIMARY KEY,
-    chatroom_id INTEGER NOT NULL,
-    user_id UUID NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (chatroom_id) REFERENCES chatroom(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
-);
+create table
+  public.message (
+    id serial not null,
+    chatroom_id integer not null,
+    user_id uuid not null,
+    content text not null,
+    created_at timestamp without time zone null default current_timestamp,
+    constraint messages_pkey primary key (id),
+    constraint messages_chatroom_id_fkey foreign key (chatroom_id) references chatroom (id) on delete cascade,
+    constraint messages_user_id_fkey foreign key (user_id) references "user" (id) on delete cascade
+  ) tablespace pg_default;
 
-CREATE TABLE ticket (
-    id SERIAL PRIMARY KEY,
-    event_id INTEGER NOT NULL,
-    price VARCHAR(45),
-    quantity VARCHAR(45),
-    FOREIGN KEY (event_id) REFERENCES event(id)
-);
+create table
+  public.ticket (
+    id serial not null,
+    event_id integer not null,
+    price character varying(45) null,
+    quantity character varying(45) null,
+    constraint ticket_pkey primary key (id),
+    constraint ticket_event_id_fkey foreign key (event_id) references event (id) on delete cascade
+  ) tablespace pg_default;
 
 create table
   public.order (
@@ -390,45 +457,51 @@ create table
 create unique index if not exists unique_pending_request on public.request using btree (user_id, event_id) tablespace pg_default
 where
   ((status)::text = 'pending'::text);
+create unique index if not exists unique_pending_request on public.request using btree (user_id, event_id) tablespace pg_default
+where
+  ((status)::text = 'pending'::text);
 
 
-CREATE TABLE "group" (
-    id SERIAL PRIMARY KEY,
-    privacy BOOLEAN,
-    name TEXT NOT NULL, -- Group name
-    details TEXT -- Group details or description
-);
-
-
-
-CREATE TABLE follower (
-    follower_id UUID NOT NULL,
-    following_id UUID NOT NULL,
-    followed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (follower_id, following_id),
-    FOREIGN KEY (follower_id) REFERENCES "user"(id) ON DELETE CASCADE,  -- The follower
-    FOREIGN KEY (following_id) REFERENCES "user"(id) ON DELETE CASCADE  -- The user being followed
-);
+create table
+  public.group (
+    id serial not null,
+    name text not null,
+    details text null,
+    privacy boolean null default false,
+    constraint group_pkey primary key (id)
+  ) tablespace pg_default;
 
 
 
-CREATE TABLE saved (
-    id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL,
-    event_id INTEGER,
-    personal_id INTEGER,
-    material_id INTEGER,
-    local_id INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+create table
+  public.follower (
+    follower_id uuid not null,
+    following_id uuid not null,
+    followed_at timestamp without time zone null default current_timestamp,
+    group_id integer null,
+    constraint followers_pkey primary key (follower_id, following_id),
+    constraint fk_group foreign key (group_id) references "group" (id) on delete cascade,
+    constraint followers_follower_id_fkey foreign key (follower_id) references "user" (id) on delete cascade,
+    constraint followers_following_id_fkey foreign key (following_id) references "user" (id) on delete cascade
+  ) tablespace pg_default;
 
-    -- Foreign key references
-    FOREIGN KEY (user_id) REFERENCES "user"(id),
-    FOREIGN KEY (event_id) REFERENCES event(id),
-    FOREIGN KEY (personal_id) REFERENCES personal(id),
-    FOREIGN KEY (material_id) REFERENCES material(id),
-    FOREIGN KEY (local_id) REFERENCES local(id)
-);
 
+create table
+  public.saved (
+    id serial not null,
+    user_id uuid not null,
+    event_id integer null,
+    personal_id integer null,
+    material_id integer null,
+    local_id integer null,
+    created_at timestamp without time zone null default current_timestamp,
+    constraint saved_pkey primary key (id),
+    constraint saved_event_id_fkey foreign key (event_id) references event (id),
+    constraint saved_local_id_fkey foreign key (local_id) references local (id),
+    constraint saved_material_id_fkey foreign key (material_id) references material (id),
+    constraint saved_personal_id_fkey foreign key (personal_id) references personal (id),
+    constraint saved_user_id_fkey foreign key (user_id) references "user" (id)
+  ) tablespace pg_default;
 
 
 create table
@@ -441,7 +514,7 @@ create table
     local_id integer null,
     rate double precision null,
     constraint review_pkey primary key (id),
-    constraint review_event_id_fkey foreign key (event_id) references event (id),
+    constraint review_event_id_fkey foreign key (event_id) references event (id) on delete cascade,
     constraint review_local_id_fkey foreign key (local_id) references local (id),
     constraint review_material_id_fkey foreign key (material_id) references material (id),
     constraint review_personal_id_fkey foreign key (personal_id) references personal (id),
@@ -451,19 +524,20 @@ create table
 
 
 create table
-  "like" (
-    id SERIAL primary key,
-    event_id integer, -- Nullable if not all references are required
-    local_id integer,
-    material_id integer,
-    personal_id integer,
-    user_id uuid not null, -- Assuming a user likes the entities
-    foreign key (event_id) references event (id),
-    foreign key (local_id) references local (id),
-    foreign key (material_id) references material (id),
-    foreign key (personal_id) references personal (id),
-    foreign key (user_id) references "user" (id)
-  );
+  public.like (
+    id serial not null,
+    event_id integer null,
+    local_id integer null,
+    material_id integer null,
+    personal_id integer null,
+    user_id uuid not null,
+    constraint like_pkey primary key (id),
+    constraint like_event_id_fkey foreign key (event_id) references event (id),
+    constraint like_local_id_fkey foreign key (local_id) references local (id),
+    constraint like_material_id_fkey foreign key (material_id) references material (id),
+    constraint like_personal_id_fkey foreign key (personal_id) references personal (id),
+    constraint like_user_id_fkey foreign key (user_id) references "user" (id)
+  ) tablespace pg_default;
 
 create table
   public.comment_replies (
@@ -510,3 +584,190 @@ create index if not exists idx_notifications_user_id on public.notifications usi
 
 create index if not exists idx_notifications_created_at on public.notifications using btree (created_at) tablespace pg_default;
 
+create table
+  public.room_participants (
+    id serial not null,
+    room_id integer not null,
+    user_id uuid not null,
+    is_active boolean null default true,
+    joined_at timestamp with time zone null default current_timestamp,
+    left_at timestamp with time zone null,
+    last_heartbeat timestamp with time zone null,
+    daily_co_id character varying(255) null,
+    constraint room_participants_pkey primary key (id),
+    constraint unique_room_user unique (room_id, user_id),
+    constraint room_participants_room_id_fkey foreign key (room_id) references videoroom (id) on delete cascade,
+    constraint room_participants_user_id_fkey foreign key (user_id) references "user" (id) on delete cascade
+  ) tablespace pg_default;
+
+create index if not exists idx_room_participants_user_id on public.room_participants using btree (user_id) tablespace pg_default;
+
+create index if not exists idx_room_participants_last_heartbeat on public.room_participants using btree (last_heartbeat) tablespace pg_default;
+
+create index if not exists idx_room_participants_daily_co_id on public.room_participants using btree (daily_co_id) tablespace pg_default;
+
+create index if not exists idx_room_participants_room_id on public.room_participants using btree (room_id) tablespace pg_default;
+
+
+create table
+  public.update (
+    id serial not null,
+    follower_id uuid not null,
+    event_id integer null,
+    personal_id integer null,
+    material_id integer null,
+    local_id integer null,
+    group_id integer null,
+    seen boolean null default false,
+    created_at timestamp with time zone null default current_timestamp,
+    constraint update_pkey primary key (id),
+    constraint unique_update unique (
+      follower_id,
+      event_id,
+      personal_id,
+      material_id,
+      local_id,
+      group_id
+    ),
+    constraint fk_follower foreign key (follower_id) references "user" (id) on delete cascade,
+    constraint fk_group foreign key (group_id) references "group" (id) on delete cascade,
+    constraint fk_material foreign key (material_id) references material (id) on delete cascade,
+    constraint fk_personal foreign key (personal_id) references personal (id) on delete cascade,
+    constraint fk_local foreign key (local_id) references local (id) on delete cascade,
+    constraint fk_event foreign key (event_id) references event (id) on delete cascade,
+    constraint check_one_id_not_null check (
+      (
+        (
+          (
+            (
+              (
+                ((event_id is not null))::integer + ((personal_id is not null))::integer
+              ) + ((material_id is not null))::integer
+            ) + ((local_id is not null))::integer
+          ) + ((group_id is not null))::integer
+        ) = 1
+      )
+    )
+  ) tablespace pg_default;
+
+create index if not exists idx_update_follower on public.update using btree (follower_id) tablespace pg_default;
+
+create index if not exists idx_update_seen on public.update using btree (seen) tablespace pg_default;
+
+
+
+create table
+  public.videoroom (
+    id serial not null,
+    url text not null,
+    creator_id uuid null,
+    is_connected boolean null default false,
+    created_at timestamp with time zone null default current_timestamp,
+    event_id integer null,
+    is_ready boolean null default false,
+    name text null,
+    subcategory_id integer null,
+    details text null,
+    constraint videoroom_pkey primary key (id),
+    constraint fk_creator foreign key (creator_id) references "user" (id) on delete cascade,
+    constraint fk_event foreign key (event_id) references event (id) on delete cascade,
+    constraint videoroom_subcategory_id_fkey foreign key (subcategory_id) references subcategory (id)
+  ) tablespace pg_default;
+
+create index if not exists idx_videoroom_event_id on public.videoroom using btree (event_id) tablespace pg_default;
+
+
+create table
+  public.invitation (
+    id serial not null,
+    sender_id uuid not null,
+    receiver_id uuid not null,
+    event_id integer null,
+    local_id integer null,
+    material_id integer null,
+    personal_id integer null,
+    group_id integer null,
+    status boolean null default false,
+    created_at timestamp with time zone null default current_timestamp,
+    constraint invitation_pkey primary key (id),
+    constraint fk_event foreign key (event_id) references event (id) on delete cascade,
+    constraint fk_group foreign key (group_id) references "group" (id) on delete cascade,
+    constraint fk_local foreign key (local_id) references local (id) on delete cascade,
+    constraint fk_personal foreign key (personal_id) references personal (id) on delete cascade,
+    constraint fk_receiver foreign key (receiver_id) references "user" (id) on delete cascade,
+    constraint fk_sender foreign key (sender_id) references "user" (id) on delete cascade,
+    constraint fk_material foreign key (material_id) references material (id) on delete cascade,
+    constraint check_one_id_not_null check (
+      (
+        (
+          (
+            (
+              (
+                ((event_id is not null))::integer + ((local_id is not null))::integer
+              ) + ((material_id is not null))::integer
+            ) + ((personal_id is not null))::integer
+          ) + ((group_id is not null))::integer
+        ) = 1
+      )
+    )
+  ) tablespace pg_default;
+
+create index if not exists idx_invitation_sender on public.invitation using btree (sender_id) tablespace pg_default;
+
+create index if not exists idx_invitation_receiver on public.invitation using btree (receiver_id) tablespace pg_default;
+
+create index if not exists idx_invitation_status on public.invitation using btree (status) tablespace pg_default;
+
+
+create table
+  public.complaints (
+    id serial not null,
+    user_id uuid not null,
+    created_at timestamp without time zone null default current_timestamp,
+    resolved_at timestamp without time zone null,
+    status character varying(10) null default 'pending'::character varying,
+    details text not null,
+    category character varying(20) not null,
+    event_id integer null,
+    personal_id integer null,
+    material_id integer null,
+    local_id integer null,
+    reported_user_id uuid null,
+    title character varying(255) not null default 'Default Title'::character varying,
+    constraint complaints_pkey primary key (id),
+    constraint complaints_event_id_fkey foreign key (event_id) references event (id) on delete set null,
+    constraint complaints_local_id_fkey foreign key (local_id) references local (id) on delete set null,
+    constraint complaints_material_id_fkey foreign key (material_id) references material (id) on delete set null,
+    constraint complaints_personal_id_fkey foreign key (personal_id) references personal (id) on delete set null,
+    constraint complaints_reported_user_id_fkey foreign key (reported_user_id) references "user" (id),
+    constraint complaints_user_id_fkey foreign key (user_id) references "user" (id) on delete cascade,
+    constraint complaints_status_check check (
+      (
+        (status)::text = any (
+          (
+            array[
+              'pending'::character varying,
+              'in_review'::character varying,
+              'resolved'::character varying
+            ]
+          )::text[]
+        )
+      )
+    ),
+    constraint complaints_category_check check (
+      (
+        (category)::text = any (
+          (
+            array[
+              'user'::character varying,
+              'event'::character varying,
+              'personal'::character varying,
+              'material'::character varying,
+              'local'::character varying,
+              'other'::character varying
+            ]
+          )::text[]
+        )
+      )
+    )
+  ) tablespace pg_default;
