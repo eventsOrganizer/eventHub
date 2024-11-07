@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert, FlatList } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../services/supabaseClient';
 import { useUser } from '../../../UserContext';
 import { useNavigation } from '@react-navigation/native';
 import tw from 'twrnc';
+import EventReview from '../EventReview';
+import UserAvatar from '../UserAvatar';
 
 interface Event {
   id: number;
@@ -32,9 +34,18 @@ const AttendedEvents: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return 'Date not set';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   const fetchAttendedEvents = useCallback(async () => {
     if (!userId) return;
-
+  
     try {
       const { data, error } = await supabase
         .from('event_has_user')
@@ -43,6 +54,12 @@ const AttendedEvents: React.FC = () => {
             id,
             name,
             details,
+            type,
+            user_id,
+            user:user_id (
+              firstname,
+              lastname
+            ),
             media (url),
             subcategory (
               name,
@@ -55,7 +72,7 @@ const AttendedEvents: React.FC = () => {
           )
         `)
         .eq('user_id', userId);
-
+  
       if (error) throw error;
       setEvents(data?.map(item => item.event) || []);
     } catch (error) {
@@ -66,85 +83,103 @@ const AttendedEvents: React.FC = () => {
     }
   }, [userId]);
 
+  
+
   useEffect(() => {
     fetchAttendedEvents();
   }, [fetchAttendedEvents]);
 
+  const renderEvent = ({ item }: { item: Event }) => (
+    <View style={tw`bg-white rounded-xl mb-4 shadow-sm border border-gray-100 overflow-hidden`}>
+      <View style={tw`p-4`}>
+        {/* Event Information */}
+        <View style={tw`flex-row mb-4`}>
+          <Image
+            source={{ uri: item.media?.[0]?.url || 'https://via.placeholder.com/150' }}
+            style={tw`w-28 h-28 rounded-xl mr-4`}
+          />
+          <View style={tw`flex-1 justify-between`}>
+            <View>
+              <Text style={tw`text-gray-800 text-xl font-bold mb-1`}>
+                {item.name}
+              </Text>
+              <Text style={tw`text-gray-500 text-sm mb-2`}>
+                {item.availability?.[0]?.date 
+                  ? formatDate(item.availability[0].date)
+                  : 'Date not set'}
+              </Text>
+              <Text style={tw`text-gray-400 text-xs`}>
+                {item.subcategory?.category?.name || 'Category'} • 
+                {item.subcategory?.name || 'Subcategory'}
+              </Text>
+            </View>
+            <View style={tw`flex-row items-center justify-between`}>
+              <View style={tw`flex-row items-center`}>
+                <Ionicons 
+                  name={item.type === 'online' ? 'laptop-outline' : 'location-outline'} 
+                  size={16} 
+                  color="#0066CC" 
+                />
+                <Text style={tw`text-gray-600 text-sm ml-1`}>
+                  {item.type === 'online' ? 'Online Event' : 'Physical Event'}
+                </Text>
+              </View>
+              <TouchableOpacity 
+                style={tw`bg-blue-50 px-4 py-2 rounded-xl border border-blue-100`}
+                onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
+              >
+                <Text style={tw`text-blue-600 font-medium`}>View Details</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Organizer Information */}
+        <View style={tw`bg-gray-50 rounded-xl p-4`}>
+  <View style={tw`flex-row items-center`}>
+    <UserAvatar 
+      userId={item.user_id} // Changed to use the event creator's ID
+      style={tw`w-12 h-12 rounded-full border-2 border-white shadow-sm`}
+    />
+    <View style={tw`ml-4 flex-1`}>
+      <Text style={tw`text-gray-800 font-medium`}>Organized by</Text>
+      <Text style={tw`text-gray-500 text-sm`}>
+        {item.user?.firstname} {item.user?.lastname}
+              </Text>
+            </View>
+            <EventReview eventId={item.id} showOnlyStars={true} />
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
   if (loading) {
     return (
-      <View style={tw`flex-1 justify-center items-center`}>
-        <ActivityIndicator size="large" color="white" />
-        <Text style={tw`text-white mt-4 text-lg font-medium`}>Loading attended events...</Text>
+      <View style={tw`flex-1 bg-white justify-center items-center`}>
+        <Text style={tw`text-gray-600 text-lg`}>Loading attended events...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={tw`flex-1`}>
-    <View style={tw`px-4 pt-6 pb-20`}>
-      <View style={tw`flex-row justify-between items-center mb-8`}>
-        <View>
-          <Text style={tw`text-white text-3xl font-bold`}>Your Attended Events</Text>
-        </View>
-      </View>
-        {events.length === 0 ? (
-          <BlurView intensity={80} tint="dark" style={tw`rounded-3xl p-8 items-center`}>
-            <Ionicons name="calendar-outline" size={48} color="white" style={tw`mb-4 opacity-80`} />
-            <Text style={tw`text-white text-xl font-bold mb-2`}>No Attended Events</Text>
-            <Text style={tw`text-white/70 text-center mb-6`}>
-              You haven't attended any events yet
+    <View style={tw`flex-1 bg-white`}>
+      <FlatList
+        contentContainerStyle={tw`p-4`}
+        data={events}
+        renderItem={renderEvent}
+        keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={
+          <View style={tw`bg-white rounded-3xl p-8 items-center border border-gray-100 shadow-sm`}>
+            <Ionicons name="calendar-outline" size={48} color="#0066CC" style={tw`mb-4`} />
+            <Text style={tw`text-gray-800 text-xl font-bold mb-2`}>No Attended Events</Text>
+            <Text style={tw`text-gray-500 text-center`}>
+              Events you've attended will appear here
             </Text>
-          </BlurView>
-        ) : (
-          events.map((event) => (
-            <BlurView 
-              key={event.id} 
-              intensity={80} 
-              tint="dark" 
-              style={tw`rounded-3xl mb-4 overflow-hidden border border-white/10`}
-            >
-              <TouchableOpacity 
-                style={tw`p-4`}
-                onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
-              >
-                <View style={tw`flex-row items-center`}>
-                  <Image 
-                    source={{ uri: event.media[0]?.url || 'https://via.placeholder.com/150' }}
-                    style={tw`w-28 h-28 rounded-2xl mr-4`}
-                  />
-                  <View style={tw`flex-1 h-28 justify-between py-1`}>
-                    <View>
-                      <Text style={tw`text-white text-xl font-bold mb-1`}>{event.name}</Text>
-                      <Text style={tw`text-white/60 text-sm mb-2`}>
-                        {event.availability?.[0]?.date 
-                          ? new Date(event.availability[0].date).toLocaleDateString('en-US', {
-                              month: 'long',
-                              day: 'numeric',
-                              year: 'numeric'
-                            })
-                          : 'Date not set'}
-                      </Text>
-                    </View>
-                    
-                    <View>
-                      <Text style={tw`text-white/50 text-xs mb-2`}>
-                        {event.subcategory?.category?.name} • {event.subcategory?.name}
-                      </Text>
-                      <View style={tw`flex-row items-center`}>
-                        <Ionicons name="people" size={16} color="white" />
-                        <Text style={tw`text-white/80 text-sm ml-1`}>
-                          {event.event_has_user?.length || 0} attendees
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </BlurView>
-          ))
-        )}
-      </View>
-    </ScrollView>
+          </View>
+        }
+      />
+    </View>
   );
 };
 

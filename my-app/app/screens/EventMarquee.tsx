@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
   container: {
     height: 50,
     justifyContent: 'center',
-    marginBottom: 15,
+    marginBottom: 8,
     overflow: 'hidden',
   },
   blurContainer: {

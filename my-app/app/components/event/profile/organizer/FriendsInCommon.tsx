@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList } from 'react-native';
 import { supabase } from '../../../../services/supabaseClient';
 import tw from 'twrnc';
+import { useNavigation } from '@react-navigation/native';
+import UserAvatar from '../../UserAvatar';
 
 interface Friend {
   id: string;
@@ -22,7 +24,7 @@ const FriendsInCommon: React.FC<Props> = ({ currentUserId, organizerId }) => {
     console.log('FriendsInCommon mounted with:', { currentUserId, organizerId });
     fetchCommonFriends();
   }, [currentUserId, organizerId]);
-
+  const navigation = useNavigation();
   const fetchCommonFriends = async () => {
     try {
       console.log('Fetching friends for users:', { currentUserId, organizerId });
@@ -112,7 +114,7 @@ const FriendsInCommon: React.FC<Props> = ({ currentUserId, organizerId }) => {
 
   return (
     <View style={tw`mt-4`}>
-      <Text style={tw`text-white text-xl font-bold mb-2`}>
+      <Text style={tw`text-blue-500 text-xl font-bold mb-2`}>
         Friends in Common ({commonFriends.length})
       </Text>
       <FlatList
@@ -120,19 +122,27 @@ const FriendsInCommon: React.FC<Props> = ({ currentUserId, organizerId }) => {
         data={commonFriends}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
-          <View style={tw`mr-4 items-center`}>
-            <Image
-              source={{ uri: item.avatar_url }}
-              style={tw`w-16 h-16 rounded-full`}
-            />
-            <Text style={tw`text-white text-sm mt-1`}>
-              {`${item.firstname} ${item.lastname}`}
+          <TouchableOpacity 
+            style={tw`mr-4 items-center`}
+            onPress={() => {
+              // Reset navigation state and navigate with fresh state
+              navigation.replace('OrganizerProfile', { 
+                organizerId: item.id,
+                timestamp: Date.now() // Force refresh
+              });
+            }}
+          >
+            <UserAvatar userId={item.id} size={64} />
+            <Text style={tw`text-blue-500 text-sm mt-1`}>
+              {item.firstname} {item.lastname}
             </Text>
-          </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={
-          <Text style={tw`text-white/70 text-sm`}>No friends in common</Text>
+          <Text style={tw`text-black-500/70 text-sm`}>No friends in common</Text>
         }
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={tw`px-4`}
       />
     </View>
   );

@@ -72,7 +72,6 @@ const ManageYourEvents: React.FC = () => {
 
   const checkTicketsAndOrders = async (eventId: number) => {
     try {
-      // Check if event has tickets
       const { data: ticketData, error: ticketError } = await supabase
         .from('ticket')
         .select('id')
@@ -81,7 +80,6 @@ const ManageYourEvents: React.FC = () => {
 
       if (ticketError && ticketError.code !== 'PGRST116') throw ticketError;
 
-      // If we found a ticket, check for orders
       if (ticketData) {
         const { data: orderData, error: orderError } = await supabase
           .from('order')
@@ -123,7 +121,6 @@ const ManageYourEvents: React.FC = () => {
               style: 'destructive',
               onPress: async () => {
                 try {
-                  // Delete the event - cascading will handle related records
                   const { error: deleteError } = await supabase
                     .from('event')
                     .delete()
@@ -146,7 +143,6 @@ const ManageYourEvents: React.FC = () => {
         return;
       }
 
-      // No tickets/orders - proceed with normal deletion
       const { error: deleteError } = await supabase
         .from('event')
         .delete()
@@ -166,67 +162,74 @@ const ManageYourEvents: React.FC = () => {
 
   if (loading) {
     return (
-      <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`flex-1 justify-center items-center`}>
-        <BlurView intensity={80} tint="dark" style={tw`p-8 rounded-3xl`}>
-          <ActivityIndicator size="large" color="white" />
-          <Text style={tw`text-white mt-4 text-lg font-medium`}>Loading your events...</Text>
-        </BlurView>
-      </LinearGradient>
+      <View style={tw`flex-1 bg-white justify-center items-center`}>
+        <View style={tw`bg-white p-8 rounded-3xl shadow-sm border border-gray-100`}>
+          <ActivityIndicator size="large" color="#0066CC" />
+          <Text style={tw`text-gray-600 mt-4 text-lg font-medium`}>Loading your events...</Text>
+        </View>
+      </View>
     );
   }
 
   return (
-    <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`flex-1`}>
+    <View style={tw`flex-1 bg-white`}>
       <ScrollView style={tw`flex-1`}>
         <View style={tw`px-4 pt-6 pb-20`}>
           <View style={tw`flex-row justify-between items-center mb-8`}>
-            <View>
-              {/* <Text style={tw`text-white/80 text-base mb-1`}>Your Events</Text> */}
-              <Text style={tw`text-white text-3xl font-bold`}>Your Events</Text>
-            </View>
+            <Text style={tw`text-blue-800 text-3xl font-bold`}>Your Events</Text>
             <TouchableOpacity 
-              style={tw`bg-white/20 p-4 rounded-2xl shadow-lg`}
+              style={tw`bg-blue-50 p-4 rounded-2xl shadow-sm border border-blue-100`}
               onPress={() => navigation.navigate('EventCreation')}
             >
-              <Ionicons name="add" size={28} color="white" />
+              <Ionicons name="add" size={28} color="#0066CC" />
             </TouchableOpacity>
           </View>
 
+          {/* Empty state */}
           {events.length === 0 ? (
-            <BlurView intensity={80} tint="dark" style={tw`rounded-3xl p-8 items-center`}>
-              <Ionicons name="calendar-outline" size={48} color="white" style={tw`mb-4 opacity-80`} />
-              <Text style={tw`text-white text-xl font-bold mb-2`}>No Events Yet</Text>
-              <Text style={tw`text-white/70 text-center mb-6`}>
+            <View style={tw`bg-white rounded-3xl p-8 items-center border border-gray-100 shadow-sm`}>
+              <Ionicons name="calendar-outline" size={48} color="#0066CC" style={tw`mb-4`} />
+              <Text style={tw`text-gray-800 text-xl font-bold mb-2`}>No Events Yet</Text>
+              <Text style={tw`text-gray-500 text-center mb-6`}>
                 Start creating amazing events for your community
               </Text>
               <TouchableOpacity 
-                style={tw`bg-white/20 px-6 py-3 rounded-xl`}
+                style={tw`bg-blue-50 px-6 py-3 rounded-xl border border-blue-100`}
                 onPress={() => navigation.navigate('EventCreation')}
               >
-                <Text style={tw`text-white font-bold`}>Create Your First Event</Text>
+                <Text style={tw`text-blue-600 font-bold`}>Create Your First Event</Text>
               </TouchableOpacity>
-            </BlurView>
+            </View>
           ) : (
+            // Event cards
             events.map((event) => (
-              <BlurView 
-                key={event.id} 
-                intensity={80} 
-                tint="dark" 
-                style={tw`rounded-3xl mb-4 overflow-hidden border border-white/10`}
+              <View 
+                key={event.id}
+                style={tw`bg-white rounded-3xl mb-4 overflow-hidden border border-gray-100 shadow-sm`}
               >
                 <TouchableOpacity 
                   style={tw`p-4`}
                   onPress={() => navigation.navigate('EventDetails', { eventId: event.id })}
                 >
-                  <View style={tw`flex-row items-center`}>
+                  <View style={tw`flex-row h-32`}>
                     <Image 
                       source={{ uri: event.media[0]?.url || 'https://via.placeholder.com/150' }}
-                      style={tw`w-28 h-28 rounded-2xl mr-4`}
+                      style={tw`w-32 h-32 rounded-xl mr-4`}
                     />
-                    <View style={tw`flex-1 h-28 justify-between py-1`}>
-                      <View>
-                        <Text style={tw`text-white text-xl font-bold mb-1`}>{event.name}</Text>
-                        <Text style={tw`text-white/60 text-sm mb-2`}>
+                    <View style={tw`flex-1 justify-between py-1`}>
+                      {/* Top Section */}
+                      <View style={tw`flex-1`}>
+                        <Text 
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                          style={tw`text-gray-800 text-xl font-bold`}
+                        >
+                          {event.name}
+                        </Text>
+                        <Text 
+                          numberOfLines={1} 
+                          style={tw`text-gray-500 text-sm mt-1`}
+                        >
                           {event.availability?.[0]?.date 
                             ? new Date(event.availability[0].date).toLocaleDateString('en-US', {
                                 month: 'long',
@@ -237,64 +240,71 @@ const ManageYourEvents: React.FC = () => {
                         </Text>
                       </View>
                       
-                      <View>
-                        <Text style={tw`text-white/50 text-xs mb-2`}>
+                      {/* Middle Section */}
+                      <View style={tw`flex-1 justify-center`}>
+                        <Text 
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                          style={tw`text-gray-400 text-xs`}
+                        >
                           {event.subcategory?.category?.name} • {event.subcategory?.name}
                         </Text>
-                        <View style={tw`flex-row items-center justify-between`}>
-                          <View style={tw`flex-row items-center`}>
-                            <Ionicons name="people" size={16} color="white" />
-                            <Text style={tw`text-white/80 text-sm ml-1`}>
-                              {event.event_has_user?.length || 0} attendees
-                            </Text>
-                          </View>
-                          <View style={tw`flex-row`}>
-                            <TouchableOpacity 
-                              style={tw`bg-white/20 p-2 rounded-xl mr-2`}
-                              onPress={() => navigation.navigate('EditEvent', { eventId: event.id })}
-                            >
-                              <Ionicons name="pencil" size={20} color="white" />
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                              style={tw`bg-red-500/20 p-2 rounded-xl`}
-                              onPress={() => {
-                                setSelectedEventId(event.id);
-                                setShowDeleteModal(true);
-                              }}
-                            >
-                              <Ionicons name="trash" size={20} color="#ef4444" />
-                            </TouchableOpacity>
-                          </View>
+                      </View>
+
+                      {/* Bottom Section */}
+                      <View style={tw`flex-row items-center justify-between`}>
+                        <View style={tw`flex-row items-center flex-1`}>
+                          <Ionicons name="people" size={16} color="#0066CC" />
+                          <Text 
+                            numberOfLines={1}
+                            style={tw`text-gray-600 text-sm ml-1 flex-1`}
+                          >
+                            {event.event_has_user?.length || 0} attendees
+                          </Text>
+                        </View>
+                        <View style={tw`flex-row ml-2`}>
+                          <TouchableOpacity 
+                            style={tw`bg-blue-50 p-2 rounded-xl mr-2 border border-blue-100`}
+                            onPress={() => navigation.navigate('EditEvent', { eventId: event.id })}
+                          >
+                            <Ionicons name="pencil" size={20} color="#0066CC" />
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            style={tw`bg-red-50 p-2 rounded-xl border border-red-100`}
+                            onPress={() => {
+                              setSelectedEventId(event.id);
+                              setShowDeleteModal(true);
+                            }}
+                          >
+                            <Ionicons name="trash" size={20} color="#ef4444" />
+                          </TouchableOpacity>
                         </View>
                       </View>
                     </View>
                   </View>
                 </TouchableOpacity>
-              </BlurView>
+              </View>
             ))
           )}
         </View>
       </ScrollView>
 
+      {/* Delete Modal */}
       {showDeleteModal && (
-        <BlurView 
-          intensity={90} 
-          tint="dark" 
-          style={tw`absolute inset-0 justify-center items-center px-6`}
-        >
-          <View style={tw`bg-white/10 p-6 rounded-3xl w-full max-w-sm`}>
-            <Text style={tw`text-white text-xl font-bold mb-4 text-center`}>
+        <View style={tw`absolute inset-0 bg-black/50 justify-center items-center px-6`}>
+          <View style={tw`bg-white p-6 rounded-3xl w-full max-w-sm shadow-lg`}>
+            <Text style={tw`text-gray-800 text-xl font-bold mb-4 text-center`}>
               Delete Event?
             </Text>
-            <Text style={tw`text-white/80 text-center mb-6`}>
+            <Text style={tw`text-gray-600 text-center mb-6`}>
               This action cannot be undone. All event data will be permanently removed.
             </Text>
             <View style={tw`flex-row justify-end`}>
               <TouchableOpacity
-                style={tw`bg-white/20 px-6 py-3 rounded-xl mr-2`}
+                style={tw`bg-gray-100 px-6 py-3 rounded-xl mr-2`}
                 onPress={() => setShowDeleteModal(false)}
               >
-                <Text style={tw`text-white font-bold`}>Cancel</Text>
+                <Text style={tw`text-gray-600 font-bold`}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={tw`bg-red-500 px-6 py-3 rounded-xl`}
@@ -304,9 +314,9 @@ const ManageYourEvents: React.FC = () => {
               </TouchableOpacity>
             </View>
           </View>
-        </BlurView>
+        </View>
       )}
-    </LinearGradient>
+    </View>
   );
 };
 

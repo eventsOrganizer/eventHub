@@ -117,102 +117,98 @@ const SoldTickets: React.FC = () => {
   };
 
   const renderTicket = ({ item }: { item: SoldTicket }) => (
-    <BlurView
-      intensity={80}
-      tint="dark"
-      style={tw`rounded-3xl mb-4 overflow-hidden border border-white/10`}
-    >
+    <View style={tw`bg-white rounded-xl mb-4 shadow-sm border border-gray-100 overflow-hidden`}>
       <View style={tw`p-4`}>
         {/* Event Information */}
         <View style={tw`flex-row mb-4`}>
           <Image
             source={{ uri: item.ticket.event.media?.[0]?.url || 'https://via.placeholder.com/150' }}
-            style={tw`w-28 h-28 rounded-2xl mr-4`}
+            style={tw`w-28 h-28 rounded-xl mr-4`}
           />
           <View style={tw`flex-1 justify-between`}>
             <View>
-              <Text style={tw`text-white text-xl font-bold mb-1`}>
+              <Text style={tw`text-gray-800 text-xl font-bold mb-1`}>
                 {item.ticket.event.name}
               </Text>
-              <Text style={tw`text-white/60 text-sm mb-2`}>
+              <Text style={tw`text-gray-500 text-sm mb-2`}>
                 {item.ticket.event.availability?.[0]?.date 
                   ? formatDate(item.ticket.event.availability[0].date)
                   : 'Date not set'}
               </Text>
-              <Text style={tw`text-white/50 text-xs`}>
+              <Text style={tw`text-gray-400 text-xs`}>
                 {item.ticket.event.subcategory?.category?.name || 'Category'} • 
                 {item.ticket.event.subcategory?.name || 'Subcategory'}
               </Text>
             </View>
-            <Text style={tw`text-white/80 text-lg font-bold`}>
+            <Text style={tw`text-blue-600 text-lg font-bold`}>
               {formatPrice(item.ticket.price)}
             </Text>
           </View>
         </View>
 
-    {/* Buyer Information */}
-<View style={tw`bg-black/20 rounded-xl p-4`}>
-  <View style={tw`flex-row items-center mb-3`}>
-    <UserAvatar 
-      userId={item.user.id}
-      style={tw`w-12 h-12 rounded-full`}  // Removed mr-3
-    />
-    <View style={tw`ml-4`}> 
-      <Text style={tw`text-white font-medium text-lg`}>
-        {item.user.firstname} {item.user.lastname}
-      </Text>
-      <Text style={tw`text-white/60 text-sm`}>
-        Order ID: #{item.id}
-      </Text>
-    </View>
-  </View>
+        {/* Buyer Information */}
+        <View style={tw`bg-gray-50 rounded-xl p-4`}>
+          <View style={tw`flex-row items-center mb-3`}>
+            <UserAvatar 
+              userId={item.user.id}
+              style={tw`w-12 h-12 rounded-full border-2 border-white shadow-sm`}
+            />
+            <View style={tw`ml-4`}> 
+              <Text style={tw`text-gray-800 font-medium text-lg`}>
+                {item.user.firstname} {item.user.lastname}
+              </Text>
+              <Text style={tw`text-gray-500 text-sm`}>
+                Order ID: #{item.id}
+              </Text>
+            </View>
+          </View>
 
           <View style={tw`flex-row justify-between items-center`}>
             <View style={tw`flex-row items-center`}>
               <Ionicons 
                 name={item.ticket.event.type === 'online' ? 'laptop-outline' : 'location-outline'} 
                 size={16} 
-                color="white" 
+                color="#0066CC" 
               />
-              <Text style={tw`text-white/80 text-sm ml-1`}>
+              <Text style={tw`text-gray-600 text-sm ml-1`}>
                 {item.ticket.event.type === 'online' ? 'Online Event' : 'Physical Event'}
               </Text>
             </View>
-            <Text style={tw`text-white/70 text-sm`}>
+            <Text style={tw`text-gray-500 text-sm`}>
               Price: {formatPrice(item.ticket.price)}
             </Text>
           </View>
         </View>
       </View>
-    </BlurView>
+    </View>
   );
 
   if (loading) {
     return (
-      <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`flex-1 justify-center items-center`}>
-        <Text style={tw`text-white text-lg`}>Loading sold tickets...</Text>
-      </LinearGradient>
+      <View style={tw`flex-1 bg-white justify-center items-center`}>
+        <Text style={tw`text-gray-600 text-lg`}>Loading sold tickets...</Text>
+      </View>
     );
   }
 
   return (
-    <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`flex-1`}>
+    <View style={tw`flex-1 bg-white`}>
       <FlatList
         contentContainerStyle={tw`p-4`}
         data={tickets}
         renderItem={renderTicket}
         keyExtractor={(item) => item.id.toString()}
         ListEmptyComponent={
-          <BlurView intensity={80} tint="dark" style={tw`rounded-3xl p-8 items-center`}>
-            <Ionicons name="ticket-outline" size={48} color="white" style={tw`mb-4 opacity-80`} />
-            <Text style={tw`text-white text-xl font-bold mb-2`}>No Sold Tickets</Text>
-            <Text style={tw`text-white/70 text-center`}>
+          <View style={tw`bg-white rounded-3xl p-8 items-center border border-gray-100 shadow-sm`}>
+            <Ionicons name="ticket-outline" size={48} color="#0066CC" style={tw`mb-4`} />
+            <Text style={tw`text-gray-800 text-xl font-bold mb-2`}>No Sold Tickets</Text>
+            <Text style={tw`text-gray-500 text-center`}>
               Tickets you've sold will appear here
             </Text>
-          </BlurView>
+          </View>
         }
       />
-    </LinearGradient>
+    </View>
   );
 };
 

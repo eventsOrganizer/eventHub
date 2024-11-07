@@ -48,7 +48,7 @@ const OrganizerInterests: React.FC<Props> = ({ organizerId }) => {
 
   return (
     <View style={tw`mt-4`}>
-      <Text style={tw`text-white text-xl font-bold mb-2`}>Interests</Text>
+      <Text style={tw`text-blue-500 text-xl font-bold mb-2`}>Interests</Text>
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
@@ -60,13 +60,13 @@ const OrganizerInterests: React.FC<Props> = ({ organizerId }) => {
             key={interest.id} 
             style={tw`bg-white/20 rounded-full px-3 py-1 mr-2 mb-2`}
           >
-            <Text style={tw`text-white text-sm`}>
+            <Text style={tw`text-blue-500 text-sm`}>
               {`${interest.subcategory.category.name} - ${interest.subcategory.name}`}
             </Text>
           </View>
         ))}
         {interests.length === 0 && (
-          <Text style={tw`text-white/70 text-sm`}>No interests added yet</Text>
+          <Text style={tw`text-black-500/70 text-sm`}>No interests added yet</Text>
         )}
       </ScrollView>
     </View>

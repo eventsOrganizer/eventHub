@@ -95,30 +95,27 @@ const PurchasedTickets: React.FC = () => {
     });
   };
 
+
   const renderTicket = ({ item }: { item: Ticket }) => (
-    <BlurView
-      intensity={80}
-      tint="dark"
-      style={tw`rounded-3xl mb-4 overflow-hidden border border-white/10`}
-    >
+    <View style={tw`bg-white rounded-xl mb-4 shadow-sm border border-gray-100 overflow-hidden`}>
       <View style={tw`p-4`}>
         {/* Event Information */}
         <View style={tw`flex-row mb-4`}>
           <Image
             source={{ uri: item.ticket.event.media?.[0]?.url || 'https://via.placeholder.com/150' }}
-            style={tw`w-28 h-28 rounded-2xl mr-4`}
+            style={tw`w-28 h-28 rounded-xl mr-4`}
           />
           <View style={tw`flex-1 justify-between`}>
             <View>
-              <Text style={tw`text-white text-xl font-bold mb-1`}>
+              <Text style={tw`text-gray-800 text-xl font-bold mb-1`}>
                 {item.ticket.event.name}
               </Text>
-              <Text style={tw`text-white/60 text-sm mb-2`}>
+              <Text style={tw`text-gray-500 text-sm mb-2`}>
                 {item.ticket.event.availability?.[0]?.date 
                   ? formatDate(item.ticket.event.availability[0].date)
                   : 'Date not set'}
               </Text>
-              <Text style={tw`text-white/50 text-xs`}>
+              <Text style={tw`text-gray-400 text-xs`}>
                 {item.ticket.event.subcategory?.category?.name || 'Category'} • 
                 {item.ticket.event.subcategory?.name || 'Subcategory'}
               </Text>
@@ -127,64 +124,61 @@ const PurchasedTickets: React.FC = () => {
               <Ionicons 
                 name={item.type === 'online' ? 'laptop-outline' : 'location-outline'} 
                 size={16} 
-                color="white" 
+                color="#0066CC" 
               />
-              <Text style={tw`text-white/80 text-sm ml-1`}>
+              <Text style={tw`text-gray-600 text-sm ml-1`}>
                 {item.type === 'online' ? 'Online Event' : 'Physical Event'}
               </Text>
             </View>
           </View>
         </View>
 
-
-
-
-{/* QR Code Section with Refund and Preview buttons for both types */}
-<View style={tw`bg-black/20 rounded-xl p-4`}>
-  <View style={tw`flex-row items-center justify-between`}>
-    {item.type === 'physical' ? (
-      <>
-        <View style={tw`bg-white p-4 rounded-xl`}>
-          <QRCode
-            value={item.token || ''}
-            size={120}
-          />
+        {/* QR Code Section */}
+        <View style={tw`bg-gray-50 rounded-xl p-4`}>
+          <View style={tw`flex-row items-center justify-between`}>
+            {item.type === 'physical' ? (
+              <>
+                <View style={tw`bg-white p-4 rounded-xl shadow-sm border border-gray-100`}>
+                  <QRCode
+                    value={item.token || ''}
+                    size={120}
+                  />
+                </View>
+                <View style={tw`ml-4`}>
+                  <TouchableOpacity 
+                    onPress={() => console.log('Refund requested')}
+                    style={tw`bg-red-50 px-6 py-2 rounded-xl flex-row items-center mb-2 border border-red-100`}
+                  >
+                    <Ionicons name="refresh-outline" size={20} color="#EF4444" />
+                    <Text style={tw`text-red-500 ml-2 font-medium`}>Refund</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => setSelectedQR(item.token)}
+                    style={tw`bg-blue-50 px-6 py-2 rounded-xl flex-row items-center border border-blue-100`}
+                  >
+                    <Ionicons name="expand-outline" size={20} color="#0066CC" />
+                    <Text style={tw`text-blue-600 ml-2 font-medium`}>Preview QR</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <View style={tw`flex-row items-center justify-between w-full`}>
+                <View style={tw`bg-white px-4 py-3 rounded-xl flex-1 mr-4 border border-gray-100`}>
+                  <Text style={tw`text-gray-700 text-base`}>Access Code: {item.token}</Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => console.log('Refund requested')}
+                  style={tw`bg-red-50 px-6 py-2 rounded-xl flex-row items-center border border-red-100`}
+                >
+                  <Ionicons name="refresh-outline" size={20} color="#EF4444" />
+                  <Text style={tw`text-red-500 ml-2 font-medium`}>Refund</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </View>
-        <View style={tw`ml-4`}>
-          <TouchableOpacity 
-            onPress={() => console.log('Refund requested')}
-            style={tw`bg-red-500/20 px-6 py-2 rounded-xl flex-row items-center mb-2`}
-          >
-            <Ionicons name="refresh-outline" size={20} color="white" />
-            <Text style={tw`text-white ml-2 font-medium`}>Refund</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            onPress={() => setSelectedQR(item.token)}
-            style={tw`bg-white/10 px-6 py-2 rounded-xl flex-row items-center`}
-          >
-            <Ionicons name="expand-outline" size={20} color="white" />
-            <Text style={tw`text-white ml-2 font-medium`}>Preview QR</Text>
-          </TouchableOpacity>
-        </View>
-      </>
-    ) : (
-      <View style={tw`flex-row items-center justify-between w-full`}>
-        <View style={tw`bg-white/20 px-4 py-3 rounded-xl flex-1 mr-4`}>
-          <Text style={tw`text-white text-base`}>Access Code: {item.token}</Text>
-        </View>
-        <TouchableOpacity 
-          onPress={() => console.log('Refund requested')}
-          style={tw`bg-red-500/20 px-6 py-2 rounded-xl flex-row items-center`}
-        >
-          <Ionicons name="refresh-outline" size={20} color="white" />
-          <Text style={tw`text-white ml-2 font-medium`}>Refund</Text>
-        </TouchableOpacity>
       </View>
-    )}
-  </View>
-</View>
-      </View>
-    </BlurView>
+    </View>
   );
 
   const renderQRModal = () => {
@@ -198,11 +192,11 @@ const PurchasedTickets: React.FC = () => {
         onRequestClose={() => setSelectedQR(null)}
       >
         <TouchableOpacity 
-          style={tw`flex-1 justify-center items-center bg-black/70`}
+          style={tw`flex-1 justify-center items-center bg-black/50`}
           onPress={() => setSelectedQR(null)}
         >
-          <BlurView intensity={80} tint="dark" style={tw`p-8 rounded-3xl`}>
-            <View style={tw`bg-white p-6 rounded-2xl`}>
+          <View style={tw`bg-white p-8 rounded-3xl shadow-lg`}>
+            <View style={tw`bg-gray-50 p-6 rounded-2xl border border-gray-100`}>
               <QRCode
                 value={selectedQR}
                 size={250}
@@ -212,9 +206,9 @@ const PurchasedTickets: React.FC = () => {
               style={tw`mt-4 items-center`}
               onPress={() => setSelectedQR(null)}
             >
-              <Text style={tw`text-white text-lg`}>Close</Text>
+              <Text style={tw`text-gray-600 text-lg font-medium`}>Close</Text>
             </TouchableOpacity>
-          </BlurView>
+          </View>
         </TouchableOpacity>
       </Modal>
     );
@@ -222,31 +216,31 @@ const PurchasedTickets: React.FC = () => {
 
   if (loading) {
     return (
-      <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`flex-1 justify-center items-center`}>
-        <Text style={tw`text-white text-lg`}>Loading tickets...</Text>
-      </LinearGradient>
+      <View style={tw`flex-1 bg-white justify-center items-center`}>
+        <Text style={tw`text-gray-600 text-lg`}>Loading tickets...</Text>
+      </View>
     );
   }
 
   return (
-    <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`flex-1`}>
+    <View style={tw`flex-1 bg-white`}>
       <FlatList
         contentContainerStyle={tw`p-4`}
         data={tickets}
         renderItem={renderTicket}
         keyExtractor={(item) => item.id.toString()}
         ListEmptyComponent={
-          <BlurView intensity={80} tint="dark" style={tw`rounded-3xl p-8 items-center`}>
-            <Ionicons name="ticket-outline" size={48} color="white" style={tw`mb-4 opacity-80`} />
-            <Text style={tw`text-white text-xl font-bold mb-2`}>No Tickets Yet</Text>
-            <Text style={tw`text-white/70 text-center`}>
+          <View style={tw`bg-white rounded-3xl p-8 items-center border border-gray-100 shadow-sm`}>
+            <Ionicons name="ticket-outline" size={48} color="#0066CC" style={tw`mb-4`} />
+            <Text style={tw`text-gray-800 text-xl font-bold mb-2`}>No Tickets Yet</Text>
+            <Text style={tw`text-gray-500 text-center`}>
               Your purchased tickets will appear here
             </Text>
-          </BlurView>
+          </View>
         }
       />
       {renderQRModal()}
-    </LinearGradient>
+    </View>
   );
 };
 

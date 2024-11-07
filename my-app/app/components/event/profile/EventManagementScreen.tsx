@@ -11,16 +11,18 @@ const EventsManagementScreen: React.FC = () => {
 
   const renderTabButton = (tab: 'your' | 'attended' | 'tickets', label: string) => (
     <TouchableOpacity 
-      style={tw`px-4 py-3 rounded-xl ${activeTab === tab ? 'bg-white/20' : ''}`}
+      style={tw`px-4 py-3 rounded-xl ${activeTab === tab ? 'bg-blue-50 border border-blue-100' : ''}`}
       onPress={() => setActiveTab(tab)}
     >
-      <Text style={tw`text-white font-semibold`}>{label}</Text>
+      <Text style={tw`${activeTab === tab ? 'text-blue-600' : 'text-gray-600'} font-semibold`}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 
   return (
-    <LinearGradient colors={['#4B0082', '#0066CC']} style={tw`flex-1`}>
-      <View style={tw`flex-row justify-around items-center p-4 bg-white/10`}>
+    <View style={tw`flex-1 bg-white`}>
+      <View style={tw`flex-row justify-around items-center p-4 bg-white border-b border-gray-100`}>
         {renderTabButton('your', 'Your Events')}
         {renderTabButton('attended', 'Attended')}
         {renderTabButton('tickets', 'Tickets')}
@@ -29,7 +31,7 @@ const EventsManagementScreen: React.FC = () => {
       {activeTab === 'your' && <ManageYourEvents />}
       {activeTab === 'attended' && <AttendedEvents />}
       {activeTab === 'tickets' && <TicketsView />}
-    </LinearGradient>
+    </View>
   );
 };
 

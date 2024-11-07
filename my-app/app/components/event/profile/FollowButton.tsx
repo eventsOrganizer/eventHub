@@ -5,9 +5,10 @@ import { useUser } from '../../../UserContext';
 
 interface FollowButtonProps {
   targetUserId: string;
+  onFollowStateChange?: (isFollowing: boolean) => void;
 }
 
-const FollowButton: React.FC<FollowButtonProps> = ({ targetUserId }) => {
+const FollowButton: React.FC<FollowButtonProps> = ({ targetUserId, onFollowStateChange }) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const { userId } = useUser();
 
@@ -43,6 +44,7 @@ const FollowButton: React.FC<FollowButtonProps> = ({ targetUserId }) => {
         console.error('Error unfollowing user:', error);
       } else {
         setIsFollowing(false);
+        onFollowStateChange?.(false); // Notify parent component
       }
     } else {
       const { error } = await supabase
@@ -53,9 +55,12 @@ const FollowButton: React.FC<FollowButtonProps> = ({ targetUserId }) => {
         console.error('Error following user:', error);
       } else {
         setIsFollowing(true);
+        onFollowStateChange?.(true); // Notify parent component
       }
     }
   };
+
+  
 
   return (
     <TouchableOpacity style={styles.followButton} onPress={handleFollow}>
@@ -68,7 +73,7 @@ const FollowButton: React.FC<FollowButtonProps> = ({ targetUserId }) => {
 
 const styles = StyleSheet.create({
   followButton: {
-    backgroundColor: '#FFA500',
+    backgroundColor: '#007bff',
     padding: 10,
     borderRadius: 5,
     marginTop: 10,

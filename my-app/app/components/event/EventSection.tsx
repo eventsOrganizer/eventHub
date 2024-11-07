@@ -112,15 +112,15 @@ const EventSection: React.FC<EventSectionProps> = ({
       >
         <View style={tw`p-4`}>
           {!isSeeAllPage && (
-            <View style={tw`flex-row justify-between items-center mb-4 border-b border-white/30 pb-2`}>
-              <Text style={tw`text-2xl font-bold text-white`}>{title}</Text>
+            <View style={tw`flex-row justify-between items-center mb-4 border-b border-[#BAE6FD] pb-2`}>
+              <Text style={[tw`text-lg font-bold mb-2`, { color: '#0066CC' }]}>{title}</Text>
               {onSeeAll && (
                 <TouchableOpacity 
                   onPress={onSeeAll} 
                   style={tw`flex-row items-center bg-white/20 py-2 px-3 rounded-full`}
                 >
-                  <Text style={tw`text-white text-sm font-medium mr-1`}>See All</Text>
-                  <Ionicons name="arrow-forward" size={16} color="#fff" />
+                  <Text style={tw`text-black text-sm font-medium mr-1`}>See All</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#000000" />
                 </TouchableOpacity>
               )}
             </View>

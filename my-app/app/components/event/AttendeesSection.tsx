@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal } from 'react-native';
 import { supabase } from '../../services/supabaseClient';
-import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import UserAvatar from './UserAvatar';
 import { Ionicons } from '@expo/vector-icons';
@@ -106,20 +105,17 @@ const AttendeesSection: React.FC<AttendeesSectionProps> = ({
 
   return (
     <View>
-      <LinearGradient
-        colors={['#4B0082', '#0066CC']}
-        style={tw`p-4 rounded-xl mt-4 shadow-lg`}
-      >
+      <View style={tw`bg-white rounded-xl mt-4 shadow-sm border border-gray-100`}>
         <TouchableOpacity 
-          style={tw`flex-row items-center mb-4`}
+          style={tw`flex-row items-center mb-4 p-4`}
           onPress={() => setShowAllModal(true)}
         >
-          <Ionicons name="people" size={24} color="white" />
-          <Text style={tw`text-lg font-bold text-white ml-2`}>
+          <Ionicons name="people" size={24} color="#0066CC" />
+          <Text style={tw`text-lg font-bold text-gray-800 ml-2`}>
             Attendees ({attendees.length})
           </Text>
           {friendsAttending.length > 0 && (
-            <Text style={tw`text-sm text-yellow-400 ml-2`}>
+            <Text style={tw`text-sm text-blue-500 ml-2`}>
               {friendsAttending.length} friends joined
             </Text>
           )}
@@ -131,48 +127,47 @@ const AttendeesSection: React.FC<AttendeesSectionProps> = ({
           keyExtractor={(item) => item.id}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={tw`py-2`}
+          contentContainerStyle={tw`px-4 py-2`}
         />
-      </LinearGradient>
+      </View>
+
       <EventFriends 
-  eventId={eventId}
-  refreshTrigger={refreshTrigger}
-/>
+        eventId={eventId}
+        refreshTrigger={refreshTrigger}
+      />
+
       <Modal
         visible={showAllModal}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setShowAllModal(false)}
       >
-        <BlurView intensity={90} tint="dark" style={tw`flex-1`}>
-          <View style={tw`flex-1 mt-20 mx-4 bg-gray-900/90 rounded-t-3xl overflow-hidden`}>
-            <LinearGradient
-              colors={['#4B0082', '#0066CC']}
-              style={tw`p-4`}
-            >
+        <BlurView intensity={90} tint="light" style={tw`flex-1`}>
+          <View style={tw`flex-1 mt-20 mx-4 bg-white rounded-t-3xl overflow-hidden shadow-xl`}>
+            <View style={tw`p-4 bg-gray-50 border-b border-gray-100`}>
               <View style={tw`flex-row justify-between items-center`}>
-                <Text style={tw`text-xl font-bold text-white`}>All Attendees</Text>
+                <Text style={tw`text-xl font-bold text-gray-800`}>All Attendees</Text>
                 <TouchableOpacity onPress={() => setShowAllModal(false)}>
-                  <Ionicons name="close" size={24} color="white" />
+                  <Ionicons name="close" size={24} color="#666666" />
                 </TouchableOpacity>
               </View>
-            </LinearGradient>
+            </View>
 
             <FlatList
               data={attendees}
               renderItem={({ item }) => (
-                <View style={tw`flex-row items-center p-4 border-b border-gray-800`}>
+                <View style={tw`flex-row items-center p-4 border-b border-gray-100`}>
                   <UserAvatar 
                     userId={item.id} 
                     size={50} 
-                    style={tw`border-2 ${item.isFriend ? 'border-yellow-400' : 'border-white'}`}
+                    style={tw`border-2 ${item.isFriend ? 'border-blue-400' : 'border-gray-200'}`}
                   />
                   <View style={tw`ml-3`}>
-                    <Text style={tw`text-white text-lg`}>
+                    <Text style={tw`text-gray-800 text-lg`}>
                       {item.firstname} {item.lastname}
                     </Text>
                     {item.isFriend && (
-                      <Text style={tw`text-yellow-400 text-sm`}>Friend</Text>
+                      <Text style={tw`text-blue-500 text-sm`}>Friend</Text>
                     )}
                   </View>
                 </View>

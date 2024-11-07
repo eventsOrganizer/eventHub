@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, FlatList, SafeAreaView, ActivityIndicator, TextInput, Button, Dimensions, ScrollView } from 'react-native';
+import { View, FlatList, SafeAreaView, ActivityIndicator, TextInput, Button, Dimensions, ScrollView, TouchableOpacity, Text } from 'react-native';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { supabase } from '../services/supabaseClient';
@@ -24,12 +24,12 @@ interface Subcategory {
   category_id: number;
 }
 
-const ITEMS_PER_PAGE = 9;
-const ITEMS_PER_ROW = 3;
+const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_ROW = 1;
 const { width } = Dimensions.get('window');
 const CARD_SPACING = 8;
-const CONTAINER_PADDING = 16;
-const CARD_WIDTH = (width - (2 * CONTAINER_PADDING) - (CARD_SPACING * 2)) / 3;
+const CONTAINER_PADDING = 0;
+const CARD_WIDTH = (width - (2 * CONTAINER_PADDING) - (CARD_SPACING * 2)) / 1;
 
 const AllEvents = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -224,13 +224,13 @@ const AllEvents = () => {
 
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-[#001F3F]`}>
+    <SafeAreaView style={tw`flex-1 bg-white`}>
       <View style={tw`flex-1`}>
         <View style={tw`px-4 pt-4`}>
           <TextInput
-            style={tw`bg-white/20 p-4 rounded-xl mb-4 text-white`}
+            style={tw`bg-gray-50 p-4 rounded-xl mb-4 text-gray-800 border border-gray-100`}
             placeholder="Search events..."
-            placeholderTextColor="rgba(255,255,255,0.5)"
+            placeholderTextColor="rgba(0,0,0,0.4)"
             value={searchTerm}
             onChangeText={setSearchTerm}
           />
@@ -247,16 +247,20 @@ const AllEvents = () => {
           ListFooterComponent={
             section === 'YOUR_EVENTS' && (
               <View style={tw`flex-row justify-between mt-4 px-4`}>
-                <Button
-                  title="Previous"
+                <TouchableOpacity 
+                  style={tw`bg-blue-50 px-6 py-3 rounded-xl border border-blue-100 ${page === 0 ? 'opacity-50' : ''}`}
                   onPress={() => setPage(p => Math.max(0, p - 1))}
                   disabled={page === 0}
-                />
-                <Button
-                  title="Next"
+                >
+                  <Text style={tw`text-blue-600 font-bold`}>Previous</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={tw`bg-blue-50 px-6 py-3 rounded-xl border border-blue-100 ${(page + 1) * ITEMS_PER_PAGE >= events.length ? 'opacity-50' : ''}`}
                   onPress={() => setPage(p => p + 1)}
                   disabled={(page + 1) * ITEMS_PER_PAGE >= events.length}
-                />
+                >
+                  <Text style={tw`text-blue-600 font-bold`}>Next</Text>
+                </TouchableOpacity>
               </View>
             )
           }

@@ -51,7 +51,7 @@ const ServiceIcons: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 20,
+    marginVertical: 8,
     position: 'relative',
     alignItems: 'center',
   },
