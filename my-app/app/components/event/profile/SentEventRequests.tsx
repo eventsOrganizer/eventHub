@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../services/supabaseClient';
 import { useUser } from '../../../UserContext';
 import { useNavigation } from '@react-navigation/native';
 import tw from 'twrnc';
+import UserAvatar from '../UserAvatar';
 
 interface Request {
   id: number;
@@ -13,6 +13,7 @@ interface Request {
   event: {
     id: number;
     name: string;
+    user_id: string;
     media: { url: string }[];
     subcategory: {
       name: string;
@@ -20,20 +21,36 @@ interface Request {
         name: string;
       };
     };
+    user: {
+      firstname: string;
+      lastname: string;
+    };
   };
 }
+
+const getStatusStyle = (status: 'pending' | 'accepted' | 'refused') => {
+  switch (status) {
+    case 'pending':
+      return tw`bg-blue-50 text-blue-600`;
+    case 'accepted':
+      return tw`bg-green-50 text-green-600`;
+    case 'refused':
+      return tw`bg-red-50 text-red-600`;
+  }
+};
 
 const SentEventRequests: React.FC = () => {
   const { userId } = useUser();
   const navigation = useNavigation<any>();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchSentRequests = useCallback(async () => {
     if (!userId) return;
   
     try {
-        const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('request')
         .select(`
           id,
@@ -41,6 +58,11 @@ const SentEventRequests: React.FC = () => {
           event:event_id (
             id,
             name,
+            user_id,
+            user:user_id (
+              firstname,
+              lastname
+            ),
             media (url),
             subcategory (
               name,
@@ -50,11 +72,10 @@ const SentEventRequests: React.FC = () => {
         `)
         .eq('user_id', userId)
         .not('event_id', 'is', null)
-        .order('id', { ascending: false });// Add this line to filter out null events
-  
+        .order('id', { ascending: false });
+
       if (error) throw error;
       
-      // Filter out any requests where event is null
       const validRequests = (data || []).filter(request => request.event !== null);
       setRequests(validRequests);
     } catch (error) {
@@ -62,32 +83,9 @@ const SentEventRequests: React.FC = () => {
       Alert.alert('Error', 'Failed to load requests');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [userId]);
-
-  useEffect(() => {
-    fetchSentRequests();
-  }, [fetchSentRequests]);
-
-  if (loading) {
-    return (
-      <View style={tw`flex-1 justify-center items-center`}>
-        <ActivityIndicator size="large" color="white" />
-      </View>
-    );
-  }
-
-  // Add this status style function at the top of both components, after the interfaces
-const getStatusStyle = (status: 'pending' | 'accepted' | 'refused') => {
-    switch (status) {
-      case 'pending':
-        return tw`bg-white/10 text-white/70`;
-      case 'accepted':
-        return tw`bg-green-500/20 text-green-400`;
-      case 'refused':
-        return tw`bg-red-500/20 text-red-400`;
-    }
-  };
 
   const handleDeleteRequest = async (requestId: number) => {
     try {
@@ -98,7 +96,6 @@ const getStatusStyle = (status: 'pending' | 'accepted' | 'refused') => {
   
       if (error) throw error;
       
-      // Refresh the requests list
       await fetchSentRequests();
       Alert.alert('Success', 'Request deleted successfully');
     } catch (error) {
@@ -107,73 +104,117 @@ const getStatusStyle = (status: 'pending' | 'accepted' | 'refused') => {
     }
   };
 
-return (
-  <ScrollView style={tw`flex-1`}>
-    <View style={tw`px-4 pt-6 pb-20`}>
-      <Text style={tw`text-white text-3xl font-bold mb-8`}>Sent Requests</Text>
-      
-      {requests.length === 0 ? (
-        <Text style={tw`text-white/60 text-lg text-center mt-10`}>
-          No requests sent yet
-        </Text>
-      ) : (
-        requests.map((request) => (
-          <BlurView
-            key={request.id}
-            intensity={80}
-            tint="dark"
-            style={tw`rounded-3xl mb-4 overflow-hidden border border-white/10`}
-          >
-            <TouchableOpacity
-              style={tw`p-4`}
-              onPress={() => navigation.navigate('EventDetails', { eventId: request.event.id })}
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchSentRequests();
+  }, [fetchSentRequests]);
+
+  useEffect(() => {
+    fetchSentRequests();
+  }, [fetchSentRequests]);
+
+  if (loading && !refreshing) {
+    return (
+      <View style={tw`flex-1 bg-white justify-center items-center`}>
+        <Text style={tw`text-gray-600 text-lg`}>Loading requests...</Text>
+      </View>
+    );
+  }
+
+  return (
+<ScrollView 
+  style={[tw`flex-1 bg-white`, { marginRight: -10 }]}
+  showsVerticalScrollIndicator={false}
+  indicatorStyle="black"
+  refreshControl={
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      tintColor="#0066CC"
+    />
+  }
+>
+      <View style={tw`px-4 pt-6 pb-20`}>
+        <Text style={tw`text-gray-800 text-2xl font-bold mb-6`}>Sent Requests</Text>
+        
+        {requests.length === 0 ? (
+          <View style={tw`bg-white rounded-3xl p-8 items-center border border-gray-100 shadow-sm`}>
+            <Ionicons name="paper-plane-outline" size={48} color="#0066CC" style={tw`mb-4`} />
+            <Text style={tw`text-gray-800 text-xl font-bold mb-2`}>No Sent Requests</Text>
+            <Text style={tw`text-gray-500 text-center`}>
+              Your event join requests will appear here
+            </Text>
+          </View>
+        ) : (
+          requests.map((request) => (
+            <View 
+              key={request.id}
+              style={tw`bg-white rounded-xl mb-4 shadow-sm border border-gray-100 overflow-hidden`}
             >
-              <View style={tw`flex-row items-center`}>
-                <Image
-                  source={{ uri: request.event.media[0]?.url || 'https://via.placeholder.com/150' }}
-                  style={tw`w-28 h-28 rounded-2xl mr-4`}
-                />
-                <View style={tw`flex-1 h-28 justify-between py-1`}>
-                  <View>
-                    <Text style={tw`text-white text-xl font-bold mb-1`}>{request.event.name}</Text>
-                    <Text style={[tw`text-sm px-2 py-1 rounded-full self-start`, getStatusStyle(request.status)]}>
-                      Status: {request.status}
-                    </Text>
-                  </View>
-                  
-                  <View style={tw`flex-row justify-between items-center`}>
-                    <Text style={tw`text-white/50 text-xs`}>
-                      {request.event.subcategory?.category?.name} • {request.event.subcategory?.name}
-                    </Text>
-                    <TouchableOpacity
-                      style={tw`p-2`}
-                      onPress={() => {
-                        Alert.alert(
-                          'Delete Request',
-                          'Are you sure you want to delete this request?',
-                          [
-                            { text: 'Cancel', style: 'cancel' },
-                            { 
-                              text: 'Delete', 
-                              onPress: () => handleDeleteRequest(request.id),
-                              style: 'destructive'
-                            },
-                          ]
-                        );
-                      }}
-                    >
-                      <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                    </TouchableOpacity>
+              <TouchableOpacity
+                style={tw`p-4`}
+                onPress={() => navigation.navigate('EventDetails', { eventId: request.event.id })}
+              >
+                <View style={tw`flex-row mb-4`}>
+                  <Image
+                    source={{ uri: request.event.media[0]?.url || 'https://via.placeholder.com/150' }}
+                    style={tw`w-28 h-28 rounded-xl mr-4`}
+                  />
+                  <View style={tw`flex-1 justify-between`}>
+                    <View>
+                      <Text style={tw`text-gray-800 text-xl font-bold mb-1`}>{request.event.name}</Text>
+                      <Text style={tw`text-gray-400 text-xs`}>
+                        {request.event.subcategory?.category?.name} • {request.event.subcategory?.name}
+                      </Text>
+                    </View>
+                    <View style={tw`flex-row items-center justify-between`}>
+                      <Text style={[tw`text-sm px-3 py-1 rounded-full`, getStatusStyle(request.status)]}>
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </Text>
+                      <TouchableOpacity
+                        style={tw`bg-red-50 p-2 rounded-xl border border-red-100`}
+                        onPress={() => {
+                          Alert.alert(
+                            'Delete Request',
+                            'Are you sure you want to delete this request?',
+                            [
+                              { text: 'Cancel', style: 'cancel' },
+                              { 
+                                text: 'Delete', 
+                                onPress: () => handleDeleteRequest(request.id),
+                                style: 'destructive'
+                              },
+                            ]
+                          );
+                        }}
+                      >
+                        <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          </BlurView>
-        ))
-      )}
-    </View>
-  </ScrollView>
-);
+
+                <View style={tw`bg-gray-50 rounded-xl p-4`}>
+                  <View style={tw`flex-row items-center`}>
+                    <UserAvatar 
+                      userId={request.event.user_id}
+                      style={tw`w-12 h-12 rounded-full border-2 border-white shadow-sm`}
+                    />
+                    <View style={tw`ml-4 flex-1`}>
+                      <Text style={tw`text-gray-800 font-medium`}>Organized by</Text>
+                      <Text style={tw`text-gray-500 text-sm`}>
+                        {request.event.user?.firstname} {request.event.user?.lastname}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+          ))
+        )}
+      </View>
+    </ScrollView>
+  );
 };
 
 export default SentEventRequests;

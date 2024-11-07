@@ -16,7 +16,7 @@ const Social: React.FC = () => {
   return (
     <SafeAreaView style={tw`flex-1`}>
       <LinearGradient
-        colors={['#003791', '#0054A8', '#0072CE']}
+        colors={['#003791', 'white', '#0072CE']}
         style={tw`flex-1`}
       >
         <BlurView intensity={20} tint="dark" style={tw`flex-1`}>

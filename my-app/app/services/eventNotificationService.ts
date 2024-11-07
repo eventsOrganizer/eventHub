@@ -104,15 +104,15 @@ export const createEventNotificationSystem = () => {
         user_id: data.ticket.event.user_id,
         title: 'New Ticket Purchase',
         message: `${data.user.firstname} ${data.user.lastname} has purchased a ticket for your event: ${data.ticket.event.name}`,
-        type: 'payment',  // Changed from 'ticket' to 'payment'
-        related_id: orderId
+        type: 'payment',
+        // Remove related_id since it's not a request
+        // related_id: orderId  // This was causing the error
       });
     } catch (error) {
       console.error('Error creating ticket purchase notification:', error);
       return false;
     }
   };
-
 const handleEventCreationNotification = async (eventId: number, creatorId: string) => {
   try {
     console.log('Starting event creation notification process...', { eventId, creatorId });

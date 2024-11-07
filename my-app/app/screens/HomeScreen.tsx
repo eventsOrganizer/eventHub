@@ -117,6 +117,7 @@ const HomeScreen: React.FC = () => {
         end={{ x: 0, y: 1 }}
       >
         <BlurView intensity={85} tint="light" style={tw`py-4 mt-2`}>
+       
           <NavBar 
             selectedFilter={selectedFilter} 
             setSelectedFilter={setSelectedFilter} 
@@ -145,6 +146,7 @@ const HomeScreen: React.FC = () => {
           <BlurView intensity={85} tint="light" style={tw`mx-3 rounded-3xl overflow-hidden p-2 mb-1`}>
             <ServiceIcons />
           </BlurView>
+<View style={tw`h-2 bg-[#3B82F6] mb-2`} />
           
           <View style={tw`mb-2`}>
             <Banner title="Events" />

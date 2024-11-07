@@ -11,6 +11,7 @@ import FriendsInCommon from '../../components/event/profile/organizer/FriendsInC
 import OrganizerInterests from '../../components/event/profile/organizer/OrganizerInterests';
 import tw from 'twrnc';
 import FollowerStats from './profile/organizer/FollowerStats';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface OrganizerProfile {
   id: string;
@@ -271,47 +272,73 @@ const OrganizerProfileScreen: React.FC<{
       
       <View style={tw`bg-white -mt-12 rounded-t-3xl p-5`}>
         <View style={tw`flex-row`}>
-          <Image 
-            source={{ uri: organizer.avatar_url }} 
-            style={tw`w-30 h-48 rounded-xl mr-4`} 
-          />
+        <Image 
+  source={{ uri: organizer.avatar_url }} 
+  style={tw`w-47 h-70 rounded-xl mr-3.6 ml-[3%]`} 
+/>
           <View style={tw`flex-1`}>
          
             {/* <Text style={tw`text-gray-600 mb-2`}>{organizer.email}</Text> */}
             <Text style={tw`text-blue-800/80 mb-4`}>{organizer.bio || 'No bio available'}</Text>
             
             {currentUserId ? (
-              currentUserId !== organizerId ? (
-                <View style={tw`gap-2`}>
-                  <TouchableOpacity
-                    style={tw`bg-blue-800 p-3 rounded-lg`}
-                    onPress={() => navigation.navigate('ChatRoom', { userId: currentUserId, organizerId })}
-                  >
-                    <Text style={tw`text-white font-bold text-center`}>Chat with Organizer</Text>
-                  </TouchableOpacity>
-                  <FriendButton targetUserId={organizerId} />
-                  <FollowButton 
-    targetUserId={organizerId} 
-                  
-                  />
-                </View>
-              ) : (
-                <Text style={tw`text-gray-600`}>This is your profile</Text>
-              )
-            ) : (
-              <Text style={tw`text-gray-600`}>Log in to interact with the organizer</Text>
-            )}
-          </View>
-        </View>
-  
-        <FollowerStats 
-    organizerId={organizerId} 
-  
-  />
-      {currentUserId && currentUserId !== organizerId && (
-  <FriendsInCommon currentUserId={currentUserId} organizerId={organizerId} />
+  currentUserId !== organizerId ? (
+    <View style={tw`gap-2`}>
+      <TouchableOpacity
+        style={tw`bg-blue-800 p-3 rounded-lg flex-row items-center justify-center`}
+        onPress={() => navigation.navigate('ChatRoom', { userId: currentUserId, organizerId })}
+      >
+        <Ionicons name="chatbubbles-outline" size={24} color="white" />
+        <Text style={tw`text-white font-bold text-center ml-2`}>Message</Text>
+      </TouchableOpacity>
+      <FriendButton targetUserId={organizerId} />
+    </View>
+  ) : (
+    <Text style={tw`text-gray-600`}>This is your profile</Text>
+  )
+) : (
+  <Text style={tw`text-gray-600`}>Log in to interact with the organizer</Text>
 )}
-        <OrganizerInterests organizerId={organizerId} />
+          </View>
+          
+        </View>
+        <View style={tw`mx-2 mt-6 p-4 bg-white rounded-xl border border-blue-200 shadow-sm`}>
+  <Text style={tw`text-blue-600 text-lg font-semibold mb-2`}>Description</Text>
+  <Text style={tw`text-gray-600 leading-5`}>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  </Text>
+</View>
+
+<View style={tw`flex-row items-center justify-between mx-2 mt-[4%]`}>
+  <View style={tw`bg-white rounded-xl p-3 shadow-sm border border-blue-200 flex-1 mr-2`}>
+    <Text style={tw`text-blue-600 text-sm font-semibold mb-1 text-center`}>
+      Subscriptions
+    </Text>
+    <FollowerStats 
+      organizerId={organizerId} 
+    />
+  </View>
+  {currentUserId && currentUserId !== organizerId && (
+    <FollowButton 
+      targetUserId={organizerId} 
+    />
+  )}
+</View>
+           {/* Friends and Interests Container */}
+<View style={tw`bg-blue-50 rounded-2xl p-4 mb-6 shadow-md mt-[4%]`}>
+  <View style={tw`min-h-[120px]`}>
+    <OrganizerInterests organizerId={organizerId} />
+    {currentUserId && currentUserId !== organizerId && (
+      <>
+        <View style={tw`h-[1px] bg-blue-200 my-4`} />
+        <FriendsInCommon 
+          currentUserId={currentUserId} 
+          organizerId={organizerId} 
+        />
+      </>
+    )}
+  </View>
+</View>
   
         <View style={tw`flex-row justify-around mt-6 border-b border-gray-200 pb-2`}>
           <TouchableOpacity

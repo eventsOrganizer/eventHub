@@ -78,7 +78,7 @@ import LocalAddReviewScreen from '../screens/LocalServiceScreens/LocalAddReviewS
 import LocalBookingScreen from '../screens/LocalServiceScreens/LocalBookingScreen';
 import ReceivedEventRequests from '../components/event/profile/ReceivedEventRequests';
 import SentEventRequests from '../components/event/profile/SentEventRequests';
-
+import Header from '../components/header/Header';
 
 import ServiceDetailsScreen from '../screens/PersonalServiceScreen/PersonalDetail';
 
@@ -241,7 +241,7 @@ const AppNavigation: React.FC = () => {
       <Stack.Screen
         name="Social"
         component={Social}
-        options={{ headerShown: false }}
+        options={{ headerShown: true, header: () => <Header title="Social" subtitle="" /> }}
       />
     
   <Stack.Screen 
@@ -313,13 +313,13 @@ const AppNavigation: React.FC = () => {
   <Stack.Screen 
     name="EventDetails" 
     component={EventDetailsScreen} 
-    options={{ headerShown: true }} 
+    options={{ headerShown: true, header: () => <Header title=" Details" subtitle="" /> }} 
   />
 
   <Stack.Screen 
     name="OrganizerProfile" 
     component={OrganizerProfileScreen} 
-    options={{ headerShown: true }} 
+    options={{ headerShown: true, header: () => <Header title="Organizer Profile" subtitle="" /> }} 
   />
 
   <Stack.Screen
@@ -331,7 +331,7 @@ const AppNavigation: React.FC = () => {
   <Stack.Screen
     name="ChatList"
     component={ChatListScreen}
-    options={{ headerShown: true }} 
+    options={{ headerShown: true, header: () => <Header title="Messages" subtitle="Your conversations" /> }} 
   />
 
   <Stack.Screen
@@ -350,7 +350,9 @@ const AppNavigation: React.FC = () => {
   <Stack.Screen 
     name="AllEvents" 
     component={AllEvents} 
-    options={{ headerShown: true, title: 'All Events' }} 
+    options={{ headerShown: true, title: 'All Events' , header: () => <Header title="All Events" subtitle="All events" /> }} 
+
+    
   />
 
 <Stack.Screen 
@@ -358,7 +360,8 @@ const AppNavigation: React.FC = () => {
         component={MyOrders}
         options={{
           title: 'My Orders',
-          headerShown: true,
+          headerShown: true, 
+          header: () => <Header title="Check Your Orders" subtitle="" />
         }}
       />
 
@@ -412,6 +415,7 @@ const AppNavigation: React.FC = () => {
     name="CreatePersonalServiceStep1" 
     component={CreatePersonalServiceStep1} 
     options={{ headerShown: true, title: 'Create Personal Service - Step 1' }} 
+    
   />
 
   <Stack.Screen 
@@ -440,7 +444,7 @@ const AppNavigation: React.FC = () => {
   <Stack.Screen 
     name="UserProfile" 
     component={UserProfileScreen} 
-    options={{ headerShown: true }} 
+    options={{ headerShown: true, header: () => <Header title="Profile" subtitle="Your profile" /> }} 
   />
 
   <Stack.Screen
@@ -469,6 +473,7 @@ const AppNavigation: React.FC = () => {
   <Stack.Screen 
     name="EventCreation" 
     component={EventCreationScreen} 
+    options={{ headerShown: true, header: () => <Header title="Create Event" subtitle="" /> }}
   />
 
   <Stack.Screen 
@@ -575,6 +580,7 @@ const AppNavigation: React.FC = () => {
   <Stack.Screen 
     name="MapScreen" 
     component={MapScreen} 
+    options={{ headerShown: true, header: () => <Header title="Map" subtitle="" /> }}
   />
   
 
@@ -614,7 +620,8 @@ const AppNavigation: React.FC = () => {
   component={EventsManagementScreen}
   options={{
     title: 'Events Management',
-    headerShown: true,
+    headerShown: true, 
+    header: () => <Header title="Events & tickets" subtitle="" />
   }}
 />
 
@@ -625,14 +632,8 @@ const AppNavigation: React.FC = () => {
     component={ReceivedEventRequests}
     options={{
       title: 'Received Requests',
-      headerShown: true,
-      headerStyle: {
-        backgroundColor: '#4B0082',
-      },
-      headerTintColor: '#fff',
-      headerTitleStyle: {
-        fontWeight: 'bold',
-      },
+      headerShown: true, 
+      header: () => <Header title=" Requests" subtitle="" />
     }}
   />
   
@@ -641,14 +642,8 @@ const AppNavigation: React.FC = () => {
     component={SentEventRequests}
     options={{
       title: 'Sent Requests',
-      headerShown: true,
-      headerStyle: {
-        backgroundColor: '#4B0082',
-      },
-      headerTintColor: '#fff',
-      headerTitleStyle: {
-        fontWeight: 'bold',
-      },
+      headerShown: true, 
+      header: () => <Header title=" Requests" subtitle="" />
     }}
   />
 

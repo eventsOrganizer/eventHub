@@ -26,19 +26,20 @@ const EventPaymentSuccessScreen = () => {
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showImageUpload, setShowImageUpload] = useState(false);
+  const [currentOrderId, setCurrentOrderId] = useState<number | null>(null);
   const { handleTicketPurchaseNotification } = createEventNotificationSystem();
   const { ticketId, eventId, paymentIntentId, amount, userId, eventType } = route.params;
   const handleImageUploaded = async (urls: string[]) => {
-    if (urls.length > 0) {
+    if (urls.length > 0 && currentOrderId) { // Check for currentOrderId
       try {
         const { error: mediaError } = await supabase
           .from('media')
           .insert({
             url: urls[0],
-            order_id: ticketId,
+            order_id: currentOrderId, // Use currentOrderId instead of ticketId
             type: 'ticket_photo'
           });
-  
+
         if (mediaError) throw mediaError;
         
         navigation.navigate('EventDetails', { eventId });
@@ -66,21 +67,23 @@ const EventPaymentSuccessScreen = () => {
         const generatedToken = `${ticketId}-${userId}`;
         
         const { data: orderData, error: orderError } = await supabase
-  .from('order')
-  .insert({
-    user_id: userId,
-    ticket_id: ticketId,
-    payment_id: paymentIntentId,
-    type: eventType === 'online' ? 'online' : 'physical',
-    token: generatedToken,
-    payedamount: amount,
-    totalprice: amount,
-    created_at: new Date().toISOString()
-  })
-  .select()
-  .single();
-    
-        if (orderError) throw orderError;
+        .from('order')
+        .insert({
+          user_id: userId,
+          ticket_id: ticketId,
+          payment_id: paymentIntentId,
+          type: eventType === 'online' ? 'online' : 'physical',
+          token: generatedToken,
+          payedamount: amount,
+          totalprice: amount,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+   
+      if (orderError) throw orderError;
+   
+      setCurrentOrderId(orderData.id); // Store the order ID
     
         const { error: ticketError } = await supabase
           .from('ticket')

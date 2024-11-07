@@ -11,12 +11,12 @@ export const HeartbeatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateUserStatus = async (isConnected: boolean, userIdToUpdate?: string) => {
     const targetUserId = userIdToUpdate || userId;
     if (!targetUserId) {
-      console.log('❌ Heartbeat skipped: No user ID');
+      // console.log('❌ Heartbeat skipped: No user ID');
       return;
     }
 
     try {
-      console.log(`💓 Sending heartbeat for user ${targetUserId}...`);
+      // console.log(`💓 Sending heartbeat for user ${targetUserId}...`);
       const timestamp = new Date().toISOString();
       
       const { data, error } = await supabase
@@ -29,15 +29,15 @@ export const HeartbeatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .select('is_connected');
 
       if (error) {
-        console.error('❌ Heartbeat failed:', error.message);
+        // console.error('❌ Heartbeat failed:', error.message);
       } else {
-        console.log(`✅ Heartbeat success - Connected: ${data?.[0]?.is_connected}`);
+        // console.log(`✅ Heartbeat success - Connected: ${data?.[0]?.is_connected}`);
         if (!isConnected) {
-          console.log(`👋 User last seen: ${timestamp}`);
+          // console.log(`👋 User last seen: ${timestamp}`);
         }
       }
     } catch (error) {
-      console.error('❌ Heartbeat exception:', error);
+      // console.error('❌ Heartbeat exception:', error);
     }
   };
 

@@ -107,7 +107,7 @@ const receivedServiceRequests = useUnseenRequests(userId, 'received_services');
 
   return (
     <LinearGradient
-      colors={['#1E3A8A', '#3B82F6', '#93C5FD']}
+      colors={['white', '#3B82F6', '#93C5FD']}
       style={tw`flex-1`}
     >
       {showNotifications && (

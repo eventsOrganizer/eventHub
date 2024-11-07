@@ -83,16 +83,16 @@ const FollowerStats: React.FC<Props> = ({ organizerId }) => {
   };
 
   return (
-    <View style={tw`flex-row justify-around py-2`}>
+    <View style={tw`flex-row justify-around py-0.5 h-[44px]`}>
       <TouchableOpacity 
-        style={tw`items-center`} 
+        style={tw`items-center flex-1`} 
         onPress={handleFollowersPress}
       >
         <Text style={tw`text-black-500 text-xl font-bold`}>{followersCount}</Text>
         <Text style={tw`text-black-500 text-sm`}>Followers</Text>
       </TouchableOpacity>
       <TouchableOpacity 
-        style={tw`items-center`} 
+        style={tw`items-center flex-1`} 
         onPress={handleFollowingPress}
       >
         <Text style={tw`text-black-500 text-xl font-bold`}>{followingCount}</Text>
@@ -104,4 +104,3 @@ const FollowerStats: React.FC<Props> = ({ organizerId }) => {
 
 export default FollowerStats;
 
-export default FollowerStats;

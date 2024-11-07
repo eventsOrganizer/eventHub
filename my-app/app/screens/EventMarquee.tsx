@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { theme } from '../../lib/theme';
 
 interface EventMarqueeProps {
   events: Array<{ name: string }>;
@@ -12,6 +13,8 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
   const scrollX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    if (!events.length) return;
+
     const textWidth = events.reduce((acc, event) => acc + event.name.length * 16 + 300, 0);
     const duration = textWidth * 50;
 
@@ -23,34 +26,40 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
     });
 
     const resetAnimation = Animated.timing(scrollX, {
-      toValue: 0,
+      toValue: width,
       duration: 0,
       useNativeDriver: true,
     });
 
-    const sequenceAnimation = Animated.sequence([animation, resetAnimation]);
-
-    Animated.loop(sequenceAnimation).start();
+    Animated.loop(
+      Animated.sequence([
+        animation,
+        resetAnimation
+      ])
+    ).start();
 
     return () => {
-      sequenceAnimation.stop();
+      animation.stop();
+      resetAnimation.stop();
     };
   }, [events]);
 
+  if (!events.length) return null;
+
   return (
     <View style={styles.container}>
-      <BlurView intensity={90} tint="dark" style={styles.blurContainer}>
+      <BlurView intensity={90} tint="light" style={styles.blurContainer}>
         <View style={styles.marqueeContainer}>
           <Animated.View 
             style={[
               styles.textContainer, 
               { 
                 transform: [{ translateX: scrollX }],
-                width: events.reduce((acc, event) => acc + event.name.length * 16 + 30, 0) * 2,
+                width: events.reduce((acc, event) => acc + event.name.length * 16 + 300, 0),
               }
             ]}
           >
-            {[...events, ...events].map((event, index) => (
+            {events.map((event, index) => (
               <View key={index} style={styles.eventContainer}>
                 <Text style={styles.text}>{event.name.toUpperCase()}</Text>
                 <Text style={styles.bullet}>•</Text>
@@ -65,10 +74,12 @@ const EventMarquee: React.FC<EventMarqueeProps> = ({ events }) => {
 
 const styles = StyleSheet.create({
   container: {
-    height: 50,
+    height: 40,
+    marginVertical: 8,
     justifyContent: 'center',
-    marginBottom: 8,
+
     overflow: 'hidden',
+    backgroundColor: '#3B82F6',
   },
   blurContainer: {
     flex: 1,
@@ -76,29 +87,29 @@ const styles = StyleSheet.create({
   },
   marqueeContainer: {
     overflow: 'hidden',
-    width: width,
+    width: width - 32, // Account for padding
   },
   textContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    height: 40,
   },
   eventContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20,
+    paddingHorizontal: theme.spacing.md,
   },
   text: {
-    color: '#FFFFFF',
+    color: 'white',
     fontSize: 14,
     fontWeight: '600',
     letterSpacing: 0.5,
-    fontFamily: 'System',
   },
   bullet: {
-    color: '#FFA500',
+    color: 'red',
     fontSize: 18,
     fontWeight: 'bold',
-    marginLeft: 10,
+    marginLeft: theme.spacing.sm,
   },
 });
 

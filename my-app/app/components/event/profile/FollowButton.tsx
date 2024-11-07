@@ -77,6 +77,10 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginTop: 10,
+    marginBottom: 10,
+    height: 88,
+    width: 100, // This matches the height of the FollowerStats container
+    justifyContent: 'center',
   },
   followButtonText: {
     color: '#fff',

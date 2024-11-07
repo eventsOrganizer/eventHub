@@ -6,6 +6,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
+import UserAvatar from './UserAvatar';
 
 interface ChatRoomItemProps {
   item: any;
@@ -82,23 +83,24 @@ const ChatRoomItem = React.memo(({ item, userId, onPress }: ChatRoomItemProps) =
   // Rest of the component remains the same
   return (
     <TouchableOpacity onPress={onPress} style={tw`mb-4 overflow-hidden rounded-xl`}>
-      <BlurView intensity={20} style={tw`p-4`}>
+  <BlurView intensity={60} tint="light" style={tw`p-4 bg-blue-400/30`}>
         <View style={tw`flex-row items-center`}>
-          <View style={tw`relative`}>
-            <View style={tw`w-12 h-12 rounded-full bg-gray-700 items-center justify-center`}>
-              <Text style={tw`text-white text-lg`}>
-                {otherUser.email.charAt(0).toUpperCase()}
-              </Text>
-            </View>
-            <View style={tw`absolute bottom-0 right-0 w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`} />
-          </View>
+        <View style={tw`relative`}>
+  <LinearGradient
+    colors={['#ffffff', '#e6e9ff', '#f0f0f0']}
+    style={tw`w-12 h-12 rounded-full justify-center items-center`}
+  >
+    <UserAvatar userId={otherUser.id} size={48} />
+  </LinearGradient>
+  <View style={tw`absolute bottom-0 right-0 w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`} />
+</View>
           
           <View style={tw`ml-4 flex-1`}>
-            <Text style={tw`text-white text-lg font-bold`}>
+            <Text style={tw`text-blue-400 text-lg font-bold`}>
               {otherUser.email}
             </Text>
             {!isConnected && lastSeen && (
-              <Text style={tw`text-gray-400 text-sm`}>
+              <Text style={tw`text-black-400 text-sm`}>
                 Last seen {new Date(lastSeen).toLocaleString()}
               </Text>
             )}
@@ -164,11 +166,11 @@ const ChatListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <LinearGradient
-      colors={['#1e1e1e', '#0f0f0f']}
-      style={tw`flex-1`}
-    >
+  colors={['#E8EAF6', 'white', '#9FA8DA']}
+  style={tw`flex-1`}
+>
       <View style={tw`flex-1 px-4 pt-4`}>
-        <Text style={tw`text-white text-2xl font-bold mb-6`}>Messages</Text>
+        <Text style={tw`text-blue-800 text-2xl font-bold mb-6`}>Messages</Text>
         
         {loading ? (
           <ActivityIndicator size="large" color="#fff" style={tw`mt-8`} />
