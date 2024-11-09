@@ -7,6 +7,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import tw from 'twrnc';
 import { NotificationIcon } from './Notifications/NotificationIcon';
 import { NotificationsModal } from './Notifications/NotificationsModal';
+import { useMessageNotifications } from '../hooks/useMessageNotifications';
+import { useUser } from '../UserContext';
+
 
 interface NavBarProps {
   selectedFilter: string | null;
@@ -15,6 +18,8 @@ interface NavBarProps {
 }
 
 const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSearch }) => {
+  const { userId } = useUser();
+  const { totalUnreadCount } = useMessageNotifications(userId);
   const [searchTerm, setSearchTerm] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const navigation = useNavigation();
@@ -52,11 +57,16 @@ const NavBar: React.FC<NavBarProps> = ({ selectedFilter, setSelectedFilter, onSe
           <NotificationIcon onPress={() => setShowNotifications(true)} />
 
           <TouchableOpacity 
-            style={tw`p-2`}
-            onPress={() => navigation.navigate('ChatList' as never)}
-          >
-            <Ionicons name="chatbubbles-outline" size={24} color="#1a2a4a" />
-          </TouchableOpacity>
+  style={tw`p-2 relative`}
+  onPress={() => navigation.navigate('ChatList')}
+>
+  <Ionicons name="chatbubbles-outline" size={24} color="#1a2a4a" />
+  {totalUnreadCount > 0 && (
+    <View style={tw`absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 justify-center items-center`}>
+      <Text style={tw`text-white text-xs font-bold`}>{totalUnreadCount}</Text>
+    </View>
+  )}
+</TouchableOpacity>
 
           <View style={tw`w-30`}>
             <RNPickerSelect

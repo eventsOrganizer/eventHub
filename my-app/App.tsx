@@ -11,7 +11,9 @@ import { StripeProvider } from '@stripe/stripe-react-native';
 import Constants from 'expo-constants';
 import { generateData, resetDatabase } from './app/fake_data';
 import { HeartbeatProvider } from './app/components/HeartbeatProvider';
-  
+import { LogBox } from 'react-native';
+
+LogBox.ignoreAllLogs();
 const App = () => {
   const stripePublishableKey = Constants.expoConfig?.extra?.STRIPE_PUBLISHABLE_KEY;
 

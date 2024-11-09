@@ -11,12 +11,22 @@ import { RootStackParamList } from '../../navigation/types';
 
 const { height } = Dimensions.get('window');
 
+interface Availability {
+  id: number;
+  event_id: number;
+  start_date: string;
+  end_date: string;
+  start_time: string;
+  end_time: string;
+}
+
 interface Event {
   id: number;
   name: string;
   description: string;
   privacy: string;
   user_id: string;
+  availabilities?: Availability[];  // Add this to include the related availability data
   subcategory: {
     id: number;
     name: string;
@@ -27,6 +37,7 @@ interface Event {
   };
   media?: { url: string }[];
 }
+
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 

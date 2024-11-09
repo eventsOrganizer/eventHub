@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import SuggestToFriendButton from '../suggestions/SuggestToFriendButton';
+import tw from 'twrnc';
 
 const { width, height } = Dimensions.get('window');
 
@@ -9,39 +10,42 @@ interface EventCardProps {
   event: {
     id: number;
     name: string;
+    description: string;
     type: string;
-    details: string;
-    media: { url: string }[];
+    media?: { url: string }[];
     subcategory: {
+      name: string;
       category: {
         id: number;
         name: string;
         type: string;
       };
-      name: string;
     };
-    availability: {
+    availability?: Array<{
       date: string;
       start: string;
       end: string;
-    };
-    privacy: boolean;
-    user_id: string;
+    }>;
   };
-  onPress: (event: any) => void;
+  onPress?: () => void;
   children?: React.ReactNode;
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event, onPress, children }) => {
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
-    <TouchableOpacity
-      style={styles.eventCardContainer}
-      onPress={() => onPress(event)}
-    >
+    <TouchableOpacity onPress={onPress} style={styles.eventCardContainer}>
       <View style={styles.eventCardFrame}>
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: event.media[0]?.url }}
+            source={{ uri: event.media?.[0]?.url || 'https://via.placeholder.com/150' }}
             style={styles.eventCardImage}
           />
           <View style={styles.joinButtonContainer}>
@@ -51,22 +55,38 @@ const EventCard: React.FC<EventCardProps> = ({ event, onPress, children }) => {
             <SuggestToFriendButton itemId={event.id} category={event.subcategory.category} />
           </View>
         </View>
+        
         <View style={styles.eventInfoContainer}>
-          <Text style={styles.eventName} numberOfLines={1}>{event.name}</Text>
+          <Text numberOfLines={1} style={styles.eventName}>
+            {event.name}
+          </Text>
+          
+          {event.availability?.[0] && (
+            <>
+              <View style={styles.eventInfoRow}>
+                <Ionicons name="calendar-outline" size={14} color="#666" />
+                <Text style={styles.eventInfoText}>
+                  {formatDate(event.availability[0].date)}
+                </Text>
+              </View>
+              <View style={styles.eventInfoRow}>
+                <Ionicons name="time-outline" size={14} color="#666" />
+                <Text style={styles.eventInfoText}>
+                  {event.availability[0].start} - {event.availability[0].end}
+                </Text>
+              </View>
+            </>
+          )}
+
           <View style={styles.eventInfoRow}>
-            <Ionicons name="calendar-outline" size={12} color="#666" />
-            <Text style={styles.eventInfoText}>{event.availability.date}</Text>
+            <Ionicons name="pricetag-outline" size={14} color="#666" />
+            <Text style={styles.eventInfoText}>
+              {event.subcategory.category.name} • {event.subcategory.name}
+            </Text>
           </View>
+
           <View style={styles.eventInfoRow}>
-            <Ionicons name="time-outline" size={12} color="#666" />
-            <Text style={styles.eventInfoText}>{event.availability.start} - {event.availability.end}</Text>
-          </View>
-          <View style={styles.eventInfoRow}>
-            <Ionicons name="pricetag-outline" size={12} color="#666" />
-            <Text style={styles.eventInfoText} numberOfLines={1}>{event.subcategory.category.name} - {event.subcategory.name}</Text>
-          </View>
-          <View style={styles.eventInfoRow}>
-            <Ionicons name="business-outline" size={12} color="#666" />
+            <Ionicons name="business-outline" size={14} color="#666" />
             <Text style={styles.eventInfoText}>{event.type}</Text>
           </View>
         </View>
@@ -122,12 +142,12 @@ const styles = StyleSheet.create({
   eventInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 3,
+    marginBottom: 4,
   },
   eventInfoText: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#666',
-    marginLeft: 5,
+    marginLeft: 8,
   },
   joinButtonContainer: {
     position: 'absolute',

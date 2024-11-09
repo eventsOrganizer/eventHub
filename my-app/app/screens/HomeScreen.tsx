@@ -41,28 +41,61 @@ const HomeScreen: React.FC = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [events, topEvents, locals, staff, materials] = await Promise.all([
-        supabase.from('event').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).order('id', { ascending: false }),
-        supabase.from('local').select(`*, subcategory (id, name, category (id, name)), location (id, longitude, latitude), availability (id, start, end, daysofweek, date), media (url)`).order('id', { ascending: false }),
-        supabase.from('personal').select('*, subcategory (id,name,category(id,name)), media (url)').order('id', { ascending: false }),
-        supabase.from('material').select('*, subcategory (id, name, category (id, name)), media (url)').order('id', { ascending: false }),
+      
+      // Fetch all data in parallel with proper error handling
+      const [eventsResult, localsResult, staffResult, materialsResult] = await Promise.all([
+        supabase
+          .from('event')
+          .select(`
+            *, 
+            subcategory (id, name, category (id, name)), 
+            location (id, longitude, latitude), 
+            availability (id, start, end, daysofweek, date), 
+            media (url)
+          `)
+          .order('id', { ascending: false }),
+  
+        supabase
+          .from('local')
+          .select(`
+            *, 
+            subcategory (id, name, category (id, name)), 
+            location (id, longitude, latitude), 
+            availability (id, start, end, daysofweek, date), 
+            media (url)
+          `)
+          .order('id', { ascending: false }),
+  
+        supabase
+          .from('personal')
+          .select('*, subcategory (id,name,category(id,name)), media (url)')
+          .order('id', { ascending: false })
+          .limit(5),
+  
+        supabase
+          .from('material')
+          .select('*, subcategory (id, name, category (id, name)), media (url)')
+          .order('id', { ascending: false })
+          .limit(5)
       ]);
-
+  
+      // Fetch interest events separately
       console.log('Fetching interest events for userId:', userId);
       const interestEvents = await fetchEventsByUserInterests(userId, selectedInterests);
       console.log('Interest Events Length:', interestEvents?.length || 0);
-
+  
+      // Set data with proper null checks
       setData({
-        events: events.data || [],
-        topEvents: topEvents.data || [],
+        events: eventsResult?.data || [],
+        topEvents: eventsResult?.data?.slice(0, 10) || [], // Top 10 most recent events
         interestEvents: interestEvents || [],
-        staffServices: staff.data || [],
-        locals: locals.data?.filter(item => item.subcategory !== null) || [],
-        materials: materials.data || [],
-        filteredEvents: events.data || [],
-        filteredServices: staff.data || []
+        staffServices: staffResult?.data || [],
+        locals: localsResult?.data?.filter(item => item.subcategory !== null) || [],
+        materials: materialsResult?.data || [],
+        filteredEvents: eventsResult?.data || [],
+        filteredServices: staffResult?.data || []
       });
-
+  
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -153,7 +186,7 @@ const HomeScreen: React.FC = () => {
               {data.interestEvents.length > 0 && (
                 <EventSection 
                   title="EVENTS FOR YOU" 
-                  events={data.interestEvents} 
+                  events={data.interestEvents as never[]} 
                   navigation={navigation} 
                   onSeeAll={() => navigation.navigate('AllEvents', { section: 'EVENTS_FOR_YOU' })}  
                   isTopEvents={true} 
@@ -161,14 +194,14 @@ const HomeScreen: React.FC = () => {
               )}
               <EventSection 
                 title="YOUR EVENTS" 
-                events={data.filteredEvents} 
+                events={data.filteredEvents as never[]} 
                 navigation={navigation} 
                 onSeeAll={() => navigation.navigate('AllEvents', { section: 'YOUR_EVENTS' })} 
                 isTopEvents={false} 
               />
               <EventSection 
                 title="HOT EVENTS" 
-                events={data.topEvents} 
+                events={data.topEvents as never[]} 
                 navigation={navigation} 
                 onSeeAll={() => navigation.navigate('AllEvents', { section: 'HOT_EVENTS' })} 
                 isTopEvents={true} 
@@ -181,21 +214,21 @@ const HomeScreen: React.FC = () => {
             <View style={tw`px-3`}>
               <SectionComponent 
                 title="TOP CREW SERVICES" 
-                data={data.staffServices} 
+                data={data.staffServices as never[]} 
                 onSeeAll={() => navigation.navigate('PersonalsScreen', { category: 'all' })} 
                 onItemPress={(item) => navigation.navigate('PersonalDetail', { personalId: item.id })} 
                 type="staff" 
               />
               <SectionComponent 
                 title="VENUE SERVICES" 
-                data={data.locals} 
+                data={data.locals as never[]} 
                 onSeeAll={() => navigation.navigate('LocalsScreen')} 
                 onItemPress={(item) => navigation.navigate('LocalServiceDetails', { localServiceId: item.id })} 
                 type="local" 
               />
               <SectionComponent 
                 title="TOP EQUIPMENTS" 
-                data={data.materials} 
+                data={data.materials as never[]} 
                 onSeeAll={() => navigation.navigate('MaterialScreen')} 
                 onItemPress={(item) => navigation.navigate('MaterialDetail', { material: item })} 
                 type="material" 

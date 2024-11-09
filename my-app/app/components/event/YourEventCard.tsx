@@ -32,6 +32,14 @@ interface YourEventCardProps {
 }
 
 const YourEventCard: React.FC<YourEventCardProps> = ({ event, onPress, children }) => {
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
     <TouchableOpacity style={styles.eventCardContainer} onPress={() => onPress(event)}>
       <ImageBackground source={{ uri: event.media[0]?.url }} style={styles.eventCardBackground} imageStyle={styles.eventCardImage}>
@@ -47,14 +55,18 @@ const YourEventCard: React.FC<YourEventCardProps> = ({ event, onPress, children 
         >
           <Text style={styles.eventName}>{event.name}</Text>
           <View style={styles.eventInfoContainer}>
-            <View style={styles.eventInfoRow}>
-              <Ionicons name="calendar-outline" size={14} color="#fff" />
-              <Text style={styles.eventInfoText}>{event.availability.date}</Text>
-            </View>
-            <View style={styles.eventInfoRow}>
-              <Ionicons name="time-outline" size={14} color="#fff" />
-              <Text style={styles.eventInfoText}>{`${event.availability.start} - ${event.availability.end}`}</Text>
-            </View>
+            {event.availability?.[0] && (
+              <>
+                <View style={styles.eventInfoRow}>
+                  <Ionicons name="calendar-outline" size={14} color="#fff" />
+                  <Text style={styles.eventInfoText}>{formatDate(event.availability[0].date)}</Text>
+                </View>
+                <View style={styles.eventInfoRow}>
+                  <Ionicons name="time-outline" size={14} color="#fff" />
+                  <Text style={styles.eventInfoText}>{`${event.availability[0].start} - ${event.availability[0].end}`}</Text>
+                </View>
+              </>
+            )}
             <View style={styles.eventInfoRow}>
               <Ionicons name="pricetag-outline" size={14} color="#fff" />
               <Text style={styles.eventInfoText}>{`${event.subcategory.category.name} - ${event.subcategory.name}`}</Text>

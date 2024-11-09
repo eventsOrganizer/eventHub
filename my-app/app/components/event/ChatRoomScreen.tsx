@@ -1,15 +1,41 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  FlatList, 
+  TouchableOpacity, 
+  StyleSheet, 
+  KeyboardAvoidingView, 
+  Platform,
+  ActivityIndicator 
+} from 'react-native';
 import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
+import { useMessageNotifications } from '../../hooks/useMessageNotifications';
+import debounce from 'lodash/debounce';
+
+interface Message {
+  id: string;
+  content: string;
+  user_id: string;
+  chatroom_id: string;
+  created_at: string;
+  seen: boolean;
+}
 
 const ChatRoomScreen: React.FC<{ route: { params: { organizerId: string } } }> = ({ route }) => {
   const { organizerId } = route.params;
   const { userId } = useUser();
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const messageUpdateQueue = useRef<string[]>([]);
+  const lastFetch = useRef<number>(0);
+  const { markChatAsRead } = useMessageNotifications(userId);
 
   const fetchOrCreateChatRoom = useCallback(async () => {
     if (!userId) {
@@ -17,57 +43,123 @@ const ChatRoomScreen: React.FC<{ route: { params: { organizerId: string } } }> =
       return;
     }
 
-    console.log('Fetching or creating chat room for:', { userId, organizerId });
-
-    let { data: chatRoom, error } = await supabase
-      .from('chatroom')
-      .select('*')
-      .eq('type', 'private')
-      .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-      .or(`user1_id.eq.${organizerId},user2_id.eq.${organizerId}`)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching chat room:', error);
-      return;
-    }
-
-    if (!chatRoom) {
-      console.log('Chat room not found, creating a new one');
-      const { data: newChatRoom, error: createError } = await supabase
+    try {
+      let { data: chatRoom, error } = await supabase
         .from('chatroom')
-        .insert([
-          { type: 'private', user1_id: userId, user2_id: organizerId }
-        ])
+        .select('*')
+        .eq('type', 'private')
+        .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+        .or(`user1_id.eq.${organizerId},user2_id.eq.${organizerId}`)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (!chatRoom) {
+        const { data: newChatRoom, error: createError } = await supabase
+          .from('chatroom')
+          .insert([
+            { type: 'private', user1_id: userId, user2_id: organizerId }
+          ])
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        chatRoom = newChatRoom;
+      }
+
+      setChatRoomId(chatRoom.id);
+    } catch (error) {
+      console.error('Error in fetchOrCreateChatRoom:', error);
+    }
+  }, [userId, organizerId]);
+
+  const fetchMessages = useCallback(async () => {
+    if (!chatRoomId) return;
+    
+    const now = Date.now();
+    if (now - lastFetch.current < 1000) return;
+    lastFetch.current = now;
+
+    try {
+      const { data, error } = await supabase
+        .from('message')
+        .select('*')
+        .eq('chatroom_id', chatRoomId)
+        .order('created_at', { ascending: true })
+        .limit(50);
+
+      if (error) throw error;
+
+      if (data) {
+        setMessages(data);
+        const unseenMessages = data
+          .filter(msg => msg.user_id !== userId && !msg.seen)
+          .map(msg => msg.id);
+        
+        if (unseenMessages.length > 0) {
+          messageUpdateQueue.current = unseenMessages;
+          debouncedUpdateSeenStatus();
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [chatRoomId, userId]);
+
+  const debouncedUpdateSeenStatus = useCallback(
+    debounce(async () => {
+      if (messageUpdateQueue.current.length === 0) return;
+      
+      const messageIds = [...messageUpdateQueue.current];
+      messageUpdateQueue.current = [];
+
+      try {
+        await supabase
+          .from('message')
+          .update({ seen: true })
+          .in('id', messageIds);
+        await markChatAsRead(chatRoomId!);
+      } catch (error) {
+        console.error('Error updating seen status:', error);
+      }
+    }, 1000),
+    [chatRoomId, markChatAsRead]
+  );
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !chatRoomId || isSending) return;
+
+    setIsSending(true);
+    try {
+      const messageContent = newMessage.trim();
+      setNewMessage('');
+
+      const { data, error } = await supabase
+        .from('message')
+        .insert([{
+          content: messageContent,
+          chatroom_id: chatRoomId,
+          user_id: userId,
+          seen: false
+        }])
         .select()
         .single();
 
-      if (createError) {
-        console.error('Error creating chat room:', createError);
-        return;
-      }
+      if (error) throw error;
 
-      chatRoom = newChatRoom;
+      setMessages(prev => [...prev, data]);
+      flatListRef.current?.scrollToEnd({ animated: true });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setNewMessage(newMessage); // Restore message if send fails
+    } finally {
+      setIsSending(false);
     }
-
-    console.log('Chat room:', chatRoom);
-    setChatRoomId(chatRoom.id);
-  }, [userId, organizerId]);
-
-  const fetchMessages = useCallback(async (roomId: string) => {
-    const { data, error } = await supabase
-      .from('message')
-      .select('*')
-      .eq('chatroom_id', roomId)
-      .order('created_at', { ascending: true })
-      .limit(50);
-
-    if (error) {
-      console.error('Error fetching messages:', error);
-    } else {
-      setMessages(data);
-    }
-  }, []);
+  };
 
   useEffect(() => {
     fetchOrCreateChatRoom();
@@ -75,70 +167,67 @@ const ChatRoomScreen: React.FC<{ route: { params: { organizerId: string } } }> =
 
   useEffect(() => {
     if (!chatRoomId) return;
-  
-    fetchMessages(chatRoomId);
-  
+
+    fetchMessages();
+    
     const channel = supabase
       .channel(`chatroom:${chatRoomId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'message', filter: `chatroom_id=eq.${chatRoomId}` }, payload => {
-        console.log('Received real-time update:', payload);
-        if (payload.eventType === 'INSERT') {
-          setMessages(prevMessages => [...prevMessages, payload.new]);
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }
-      })
-      .subscribe((status) => {
-        console.log('Subscription status:', status);
-      });
-  
+// Update the subscription handler (around line 175-190)
+.on('postgres_changes', { 
+  event: '*', 
+  schema: 'public', 
+  table: 'message', 
+  filter: `chatroom_id=eq.${chatRoomId}` 
+}, payload => {
+  if (payload.eventType === 'INSERT') {
+    setMessages(prev => {
+      // Check if message already exists
+      const messageExists = prev.some(msg => msg.id === payload.new.id);
+      if (messageExists) return prev;
+      return [...prev, payload.new];
+    });
+    flatListRef.current?.scrollToEnd({ animated: true });
+    
+    if (payload.new.user_id !== userId) {
+      messageUpdateQueue.current.push(payload.new.id);
+      debouncedUpdateSeenStatus();
+    }
+  }
+})
+      .subscribe();
+
     return () => {
-      console.log('Unsubscribing from channel');
       supabase.removeChannel(channel);
     };
-  }, [chatRoomId, fetchMessages]);
+  }, [chatRoomId, fetchMessages, userId, debouncedUpdateSeenStatus]);
 
-  const sendMessage = async () => {
-    if (newMessage.trim() === '' || !chatRoomId || !userId) {
-      console.log('Cannot send message: ', { newMessage, chatRoomId, userId });
-      return;
-    }
-  
-    console.log('Sending message:', { chatRoomId, userId, content: newMessage });
-  
-    const { error } = await supabase
-      .from('message')
-      .insert([
-        { chatroom_id: chatRoomId, user_id: userId, content: newMessage }
-      ]);
-  
-    if (error) {
-      console.error('Error sending message:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-    } else {
-      console.log('Message sent successfully');
-      setNewMessage('');
-    }
-  };
-
-  const renderMessage = ({ item }: { item: any }) => (
+  const renderMessage = ({ item }: { item: Message }) => (
     <View style={item.user_id === userId ? styles.sentMessage : styles.receivedMessage}>
       <Text style={styles.messageText}>{item.content}</Text>
     </View>
   );
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFA500" />
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <FlatList
         ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
-        keyExtractor={item => item.id.toString()}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.messageList}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
       />
       <View style={styles.inputContainer}>
         <TextInput
@@ -146,9 +235,13 @@ const ChatRoomScreen: React.FC<{ route: { params: { organizerId: string } } }> =
           value={newMessage}
           onChangeText={setNewMessage}
           placeholder="Type a message..."
-          onSubmitEditing={sendMessage}
+          multiline
         />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+        <TouchableOpacity 
+          style={[styles.sendButton, isSending && styles.sendButtonDisabled]}
+          onPress={sendMessage}
+          disabled={isSending || !newMessage.trim()}
+        >
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
@@ -161,9 +254,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  messageList: {
+    paddingVertical: 15,
+  },
   inputContainer: {
     flexDirection: 'row',
     padding: 10,
+    backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#eee',
   },
@@ -175,6 +277,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     marginRight: 10,
+    maxHeight: 100,
   },
   sendButton: {
     backgroundColor: '#FFA500',
@@ -182,6 +285,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     justifyContent: 'center',
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#FFD700',
   },
   sendButtonText: {
     color: '#fff',
@@ -210,4 +316,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChatRoomScreen;
+export default ChatRoomScreen

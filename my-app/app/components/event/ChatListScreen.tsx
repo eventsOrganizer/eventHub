@@ -6,15 +6,32 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
-import UserAvatar from './UserAvatar';
+import { useMessageNotifications  } from '../../hooks/useMessageNotifications';
 
-interface ChatRoomItemProps {
-  item: any;
-  userId: string;
-  onPress: () => void;
+interface User {
+  id: string;
+  email: string;
+  is_connected?: boolean;
+  last_seen?: string;
 }
 
-const ChatRoomItem = React.memo(({ item, userId, onPress }: ChatRoomItemProps) => {
+interface ChatRoom {
+  id: string;
+  user1_id: string;
+  user2_id: string;
+  user1: User;
+  user2: User;
+  type: string;
+}
+
+interface ChatRoomItemProps {
+  item: ChatRoom;
+  userId: string;
+  onPress: () => void;
+  unreadCount: number;
+}
+
+const ChatRoomItem = React.memo(({ item, userId, onPress, unreadCount }: ChatRoomItemProps) => {
   const otherUser = item.user1_id === userId ? item.user2 : item.user1;
   const [isConnected, setIsConnected] = useState(false);
   const [lastSeen, setLastSeen] = useState<string | null>(null);
@@ -37,7 +54,6 @@ const ChatRoomItem = React.memo(({ item, userId, onPress }: ChatRoomItemProps) =
             const online = Boolean(payload.new.is_connected);
             console.log(`User ${otherUser.email} status update:`, online ? 'ONLINE' : 'OFFLINE');
             
-            // If user disconnects, immediately update status and last seen
             if (!online) {
               setIsConnected(false);
               setLastSeen(payload.new.last_seen);
@@ -50,14 +66,14 @@ const ChatRoomItem = React.memo(({ item, userId, onPress }: ChatRoomItemProps) =
       )
       .subscribe();
 
-    // Initial fetch
     fetchUserStatus();
 
-    // Cleanup subscription
     return () => {
       supabase.removeChannel(channel);
     };
   }, [otherUser.id]);
+
+  
 
   const fetchUserStatus = async () => {
     const { data, error } = await supabase
@@ -80,27 +96,38 @@ const ChatRoomItem = React.memo(({ item, userId, onPress }: ChatRoomItemProps) =
     }
   };
 
-  // Rest of the component remains the same
   return (
     <TouchableOpacity onPress={onPress} style={tw`mb-4 overflow-hidden rounded-xl`}>
-  <BlurView intensity={60} tint="light" style={tw`p-4 bg-blue-400/30`}>
+      <BlurView intensity={20} style={tw`p-4`}>
         <View style={tw`flex-row items-center`}>
-        <View style={tw`relative`}>
-  <LinearGradient
-    colors={['#ffffff', '#e6e9ff', '#f0f0f0']}
-    style={tw`w-12 h-12 rounded-full justify-center items-center`}
-  >
-    <UserAvatar userId={otherUser.id} size={48} />
-  </LinearGradient>
-  <View style={tw`absolute bottom-0 right-0 w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`} />
-</View>
+          <View style={tw`relative`}>
+            <View style={tw`w-12 h-12 rounded-full bg-gray-700 items-center justify-center`}>
+              <Text style={tw`text-white text-lg`}>
+                {otherUser.email.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+            <View 
+              style={tw`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
+                isConnected ? 'bg-green-500' : 'bg-gray-400'
+              }`} 
+            />
+          </View>
           
           <View style={tw`ml-4 flex-1`}>
-            <Text style={tw`text-blue-400 text-lg font-bold`}>
-              {otherUser.email}
-            </Text>
+            <View style={tw`flex-row items-center justify-between`}>
+              <Text style={tw`text-white text-lg font-bold`}>
+                {otherUser.email}
+              </Text>
+              {unreadCount > 0 && (
+                <View style={tw`bg-red-500 rounded-full px-2 py-1`}>
+                  <Text style={tw`text-white text-xs font-bold`}>
+                    {unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
             {!isConnected && lastSeen && (
-              <Text style={tw`text-black-400 text-sm`}>
+              <Text style={tw`text-gray-400 text-sm`}>
                 Last seen {new Date(lastSeen).toLocaleString()}
               </Text>
             )}
@@ -113,15 +140,109 @@ const ChatRoomItem = React.memo(({ item, userId, onPress }: ChatRoomItemProps) =
 });
 
 const ChatListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const [chatRooms, setChatRooms] = useState<any[]>([]);
+  const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const { userId } = useUser();
+  const { unreadByUser, refreshUnreadCount, forceRefreshUnreadCounts } = useMessageNotifications(userId);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('ChatList focused - forcing refresh');
+      forceRefreshUnreadCounts();
+    });
+
+    return unsubscribe;
+  }, [navigation, forceRefreshUnreadCounts]);
+
+  // Add blur effect
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('blur', () => {
+      console.log('ChatList blurred - forcing refresh');
+      forceRefreshUnreadCounts();
+    });
+
+    return unsubscribe;
+  }, [navigation, forceRefreshUnreadCounts]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel('chat_list_messages')
+      .on(
+        'postgres_changes',
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'message'
+        },
+        () => {
+          console.log('Message change detected in ChatList');
+          forceRefreshUnreadCounts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, forceRefreshUnreadCounts]);
+
+  // Keep existing focus effect
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (userId) {
+        console.log('ChatList focused - forcing refresh');
+        forceRefreshUnreadCounts();
+        fetchChatRooms();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, userId, forceRefreshUnreadCounts]);
+
 
   useEffect(() => {
     if (userId) {
       fetchChatRooms();
+      setupChatRoomSubscription();
     }
   }, [userId]);
+  
+
+  const setupChatRoomSubscription = () => {
+    const channel = supabase
+      .channel('chat_rooms_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chatroom',
+          filter: `user1_id=eq.${userId}`
+        },
+        () => {
+          fetchChatRooms();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chatroom',
+          filter: `user2_id=eq.${userId}`
+        },
+        () => {
+          fetchChatRooms();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const fetchChatRooms = async () => {
     if (!userId) {
@@ -135,8 +256,8 @@ const ChatListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       .from('chatroom')
       .select(`
         *,
-        user1:user1_id(id, email),
-        user2:user2_id(id, email)
+        user1:user1_id(id, email, is_connected, last_seen),
+        user2:user2_id(id, email, is_connected, last_seen)
       `)
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
       .eq('type', 'private');
@@ -145,19 +266,22 @@ const ChatListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       console.error('Error fetching chat rooms:', error);
     } else {
       console.log('Fetched chat rooms:', data);
-      setChatRooms(data);
+      setChatRooms(data || []);
     }
     setLoading(false);
   };
 
-  const renderChatRoom = ({ item }: { item: any }) => {
+  const renderChatRoom = ({ item }: { item: ChatRoom }) => {
     if (!userId) return null;
+    const otherUser = item.user1_id === userId ? item.user2 : item.user1;
+    const unreadCount = unreadByUser[otherUser.id] || 0;
+    
     return (
       <ChatRoomItem
         item={item}
         userId={userId}
+        unreadCount={unreadCount}
         onPress={() => {
-          const otherUser = item.user1_id === userId ? item.user2 : item.user1;
           navigation.navigate('ChatRoom', { organizerId: otherUser.id });
         }}
       />
@@ -166,11 +290,11 @@ const ChatListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <LinearGradient
-  colors={['#E8EAF6', 'white', '#9FA8DA']}
-  style={tw`flex-1`}
->
+      colors={['#1e1e1e', '#0f0f0f']}
+      style={tw`flex-1`}
+    >
       <View style={tw`flex-1 px-4 pt-4`}>
-        <Text style={tw`text-blue-800 text-2xl font-bold mb-6`}>Messages</Text>
+        <Text style={tw`text-white text-2xl font-bold mb-6`}>Messages</Text>
         
         {loading ? (
           <ActivityIndicator size="large" color="#fff" style={tw`mt-8`} />
@@ -193,7 +317,3 @@ const ChatListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 };
 
 export default ChatListScreen;
-
-
-
-
