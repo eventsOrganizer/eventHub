@@ -10,6 +10,8 @@ interface FilterAdvancedProps {
   onEventsLoaded: (events: any[]) => void;
   currentLocation?: { latitude: number; longitude: number };
   lastMarkedLocation?: { latitude: number; longitude: number } | null;
+  isFilterVisible?: boolean;
+  setIsFilterVisible?: (visible: boolean) => void;
 }
 
 // Define proper types for category and subcategory
@@ -23,7 +25,13 @@ interface Subcategory {
   name: string;
 }
 
-const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, currentLocation, lastMarkedLocation }) => {
+const FilterAdvanced: React.FC<FilterAdvancedProps> = ({
+  onEventsLoaded,
+  currentLocation,
+  lastMarkedLocation,
+  isFilterVisible,
+  setIsFilterVisible
+}) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -37,7 +45,7 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [isFilterVisible, setIsFilterVisible] = useState<boolean>(false);
+
   const [useMarkedLocation, setUseMarkedLocation] = useState<boolean>(false);
 
   useEffect(() => {
@@ -180,9 +188,9 @@ const FilterAdvanced: React.FC<FilterAdvancedProps> = ({ onEventsLoaded, current
   return (
     <ScrollView style={tw`p-4 bg-white`}>
       <Button
-        title={isFilterVisible ? "Hide Filters" : "Show Filters"}
-        onPress={() => setIsFilterVisible(!isFilterVisible)}
-      />
+  title={isFilterVisible ? "Hide Filters" : "Show Filters"}
+  onPress={() => setIsFilterVisible?.(!isFilterVisible)}
+/>
       {isFilterVisible && (
         <>
           <Text style={tw`text-base font-bold mb-2`}>Filter Events</Text>

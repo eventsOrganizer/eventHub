@@ -33,6 +33,33 @@ const { userId } = useUser();
     checkAuthorization();
   }, [eventId, userId]);
 
+  
+  useEffect(() => {
+    if (!room?.id) return;
+
+    const channel = supabase
+      .channel(`videoroom_ready_${room.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'videoroom',
+          filter: `id=eq.${room.id}`
+        },
+        (payload) => {
+          if (payload.new) {
+            setIsReady(payload.new.is_ready);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [room?.id]);
+
   const fetchRoom = async () => {
     const { data, error } = await supabase
       .from('videoroom')

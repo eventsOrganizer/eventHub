@@ -5,6 +5,7 @@ import { supabase } from '../../../services/supabaseClient';
 import { Camera } from 'expo-camera';
 import { Audio } from 'expo-av';
 import { useUser } from '../../../UserContext';
+import UserAvatar from '../UserAvatar';
 
 const DAILY_API_KEY = '731a44ab06649fabe8300c0f5d89fd8721f34d5f685549bc92a4b44b33f9401c';
 const DAILY_API_URL = 'https://api.daily.co/v1';
@@ -16,6 +17,7 @@ interface Participant {
   join_time: string;
   daily_co_id: string;
   is_active: boolean;
+  session_token?: string;  // Add this line
 }
 
 const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
@@ -82,7 +84,7 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
       // Combine and reconcile the data
       const reconciled = dailyCoParticipants.map((dailyCoParticipant: any) => {
         const supabaseParticipant = updatedSupabaseParticipants.find(
-          (p) => p.daily_co_id === dailyCoParticipant.id
+          (p) => p.daily_co_id === dailyCoParticipant.id && p.is_active
         );
         return {
           id: supabaseParticipant?.id.toString() || dailyCoParticipant.id,
@@ -92,31 +94,33 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
           daily_co_id: dailyCoParticipant.id,
           is_active: true
         };
-      });
+      }).filter(p => p.user_id);
   
       // Fetch emails for participants before setting state
-      const participantsWithEmails = await Promise.all(
-        reconciled.map(async (participant) => {
-          if (participant.user_id) {
-            const { data: userData, error } = await supabase
-              .from('user')
-              .select('email')
-              .eq('id', participant.user_id)
-              .single();
-            
-            if (!error && userData) {
-              return {
-                ...participant,
-                user_name: userData.email
-              };
-            }
-          }
-          return participant;
-        })
-      );
-  
-      console.log('Participants with emails:', participantsWithEmails);
-      setParticipants(participantsWithEmails);
+      // Fetch user info for participants before setting state
+const participantsWithUserInfo = await Promise.all(
+  reconciled.map(async (participant) => {
+    if (participant.user_id) {
+      const { data: userData, error } = await supabase
+        .from('user')
+        .select('firstname, lastname')
+        .eq('id', participant.user_id)
+        .single();
+      
+      if (!error && userData) {
+        return {
+          ...participant,
+          first_name: userData.firstname, // Changed from first_name to firstname
+          last_name: userData.lastname,   // Changed from last_name to lastname
+          user_name: `${userData.firstname} ${userData.lastname}`
+        };
+      }
+    }
+    return participant;
+  })
+);
+      
+      setParticipants(participantsWithUserInfo);
   
       // Update Supabase with the reconciled data
       for (const participant of reconciled) {
@@ -163,13 +167,19 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
   const joinRoom = useCallback(async () => {
     console.log('Joining room...');
     try {
+      const sessionToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
       const { error } = await supabase
         .from('room_participants')
-        .upsert({ room_id: roomId, user_id: userId, is_active: true, last_heartbeat: new Date().toISOString() },
-                 { onConflict: ['room_id', 'user_id'] });
+        .upsert({ 
+          room_id: roomId, 
+          user_id: userId, 
+          is_active: true, 
+          last_heartbeat: new Date().toISOString(),
+          session_token: sessionToken 
+        }, { onConflict: ['room_id', 'user_id'] });
       
-      if (error) throw error;
-      console.log('Successfully joined room');
+      if (error) console.error('Error joining room:', error);
+      else console.log('Successfully joined room with token:', sessionToken);
       
       if (isCreator) {
         const { error: roomError } = await supabase
@@ -177,13 +187,12 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
           .update({ is_connected: true })
           .eq('id', roomId);
         
-        if (roomError) throw roomError;
-        console.log('Successfully updated room connection status');
+        if (roomError) console.error('Error updating room connection status:', roomError);
       }
     } catch (error) {
       console.error('Exception when joining room:', error);
     }
-  }, [roomId, userId, isCreator]);
+  }, [roomId, userId, isCreator]); // Keep these dependencies
 
   const leaveRoom = useCallback(async () => {
     console.log('Leaving room...');
@@ -224,8 +233,9 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
       Alert.alert('Error', 'Only the room creator can kick participants.');
       return;
     }
-
+  
     try {
+      // 1. Kick from Daily.co
       const roomName = roomUrl.split('/').pop();
       const response = await fetch(`${DAILY_API_URL}/rooms/${roomName}/eject`, {
         method: 'POST',
@@ -235,15 +245,34 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
         },
         body: JSON.stringify({ ids: [participantId] })
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      const data = await response.json();
-      console.log('Kick response:', data);
-
-      setParticipants(prevParticipants => prevParticipants.filter(p => p.daily_co_id !== participantId));
+  
+      // 2. Update Supabase to mark participant as inactive
+      const kickedParticipant = participants.find(p => p.daily_co_id === participantId);
+      if (kickedParticipant?.user_id) {
+        const { error: supabaseError } = await supabase
+    .from('room_participants')
+    .update({ 
+      is_active: false, 
+      left_at: new Date().toISOString(),
+      session_token: null  // Add this line
+    })
+    .match({ 
+      room_id: roomId, 
+      user_id: kickedParticipant.user_id 
+    });
+  
+        if (supabaseError) throw supabaseError;
+      }
+  
+      // 3. Update local state to remove the kicked participant
+      setParticipants(prevParticipants => 
+        prevParticipants.filter(p => p.daily_co_id !== participantId)
+      );
+  
       Alert.alert('Success', 'Participant has been kicked from the room.');
     } catch (error) {
       console.error('Error kicking participant:', error);
@@ -336,15 +365,22 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
         <Text style={styles.participantsButtonText}>Participants</Text>
       </TouchableOpacity>
       <Modal visible={showParticipants} animationType="slide">
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Room Participants</Text>
-          <FlatList
+  <View style={styles.modalContainer}>
+    <Text style={styles.modalTitle}>Room Participants</Text>
+<FlatList
   data={participants}
   keyExtractor={(item) => item.daily_co_id}
   renderItem={({ item }) => (
     <View style={styles.participantItem}>
-      <Text>{`${item.user_name || item.user_id} (Daily.co ID: ${item.daily_co_id})`}</Text>
-      {isCreator && (
+      <View style={styles.participantInfo}>
+        <UserAvatar userId={item.user_id} size={40} />
+        <Text style={styles.participantName}>
+          {item.first_name && item.last_name 
+            ? `${item.first_name} ${item.last_name}`
+            : 'Unknown User'}
+        </Text>
+      </View>
+      {isCreator && item.user_id !== userId && (
         <TouchableOpacity 
           onPress={() => kickParticipant(item.daily_co_id)}
           style={styles.kickButton}
@@ -355,14 +391,14 @@ const VideoCall = ({ route, navigation }: { route: any; navigation: any }) => {
     </View>
   )}
 />
-          <TouchableOpacity 
-            style={styles.closeButton} 
-            onPress={() => setShowParticipants(false)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
+    <TouchableOpacity 
+      style={styles.closeButton} 
+      onPress={() => setShowParticipants(false)}
+    >
+      <Text style={styles.closeButtonText}>Close</Text>
+    </TouchableOpacity>
+  </View>
+</Modal>
     </View>
   );
 };
@@ -426,9 +462,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 8,
+    padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: '#eee',
   },
   kickButton: {
     backgroundColor: 'red',
@@ -449,6 +485,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
   },
+
+  participantInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  participantName: {
+    marginLeft: 10,
+    fontSize: 16,
+  },
+ 
 });
 
 export default VideoCall;

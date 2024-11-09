@@ -8,6 +8,9 @@ import tw from 'twrnc';
 import FilterAdvanced from './FilterAdvanced';
 import { supabase } from '../services/supabaseClient';
 
+
+
+
 const Maps: React.FC = () => {
   const navigation = useNavigation();
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -20,6 +23,7 @@ const Maps: React.FC = () => {
   const [lastMarkedLocation, setLastMarkedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Array<{ name: string; lat: number; lon: number }>>([]);
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
 
 
   useEffect(() => {
@@ -309,11 +313,17 @@ const Maps: React.FC = () => {
         <Ionicons name="location" size={24} color="#4838cc" />
       </TouchableOpacity>
       <TouchableOpacity
-        style={tw`absolute top-24 right-4 z-10 bg-white p-2 rounded-full shadow-md`}
-        onPress={() => setShowFilter(true)}
-      >
-        <Ionicons name="filter" size={24} color="#4838cc" />
-      </TouchableOpacity>
+  style={tw`absolute top-24 right-4 z-10 bg-white p-2 rounded-full shadow-md`}
+  onPress={() => {
+    setShowFilter(true);
+    // Add slight delay to ensure modal is rendered
+    setTimeout(() => {
+      setIsFilterVisible(true);
+    }, 100);
+  }}
+>
+  <Ionicons name="filter" size={24} color="#4838cc" />
+</TouchableOpacity>
       {showCoordinates && (
         <View style={tw`absolute top-36 left-4 right-4 z-10 bg-white p-4 rounded-lg shadow-md`}>
           <Text style={tw`text-sm font-bold mb-2`}>Current Location:</Text>
@@ -398,11 +408,13 @@ const Maps: React.FC = () => {
       >
         <View style={tw`flex-1 justify-end`}>
           <View style={tw`bg-white rounded-t-3xl p-6 h-[70%]`}>
-            <FilterAdvanced 
-              onEventsLoaded={handleEventsLoaded} 
-              currentLocation={currentLocation}
-              lastMarkedLocation={lastMarkedLocation}
-            />
+          <FilterAdvanced 
+  onEventsLoaded={handleEventsLoaded} 
+  currentLocation={currentLocation}
+  lastMarkedLocation={lastMarkedLocation}
+  isFilterVisible={isFilterVisible}
+  setIsFilterVisible={setIsFilterVisible}
+/>
             <TouchableOpacity
               style={tw`bg-blue-500 p-4 rounded-full mt-4`}
               onPress={() => setShowFilter(false)}

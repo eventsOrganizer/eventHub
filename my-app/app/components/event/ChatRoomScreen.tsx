@@ -14,7 +14,7 @@ import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
 import { useMessageNotifications } from '../../hooks/useMessageNotifications';
 import debounce from 'lodash/debounce';
-
+import { useNavigation } from '@react-navigation/native';
 interface Message {
   id: string;
   content: string;
@@ -22,6 +22,12 @@ interface Message {
   chatroom_id: string;
   created_at: string;
   seen: boolean;
+}
+
+interface User {
+  id: string;
+  firstname: string;
+  lastname: string;
 }
 
 const ChatRoomScreen: React.FC<{ route: { params: { organizerId: string } } }> = ({ route }) => {
@@ -35,7 +41,11 @@ const ChatRoomScreen: React.FC<{ route: { params: { organizerId: string } } }> =
   const flatListRef = useRef<FlatList>(null);
   const messageUpdateQueue = useRef<string[]>([]);
   const lastFetch = useRef<number>(0);
+  const [otherUser, setOtherUser] = useState<User | null>(null);
+
   const { markChatAsRead } = useMessageNotifications(userId);
+  const navigation = useNavigation();
+
 
   const fetchOrCreateChatRoom = useCallback(async () => {
     if (!userId) {
@@ -74,6 +84,37 @@ const ChatRoomScreen: React.FC<{ route: { params: { organizerId: string } } }> =
       console.error('Error in fetchOrCreateChatRoom:', error);
     }
   }, [userId, organizerId]);
+
+
+  const fetchOtherUserDetails = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user')
+        .select('id, firstname, lastname')
+        .eq('id', organizerId)
+        .single();
+
+      if (error) throw error;
+      if (data) setOtherUser(data);
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchOtherUserDetails();
+    
+    // Set the navigation header
+    if (otherUser) {
+      navigation.setOptions({
+        headerTitle: () => (
+          <Text style={{ color: '#2563eb', fontSize: 24, fontWeight: 'bold' }}>
+            {`${otherUser.firstname} ${otherUser.lastname}`}
+          </Text>
+        ),
+      });
+    }
+  }, [otherUser, navigation]);
 
   const fetchMessages = useCallback(async () => {
     if (!chatRoomId) return;
@@ -280,7 +321,7 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: '#FFA500',
+    backgroundColor: '#00CED1',
     borderRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 10,

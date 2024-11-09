@@ -2,11 +2,11 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import CalendarComponent from '../components/Calendar';
-const CalendarScreen = () => {
+const CalendarScreen = ({ navigation }: { navigation: any }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Calendar</Text>
-      <CalendarComponent />
+      <CalendarComponent navigation={navigation} />
     </View>
   );
 };

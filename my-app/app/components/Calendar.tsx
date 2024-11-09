@@ -21,7 +21,7 @@ interface CalendarItem {
   };
 }
 
-const CalendarComponent = () => {
+const CalendarComponent = ({ navigation }: { navigation: any }) => {
   const { userId } = useUser();
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [calendarItems, setCalendarItems] = useState<CalendarItem[]>([]);
@@ -182,7 +182,22 @@ const CalendarComponent = () => {
   };
 
   const renderCalendarItem = ({ item }: { item: CalendarItem }) => (
-    <TouchableOpacity style={tw`flex-row bg-white rounded-xl p-4 mb-3 shadow-sm`}>
+    <TouchableOpacity 
+      style={tw`flex-row bg-white rounded-xl p-4 mb-3 shadow-sm`}
+      onPress={() => {
+        switch (item.type) {
+          case 'event':
+            navigation.navigate('EventDetails', { eventId: item.id });
+            break;
+          case 'local':
+            navigation.navigate('LocalServiceDetails', { localId: item.id });
+            break;
+          case 'personal':
+            navigation.navigate('PersonalServiceDetails', { personalId: item.id });
+            break;
+        }
+      }}
+    >
       <View style={tw`relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100`}>
         {item.imageUrl ? (
           <Image 
@@ -202,6 +217,9 @@ const CalendarComponent = () => {
       
       <View style={tw`flex-1 ml-4`}>
         <Text style={tw`text-lg font-semibold text-gray-800`}>{item.name}</Text>
+        <Text style={tw`text-sm text-gray-500`}>
+          {format(new Date(item.date), 'MMM dd, yyyy')}
+        </Text>
         <Text style={tw`text-sm text-gray-500 mt-1`}>
           {`${format(new Date(`2000-01-01T${item.start}`), 'h:mm a')} - ${format(new Date(`2000-01-01T${item.end}`), 'h:mm a')}`}
         </Text>

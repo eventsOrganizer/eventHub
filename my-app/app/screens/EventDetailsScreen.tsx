@@ -102,6 +102,30 @@ const EventDetailsScreen: React.FC<{ route: { params: { eventId: number } }, nav
     }
   };
 
+  // useEffect(() => {
+  //   if (!eventId) return;
+  
+  //   const channel = supabase
+  //     .channel(`videoroom_status_${eventId}`)
+  //     .on(
+  //       'postgres_changes',
+  //       {
+  //         event: '*',
+  //         schema: 'public',
+  //         table: 'videoroom',
+  //         filter: `event_id=eq.${eventId}`
+  //       },
+  //       () => {
+  //         fetchEventDetails();
+  //       }
+  //     )
+  //     .subscribe();
+  
+  //   return () => {
+  //     supabase.removeChannel(channel);
+  //   };
+  // }, [eventId]);
+
   const handleJoinSuccess = () => {
     setAttendeesRefreshTrigger(prev => prev + 1);
     setIsMember(true);

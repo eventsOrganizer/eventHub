@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+
 import { supabase } from '../../services/supabaseClient';
 import { useUser } from '../../UserContext';
 import { BlurView } from 'expo-blur';
@@ -7,10 +8,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { useMessageNotifications  } from '../../hooks/useMessageNotifications';
-
+import UserAvatar from './UserAvatar';
 interface User {
   id: string;
   email: string;
+  firstname: string;
+  lastname: string;
   is_connected?: boolean;
   last_seen?: string;
 }
@@ -99,13 +102,9 @@ const ChatRoomItem = React.memo(({ item, userId, onPress, unreadCount }: ChatRoo
   return (
     <TouchableOpacity onPress={onPress} style={tw`mb-4 overflow-hidden rounded-xl`}>
       <BlurView intensity={20} style={tw`p-4`}>
-        <View style={tw`flex-row items-center`}>
+      <View style={tw`flex-row items-center`}>
           <View style={tw`relative`}>
-            <View style={tw`w-12 h-12 rounded-full bg-gray-700 items-center justify-center`}>
-              <Text style={tw`text-white text-lg`}>
-                {otherUser.email.charAt(0).toUpperCase()}
-              </Text>
-            </View>
+            <UserAvatar userId={otherUser.id} size={48} />
             <View 
               style={tw`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
                 isConnected ? 'bg-green-500' : 'bg-gray-400'
@@ -115,19 +114,19 @@ const ChatRoomItem = React.memo(({ item, userId, onPress, unreadCount }: ChatRoo
           
           <View style={tw`ml-4 flex-1`}>
             <View style={tw`flex-row items-center justify-between`}>
-              <Text style={tw`text-white text-lg font-bold`}>
-                {otherUser.email}
-              </Text>
+            <Text style={tw`text-blue-600 text-lg font-bold`}> 
+  {`${otherUser.firstname} ${otherUser.lastname}`}
+</Text>
               {unreadCount > 0 && (
                 <View style={tw`bg-red-500 rounded-full px-2 py-1`}>
-                  <Text style={tw`text-white text-xs font-bold`}>
+                  <Text style={tw`text-black text-xs font-bold`}>
                     {unreadCount}
                   </Text>
                 </View>
               )}
             </View>
             {!isConnected && lastSeen && (
-              <Text style={tw`text-gray-400 text-sm`}>
+              <Text style={tw`text-black-400 text-sm`}>
                 Last seen {new Date(lastSeen).toLocaleString()}
               </Text>
             )}
@@ -256,8 +255,8 @@ const ChatListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       .from('chatroom')
       .select(`
         *,
-        user1:user1_id(id, email, is_connected, last_seen),
-        user2:user2_id(id, email, is_connected, last_seen)
+        user1:user1_id(id, email, firstname, lastname, is_connected, last_seen),
+        user2:user2_id(id, email, firstname, lastname, is_connected, last_seen)
       `)
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
       .eq('type', 'private');
@@ -288,22 +287,24 @@ const ChatListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     );
   };
 
-  return (
-    <LinearGradient
-      colors={['#1e1e1e', '#0f0f0f']}
-      style={tw`flex-1`}
-    >
-      <View style={tw`flex-1 px-4 pt-4`}>
-        <Text style={tw`text-white text-2xl font-bold mb-6`}>Messages</Text>
-        
-        {loading ? (
-          <ActivityIndicator size="large" color="#fff" style={tw`mt-8`} />
-        ) : chatRooms.length === 0 ? (
-          <View style={tw`flex-1 items-center justify-center`}>
-            <Ionicons name="chatbubbles-outline" size={48} color="#666" />
-            <Text style={tw`text-gray-400 text-lg mt-4`}>No conversations yet</Text>
-          </View>
-        ) : (
+  
+    return (
+      <View style={styles.container}>
+        <LinearGradient
+          colors={['white', 'white']} 
+          style={styles.gradient}
+        />
+        <View style={styles.content}>
+          <Text style={tw`text-black text-2xl font-bold mb-6`}>Messages</Text>  
+          
+          {loading ? (
+            <ActivityIndicator size="large" color="#000" style={tw`mt-8`} />  
+          ) : chatRooms.length === 0 ? (
+            <View style={tw`flex-1 items-center justify-center`}>
+              <Ionicons name="chatbubbles-outline" size={48} color="#666" />
+              <Text style={tw`text-gray-600 text-lg mt-4`}>No conversations yet</Text> 
+            </View>
+          ) : (
           <FlatList
             data={chatRooms}
             renderItem={renderChatRoom}
@@ -312,8 +313,29 @@ const ChatListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           />
         )}
       </View>
-    </LinearGradient>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  gradient: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: -1,  // This ensures the gradient stays behind other content
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    backgroundColor: 'transparent',
+  },
+  listContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  }
+});
 
 export default ChatListScreen;
